@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://x-tools.pages.dev/sitemap.xml
