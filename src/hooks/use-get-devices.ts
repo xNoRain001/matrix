@@ -1,5 +1,5 @@
 const useGetDevices = async () => {
-  return await navigator.mediaDevices.enumerateDevices()
+  return navigator.mediaDevices.enumerateDevices()
 }
 
 export default useGetDevices

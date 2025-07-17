@@ -21,8 +21,14 @@ import useBindMediaStream from './use-bind-media-stream'
 import useClosePC from './use-close-pc'
 import useBack from './use-back'
 import useAddRoomID from './use-add-room-id'
+import useGetDB from './use-get-db'
+import useClearMessages from './use-clear-messages'
+import useDeleteDB from './use-delete-db'
 
 export {
+  useDeleteDB,
+  useClearMessages,
+  useGetDB,
   useAddRoomID,
   useBack,
   useClosePC,

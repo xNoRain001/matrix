@@ -1,41 +1,39 @@
 <template>
-  <div
-    ref="containerRef"
-    class="flex-center flex h-screen flex-col overflow-y-scroll"
-  >
+  <div class="flex-center flex">
     <UPinInput
       v-if="!roomId"
       size="xl"
       :length="pinLength"
       v-model="pin"
       type="number"
+      class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
     />
 
-    <div v-if="connected" class="w-full max-w-[500px]">
-      <div class="px-8">
-        <q-chat-message label="Sunday, 19th" />
-        <q-chat-message
-          v-for="({ name, text, sent, stamp }, index) in messageList"
-          :key="index"
-          :name="name"
-          :text="text"
-          :sent="sent"
-          :stamp="stamp"
-        />
-      </div>
-
-      <div class="sticky bottom-0 rounded-t-md py-4 backdrop-blur-md">
-        <q-input
-          @keydown.enter="onSend"
-          class="mx-4 bg-[#0d1117]"
-          standout
-          dense
-          v-model="message"
-        ></q-input>
-      </div>
-      <!-- <q-btn @click="onSend" label="发送" color="primary"></q-btn> -->
+    <div v-if="connected" class="w-full max-w-[500px] pb-[56px]">
+      <!-- <q-chat-message label="Sunday, 19th" /> -->
+      <q-chat-message
+        v-for="(item, index) in messageList"
+        :avatar="avatar"
+        :key="index"
+        :text="item.content"
+        :sent="item.sent"
+      />
     </div>
+    <!-- :stamp="timestamp" -->
   </div>
+
+  <q-page-sticky v-if="connected" expand position="bottom">
+    <div class="w-full max-w-[500px] rounded-t-md py-4 backdrop-blur-md">
+      <q-input
+        @keydown.enter="onSendMsg"
+        class="mx-4 bg-[#0d1117]"
+        standout
+        dense
+        v-model="message"
+      ></q-input>
+      <!-- :disable="!otherConnected" -->
+    </div>
+  </q-page-sticky>
 </template>
 
 <script lang="ts" setup>
@@ -44,6 +42,7 @@ import {
   useBack,
   useClosePC,
   useCreatePeerConnection,
+  useGetDB,
   useInitDataChannel,
   useInitRtc,
   useInitSocket,
@@ -57,7 +56,7 @@ import type { Socket } from 'socket.io-client'
 
 let makingOffer = false
 let polite = true
-let name = Math.random() * 10 + ''
+let avatar = 'https://cdn.quasar.dev/img/avatar4.jpg'
 let pc: RTCPeerConnection | null = null
 let socket: Socket | null = null
 let dataChannel: RTCDataChannel | null = null
@@ -71,7 +70,6 @@ let dataChannel: RTCDataChannel | null = null
 const receiving = '接收中...'
 // const received = '接收完成...'
 const message = ref('')
-const containerRef = ref(null)
 // const receivedBuffer: ArrayBuffer[] = []
 const roomId = useRoute().query.roomId as string
 const pinLength = 4
@@ -86,47 +84,52 @@ const otherConnected = ref(false)
 //     progress: string
 //   }[]
 // >([])
-const messageList = reactive([
-  // {
-  //   name: 'me',
-  //   text: ['hey, how are you?', 'aaa'],
-  //   sent: true,
-  //   stamp: '7 minutes ago'
-  // },
-  // {
-  //   name: 'Jane',
-  //   text: ['doing fine, how r you?'],
-  //   sent: false,
-  //   stamp: '4 minutes ago'
-  // }
-])
 
-const onSend = async () => {
+const db = await useGetDB()
+
+// 添加聊天记录
+const addMessage = async message => {
+  await db.add('messages', message)
+}
+
+// 获取所有聊天记录
+const getMessages = async () => {
+  return db.getAllFromIndex('messages', 'roomId', roomId)
+}
+
+const messageList = reactive<
+  { content: string[]; id?: number; sent: boolean; timestamp: number }[]
+>(roomId ? [...(await getMessages())] : [])
+
+const onSendMsg = async () => {
+  const _message = message.value
+
+  if (!_message) {
+    return
+  }
+
+  const timestamp = Date.now()
+
   dataChannel.send(
     JSON.stringify({
-      name,
-      sendTime: Date.now(),
-      message: message.value
+      timestamp,
+      message: _message
     })
   )
-
   messageList.push({
-    name: 'me',
-    // avatar: 'https://cdn.quasar.dev/img/avatar4.jpg',
-    text: [message.value],
+    content: [_message],
     sent: true,
-    stamp: '4 minutes ago'
-    // suc: false
+    timestamp
   })
-
+  addMessage({ roomId, content: [_message], sent: true, timestamp })
   message.value = ''
   scrollToBottom()
 }
 
 const scrollToBottom = () => {
   const timer = setTimeout(() => {
-    containerRef.value.scrollTo({
-      top: containerRef.value.scrollHeight,
+    document.documentElement.scrollTo({
+      top: document.documentElement.scrollHeight,
       behavior: 'smooth'
     })
     clearTimeout(timer)
@@ -135,17 +138,15 @@ const scrollToBottom = () => {
 
 const onReceiveData = ({ channel }: { channel: RTCDataChannel }) => {
   channel.onmessage = ({ data }: { data: string }) => {
-    const { message, name } = JSON.parse(data)
+    const { message, timestamp } = JSON.parse(data)
     socket.emit('saved-file', roomId, null)
     messageList.push({
-      name,
-      // avatar: 'https://cdn.quasar.dev/img/avatar3.jpg',
-      text: [message],
+      content: [message],
       sent: false,
-      stamp: '4 minutes ago'
-      // suc: true
+      timestamp
     })
     scrollToBottom()
+    addMessage({ roomId, content: [message], sent: false, timestamp })
   }
 }
 
@@ -171,6 +172,7 @@ const onJoined = async (_, __, _polite) => {
   }
 
   socket.emit('otherjoin', roomId)
+  scrollToBottom()
 }
 
 // 当其他人加入房间时触发

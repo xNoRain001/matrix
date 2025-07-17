@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-center flex h-screen">
+  <div class="flex-center flex h-[calc(100vh-32px)]">
     <UPinInput
       v-if="!roomId"
       size="xl"

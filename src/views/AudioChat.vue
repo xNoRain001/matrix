@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-center flex h-screen">
+  <div class="flex-center flex h-[calc(100vh-32px)]">
     <UPinInput
       v-if="!roomId"
       size="xl"
@@ -9,16 +9,25 @@
     />
 
     <div v-show="connected" class="flex-center flex flex-col">
-      <div class="text-xl">
+      <div class="text-base">
         {{ otherConnected ? '通话中...' : '等待对方接受邀请...' }}
       </div>
-      <div class="flex-center mt-16 flex">
-        <div v-if="!disableMic" class="flex-center relative flex flex-col">
+      <div
+        :class="
+          hasMic && hasSpeaker
+            ? 'grid-cols-1'
+            : hasMic || hasSpeaker
+              ? 'grid-cols-2'
+              : 'grid-cols-3'
+        "
+        class="mt-16 grid"
+      >
+        <div v-if="!hasMic" class="flex-center relative flex flex-col">
           <q-btn
             round
             :class="micOpen ? 'bg-white' : '!bg-gray-900'"
             class="text-black"
-            size="xl"
+            size="lg"
             :icon="micOpen ? 'mic' : 'mic_off'"
             @click="updateMicStatus"
           ></q-btn>
@@ -45,9 +54,9 @@
             </q-list>
           </q-btn-dropdown>
         </div>
-        <div class="flex-center ml-8 flex flex-col">
+        <div class="flex-center flex flex-col">
           <q-btn
-            size="xl"
+            size="lg"
             icon="call_end"
             ref="leaveBtnRef"
             @click="onLeave"
@@ -56,15 +65,12 @@
           ></q-btn>
           <q-btn label="取消" class="!mt-4"></q-btn>
         </div>
-        <div
-          v-if="!disableSpeaker"
-          class="flex-center relative ml-8 flex flex-col"
-        >
+        <div v-if="!hasSpeaker" class="flex-center relative flex flex-col">
           <q-btn
             round
             :class="speakerOpen ? 'bg-white' : '!bg-gray-900'"
             class="group bg-white text-black"
-            size="xl"
+            size="lg"
             :icon="speakerOpen ? 'volume_up' : 'volume_off'"
             @click="updateSpeakerStatus"
           >
@@ -142,22 +148,42 @@ let localMediaStream: MediaStream | null = null
 let pc: RTCPeerConnection | null = null
 let socket: Socket | null = null
 const roomId = useRoute().query.roomId as string
+const audioInputs = await useGetAudioInputs()
+const audioInputLabels = audioInputs.map(
+  (item, index) => item.label || `麦克风设备 ${index}`
+)
+const audioOutputs = await useGetAudioOutputs()
+const audioOutputLabels = audioOutputs.map(
+  (item, index) => item.label || `扬声器设备 ${index}`
+)
+const audioInputLabelsLength = audioInputLabels.length
+const audioOutputLabelsLength = audioOutputLabels.length
 const pinLength = 4
 const pin = ref([])
-const micLabel = ref('')
-const micOptions = reactive([])
-const speakerLabel = ref('')
-const speakerOptions = reactive([])
+const micLabel = ref(
+  audioInputLabelsLength ? (await useGetAudioInput()).label : '未发现麦克风设备'
+)
+const micOptions = reactive([
+  ...(audioInputLabelsLength ? audioInputLabels : ['未发现麦克风设备'])
+])
+const speakerLabel = ref(
+  audioOutputLabelsLength
+    ? (await useGetAudioOutput()).label
+    : '未发现扬声器设备'
+)
+const speakerOptions = reactive([
+  ...(audioOutputLabelsLength ? audioOutputLabels : ['未发现扬声器设备'])
+])
 const volume = ref(1)
 const otherConnected = ref(false)
 const localAudioRef = ref(null)
 const remoteAudioRef = ref(null)
 const leaveBtnRef = ref(null)
 const connected = ref(false)
-const micOpen = ref(true)
-const speakerOpen = ref(true)
-const disableMic = ref(false)
-const disableSpeaker = ref(false)
+const micOpen = ref(Boolean(audioInputLabelsLength))
+const speakerOpen = ref(Boolean(audioOutputLabelsLength))
+const hasMic = ref(!audioInputLabelsLength)
+const hasSpeaker = ref(!audioOutputLabelsLength)
 const constraints = {
   video: false,
   audio: {
@@ -190,11 +216,6 @@ const onOtherJoin = async roomId => {
   // pc 存在，说明对面退出后又新进来一个，此时需要重新创建 pc
   useClosePC(pc)
   await initPC()
-  // useAddMediaStreamToPC(pc, localMediaStream)
-  // 需要保持状态，因为可能是第二次创建 pc，需要重新绑定媒体流到 pc，此时的新本地流中
-  // 的麦克风和扬声器的状态需要和旧的本地流状态统一
-  updateMicStatus()
-  updateSpeakerStatus()
 
   try {
     makingOffer = true
@@ -247,12 +268,15 @@ const initPC = async () => {
 
 const updateSpeakerLabel = (label: string) => (speakerLabel.value = label)
 
-const updateSpeakerStatus = async (v?: undefined) => {
-  if (v === undefined) {
-    remoteAudioRef.value.volume = speakerOpen.value ? volume.value : 0
+const keepSpeakerStatus = () => {
+  if (hasSpeaker.value) {
     return
   }
 
+  remoteAudioRef.value.volume = speakerOpen.value ? volume.value : 0
+}
+
+const updateSpeakerStatus = async () => {
   const newValue = !speakerOpen.value
   remoteAudioRef.value.volume = newValue ? volume.value : 0
   speakerOpen.value = newValue
@@ -260,24 +284,39 @@ const updateSpeakerStatus = async (v?: undefined) => {
 
 const updateMicLabel = label => (micLabel.value = label)
 
-const updateMicStatus = async (v?: undefined) => {
-  if (v === undefined) {
-    micOpen.value
-      ? useResumeMediaStreamTracks(localMediaStream)
-      : usePauseMediaStreamTracks(localMediaStream)
+const keepMirStatus = () => {
+  if (hasMic.value) {
     return
   }
 
-  const newValue = !micOpen.value
-  newValue
+  micOpen.value
     ? useResumeMediaStreamTracks(localMediaStream)
     : usePauseMediaStreamTracks(localMediaStream)
+}
+
+const updateMicStatus = async () => {
+  const newValue = !micOpen.value
+
+  // 最先加入房间的人会比后加入的更晚完成 pc 初始化
+  // 在没初始化之前用户可能点击关闭麦克风，此时是没有媒体流的
+  if (localMediaStream) {
+    newValue
+      ? useResumeMediaStreamTracks(localMediaStream)
+      : usePauseMediaStreamTracks(localMediaStream)
+  }
+
   micOpen.value = newValue
 }
 
 const initLocalMediaStream = async () => {
   try {
     localMediaStream = await useGetUserMedia(constraints)
+    // 最先加入房间的人会比后加入的更晚完成 pc 初始化
+    // 在没初始化之前用户可能点击关闭麦克风，初始化完成时需要更新媒体流状态
+    // 也可能是第二次创建 pc，需要重新绑定媒体流到 pc，此时的新本地流中
+    // 的麦克风和扬声器的状态需要和旧的本地流状态统一
+    keepMirStatus()
+    keepSpeakerStatus()
     // 绑定本地流
     useBindMediaStream(localAudioRef.value, localMediaStream)
     useAddMediaStreamToPC(pc, localMediaStream)
@@ -285,7 +324,7 @@ const initLocalMediaStream = async () => {
     console.error(err)
     useNotify('未获取到用户设备', 'negative')
     micOpen.value = false
-    disableMic.value = true
+    hasMic.value = true
   }
 }
 
@@ -302,52 +341,24 @@ watch(pin, v => {
 
 watch(volume, v => (remoteAudioRef.value.volume = v))
 
+watch(speakerLabel, v => {
+  const { deviceId } = audioOutputs.find(item => item.label === v)
+  remoteAudioRef.value.setSinkId(deviceId)
+})
+
+watch(micLabel, async v => {
+  const { deviceId } = audioInputs.find(item => item.label === v)
+  useCloseMediaStreamTracks(localMediaStream)
+  localMediaStream = await useGetUserMedia({
+    audio: { deviceId: { exact: deviceId } }
+  })
+  localAudioRef.value.srcObject = localMediaStream
+})
+
 onMounted(async () => {
   if (!roomId) {
     return
   }
-
-  const audioInputs = await useGetAudioInputs()
-  const audioInputLabels = audioInputs.map(
-    (item, index) => item.label || `麦克风设备 ${index}`
-  )
-  const audioOutputs = await useGetAudioOutputs()
-  const audioOutputLabels = audioOutputs.map(
-    (item, index) => item.label || `扬声器设备 ${index}`
-  )
-  const audioInputLabelsLength = audioInputLabels.length
-  const audioOutputLabelsLength = audioOutputLabels.length
-
-  micLabel.value = audioInputLabelsLength
-    ? (await useGetAudioInput()).label
-    : '未发现麦克风设备'
-  speakerLabel.value = audioOutputLabelsLength
-    ? (await useGetAudioOutput()).label
-    : '未发现扬声器设备'
-  micOptions.push(
-    ...(audioInputLabelsLength ? audioInputLabels : ['未发现麦克风设备'])
-  )
-  speakerOptions.push(
-    ...(audioOutputLabelsLength ? audioOutputLabels : ['未发现扬声器设备'])
-  )
-  // micOpen.value = Boolean(audioInputLabelsLength)
-  speakerOpen.value = Boolean(audioOutputLabelsLength)
-  // disableMic.value = !audioInputLabelsLength
-  disableSpeaker.value = !audioOutputLabelsLength
-
-  watch(speakerLabel, v => {
-    const { deviceId } = audioOutputs.find(item => item.label === v)
-    remoteAudioRef.value.setSinkId(deviceId)
-  })
-
-  watch(micLabel, async v => {
-    const { deviceId } = audioInputs.find(item => item.label === v)
-    useCloseMediaStreamTracks(localMediaStream)
-    localMediaStream = await useGetUserMedia({
-      audio: { deviceId: { exact: deviceId } }
-    })
-    localAudioRef.value.srcObject = localMediaStream
-  })
 
   initSocket()
 })
