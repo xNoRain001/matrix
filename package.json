@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
+    "build": "vue-tsc -b && vite build && vitepress build docs && node ./scripts/move-files.cjs",
     "preview": "vite preview",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
     "deploy": "wrangler pages deploy dist --project-name chat --branch=main --commit-dirty=true"
   },
   "dependencies": {
@@ -39,6 +42,7 @@
     "typescript-eslint": "^8.33.0",
     "vite": "^6.3.1",
     "vite-plugin-sass": "^0.1.0",
+    "vitepress": "^1.6.3",
     "vue-tsc": "^2.2.8"
   }
 }

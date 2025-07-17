@@ -232,7 +232,7 @@ const onDisconnect = () => {
   useClosePC(pc)
   // 关闭本地媒体
   useCloseMediaStreamTracks(localMediaStream)
-  useBack('/')
+  useBack('/audio-chat')
 }
 
 const onRtc = (roomId: string, data: any) =>

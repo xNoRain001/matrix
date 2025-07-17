@@ -1,25 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import OneToOneAudio from '@/views/AudioChat.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
-      component: OneToOneAudio
+      path: '/audio-chat',
+      component: () => import('@/views/AudioChat.vue')
     },
     {
       path: '/file',
       component: () => import('@/views/File.vue')
     },
-    {
-      path: '/audio-chat',
-      component: () => import('@/views/AudioChat.vue')
-    },
-    // {
-    //   path: '/video-chat',
-    //   component: () => import('@/views/VideoChat.vue')
-    // },
     {
       path: '/chat',
       component: () => import('@/views/Chat.vue')
@@ -30,6 +21,15 @@ const router = createRouter({
       component: () => import('@/views/NotFound.vue')
     }
   ]
+})
+
+router.beforeEach(({ path }, _, next) => {
+  if (path === '/') {
+    window.location.href = '/docs.html'
+    next(false)
+  } else {
+    next()
+  }
 })
 
 export default router
