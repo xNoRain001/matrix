@@ -9,12 +9,7 @@
     />
 
     <div v-if="connected" class="flex-center flex w-[320px] flex-col">
-      <q-uploader
-        @added="onAdded"
-        @removed="onRemoved"
-        class="bg-transparent"
-        multiple
-      >
+      <q-uploader @added="onAdded" class="bg-transparent" multiple>
         <template v-slot:header="scope">
           <div
             class="row no-wrap q-pa-sm q-gutter-xs items-center bg-[#0d1117]"
@@ -48,7 +43,7 @@
             <q-btn
               v-if="scope.canUpload"
               icon="play_arrow"
-              @click="onSend(scope.queuedFiles)"
+              @click="onSendFiles(scope.queuedFiles)"
               round
               dense
               flat
@@ -61,7 +56,7 @@
 
         <template v-slot:list="scope">
           <q-list separator>
-            <q-item v-for="(file, index) in scope.files" :key="file.__key">
+            <q-item v-for="file in scope.files" :key="file.__key">
               <q-item-section>
                 <q-item-label class="ellipsis">
                   {{ file.name }}
@@ -73,23 +68,28 @@
                   状态:
                   <q-badge
                     :color="
-                      sendStatus[index].status === sent ? 'green' : 'blue'
+                      (file.fileStatus as fileStatus).status === sent
+                        ? 'green'
+                        : 'blue'
                     "
-                    >{{ sendStatus[index].status }}</q-badge
+                    >{{ (file.fileStatus as fileStatus).status }}</q-badge
                   >
                 </q-item-label>
                 <q-item-label
-                  v-if="sendStatus[index].status === sending"
+                  v-if="(file.fileStatus as fileStatus).status === sending"
                   caption
                 >
-                  进度: {{ sendStatus[index].progress }}
+                  进度: {{ (file.fileStatus as fileStatus).progress }}
                 </q-item-label>
                 <!-- <q-item-label
-                  v-if="sendStatus[index].status === receiving"
+                  v-if="(file.fileStatus as fileStatus).status === receiving"
                   caption
                 >
-                  速度: {{ sendStatus[index].speed }}
+                  速度: {{ (file.fileStatus as fileStatus).speed }}
                 </q-item-label> -->
+                <q-item-label caption>
+                  用时: {{ (file.fileStatus as fileStatus).time }}
+                </q-item-label>
               </q-item-section>
 
               <q-item-section top side>
@@ -116,7 +116,7 @@
       >
         <q-item
           v-for="(
-            { name, formatSize, status, progress, blob }, index
+            { name, formatSize, status, progress, blob, time }, index
           ) in receivedFiles"
           :key="index"
         >
@@ -137,6 +137,7 @@
             <!-- <q-item-label v-if="file.status === receiving" caption>
               速度: {{ file.speed }}
             </q-item-label> -->
+            <q-item-label caption> 用时: {{ time }} </q-item-label>
           </q-item-section>
 
           <q-item-section top side>
@@ -168,7 +169,7 @@ import {
   useStartRTC
 } from '@/hooks'
 import { exportFile } from 'quasar'
-import { onMounted, reactive, ref, watch } from 'vue'
+import { onMounted, reactive, ref, watch, type Reactive } from 'vue'
 import { useRoute } from 'vue-router'
 
 import type { Socket } from 'socket.io-client'
@@ -185,6 +186,8 @@ let offset = 0
 // let lastReceiveTime = Number.MAX_SAFE_INTEGER
 // 对方是否收到了文件元信息的标识
 let flag = false
+let sendStartTime = 0
+let receiveStartTime = 0
 const inSending = ref(false)
 const pending = '等待中...'
 const sending = '传送中...'
@@ -201,6 +204,7 @@ const receivedFiles = reactive<
     progress: string
     status: '接收中...' | '接收完成...'
     blob: Blob
+    time: string
   }[]
 >([
   // {
@@ -226,33 +230,35 @@ const pinLength = 4
 const pin = ref([])
 const connected = ref(false)
 const otherConnected = ref(false)
-// 控制传送时的相关信息
-const sendStatus = reactive<
-  {
-    // speed:string,
-    status: '等待中...' | '传送中...' | '传送完成...'
-    progress: string
-  }[]
->([])
 
 const onDownload = (name: string, blob: Blob) => exportFile(name, blob)
 
-const onAdded = (/** files */) =>
-  sendStatus.push({
-    // speed: '0 Mb/s',
-    status: pending,
-    progress: '0 %'
-  })
+type fileStatus = Reactive<{
+  // speed:string,
+  status: '等待中...' | '传送中...' | '传送完成...'
+  progress: string
+  time: string
+}>
 
-const onRemoved = () => sendStatus.pop()
+const onAdded = files => {
+  for (let i = 0, l = files.length; i < l; i++) {
+    files[i].fileStatus = reactive({
+      // speed: '0 Mb/s',
+      status: pending,
+      progress: '0 %',
+      time: '0 s'
+    })
+  }
+}
 
-const onSend = async files => {
+const onSendFiles = async files => {
   inSending.value = true
 
   for (let i = 0, l = files.length; i < l; i++) {
+    sendStartTime = Date.now()
     const file = files[i]
-    const _sendStatus = sendStatus[i]
-    _sendStatus.status = sending
+    const { fileStatus }: { fileStatus: fileStatus } = files[i]
+    fileStatus.status = sending
     const { name, size, type } = file
 
     // 向对方发送文件的信息
@@ -296,20 +302,15 @@ const onSend = async files => {
       offset += buffer.byteLength
       // const time = Date.now() - lastSendTime
       // lastSendTime = Date.now()
-      // _sendStatus.speed = `${(chunkSize / 1024 / (time / 1000)).toFixed(2)} MB/s`
-      _sendStatus.progress = `${((offset / size) * 100).toFixed(2)} %`
+      // fileStatus.speed = `${(chunkSize / 1024 / (time / 1000)).toFixed(2)} MB/s`
+      fileStatus.progress = `${((offset / size) * 100).toFixed(2)} %`
     }
 
-    _sendStatus.status = sent
-    // _sendStatus.speed = ''
-    _sendStatus.progress = ''
+    fileStatus.status = sent
+    // fileStatus.speed = ''
+    fileStatus.progress = ''
     offset = 0
-    // 等待 1s，再发送下一个文件，否则接收端会把下一个文件的内容加到上一个文件中
-    // await new Promise(resolve => {
-    //   setTimeout(() => {
-    //     resolve(null)
-    //   }, 1000)
-    // })
+    fileStatus.time = ((Date.now() - sendStartTime) / 1000).toFixed(2) + ' s'
     await new Promise(resolve => {
       const timer = setInterval(() => {
         if (flag) {
@@ -338,6 +339,8 @@ const onReceiveData = ({ channel }: { channel: RTCDataChannel }) => {
 
     // 所有数据传输完成
     if (receivedSize === size) {
+      receivedFile.time =
+        ((Date.now() - receiveStartTime) / 1000).toFixed(2) + ' s'
       // 深拷贝，否则下载时会被回收
       const blob = new Blob([...receivedBuffer], { type })
       receivedFile.blob = blob
@@ -350,10 +353,12 @@ const onReceiveData = ({ channel }: { channel: RTCDataChannel }) => {
 }
 
 const onFileMetadata = async (roomId: string, data: any) => {
+  receiveStartTime = Date.now()
   const o = { ...data }
   o.status = receiving
   o.formatSize = (data.size / 1024 / 1024).toFixed(2) + 'MB'
   o.progress = '0 %'
+  o.time = '0 s'
   // o.speed = '0 MB/s'
   receivedFiles.push(o)
   socket.emit('receive-file-metadata', roomId, null)
