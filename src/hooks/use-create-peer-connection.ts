@@ -49,15 +49,16 @@ const useCreatePeerConnection = (
       // pc.restartIce()
     } else if (iceConnectionState === 'disconnected') {
       console.log('disconnected...')
+      otherConnected.value = false
       // 关闭网页或点击取消
-      useNotify('对方离开了房间, 如果 30 s 内没有人加入，将返回主页')
+      // useNotify('对方离开了房间, 如果 30 s 内没有人加入，将返回主页')
       // socket.disconnect()
-      timer = setTimeout(() => {
-        location.href = '/'
-      }, 30000)
+      // timer = setTimeout(() => {
+      //   location.href = '/'
+      // }, 30000)
     } else if (iceConnectionState === 'connected') {
       console.log('connected...')
-      useNotify('连接已建立')
+      // useNotify('连接已建立')
       otherConnected.value = true
       clearTimeout(timer)
     }

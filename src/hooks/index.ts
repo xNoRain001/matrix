@@ -24,8 +24,10 @@ import useAddRoomID from './use-add-room-id'
 import useGetDB from './use-get-db'
 import useClearMessages from './use-clear-messages'
 import useDeleteDB from './use-delete-db'
+import useDialog from './use-dialog'
 
 export {
+  useDialog,
   useDeleteDB,
   useClearMessages,
   useGetDB,

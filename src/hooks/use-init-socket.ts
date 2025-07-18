@@ -1,11 +1,14 @@
 import { io } from 'socket.io-client'
 import useNotify from './use-notify'
+import type { Ref } from 'vue'
 
 const useInitSocket = (
   onJoined: Function,
   onOtherJoin: Function,
   onDisconnect: Function,
-  onRtc: Function
+  onRtc: Function,
+  isReconnect?: Ref<boolean>,
+  roomId?: string
 ) => {
   // @ts-ignore
   const socket = io.connect(import.meta.env.VITE_API_BASE_URL, {
@@ -23,11 +26,17 @@ const useInitSocket = (
 
   // 不断开 socket 连接，30 s 内没人进入再返回主页
   // 可以不对别人进行离开通知，因为在 oniceconnectionstatechange 中会通知
-  const onBye = () => {}
+  // const onBye = () => {}
 
   const onConnectError = () => {
     useNotify('连接服务器失败...', 'negative')
   }
+
+  socket.on('connect', () => {
+    if (isReconnect.value) {
+      socket.emit('join', roomId)
+    }
+  })
 
   // 自己成功加入房间
   socket.on('joined', onJoined)
@@ -37,8 +46,6 @@ const useInitSocket = (
   socket.on('full', onFull)
   // 自己离开房间
   socket.on('leaved', onLeaved)
-  // 其他人离开房间
-  socket.on('bye', onBye)
   // 连接失败
   socket.on('connect_error', onConnectError)
   // 连接断开

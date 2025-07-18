@@ -36,15 +36,17 @@
             v-for="({ label, icon, separator }, index) in menus"
             :key="index"
           >
-            <q-item clickable v-ripple>
-              <q-item-section avatar>
-                <q-icon :name="icon" />
-              </q-item-section>
-              <q-item-section>
-                {{ label }}
-              </q-item-section>
-            </q-item>
-            <q-separator :key="'sep' + index" v-if="separator" />
+            <div @click="onClick(label)">
+              <q-item clickable v-ripple>
+                <q-item-section avatar>
+                  <q-icon :name="icon" />
+                </q-item-section>
+                <q-item-section>
+                  {{ label }}
+                </q-item-section>
+              </q-item>
+              <q-separator :key="'sep' + index" v-if="separator" />
+            </div>
           </template>
         </q-list>
       </q-scroll-area>
@@ -63,9 +65,11 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useClearMessages } from './hooks'
 
 const route = useRoute()
+const router = useRouter()
 const isChat = ref(false)
 const drawer = ref(false)
 const mini = ref(true)
@@ -81,8 +85,28 @@ const menus = [
     icon: 'face',
     label: '修改头像',
     separator: false
+  },
+  {
+    icon: 'face',
+    label: '退出房间',
+    separator: false
+  },
+  {
+    icon: 'face',
+    label: '返回主页',
+    separator: false
   }
 ]
+
+const onClick = async label => {
+  if (label === '退出房间') {
+    await useClearMessages()
+    localStorage.removeItem('roomId')
+    // location.href = '/chat?type=match'
+  } else if (label === '返回主页') {
+    router.push('/')
+  }
+}
 
 watch(
   dark,

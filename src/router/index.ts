@@ -23,13 +23,14 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach(({ path }, _, next) => {
+router.beforeEach(({ path, query }, _, next) => {
   if (path === '/') {
-    window.location.href = '/docs.html'
+    location.href = '/docs.html'
     next(false)
-  } else {
-    next()
+    return
   }
+
+  next()
 })
 
 export default router

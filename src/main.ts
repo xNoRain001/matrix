@@ -1,5 +1,5 @@
 import { createApp } from 'vue'
-import { Quasar, Notify, Loading } from 'quasar'
+import { Quasar, Notify, Loading, Dialog } from 'quasar'
 import ui from '@nuxt/ui/vue-plugin'
 
 import '@quasar/extras/material-icons/material-icons.css'
@@ -11,7 +11,7 @@ import router from './router'
 const app = createApp(App)
 
 app
-  .use(Quasar, { plugins: { Notify, Loading } })
+  .use(Quasar, { plugins: { Notify, Loading, Dialog } })
   .use(ui)
   .use(router)
   .mount('#app')
