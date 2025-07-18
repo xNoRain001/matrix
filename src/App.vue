@@ -87,23 +87,14 @@ const menus = [
     separator: false
   },
   {
-    icon: 'face',
-    label: '退出房间',
-    separator: false
-  },
-  {
-    icon: 'face',
+    icon: 'home',
     label: '返回主页',
     separator: false
   }
 ]
 
 const onClick = async label => {
-  if (label === '退出房间') {
-    await useClearMessages()
-    localStorage.removeItem('roomId')
-    // location.href = '/chat?type=match'
-  } else if (label === '返回主页') {
+  if (label === '返回主页') {
     router.push('/')
   }
 }

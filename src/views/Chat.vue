@@ -20,15 +20,25 @@
       :class="leaved || otherLeaved ? '' : 'pb-[56px]'"
       class="min-h-[var(--content-height)] w-full max-w-[500px]"
     >
-      <!-- <q-chat-message label="Sunday, 19th" /> -->
-      <q-chat-message
-        v-for="(item, index) in messageList"
-        :avatar="avatar"
-        :key="index"
-        :text="item.content"
-        :sent="item.sent"
-      />
-      <!-- :stamp="timestamp" -->
+      <template
+        v-for="(
+          { type, timestamp, content, sent, stamp }, index
+        ) in messageList"
+      >
+        <q-chat-message
+          v-if="type === 'label'"
+          :label="formatTimestamp(timestamp)"
+        ></q-chat-message>
+        <q-chat-message
+          v-else
+          :avatar="avatar"
+          :key="index"
+          :text="content"
+          :sent="sent"
+          :stamp="stamp"
+        />
+      </template>
+
       <div
         v-if="!(leaved || otherLeaved) && !otherConnected"
         class="flex-center flex flex-col"
@@ -72,7 +82,14 @@
         <template v-slot:before>
           <q-btn @click="onLeave" round icon="logout" />
         </template>
+        <template v-slot:after>
+          <q-btn @click="onExpand" round icon="control_point" />
+        </template>
       </q-input>
+      <div
+        :class="expanded ? 'h-24' : 'h-0'"
+        class="transition-all duration-200"
+      ></div>
     </div>
   </q-page-sticky>
 </template>
@@ -96,6 +113,8 @@ import { useRoute, useRouter } from 'vue-router'
 import type { Socket } from 'socket.io-client'
 
 let timer = null
+let lastMsgTimer = null
+let lastMsgStampIndex = 0
 let makingOffer = false
 let polite = true
 let avatar = 'https://cdn.quasar.dev/img/avatar4.jpg'
@@ -112,6 +131,7 @@ let dataChannel: RTCDataChannel | null = null
 const receiving = '接收中...'
 // const received = '接收完成...'
 const message = ref('')
+const expanded = ref(false)
 // const receivedBuffer: ArrayBuffer[] = []
 const { query, path } = useRoute()
 const router = useRouter()
@@ -134,16 +154,57 @@ const otherConnected = ref(false)
 //   }[]
 // >([])
 const db = await useGetDB()
+const minute = 60 * 1000
+const fiveMins = 5 * minute
+const hour = 60 * minute
+const day = 24 * hour
+const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
+  // year: 'numeric',
+  // month: 'long',
+  // day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  weekday: 'long'
+}
+
+const onExpand = () => (expanded.value = !expanded.value)
+
+const formatTimestamp = (timestamp: number) => {
+  // TODO: 更久远的记录显示日期甚至年份
+  return new Date(timestamp).toLocaleString('zh-CN', dateTimeFormatOptions)
+}
+
+type message = {
+  roomId?: string
+  type: 'message' | 'label'
+  content?: string[]
+  sent?: boolean
+  timestamp: number
+  stamp?: string
+}
 
 // 添加聊天记录
-const addMessage = async message => db.add('messages', message)
+const addMessage = async (message: message) => db.add('messages', message)
 
 // 获取所有聊天记录
 const getMessages = async () => db.getAllFromIndex('messages', 'roomId', roomId)
 
-const messageList = ref<
-  { content: string[]; sent: boolean; timestamp: number }[]
->(roomId ? [...(await getMessages())] : [])
+const messageList = ref<message[]>(roomId ? [...(await getMessages())] : [])
+let lastMsgTimeStamp = messageList.value[0]?.timestamp || 0
+
+const addMessageLabel = (timestamp: number) => {
+  if (timestamp - lastMsgTimeStamp > fiveMins) {
+    addMessage({ roomId, type: 'label', timestamp })
+  }
+
+  lastMsgTimeStamp = timestamp
+}
+
+const removeLastMsgStamp = (stampMsg: message) => {
+  if (stampMsg.stamp) {
+    stampMsg.stamp = undefined
+  }
+}
 
 const onSendMsg = async () => {
   const _message = message.value
@@ -153,21 +214,26 @@ const onSendMsg = async () => {
   }
 
   const timestamp = Date.now()
-
+  const _messageList = messageList.value
+  const stampMsg = _messageList[lastMsgStampIndex]
+  const common: message = {
+    type: 'message',
+    content: [_message],
+    sent: true,
+    timestamp
+  }
   dataChannel.send(
     JSON.stringify({
       timestamp,
       message: _message
     })
   )
-  messageList.value.push({
-    content: [_message],
-    sent: true,
-    timestamp
-  })
-  addMessage({ roomId, content: [_message], sent: true, timestamp })
-  message.value = ''
+  _messageList.push(common)
+  addMessageLabel(timestamp)
+  addMessage({ roomId, ...common })
+  removeLastMsgStamp(stampMsg)
   scrollToBottom()
+  message.value = ''
 }
 
 const scrollToBottom = () => {
@@ -181,16 +247,22 @@ const scrollToBottom = () => {
   })
 }
 
-const onReceiveData = ({ channel }: { channel: RTCDataChannel }) => {
+const onReceiveMsg = ({ channel }: { channel: RTCDataChannel }) => {
   channel.onmessage = ({ data }: { data: string }) => {
     const { message, timestamp } = JSON.parse(data)
-    socket.emit('saved-file', roomId, null)
-    messageList.value.push({
+    // socket.emit('saved-file', roomId, null)
+    const _messageList = messageList.value
+    const stampMsg = _messageList[lastMsgStampIndex]
+    const common: message = {
+      type: 'message',
       content: [message],
       sent: false,
       timestamp
-    })
-    addMessage({ roomId, content: [message], sent: false, timestamp })
+    }
+    _messageList.push(common)
+    addMessageLabel(timestamp)
+    addMessage({ roomId, ...common })
+    removeLastMsgStamp(stampMsg)
     scrollToBottom()
   }
 }
@@ -203,12 +275,36 @@ const onFileMetadata = async (roomId: string, data: any) => {
 
 const initPC = () => {
   pc = useCreatePeerConnection(socket, roomId, otherConnected, () => {})
-  pc.ondatachannel = onReceiveData
+  pc.ondatachannel = onReceiveMsg
   dataChannel = useInitDataChannel(pc)
+}
+
+const formatTimeAgo = timestamp => {
+  const diff = Date.now() - timestamp
+
+  return diff < minute
+    ? '刚刚'
+    : diff < hour
+      ? `${Math.floor(diff / minute)} 分钟前`
+      : diff < day
+        ? `${Math.floor(diff / hour)} 小时前`
+        : `${Math.floor(diff / day)} 天前`
+}
+
+const updateLastMsgStamp = () => {
+  const _messageList = messageList.value
+  const { length } = _messageList
+
+  if (length) {
+    lastMsgStampIndex = length - 1
+    const lastMsg = _messageList[lastMsgStampIndex]
+    lastMsg.stamp = formatTimeAgo(lastMsg.timestamp)
+  }
 }
 
 // 当自己加入房间时触发
 const onJoined = async (_, __, _polite) => {
+  clearInterval(lastMsgTimer)
   polite = _polite
   connected.value = true
 
@@ -218,6 +314,10 @@ const onJoined = async (_, __, _polite) => {
   }
 
   scrollToBottom()
+  updateLastMsgStamp()
+  lastMsgTimer = setInterval(() => {
+    updateLastMsgStamp()
+  }, 2 * minute)
 }
 
 // 当其他人加入房间时触发
