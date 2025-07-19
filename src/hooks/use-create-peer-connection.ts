@@ -1,8 +1,6 @@
 import type { Ref } from 'vue'
 import type { Socket } from 'socket.io-client'
 
-import useNotify from './use-notify'
-
 let timer = null
 
 // @ts-ignore

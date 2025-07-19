@@ -23,7 +23,7 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach(({ path, query }, _, next) => {
+router.beforeEach(({ path }, _, next) => {
   if (path === '/') {
     location.href = '/docs.html'
     next(false)
