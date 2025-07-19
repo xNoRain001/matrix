@@ -25,8 +25,14 @@ import useGetDB from './use-get-db'
 import useClearMessages from './use-clear-messages'
 import useDeleteDB from './use-delete-db'
 import useDialog from './use-dialog'
+import useSaveRoomId from './use-save-room-id'
+import useGetRoomId from './use-get-room-id'
+import useClearRoomId from './use-clear-room-id'
 
 export {
+  useClearRoomId,
+  useSaveRoomId,
+  useGetRoomId,
   useDialog,
   useDeleteDB,
   useClearMessages,

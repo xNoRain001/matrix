@@ -1,6 +1,6 @@
 <template>
   <q-layout class="bg-[#010409]">
-    <q-header v-if="isChat" reveal class="border-b !border-b-[#3d444d]">
+    <q-header reveal class="border-b !border-b-[#3d444d]">
       <q-toolbar class="bg-[#010409]">
         <q-btn
           class="q-mr-sm"
@@ -9,7 +9,11 @@
           round
           dense
           icon="menu"
-        />
+        >
+          <q-tooltip class="!bg-[#0d1117]"
+            >{{ drawer ? '折叠' : '展开' }}菜单</q-tooltip
+          >
+        </q-btn>
         <q-avatar>
           <img src="/images/logo.svg" />
         </q-avatar>
@@ -18,7 +22,6 @@
     </q-header>
 
     <q-drawer
-      v-if="isChat"
       v-model="drawer"
       show-if-above
       mini-to-overlay
@@ -76,16 +79,16 @@ const mini = ref(true)
 const $q = useQuasar()
 const dark = ref(true)
 const menus = [
-  {
-    icon: 'person',
-    label: '修改昵称',
-    separator: false
-  },
-  {
-    icon: 'face',
-    label: '修改头像',
-    separator: false
-  },
+  // {
+  //   icon: 'person',
+  //   label: '修改昵称',
+  //   separator: false
+  // },
+  // {
+  //   icon: 'face',
+  //   label: '修改头像',
+  //   separator: false
+  // },
   {
     icon: 'home',
     label: '返回主页',
