@@ -21,7 +21,7 @@
 
     <div
       v-if="joined"
-      :class="leaved ? '' : 'pb-[56px]'"
+      :class="leaved ? '' : expanded ? 'pb-[calc(56px+13.25rem)]' : 'pb-[56px]'"
       class="relative min-h-[var(--content-height)] w-full max-w-[500px]"
     >
       <template
@@ -34,7 +34,17 @@
           :label="formatTimestamp(timestamp)"
         ></q-chat-message>
         <q-chat-message
-          v-else
+          v-if="type === 'image'"
+          :avatar="avatar"
+          :key="index"
+          :text="content"
+          :sent="sent"
+          :stamp="stamp"
+        >
+          <img :src="content[0]" />
+        </q-chat-message>
+        <q-chat-message
+          v-if="type === 'message'"
           :avatar="avatar"
           :key="index"
           :text="content"
@@ -44,7 +54,7 @@
       </template>
 
       <div v-if="!leaved && !otherConnected" class="flex-center flex">
-        <q-badge class="mr-2" rounded color="red" />对方未在线...
+        <q-badge class="my-4" rounded color="red" />对方未在线...
       </div>
 
       <div
@@ -75,7 +85,7 @@
 
   <q-page-sticky v-if="joined && !leaved" expand position="bottom">
     <div
-      class="w-full max-w-[calc(500px+2rem)] rounded-t-md py-4 backdrop-blur-md"
+      class="w-full max-w-[calc(500px+2rem)] rounded-t-md border-t border-t-[#0d1117] py-4 backdrop-blur-md"
     >
       <q-input
         @keydown.enter="onSendMsg"
@@ -92,17 +102,39 @@
           </q-btn>
         </template>
         <template v-slot:after>
+          <!-- :disable="!otherConnected" -->
           <q-btn @click="onExpand" round icon="control_point">
             <q-tooltip class="!bg-[#0d1117]">选项</q-tooltip>
           </q-btn>
         </template>
       </q-input>
       <div
-        :class="expanded ? 'h-24' : 'h-0'"
+        :class="expanded ? 'h-53' : 'h-0'"
         class="transition-all duration-200"
-      ></div>
+      >
+        <div class="grid grid-cols-4 gap-y-4 p-4">
+          <div class="flex-center flex flex-col">
+            <q-btn
+              @click="onSelectPhotos"
+              round
+              size="lg"
+              icon="photo_size_select_actual"
+            ></q-btn>
+            <div>照片</div>
+          </div>
+        </div>
+      </div>
     </div>
   </q-page-sticky>
+
+  <input
+    ref="photoInputRef"
+    @change="onPhotoInputChange"
+    type="file"
+    hidden
+    multiple
+    accept="image/*"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -182,6 +214,30 @@ const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
   minute: '2-digit',
   weekday: 'long'
 }
+const photoInputRef = ref<HTMLInputElement | null>(null)
+
+const imageToBase64 = file => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = error => reject(error)
+  })
+}
+
+const onPhotoInputChange = async () => {
+  const photoInput = photoInputRef.value
+  const { files } = photoInput
+
+  for (let i = 0, l = files.length; i < l; i++) {
+    const data = (await imageToBase64(files[i])) as string
+    onSendImage(data)
+  }
+
+  photoInput.value = ''
+}
+
+const onSelectPhotos = () => photoInputRef.value.click()
 
 const onExpand = () => (expanded.value = !expanded.value)
 
@@ -192,7 +248,7 @@ const formatTimestamp = (timestamp: number) => {
 
 type message = {
   roomId?: string
-  type: 'message' | 'label'
+  type: 'message' | 'label' | 'image'
   content?: string[]
   sent?: boolean
   timestamp: number
@@ -207,6 +263,7 @@ const getMessages = async () => db.getAllFromIndex('messages', 'roomId', roomId)
 
 const messageList = ref<message[]>(roomId ? [...(await getMessages())] : [])
 let lastMsgTimeStamp = messageList.value[0]?.timestamp || 0
+console.log(messageList.value)
 
 const addMessageLabel = (timestamp: number) => {
   if (timestamp - lastMsgTimeStamp > fiveMins) {
@@ -223,26 +280,34 @@ const removeLastMsgStamp = (stampMsg: message) => {
   }
 }
 
-const onSendMsg = async () => {
+const onSendImage = (data: string) => onSendData('image', data)
+
+const onSendMsg = () => {
   const _message = message.value
 
   if (!_message) {
     return
   }
 
+  onSendData('message', _message)
+  message.value = ''
+}
+
+const onSendData = (type: 'message' | 'image' | 'label', data: string) => {
   const timestamp = Date.now()
   const _messageList = messageList.value
   const stampMsg = _messageList[lastMsgStampIndex]
   const common: message = {
-    type: 'message',
-    content: [_message],
+    type,
+    content: [data],
     sent: true,
     timestamp
   }
   dataChannel.send(
     JSON.stringify({
+      type,
       timestamp,
-      message: _message
+      message: data
     })
   )
   _messageList.push(common)
@@ -250,7 +315,6 @@ const onSendMsg = async () => {
   addMessage({ roomId, ...common })
   removeLastMsgStamp(stampMsg)
   scrollToBottom()
-  message.value = ''
 }
 
 const scrollToBottom = () => {
@@ -266,12 +330,12 @@ const scrollToBottom = () => {
 
 const onReceiveMsg = ({ channel }: { channel: RTCDataChannel }) => {
   channel.onmessage = ({ data }: { data: string }) => {
-    const { message, timestamp } = JSON.parse(data)
+    const { type, message, timestamp } = JSON.parse(data)
     // socket.emit('saved-file', roomId, null)
     const _messageList = messageList.value
     const stampMsg = _messageList[lastMsgStampIndex]
     const common: message = {
-      type: 'message',
+      type,
       content: [message],
       sent: false,
       timestamp
