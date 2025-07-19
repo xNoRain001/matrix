@@ -43,24 +43,30 @@
         />
       </template>
 
-      <div v-if="!leaved && !otherConnected" class="flex-center flex flex-col">
-        <div>对方未在线...</div>
+      <div v-if="!leaved && !otherConnected" class="flex-center flex">
+        <q-badge class="mr-2" rounded color="red" />对方未在线...
       </div>
 
       <div
         v-if="leaved"
         class="flex-center absolute bottom-0 flex w-full flex-col"
       >
-        <div>{{ otherLeaved ? '对方' : '你' }}已离开房间...</div>
+        <div class="flex items-center">
+          <q-badge class="mr-2" rounded color="red" />{{
+            otherLeaved ? '对方' : '你'
+          }}已离开房间...
+        </div>
         <q-btn
           class="full-width !mt-4"
           color="primary"
           :label="
-            remoteroomId.startsWith('chat-') ? '重新进入房间' : '重新匹配'
+            remoteroomId.startsWith('audio-chat-') ? '重新进入房间' : '重新匹配'
           "
           rounded
           @click="
-            remoteroomId.startsWith('chat-') ? onBackRoomPIN() : onRematch()
+            remoteroomId.startsWith('audio-chat-')
+              ? onBackRoomPIN()
+              : onRematch()
           "
         ></q-btn>
       </div>

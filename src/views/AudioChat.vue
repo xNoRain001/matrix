@@ -23,12 +23,11 @@
       v-if="joined"
       class="relative h-[var(--content-height)] w-full max-w-[500px]"
     >
-      <div class="flex-center flex h-full flex-col">
-        <div v-if="!leaved" class="text-base">
+      <div v-if="!leaved" class="flex-center flex h-full flex-col">
+        <div class="text-base">
           {{ otherConnected ? '通话中...' : '等待对方接通...' }}
         </div>
         <div
-          v-if="!leaved"
           :class="
             hasMic && hasSpeaker
               ? 'grid-cols-1'
@@ -127,11 +126,12 @@
           </div>
         </div>
       </div>
-      <div
-        v-if="leaved"
-        class="flex-center absolute bottom-0 flex w-full flex-col"
-      >
-        <div>{{ otherLeaved ? '对方' : '你' }}已离开房间...</div>
+      <div v-else class="flex-center absolute bottom-0 flex w-full flex-col">
+        <div class="flex items-center">
+          <q-badge class="mr-2" rounded color="red" />{{
+            otherLeaved ? '对方' : '你'
+          }}已离开房间...
+        </div>
         <q-btn
           class="full-width !mt-4"
           color="primary"

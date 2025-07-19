@@ -8,8 +8,8 @@ const router = createRouter({
       component: () => import('@/views/AudioChat.vue')
     },
     {
-      path: '/file',
-      component: () => import('@/views/File.vue')
+      path: '/file-transfer',
+      component: () => import('@/views/FileTransfer.vue')
     },
     {
       path: '/chat',
