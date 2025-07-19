@@ -1,7 +1,7 @@
 <template>
   <div class="flex-center flex">
     <div
-      v-if="!(remoteroomId || isMatch)"
+      v-if="!(roomId || remoteroomId || isMatch)"
       class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-end"
     >
       <UPinInput size="xl" :length="pinLength" v-model="pin" />
