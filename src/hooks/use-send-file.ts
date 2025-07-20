@@ -1,12 +1,6 @@
-import type { Ref, Reactive } from 'vue'
+import type { Ref } from 'vue'
 import type { Socket } from 'socket.io-client'
-
-type fileStatus = Reactive<{
-  // speed:string,
-  status: '等待中...' | '传送中...' | '传送完成...'
-  progress: string
-  time: string
-}>
+import type { fileTypes, sendFileStatus, extendedFile } from '@/types'
 
 let timer = null
 let offset = 0
@@ -17,14 +11,14 @@ const useSendFile = async (
   socket: Socket,
   dataChannel: RTCDataChannel,
   roomId: string,
-  file: File & { fileStatus: fileStatus },
+  file: extendedFile,
   flag: Ref<boolean>,
   sendingLabel: '传送中...',
   sentLabel: '传送完成...',
-  messageType?: 'image' | 'video' | 'file'
+  messageType?: fileTypes
 ) => {
   sendStartTime = Date.now()
-  const { fileStatus }: { fileStatus: fileStatus } = file
+  const { fileStatus }: { fileStatus: sendFileStatus } = file
   fileStatus.status = sendingLabel
   const { name, size, type } = file
 
@@ -70,12 +64,16 @@ const useSendFile = async (
     // const time = Date.now() - lastSendTime
     // lastSendTime = Date.now()
     // fileStatus.speed = `${(chunkSize / 1024 / (time / 1000)).toFixed(2)} MB/s`
-    fileStatus.progress = `${((offset / size) * 100).toFixed(2)} %`
+    const v = Number(((offset / size) * 100).toFixed(0))
+    fileStatus.progress = v
+    fileStatus.formatedProgress = `${v} %`
   }
 
   fileStatus.status = sentLabel
   // fileStatus.speed = ''
-  fileStatus.progress = ''
+  fileStatus.progress = 0
+  fileStatus.formatedProgress = '0 %'
+
   offset = 0
   fileStatus.time = ((Date.now() - sendStartTime) / 1000).toFixed(2) + ' s'
   await new Promise(resolve => {

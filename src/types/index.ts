@@ -1,4 +1,4 @@
-import type { Ref } from 'vue'
+import type { Ref, Reactive } from 'vue'
 
 export type receivedFiles = Ref<
   {
@@ -11,6 +11,22 @@ export type receivedFiles = Ref<
     status: '接收中...' | '接收完成...'
     blob: Blob
     time: string
-    messageType?: 'image' | 'video' | 'file'
+    messageType?: fileTypes
   }[]
 >
+
+export type fileTypes = 'image' | 'video' | 'file' | 'audio'
+
+export type sendStatus = '等待中...' | '传送中...' | '传送完成...'
+
+export type sendFileStatus = Reactive<{
+  // speed:string,
+  status: sendStatus
+  progress: number
+  formatedProgress: string
+  time: string
+}>
+
+export type extendedFile = File & { fileStatus: sendFileStatus }
+
+export type extendedFiles = extendedFile[]

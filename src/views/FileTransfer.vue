@@ -101,27 +101,26 @@
                     状态:
                     <q-badge
                       :color="
-                        (file.fileStatus as fileStatus).status === sent
-                          ? 'green'
-                          : 'blue'
+                        file.fileStatus.status === sent ? 'green' : 'blue'
                       "
-                      >{{ (file.fileStatus as fileStatus).status }}</q-badge
+                      >{{ file.fileStatus.status }}</q-badge
                     >
                   </q-item-label>
                   <q-item-label
-                    v-if="(file.fileStatus as fileStatus).status === sending"
+                    v-if="file.fileStatus.status === sending"
                     caption
                   >
-                    进度: {{ (file.fileStatus as fileStatus).progress }}
+                    进度:
+                    {{ file.fileStatus.formatedProgress }}
                   </q-item-label>
                   <!-- <q-item-label
-                  v-if="(file.fileStatus as fileStatus).status === receiving"
+                  v-if="(file.fileStatus).status === receiving"
                   caption
                 >
-                  速度: {{ (file.fileStatus as fileStatus).speed }}
+                  速度: {{ (file.fileStatus).speed }}
                 </q-item-label> -->
                   <q-item-label caption>
-                    用时: {{ (file.fileStatus as fileStatus).time }}
+                    用时: {{ file.fileStatus.time }}
                   </q-item-label>
                 </q-item-section>
 
@@ -204,7 +203,7 @@
                     dense
                     round
                     icon="cloud_download"
-                    @click="onDownload(name, blob)"
+                    @click="exportFile(name, blob)"
                   />
                 </q-item-section>
               </q-item>
@@ -257,11 +256,12 @@ import {
   useStartRTC
 } from '@/hooks'
 import { exportFile } from 'quasar'
-import { onMounted, ref, watch, type Reactive } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { received, receiving, sending, sent } from '@/const'
 
 import type { Socket } from 'socket.io-client'
+import type { receivedFiles } from '@/types'
 
 let timer = null
 let makingOffer = false
@@ -269,43 +269,12 @@ let polite = true
 let pc: RTCPeerConnection | null = null
 let socket: Socket | null = null
 let dataChannel: RTCDataChannel | null = null
-// let lastSendTime = Number.MAX_SAFE_INTEGER
-// let lastReceiveTime = Number.MAX_SAFE_INTEGER
-// 对方是否收到了文件元信息的标识
 const receiveStartTime = ref(0)
+// 对方是否收到了文件元信息的标识
 const flag = ref(false)
 const inSending = ref(false)
 const inReceving = ref(false)
-const receivedFiles = ref<
-  {
-    name: string
-    size: number
-    type: string
-    formatSize: string
-    // speed: string
-    progress: string
-    status: '接收中...' | '接收完成...'
-    blob: Blob
-    time: string
-  }[]
->([
-  // {
-  //   name: '1',
-  //   size: 123,
-  //   formatSize: '1 MB',
-  //   speed: '1 MB/s',
-  //   progress: '10 %',
-  //   status: receiving
-  // },
-  // {
-  //   name: '2',
-  //   size: 123,
-  //   formatSize: '1 MB',
-  //   speed: '1 MB/s',
-  //   progress: '10 %',
-  //   status: receiving
-  // }
-])
+const receivedFiles: receivedFiles = ref([])
 const pinLength = 4
 const pin = ref([])
 const otherConnected = ref(false)
@@ -324,15 +293,6 @@ const onClearReceivedFiles = () => {
 }
 
 const onDownloadAll = () => {}
-
-const onDownload = (name: string, blob: Blob) => exportFile(name, blob)
-
-type fileStatus = Reactive<{
-  // speed:string,
-  status: '等待中...' | '传送中...' | '传送完成...'
-  progress: string
-  time: string
-}>
 
 const onAdded = files => useExtendFileStatus(files)
 

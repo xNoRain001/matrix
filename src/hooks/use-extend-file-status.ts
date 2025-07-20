@@ -2,12 +2,15 @@ import { reactive } from 'vue'
 
 import { pending } from '@/const'
 
-const useExtendFileStatus = (files: FileList) => {
+import type { extendedFiles } from '@/types'
+
+const useExtendFileStatus = (files: extendedFiles) => {
   for (let i = 0, l = files.length; i < l; i++) {
-    ;(files[i] as any).fileStatus = reactive({
+    files[i].fileStatus = reactive({
       // speed: '0 Mb/s',
       status: pending,
-      progress: '0 %',
+      progress: 0,
+      formatedProgress: '0 %',
       time: '0 s'
     })
   }

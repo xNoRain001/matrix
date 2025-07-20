@@ -26,7 +26,7 @@
     >
       <template
         v-for="(
-          { type, timestamp, content, sent, stamp }, index
+          { type, timestamp, content, sent, stamp, showProgress }, index
         ) in messageList"
       >
         <q-chat-message
@@ -56,6 +56,17 @@
           <video :src="content[0]" controls></video>
         </q-chat-message>
         <q-chat-message
+          v-if="type === 'audio'"
+          :avatar="avatar"
+          :key="index"
+          :text="content"
+          :sent="sent"
+          :stamp="stamp"
+          bg-color="green"
+        >
+          <audio :src="content[0]" controls></audio>
+        </q-chat-message>
+        <q-chat-message
           v-if="type === 'file'"
           :avatar="avatar"
           :key="index"
@@ -77,12 +88,24 @@
               >
             </q-item-section>
             <q-item-section top side>
+              <!-- 关闭进度条的行为在修改 status 为传送完成之后 -->
               <q-btn
+                v-if="
+                  showProgress && sendFiles[0].fileStatus.status === sending
+                "
+                color="white"
+                dense
+                round
+                flat
+                :label="sendFiles[0].fileStatus.formatedProgress"
+              />
+              <q-btn
+                v-else
                 dense
                 round
                 flat
                 icon="cloud_download"
-                @click="onDownload(content[0], content[1], content[3])"
+                @click="onDownload(content[0], content[1])"
               />
             </q-item-section>
           </q-item>
@@ -181,9 +204,18 @@
               @click="onOpenFileSelector(fileInputRef)"
               round
               size="lg"
-              icon="duo"
+              icon="folder"
             ></q-btn>
             <div>文件</div>
+          </div>
+          <div class="flex-center flex flex-col">
+            <q-btn
+              @click="onOpenFileSelector(musicInputRef)"
+              round
+              size="lg"
+              icon="music_note"
+            ></q-btn>
+            <div>音乐</div>
           </div>
         </div>
       </div>
@@ -213,6 +245,14 @@
     hidden
     multiple
   />
+  <input
+    ref="musicInputRef"
+    @change="onMusicInputChange"
+    type="file"
+    hidden
+    multiple
+    accept="audio/*"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -239,7 +279,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { received, receiving, sending, sent } from '@/const'
 
 import type { Socket } from 'socket.io-client'
-import type { receivedFiles } from '@/types'
+import type { extendedFiles, fileTypes, receivedFiles } from '@/types'
 import { exportFile } from 'quasar'
 
 let timer = null
@@ -251,13 +291,10 @@ let avatar = 'https://cdn.quasar.dev/img/avatar4.jpg'
 let pc: RTCPeerConnection | null = null
 let socket: Socket | null = null
 let dataChannel: RTCDataChannel | null = null
-// let lastSendTime = Number.MAX_SAFE_INTEGER
-// let lastReceiveTime = Number.MAX_SAFE_INTEGER
 // 对方是否收到了文件元信息的标识
 const flag = ref(false)
 const message = ref('')
 const expanded = ref(false)
-// const receivedBuffer: ArrayBuffer[] = []
 const { query, path } = useRoute()
 const router = useRouter()
 const isReconnect = ref(false)
@@ -272,14 +309,6 @@ const pinLength = 4
 const pin = ref([])
 const joined = ref(false)
 const otherConnected = ref(false)
-// 控制传送时的相关信息
-// const sendStatus = reactive<
-//   {
-//     // speed:string,
-//     status: '等待中...' | '传送中...' | '传送完成...'
-//     progress: string
-//   }[]
-// >([])
 const db = await useGetDB()
 const minute = 60 * 1000
 const fiveMins = 5 * minute
@@ -296,26 +325,42 @@ const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
 const photoInputRef = ref<HTMLInputElement | null>(null)
 const videoInputRef = ref<HTMLInputElement | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
+const musicInputRef = ref<HTMLInputElement | null>(null)
 const inSending = ref(false)
 const inReceving = ref(false)
+
 const receivedFiles: receivedFiles = ref([])
+const sendFiles = ref<extendedFiles>([])
 const receiveStartTime = ref(0)
 
-const onDownload = (url, filename, type) => {
+const onDownload = (url, filename) => {
   fetch(url)
     .then(res => res.blob())
-    .then(blob => exportFile(filename, blob, { mimeType: type }))
+    .then(blob => exportFile(filename, blob))
 }
 
 const onOpenFileSelector = target => target.click()
 
-const sendFile = async (files: FileList, type: 'image' | 'video' | 'file') => {
+const sendFile = async (files: extendedFiles, type: fileTypes) => {
   useExtendFileStatus(files)
   inSending.value = true
   for (let i = 0, l = files.length; i < l; i++) {
     const file = files[i]
     const { name, size, type: fileType } = file
     const timestamp = Date.now()
+    const messageRecord: dbMessage = {
+      type,
+      content: [file, name, size, fileType],
+      sent: true,
+      timestamp
+    }
+    // 直接保存 File，取出时再转化成 Blob URL
+    await addMessagesToDB(messageRecord)
+    addMessageToView(messageRecord)
+    const t = messageList.value
+    const msg = t[t.length - 1]
+    msg.showProgress = true
+    sendFiles.value.push(file)
     await useSendFile(
       pc,
       socket,
@@ -327,37 +372,37 @@ const sendFile = async (files: FileList, type: 'image' | 'video' | 'file') => {
       sent,
       type
     )
-    const messageRecord: dbMessage = {
-      type,
-      content: [file, name, size, fileType],
-      sent: true,
-      timestamp
-    }
-    // 直接保存 File，取出时再转化成 Blob URL
-    saveMessage(messageRecord)
-    updateLocalMessage(messageRecord)
+    msg.showProgress = false
+    sendFiles.value.pop()
   }
   inSending.value = false
+}
+
+const onMusicInputChange = async () => {
+  const musicInput = musicInputRef.value
+  const { files } = musicInput
+  sendFile(files as unknown as extendedFiles, 'audio')
+  musicInput.value = ''
 }
 
 const onFileInputChange = async () => {
   const fileInput = fileInputRef.value
   const { files } = fileInput
-  sendFile(files, 'file')
+  sendFile(files as unknown as extendedFiles, 'file')
   fileInput.value = ''
 }
 
 const onVideoInputChange = async () => {
   const videoInpu = videoInputRef.value
   const { files } = videoInpu
-  sendFile(files, 'video')
+  sendFile(files as unknown as extendedFiles, 'video')
   videoInpu.value = ''
 }
 
 const onPhotoInputChange = async () => {
   const photoInput = photoInputRef.value
   const { files } = photoInput
-  sendFile(files, 'image')
+  sendFile(files as unknown as extendedFiles, 'image')
   photoInput.value = ''
 }
 
@@ -370,13 +415,14 @@ const formatTimestamp = (timestamp: number) => {
 
 type commonMessage = {
   roomId?: string
-  type: 'message' | 'label' | 'image' | 'video' | 'file'
+  type: 'message' | 'label' | fileTypes
   sent?: boolean
   timestamp: number
   stamp?: string
 }
 
 type message = commonMessage & {
+  showProgress?: boolean // 控制是否显示发送文件时的进度
   content?:
     | [string]
     | [string, string, number, string] // url 文件名 大小 文件类型
@@ -391,13 +437,19 @@ type dbMessage = commonMessage & {
 }
 
 // 添加聊天记录
-const addMessage = async (message: dbMessage) => db.add('messages', message)
+const addMessageToDB = async (message: dbMessage) =>
+  await db.add('messages', message)
 
 // 获取所有聊天记录
 const getMessages = async () => {
   const data = await db.getAllFromIndex('messages', 'roomId', roomId)
   data.forEach(({ type, content }) => {
-    if (type === 'image' || type === 'video' || type === 'file') {
+    if (
+      type === 'image' ||
+      type === 'video' ||
+      type === 'file' ||
+      type === 'audio'
+    ) {
       content[0] = URL.createObjectURL(content[0])
     }
   })
@@ -405,14 +457,17 @@ const getMessages = async () => {
 }
 
 const messageList = ref<message[]>(roomId ? [...(await getMessages())] : [])
-let lastMsgTimeStamp = messageList.value[0]?.timestamp || 0
+const t = messageList.value
+let lastMsgTimeStamp = t[t.length - 1]?.timestamp || 0
 
-const addMessageLabel = (timestamp: number) => {
-  if (timestamp - lastMsgTimeStamp > fiveMins) {
-    addMessage({ roomId, type: 'label', timestamp })
+const overFiveMins = timestamp => timestamp - lastMsgTimeStamp > fiveMins
+
+const addMessageLabelToDB = async (timestamp: number) => {
+  if (overFiveMins(timestamp)) {
+    await addMessageToDB({ roomId, type: 'label', timestamp })
   }
 
-  lastMsgTimeStamp = timestamp
+  // 不在这里更新 lastMsgTimeStamp，因为此时视图中还没添加 message label
 }
 
 const removeLastMsgStamp = (stampMsg: message) => {
@@ -422,7 +477,7 @@ const removeLastMsgStamp = (stampMsg: message) => {
   }
 }
 
-const onSendMsg = () => {
+const onSendMsg = async () => {
   const _message = message.value
 
   if (!_message) {
@@ -444,12 +499,27 @@ const onSendMsg = () => {
       message: _message
     })
   )
-  saveMessage(messageRecord)
-  updateLocalMessage(messageRecord)
+  await addMessagesToDB(messageRecord)
+  addMessagesToView(messageRecord)
   message.value = ''
 }
 
-const updateLocalMessage = (messageRecord: dbMessage) => {
+const addMessagesToView = (messageRecord: dbMessage) => {
+  addMessageLabelToView(messageRecord)
+  addMessageToView(messageRecord)
+}
+
+const addMessageLabelToView = (messageRecord: dbMessage) => {
+  const { timestamp } = messageRecord
+
+  if (overFiveMins(timestamp)) {
+    messageList.value.push({ roomId, type: 'label', timestamp })
+  }
+
+  lastMsgTimeStamp = timestamp
+}
+
+const addMessageToView = (messageRecord: dbMessage) => {
   const _messageList = messageList.value
   const stampMsg = _messageList[lastMsgStampIndex]
   const { type } = messageRecord
@@ -465,9 +535,9 @@ const updateLocalMessage = (messageRecord: dbMessage) => {
   scrollToBottom()
 }
 
-const saveMessage = (messageRecord: dbMessage) => {
-  addMessageLabel(messageRecord.timestamp)
-  addMessage({ roomId, ...messageRecord })
+const addMessagesToDB = async (messageRecord: dbMessage) => {
+  await addMessageLabelToDB(messageRecord.timestamp)
+  await addMessageToDB({ roomId, ...messageRecord })
 }
 
 const scrollToBottom = () => {
@@ -482,7 +552,7 @@ const scrollToBottom = () => {
 }
 
 const onReceiveMsg = ({ channel }: { channel: RTCDataChannel }) => {
-  channel.onmessage = ({ data }: { data: string | ArrayBuffer }) => {
+  channel.onmessage = async ({ data }: { data: string | ArrayBuffer }) => {
     let messageRecord = null
 
     if (Object.prototype.toString.call(data) === '[object ArrayBuffer]') {
@@ -516,9 +586,9 @@ const onReceiveMsg = ({ channel }: { channel: RTCDataChannel }) => {
         timestamp
       }
     }
-
-    saveMessage(messageRecord)
-    updateLocalMessage(messageRecord)
+    // 本地记录中会将 blob 转为 url，因为必须先保存记录进数据库
+    await addMessagesToDB(messageRecord)
+    addMessagesToView(messageRecord)
   }
 }
 
@@ -682,6 +752,7 @@ const exitRoom = async () => {
   // 重新匹配时删除聊天记录
   await useClearMessages(roomId)
   useClearRoomId()
+  messageList.value = []
   remoteroomId.value = roomId = ''
   leaved.value = joined.value = false
 }
