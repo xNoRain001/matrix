@@ -245,6 +245,7 @@ import {
   useClosePC,
   useCreatePeerConnection,
   useDialog,
+  useExtendFileStatus,
   useGetRoomId,
   useInitDataChannel,
   useInitRtc,
@@ -256,9 +257,9 @@ import {
   useStartRTC
 } from '@/hooks'
 import { exportFile } from 'quasar'
-import { onMounted, reactive, ref, watch, type Reactive } from 'vue'
+import { onMounted, ref, watch, type Reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { pending, received, receiving, sending, sent } from '@/const'
+import { received, receiving, sending, sent } from '@/const'
 
 import type { Socket } from 'socket.io-client'
 
@@ -333,16 +334,7 @@ type fileStatus = Reactive<{
   time: string
 }>
 
-const onAdded = files => {
-  for (let i = 0, l = files.length; i < l; i++) {
-    files[i].fileStatus = reactive({
-      // speed: '0 Mb/s',
-      status: pending,
-      progress: '0 %',
-      time: '0 s'
-    })
-  }
-}
+const onAdded = files => useExtendFileStatus(files)
 
 const onSendFiles = async files => {
   inSending.value = true

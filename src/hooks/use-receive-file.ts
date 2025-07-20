@@ -19,7 +19,7 @@ const useReceiveFile = (
   // 当前接收的文件
   const _receivedFiles = receivedFiles.value
   const receivedFile = _receivedFiles[_receivedFiles.length - 1]
-  const { size, type } = receivedFile
+  const { name, size, type, messageType } = receivedFile
   receivedBuffer.push(data)
   receivedSize += byteLength
   // const time = Date.now() - lastReceiveTime
@@ -43,8 +43,11 @@ const useReceiveFile = (
 
     return {
       blob,
+      name,
+      size,
+      type,
       timestamp,
-      messageType: receivedFile.messageType
+      messageType
     }
   }
 }

@@ -40,8 +40,52 @@
           :text="content"
           :sent="sent"
           :stamp="stamp"
+          bg-color="green"
         >
           <img :src="content[0]" />
+        </q-chat-message>
+        <q-chat-message
+          v-if="type === 'video'"
+          :avatar="avatar"
+          :key="index"
+          :text="content"
+          :sent="sent"
+          :stamp="stamp"
+          bg-color="green"
+        >
+          <video :src="content[0]" controls></video>
+        </q-chat-message>
+        <q-chat-message
+          v-if="type === 'file'"
+          :avatar="avatar"
+          :key="index"
+          :text="content"
+          :sent="sent"
+          :stamp="stamp"
+          bg-color="green"
+        >
+          <q-item>
+            <q-item-section>
+              <q-item-label class="full-width ellipsis">
+                {{ content[1] }}
+              </q-item-label>
+              <q-item-label caption
+                >大小：{{
+                  (content[2] / 1024 / 1024).toFixed(2)
+                }}
+                MB</q-item-label
+              >
+            </q-item-section>
+            <q-item-section top side>
+              <q-btn
+                dense
+                round
+                flat
+                icon="cloud_download"
+                @click="onDownload(content[0], content[1], content[3])"
+              />
+            </q-item-section>
+          </q-item>
         </q-chat-message>
         <q-chat-message
           v-if="type === 'message'"
@@ -50,6 +94,7 @@
           :text="content"
           :sent="sent"
           :stamp="stamp"
+          bg-color="green"
         />
       </template>
 
@@ -115,7 +160,7 @@
         <div class="grid grid-cols-4 gap-y-4 p-4">
           <div class="flex-center flex flex-col">
             <q-btn
-              @click="onSelectPhotos"
+              @click="onOpenFileSelector(photoInputRef)"
               round
               size="lg"
               icon="photo_size_select_actual"
@@ -123,8 +168,22 @@
             <div>照片</div>
           </div>
           <div class="flex-center flex flex-col">
-            <q-btn @click="onSelectVideos" round size="lg" icon="duo"></q-btn>
+            <q-btn
+              @click="onOpenFileSelector(videoInputRef)"
+              round
+              size="lg"
+              icon="duo"
+            ></q-btn>
             <div>视频</div>
+          </div>
+          <div class="flex-center flex flex-col">
+            <q-btn
+              @click="onOpenFileSelector(fileInputRef)"
+              round
+              size="lg"
+              icon="duo"
+            ></q-btn>
+            <div>文件</div>
           </div>
         </div>
       </div>
@@ -139,6 +198,21 @@
     multiple
     accept="image/*"
   />
+  <input
+    ref="videoInputRef"
+    @change="onVideoInputChange"
+    type="file"
+    hidden
+    multiple
+    accept="video/*"
+  />
+  <input
+    ref="fileInputRef"
+    @change="onFileInputChange"
+    type="file"
+    hidden
+    multiple
+  />
 </template>
 
 <script lang="ts" setup>
@@ -148,6 +222,7 @@ import {
   useClosePC,
   useCreatePeerConnection,
   useDialog,
+  useExtendFileStatus,
   useGetDB,
   useGetRoomId,
   useInitDataChannel,
@@ -159,12 +234,13 @@ import {
   useSendFile,
   useStartRTC
 } from '@/hooks'
-import { onMounted, reactive, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { pending, received, receiving, sending, sent } from '@/const'
+import { received, receiving, sending, sent } from '@/const'
 
 import type { Socket } from 'socket.io-client'
 import type { receivedFiles } from '@/types'
+import { exportFile } from 'quasar'
 
 let timer = null
 let lastMsgTimer = null
@@ -218,29 +294,27 @@ const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
   weekday: 'long'
 }
 const photoInputRef = ref<HTMLInputElement | null>(null)
+const videoInputRef = ref<HTMLInputElement | null>(null)
+const fileInputRef = ref<HTMLInputElement | null>(null)
 const inSending = ref(false)
 const inReceving = ref(false)
 const receivedFiles: receivedFiles = ref([])
 const receiveStartTime = ref(0)
 
-const onSelectVideos = () => {}
+const onDownload = (url, filename, type) => {
+  fetch(url)
+    .then(res => res.blob())
+    .then(blob => exportFile(filename, blob, { mimeType: type }))
+}
 
-const onPhotoInputChange = async () => {
-  const photoInput = photoInputRef.value
-  const { files } = photoInput
+const onOpenFileSelector = target => target.click()
 
-  for (let i = 0, l = files.length; i < l; i++) {
-    ;(files[i] as any).fileStatus = reactive({
-      // speed: '0 Mb/s',
-      status: pending,
-      progress: '0 %',
-      time: '0 s'
-    })
-  }
-
+const sendFile = async (files: FileList, type: 'image' | 'video' | 'file') => {
+  useExtendFileStatus(files)
   inSending.value = true
   for (let i = 0, l = files.length; i < l; i++) {
     const file = files[i]
+    const { name, size, type: fileType } = file
     const timestamp = Date.now()
     await useSendFile(
       pc,
@@ -250,12 +324,12 @@ const onPhotoInputChange = async () => {
       file as any,
       flag,
       sending,
-      sent
+      sent,
+      type
     )
-    const type: 'image' = 'image'
     const messageRecord: dbMessage = {
       type,
-      content: [file],
+      content: [file, name, size, fileType],
       sent: true,
       timestamp
     }
@@ -264,10 +338,28 @@ const onPhotoInputChange = async () => {
     updateLocalMessage(messageRecord)
   }
   inSending.value = false
-  photoInput.value = ''
 }
 
-const onSelectPhotos = () => photoInputRef.value.click()
+const onFileInputChange = async () => {
+  const fileInput = fileInputRef.value
+  const { files } = fileInput
+  sendFile(files, 'file')
+  fileInput.value = ''
+}
+
+const onVideoInputChange = async () => {
+  const videoInpu = videoInputRef.value
+  const { files } = videoInpu
+  sendFile(files, 'video')
+  videoInpu.value = ''
+}
+
+const onPhotoInputChange = async () => {
+  const photoInput = photoInputRef.value
+  const { files } = photoInput
+  sendFile(files, 'image')
+  photoInput.value = ''
+}
 
 const onExpand = () => (expanded.value = !expanded.value)
 
@@ -285,11 +377,17 @@ type commonMessage = {
 }
 
 type message = commonMessage & {
-  content?: string[]
+  content?:
+    | [string]
+    | [string, string, number, string] // url 文件名 大小 文件类型
+    | [string, string, number, string] // url 文件名 大小 文件类型
 }
 
 type dbMessage = commonMessage & {
-  content?: string[] | File[] | Blob[]
+  content?:
+    | [string]
+    | [File, string, number, string] // File 文件名 大小 文件类型
+    | [Blob, string, number, string] // Blob 文件名 大小 文件类型
 }
 
 // 添加聊天记录
@@ -298,10 +396,9 @@ const addMessage = async (message: dbMessage) => db.add('messages', message)
 // 获取所有聊天记录
 const getMessages = async () => {
   const data = await db.getAllFromIndex('messages', 'roomId', roomId)
-  console.log(await db.getAllFromIndex('messages', 'roomId', roomId))
-  data.forEach(item => {
-    if (item.type === 'image') {
-      item.content[0] = URL.createObjectURL(item.content[0])
+  data.forEach(({ type, content }) => {
+    if (type === 'image' || type === 'video' || type === 'file') {
+      content[0] = URL.createObjectURL(content[0])
     }
   })
   return data
@@ -334,7 +431,7 @@ const onSendMsg = () => {
 
   const type = 'message'
   const timestamp = Date.now()
-  const messageRecord: message = {
+  const messageRecord: dbMessage = {
     type,
     content: [_message],
     sent: true,
@@ -389,8 +486,7 @@ const onReceiveMsg = ({ channel }: { channel: RTCDataChannel }) => {
     let messageRecord = null
 
     if (Object.prototype.toString.call(data) === '[object ArrayBuffer]') {
-      // 直接保存 Blob，取出时转为 Blob URL
-      const { blob, timestamp, messageType } = useReceiveFile(
+      const res = useReceiveFile(
         socket,
         data as ArrayBuffer,
         inReceving,
@@ -400,13 +496,14 @@ const onReceiveMsg = ({ channel }: { channel: RTCDataChannel }) => {
         receiveStartTime
       )
 
-      if (!blob) {
+      if (!res) {
         return
       }
 
+      const { blob, name, size, type, timestamp, messageType } = res
       messageRecord = {
         type: messageType,
-        content: [blob],
+        content: [blob, name, size, type], // 直接保存 Blob，取出时转为 Blob URL
         sent: false,
         timestamp
       }
