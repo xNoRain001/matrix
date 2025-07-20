@@ -250,37 +250,31 @@ import {
   useInitRtc,
   useInitSocket,
   useNotify,
+  useReceiveFile,
   useSaveRoomId,
+  useSendFile,
   useStartRTC
 } from '@/hooks'
 import { exportFile } from 'quasar'
 import { onMounted, reactive, ref, watch, type Reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { pending, received, receiving, sending, sent } from '@/const'
 
 import type { Socket } from 'socket.io-client'
 
 let timer = null
 let makingOffer = false
 let polite = true
-let receivedSize = 0
 let pc: RTCPeerConnection | null = null
 let socket: Socket | null = null
 let dataChannel: RTCDataChannel | null = null
-// 发送时分割文件时的偏移
-let offset = 0
 // let lastSendTime = Number.MAX_SAFE_INTEGER
 // let lastReceiveTime = Number.MAX_SAFE_INTEGER
 // 对方是否收到了文件元信息的标识
-let flag = false
-let sendStartTime = 0
-let receiveStartTime = 0
+const receiveStartTime = ref(0)
+const flag = ref(false)
 const inSending = ref(false)
 const inReceving = ref(false)
-const pending = '等待中...'
-const sending = '传送中...'
-const sent = '传送完成...'
-const receiving = '接收中...'
-const received = '接收完成...'
 const receivedFiles = ref<
   {
     name: string
@@ -311,7 +305,6 @@ const receivedFiles = ref<
   //   status: receiving
   // }
 ])
-const receivedBuffer: ArrayBuffer[] = []
 const pinLength = 4
 const pin = ref([])
 const otherConnected = ref(false)
@@ -355,108 +348,37 @@ const onSendFiles = async files => {
   inSending.value = true
 
   for (let i = 0, l = files.length; i < l; i++) {
-    sendStartTime = Date.now()
-    const file = files[i]
-    const { fileStatus }: { fileStatus: fileStatus } = files[i]
-    fileStatus.status = sending
-    const { name, size, type } = file
-
-    // 向对方发送文件的信息
-    // dataChannel.send(JSON.stringify({ name, size, type }))
-    socket.emit('file-metadata', roomId, {
-      name,
-      size,
-      type
-    })
-
-    await new Promise(resolve => {
-      const timer = setInterval(() => {
-        if (flag) {
-          flag = false
-          clearInterval(timer)
-          resolve(null)
-        }
-      }, 1000)
-    })
-
-    // send() 方法发送数据时有大小限制，其上限是 maxMessageSize (256KB)
-    const chunkSize = pc.sctp.maxMessageSize
-
-    while (offset < size) {
-      const buffer = await file.slice(offset, offset + chunkSize).arrayBuffer()
-
-      // 默认最大缓冲区为 256KB，如果通过数据通道发送大于 256KB 的数据块，
-      // 通常会引发 EMSGSIZE 错误，导致浏览器通道关闭。考虑到浏览器的兼容性，
-      // 我们将缓存队列的水位线 bufferedAmount-LowThreshold 设置为 64KB
-      if (dataChannel.bufferedAmount > 65535) {
-        // 等待缓存队列降到阈值之下
-        await new Promise(resolve => {
-          dataChannel.onbufferedamountlow = () => {
-            resolve(null)
-          }
-        })
-      }
-
-      // 继续发送
-      dataChannel.send(buffer)
-      offset += buffer.byteLength
-      // const time = Date.now() - lastSendTime
-      // lastSendTime = Date.now()
-      // fileStatus.speed = `${(chunkSize / 1024 / (time / 1000)).toFixed(2)} MB/s`
-      fileStatus.progress = `${((offset / size) * 100).toFixed(2)} %`
-    }
-
-    fileStatus.status = sent
-    // fileStatus.speed = ''
-    fileStatus.progress = ''
-    offset = 0
-    fileStatus.time = ((Date.now() - sendStartTime) / 1000).toFixed(2) + ' s'
-    await new Promise(resolve => {
-      const timer = setInterval(() => {
-        if (flag) {
-          flag = false
-          clearInterval(timer)
-          resolve(null)
-        }
-      }, 1000)
-    })
+    await useSendFile(
+      pc,
+      socket,
+      dataChannel,
+      roomId,
+      files[i],
+      flag,
+      sending,
+      sent
+    )
   }
+
   inSending.value = false
 }
 
 const onReceiveFile = ({ channel }: { channel: RTCDataChannel }) => {
   channel.onmessage = ({ data }: { data: ArrayBuffer }) => {
-    inReceving.value = true
-    const { byteLength } = data
-    // 当前接收的文件
-    const _receivedFiles = receivedFiles.value
-    const receivedFile = _receivedFiles[_receivedFiles.length - 1]
-    const { size, type } = receivedFile
-    receivedBuffer.push(data)
-    receivedSize += byteLength
-    // const time = Date.now() - lastReceiveTime
-    // lastReceiveTime = Date.now()
-    receivedFile.progress = ((receivedSize / size) * 100).toFixed(2) + ' %'
-    // receivedFile.speed = `${(byteLength / 1024 / 1024 / (time / 1000)).toFixed(2)} MB/s`
-
-    // 所有数据传输完成
-    if (receivedSize === size) {
-      receivedFile.time =
-        ((Date.now() - receiveStartTime) / 1000).toFixed(2) + ' s'
-      // 深拷贝，否则下载时会被回收
-      const blob = new Blob([...receivedBuffer], { type })
-      receivedFile.blob = blob
-      receivedFile.status = received
-      receivedBuffer.length = 0
-      receivedSize = 0
-      inReceving.value = false
-      socket.emit('saved-file', roomId, null)
-    }
+    useReceiveFile(
+      socket,
+      data,
+      inReceving,
+      receivedFiles,
+      received,
+      roomId,
+      receiveStartTime
+    )
   }
 }
 
 const onFileMetadata = async (roomId: string, data: any) => {
-  receiveStartTime = Date.now()
+  receiveStartTime.value = Date.now()
   const o = { ...data }
   o.status = receiving
   o.formatSize = (data.size / 1024 / 1024).toFixed(2) + 'MB'
@@ -467,9 +389,9 @@ const onFileMetadata = async (roomId: string, data: any) => {
   socket.emit('receive-file-metadata', roomId, null)
 }
 
-const onReceiveFileMetadata = () => (flag = true)
+const onReceiveFileMetadata = () => (flag.value = true)
 
-const onSavedFile = () => (flag = true)
+const onSavedFile = () => (flag.value = true)
 
 const initPC = () => {
   pc = useCreatePeerConnection(socket, roomId, otherConnected, () => {})

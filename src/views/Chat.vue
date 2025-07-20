@@ -122,6 +122,10 @@
             ></q-btn>
             <div>照片</div>
           </div>
+          <div class="flex-center flex flex-col">
+            <q-btn @click="onSelectVideos" round size="lg" icon="duo"></q-btn>
+            <div>视频</div>
+          </div>
         </div>
       </div>
     </div>
@@ -150,13 +154,17 @@ import {
   useInitRtc,
   useInitSocket,
   useNotify,
+  useReceiveFile,
   useSaveRoomId,
+  useSendFile,
   useStartRTC
 } from '@/hooks'
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { pending, received, receiving, sending, sent } from '@/const'
 
 import type { Socket } from 'socket.io-client'
+import type { receivedFiles } from '@/types'
 
 let timer = null
 let lastMsgTimer = null
@@ -170,12 +178,7 @@ let dataChannel: RTCDataChannel | null = null
 // let lastSendTime = Number.MAX_SAFE_INTEGER
 // let lastReceiveTime = Number.MAX_SAFE_INTEGER
 // 对方是否收到了文件元信息的标识
-// let flag = false
-// const pending = '等待中...'
-// const sending = '传送中...'
-// const sent = '传送完成...'
-const receiving = '接收中...'
-// const received = '接收完成...'
+const flag = ref(false)
 const message = ref('')
 const expanded = ref(false)
 // const receivedBuffer: ArrayBuffer[] = []
@@ -215,25 +218,52 @@ const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
   weekday: 'long'
 }
 const photoInputRef = ref<HTMLInputElement | null>(null)
+const inSending = ref(false)
+const inReceving = ref(false)
+const receivedFiles: receivedFiles = ref([])
+const receiveStartTime = ref(0)
 
-const imageToBase64 = file => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = error => reject(error)
-  })
-}
+const onSelectVideos = () => {}
 
 const onPhotoInputChange = async () => {
   const photoInput = photoInputRef.value
   const { files } = photoInput
 
   for (let i = 0, l = files.length; i < l; i++) {
-    const data = (await imageToBase64(files[i])) as string
-    onSendImage(data)
+    ;(files[i] as any).fileStatus = reactive({
+      // speed: '0 Mb/s',
+      status: pending,
+      progress: '0 %',
+      time: '0 s'
+    })
   }
 
+  inSending.value = true
+  for (let i = 0, l = files.length; i < l; i++) {
+    const file = files[i]
+    const timestamp = Date.now()
+    await useSendFile(
+      pc,
+      socket,
+      dataChannel,
+      roomId,
+      file as any,
+      flag,
+      sending,
+      sent
+    )
+    const type: 'image' = 'image'
+    const messageRecord: dbMessage = {
+      type,
+      content: [file],
+      sent: true,
+      timestamp
+    }
+    // 直接保存 File，取出时再转化成 Blob URL
+    saveMessage(messageRecord)
+    updateLocalMessage(messageRecord)
+  }
+  inSending.value = false
   photoInput.value = ''
 }
 
@@ -246,24 +276,39 @@ const formatTimestamp = (timestamp: number) => {
   return new Date(timestamp).toLocaleString('zh-CN', dateTimeFormatOptions)
 }
 
-type message = {
+type commonMessage = {
   roomId?: string
-  type: 'message' | 'label' | 'image'
-  content?: string[]
+  type: 'message' | 'label' | 'image' | 'video' | 'file'
   sent?: boolean
   timestamp: number
   stamp?: string
 }
 
+type message = commonMessage & {
+  content?: string[]
+}
+
+type dbMessage = commonMessage & {
+  content?: string[] | File[] | Blob[]
+}
+
 // 添加聊天记录
-const addMessage = async (message: message) => db.add('messages', message)
+const addMessage = async (message: dbMessage) => db.add('messages', message)
 
 // 获取所有聊天记录
-const getMessages = async () => db.getAllFromIndex('messages', 'roomId', roomId)
+const getMessages = async () => {
+  const data = await db.getAllFromIndex('messages', 'roomId', roomId)
+  console.log(await db.getAllFromIndex('messages', 'roomId', roomId))
+  data.forEach(item => {
+    if (item.type === 'image') {
+      item.content[0] = URL.createObjectURL(item.content[0])
+    }
+  })
+  return data
+}
 
 const messageList = ref<message[]>(roomId ? [...(await getMessages())] : [])
 let lastMsgTimeStamp = messageList.value[0]?.timestamp || 0
-console.log(messageList.value)
 
 const addMessageLabel = (timestamp: number) => {
   if (timestamp - lastMsgTimeStamp > fiveMins) {
@@ -280,8 +325,6 @@ const removeLastMsgStamp = (stampMsg: message) => {
   }
 }
 
-const onSendImage = (data: string) => onSendData('image', data)
-
 const onSendMsg = () => {
   const _message = message.value
 
@@ -289,17 +332,11 @@ const onSendMsg = () => {
     return
   }
 
-  onSendData('message', _message)
-  message.value = ''
-}
-
-const onSendData = (type: 'message' | 'image' | 'label', data: string) => {
+  const type = 'message'
   const timestamp = Date.now()
-  const _messageList = messageList.value
-  const stampMsg = _messageList[lastMsgStampIndex]
-  const common: message = {
+  const messageRecord: message = {
     type,
-    content: [data],
+    content: [_message],
     sent: true,
     timestamp
   }
@@ -307,14 +344,33 @@ const onSendData = (type: 'message' | 'image' | 'label', data: string) => {
     JSON.stringify({
       type,
       timestamp,
-      message: data
+      message: _message
     })
   )
-  _messageList.push(common)
-  addMessageLabel(timestamp)
-  addMessage({ roomId, ...common })
+  saveMessage(messageRecord)
+  updateLocalMessage(messageRecord)
+  message.value = ''
+}
+
+const updateLocalMessage = (messageRecord: dbMessage) => {
+  const _messageList = messageList.value
+  const stampMsg = _messageList[lastMsgStampIndex]
+  const { type } = messageRecord
+
+  if (type !== 'message' && type !== 'label') {
+    messageRecord.content[0] = URL.createObjectURL(
+      messageRecord.content[0] as Blob
+    )
+  }
+
+  _messageList.push(messageRecord as message)
   removeLastMsgStamp(stampMsg)
   scrollToBottom()
+}
+
+const saveMessage = (messageRecord: dbMessage) => {
+  addMessageLabel(messageRecord.timestamp)
+  addMessage({ roomId, ...messageRecord })
 }
 
 const scrollToBottom = () => {
@@ -329,28 +385,55 @@ const scrollToBottom = () => {
 }
 
 const onReceiveMsg = ({ channel }: { channel: RTCDataChannel }) => {
-  channel.onmessage = ({ data }: { data: string }) => {
-    const { type, message, timestamp } = JSON.parse(data)
-    // socket.emit('saved-file', roomId, null)
-    const _messageList = messageList.value
-    const stampMsg = _messageList[lastMsgStampIndex]
-    const common: message = {
-      type,
-      content: [message],
-      sent: false,
-      timestamp
+  channel.onmessage = ({ data }: { data: string | ArrayBuffer }) => {
+    let messageRecord = null
+
+    if (Object.prototype.toString.call(data) === '[object ArrayBuffer]') {
+      // 直接保存 Blob，取出时转为 Blob URL
+      const { blob, timestamp, messageType } = useReceiveFile(
+        socket,
+        data as ArrayBuffer,
+        inReceving,
+        receivedFiles,
+        received,
+        roomId,
+        receiveStartTime
+      )
+
+      if (!blob) {
+        return
+      }
+
+      messageRecord = {
+        type: messageType,
+        content: [blob],
+        sent: false,
+        timestamp
+      }
+    } else {
+      const { timestamp, message, type } = JSON.parse(data as string)
+      messageRecord = {
+        type,
+        content: [message],
+        sent: false,
+        timestamp
+      }
     }
-    _messageList.push(common)
-    addMessageLabel(timestamp)
-    addMessage({ roomId, ...common })
-    removeLastMsgStamp(stampMsg)
-    scrollToBottom()
+
+    saveMessage(messageRecord)
+    updateLocalMessage(messageRecord)
   }
 }
 
 const onFileMetadata = async (roomId: string, data: any) => {
+  receiveStartTime.value = Date.now()
   const o = { ...data }
   o.status = receiving
+  o.formatSize = (data.size / 1024 / 1024).toFixed(2) + 'MB'
+  o.progress = '0 %'
+  o.time = '0 s'
+  // o.speed = '0 MB/s'
+  receivedFiles.value.push(o)
   socket.emit('receive-file-metadata', roomId, null)
 }
 
@@ -518,6 +601,10 @@ const initSocketForMatch = () => {
   socket.emit('match')
 }
 
+const onReceiveFileMetadata = () => (flag.value = true)
+
+const onSavedFile = () => (flag.value = true)
+
 const initSocket = () => {
   socket = useInitSocket(
     onJoined,
@@ -530,6 +617,8 @@ const initSocket = () => {
   // 其他人离开房间
   socket.on('bye', onBye)
   socket.on('file-metadata', onFileMetadata)
+  socket.on('receive-file-metadata', onReceiveFileMetadata)
+  socket.on('saved-file', onSavedFile)
 }
 
 const replaceQuery = query => router.replace({ path, query })

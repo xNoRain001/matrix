@@ -1,0 +1,5 @@
+export const pending = '等待中...'
+export const sending = '传送中...'
+export const sent = '传送完成...'
+export const receiving = '接收中...'
+export const received = '接收完成...'

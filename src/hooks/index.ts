@@ -28,8 +28,12 @@ import useDialog from './use-dialog'
 import useSaveRoomId from './use-save-room-id'
 import useGetRoomId from './use-get-room-id'
 import useClearRoomId from './use-clear-room-id'
+import useSendFile from './use-send-file'
+import useReceiveFile from './use-receive-file'
 
 export {
+  useReceiveFile,
+  useSendFile,
   useClearRoomId,
   useSaveRoomId,
   useGetRoomId,
