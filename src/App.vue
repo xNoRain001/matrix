@@ -1,11 +1,12 @@
 <template>
   <q-layout class="bg-[#010409]">
     <q-header
+      v-if="!isMobile || (isMobile && remoteroomId)"
       reveal
       class="flex-center flex border-b !border-b-[#3d444d] !bg-[#010409]"
     >
       <q-toolbar>
-        <q-btn v-if="isMobile" to="/" flat round dense icon="home">
+        <q-btn v-if="isMobile" flat round dense icon="arrow_back_ios_new">
           <q-tooltip class="!bg-[#0d1117]">返回主页</q-tooltip>
         </q-btn>
         <q-btn v-else flat @click="drawer = !drawer" round dense icon="menu">
@@ -54,10 +55,10 @@
       <q-scroll-area class="fit">
         <q-list padding>
           <template
-            v-for="({ label, icon, separator }, index) in menus"
+            v-for="({ label, icon, to, separator }, index) in menus"
             :key="index"
           >
-            <q-item clickable v-ripple>
+            <q-item :to="to" clickable v-ripple>
               <q-item-section avatar>
                 <q-icon :name="icon" />
               </q-item-section>
@@ -82,14 +83,39 @@
         </Suspense>
       </q-page>
     </q-page-container>
+
+    <q-footer
+      v-show="
+        isMobile &&
+        !(path.startsWith('/match/chat') || path.startsWith('/room/chat'))
+      "
+      class="!bg-[#0d1117]"
+    >
+      <q-tabs
+        v-model="tab"
+        indicator-color="transparent"
+        active-color="primary"
+        class="text-grey-5"
+      >
+        <q-route-tab
+          v-for="({ label, icon, to }, index) in menus"
+          :key="index"
+          :name="label"
+          :icon="icon"
+          :label="label"
+          :to="to"
+        />
+      </q-tabs>
+    </q-footer>
   </q-layout>
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue'
+import { ref, toRefs, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { useRoomStore } from './store'
+import { useRoute } from 'vue-router'
 
 const isMobile =
   /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -101,27 +127,33 @@ const drawer = ref(false)
 const mini = ref(true)
 const menus = [
   {
+    icon: 'auto_awesome',
+    label: '匹配',
+    to: '/match',
+    separator: false
+  },
+  {
+    icon: 'chair',
+    label: '房间',
+    to: '/room',
+    separator: false
+  },
+  {
     icon: 'chat',
-    label: '文字聊天',
+    label: '聊天',
+    to: '/message-list',
     separator: false
   },
   {
-    icon: 'call',
-    label: '语音聊天',
-    separator: false
-  },
-  {
-    icon: 'folder',
-    label: '文件传输',
-    separator: false
-  },
-  {
-    icon: 'person',
-    label: '个人资料',
+    icon: 'face',
+    label: '我',
+    to: '/profile',
     separator: false
   }
 ]
 const { online, remoteroomId } = storeToRefs(useRoomStore())
+const tab = ref('mails')
+const { path } = toRefs(useRoute())
 
 watch(
   dark,
@@ -132,3 +164,9 @@ watch(
   { immediate: true }
 )
 </script>
+
+<style>
+.q-tab__label {
+  font-size: 12px;
+}
+</style>

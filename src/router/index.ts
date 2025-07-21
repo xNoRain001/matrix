@@ -4,16 +4,48 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/audio-chat',
-      component: () => import('@/views/AudioChat.vue')
+      path: '/match',
+      component: () => import('@/views/Match.vue'),
+      children: [
+        {
+          path: 'chat',
+          component: () => import('@/views/Chat.vue')
+        },
+        {
+          path: 'audio-chat',
+          component: () => import('@/views/AudioChat.vue')
+        },
+        {
+          path: 'file-transfer',
+          component: () => import('@/views/FileTransfer.vue')
+        }
+      ]
     },
     {
-      path: '/file-transfer',
-      component: () => import('@/views/FileTransfer.vue')
+      path: '/room',
+      component: () => import('@/views/Room.vue'),
+      children: [
+        {
+          path: 'chat',
+          component: () => import('@/views/Chat.vue')
+        },
+        {
+          path: 'audio-chat',
+          component: () => import('@/views/AudioChat.vue')
+        },
+        {
+          path: 'file-transfer',
+          component: () => import('@/views/FileTransfer.vue')
+        }
+      ]
     },
     {
-      path: '/chat',
-      component: () => import('@/views/Chat.vue')
+      path: '/message-list',
+      component: () => import('@/views/MessageList.vue')
+    },
+    {
+      path: '/profile',
+      component: () => import('@/views/Profile.vue')
     },
     // 404 路由
     {
@@ -26,8 +58,7 @@ const router = createRouter({
 router.beforeEach(({ path }, _, next) => {
   if (path === '/') {
     location.href = '/docs.html'
-    next(false)
-    return
+    return next(false)
   }
 
   next()

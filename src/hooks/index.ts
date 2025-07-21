@@ -31,8 +31,10 @@ import useClearRoomId from './use-clear-room-id'
 import useSendFile from './use-send-file'
 import useReceiveFile from './use-receive-file'
 import useExtendFileStatus from './use-extend-file-status'
+import useCancelMatch from './use-cancel-match'
 
 export {
+  useCancelMatch,
   useExtendFileStatus,
   useReceiveFile,
   useSendFile,

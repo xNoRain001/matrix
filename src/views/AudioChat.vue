@@ -1,24 +1,42 @@
 <template>
+  <div
+    v-if="!(roomId || remoteroomId || isMatch)"
+    class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-end"
+  >
+    <UPinInput size="xl" :length="pinLength" v-model="pin" />
+    <q-breadcrumbs class="text-primary mt-4 cursor-pointer">
+      <q-breadcrumbs-el
+        label="去匹配"
+        icon="near_me"
+        @click="router.push('/match/audio-chat')"
+      >
+      </q-breadcrumbs-el>
+    </q-breadcrumbs>
+  </div>
+
+  <div
+    v-if="!(roomId || remoteroomId)"
+    class="absolute top-4 left-4 flex flex-col"
+  >
+    <q-breadcrumbs class="text-primary mt-4 cursor-pointer">
+      <q-breadcrumbs-el
+        label="返回"
+        icon="arrow_back_ios_new"
+        @click="useCancelMatch(isMatch, timer, router)"
+      >
+      </q-breadcrumbs-el>
+    </q-breadcrumbs>
+  </div>
+
+  <div
+    v-if="isMatch"
+    class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+  >
+    <q-spinner-puff color="primary" size="lg" />
+    <div class="mt-4">正在匹配中...</div>
+  </div>
+
   <div class="flex-center flex">
-    <div
-      v-if="!(roomId || remoteroomId || isMatch)"
-      class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-end"
-    >
-      <UPinInput size="xl" :length="pinLength" v-model="pin" />
-      <q-breadcrumbs class="text-primary mt-4 cursor-pointer">
-        <q-breadcrumbs-el label="匹配" icon="near_me" @click="initMatch">
-        </q-breadcrumbs-el>
-      </q-breadcrumbs>
-    </div>
-
-    <div
-      v-if="isMatch"
-      class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
-    >
-      <q-spinner-puff color="primary" size="lg" />
-      <div class="mt-4">正在匹配中...</div>
-    </div>
-
     <div
       v-if="joined"
       class="relative h-[var(--content-height)] w-full max-w-[var(--room-width)]"
@@ -136,13 +154,11 @@
           class="full-width !mt-4"
           color="primary"
           :label="
-            remoteroomId.startsWith('audio-chat-') ? '重新进入房间' : '重新匹配'
+            path.startsWith('/room/audio-chat') ? '重新进入房间' : '重新匹配'
           "
           rounded
           @click="
-            remoteroomId.startsWith('audio-chat-')
-              ? onBackRoomPIN()
-              : onRematch()
+            path.startsWith('/room/audio-chat') ? onBackRoomPIN() : onRematch()
           "
         ></q-btn>
       </div>
@@ -155,13 +171,14 @@
 
 <script lang="ts" setup>
 import { useRoute, useRouter } from 'vue-router'
-import { onMounted, reactive, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref, toRefs, watch } from 'vue'
 
 import type { Socket } from 'socket.io-client'
 
 import {
   useAddMediaStreamToPC,
   useBindMediaStream,
+  useCancelMatch,
   useClearRoomId,
   useCloseMediaStreamTracks,
   useClosePC,
@@ -219,13 +236,15 @@ const volume = ref(1)
 const localAudioRef = ref(null)
 const remoteAudioRef = ref(null)
 const leaveBtnRef = ref(null)
-const { query, path } = useRoute()
+const route = useRoute()
+const { query } = useRoute()
+const { path } = toRefs(route)
 const router = useRouter()
 const isReconnect = ref(false)
 const leaved = ref(false)
 const { online, remoteroomId } = storeToRefs(useRoomStore())
 let roomId = remoteroomId.value || (query.roomId as string)
-const isMatch = ref(query.type === 'match')
+const isMatch = ref(path.value === '/match/audio-chat' && !roomId)
 const joined = ref(false)
 const otherLeaved = ref(false)
 const micOpen = ref(Boolean(audioInputLabelsLength))
@@ -377,7 +396,6 @@ const exitRoom = async () => {
   socket.disconnect()
   useClearRoomId()
   remoteroomId.value = roomId = ''
-  console.log('@')
   leaved.value = joined.value = false
 }
 
@@ -472,7 +490,7 @@ const initSocket = () => {
   socket.on('bye', onBye)
 }
 
-const replaceQuery = query => router.replace({ path, query })
+const replaceQuery = query => router.replace({ path: path.value, query })
 
 onMounted(async () => {
   if (roomId) {
@@ -487,6 +505,8 @@ onMounted(async () => {
     initSocketForMatch()
   }
 })
+
+onBeforeUnmount(() => socket && socket.disconnect())
 
 watch(pin, v => {
   if (v.length === pinLength) {

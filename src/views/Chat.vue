@@ -1,31 +1,42 @@
 <template>
-  <!-- <Header
-    v-if="remoteroomId"
-    :online="online"
-    avatar="https://cdn.quasar.dev/img/avatar4.jpg"
-    nickname="昵称"
-  ></Header> -->
+  <div
+    v-if="!(roomId || remoteroomId || isMatch)"
+    class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-end"
+  >
+    <UPinInput size="xl" :length="pinLength" v-model="pin" />
+    <q-breadcrumbs class="text-primary mt-4 cursor-pointer">
+      <q-breadcrumbs-el
+        label="去匹配"
+        icon="near_me"
+        @click="router.push('/match/chat')"
+      >
+      </q-breadcrumbs-el>
+    </q-breadcrumbs>
+  </div>
+
+  <div
+    v-if="!(roomId || remoteroomId)"
+    class="absolute top-4 left-4 flex flex-col"
+  >
+    <q-breadcrumbs class="text-primary mt-4 cursor-pointer">
+      <q-breadcrumbs-el
+        label="返回"
+        icon="arrow_back_ios_new"
+        @click="useCancelMatch(isMatch, timer, router)"
+      >
+      </q-breadcrumbs-el>
+    </q-breadcrumbs>
+  </div>
+
+  <div
+    v-if="isMatch"
+    class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+  >
+    <q-spinner-puff color="primary" size="lg" />
+    <div class="mt-4">正在匹配中...</div>
+  </div>
 
   <div class="flex-center flex">
-    <div
-      v-if="!(roomId || remoteroomId || isMatch)"
-      class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-end"
-    >
-      <UPinInput size="xl" :length="pinLength" v-model="pin" />
-      <q-breadcrumbs class="text-primary mt-4 cursor-pointer">
-        <q-breadcrumbs-el label="匹配" icon="near_me" @click="initMatch">
-        </q-breadcrumbs-el>
-      </q-breadcrumbs>
-    </div>
-
-    <div
-      v-if="isMatch"
-      class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
-    >
-      <q-spinner-puff color="primary" size="lg" />
-      <div class="mt-4">正在匹配中...</div>
-    </div>
-
     <div
       v-if="joined"
       :class="leaved ? '' : expanded ? 'pb-[calc(56px+13.25rem)]' : 'pb-[56px]'"
@@ -144,13 +155,9 @@
         <q-btn
           class="full-width !mt-4"
           color="primary"
-          :label="
-            remoteroomId.startsWith('chat-') ? '重新进入房间' : '重新匹配'
-          "
+          :label="path.startsWith('/room/chat') ? '重新进入房间' : '重新匹配'"
           rounded
-          @click="
-            remoteroomId.startsWith('chat-') ? onBackRoomPIN() : onRematch()
-          "
+          @click="path.startsWith('/room/chat') ? onBackRoomPIN() : onRematch()"
         ></q-btn>
       </div>
     </div>
@@ -262,6 +269,7 @@
 
 <script lang="ts" setup>
 import {
+  useCancelMatch,
   useClearMessages,
   useClearRoomId,
   useClosePC,
@@ -278,7 +286,7 @@ import {
   useSendFile,
   useStartRTC
 } from '@/hooks'
-import { onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, toRefs, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { received, receiving, sending, sent } from '@/const'
 
@@ -301,7 +309,9 @@ let dataChannel: RTCDataChannel | null = null
 const flag = ref(false)
 const message = ref('')
 const expanded = ref(false)
-const { query, path } = useRoute()
+const route = useRoute()
+const { query } = route
+const { path } = toRefs(route)
 const router = useRouter()
 const isReconnect = ref(false)
 // 双方中任意一方离开时，值会修改为 true
@@ -310,11 +320,10 @@ const otherLeaved = ref(false)
 // 如果服务器中还能获取到 roomId，说明没有退出房间，恢复到上次的房间
 const { online, remoteroomId } = storeToRefs(useRoomStore())
 let roomId = remoteroomId.value || (query.roomId as string)
-const isMatch = ref(query.type === 'match')
+const isMatch = ref(path.value === '/match/chat' && !roomId)
 const pinLength = 4
 const pin = ref([])
 const joined = ref(false)
-
 const db = await useGetDB()
 const minute = 60 * 1000
 const fiveMins = 5 * minute
@@ -334,7 +343,6 @@ const fileInputRef = ref<HTMLInputElement | null>(null)
 const musicInputRef = ref<HTMLInputElement | null>(null)
 const inSending = ref(false)
 const inReceving = ref(false)
-
 const receivedFiles: receivedFiles = ref([])
 const sendFiles = ref<extendedFiles>([])
 const receiveStartTime = ref(0)
@@ -729,7 +737,7 @@ const onLeave = async () => {
 }
 
 const onBackRoomPIN = async () => {
-  exitRoom()
+  await exitRoom()
   replaceQuery({})
   pin.value.length = 0
 }
@@ -737,13 +745,13 @@ const onBackRoomPIN = async () => {
 const onBye = () => (leaved.value = otherLeaved.value = true)
 
 const onRematch = async () => {
-  exitRoom()
+  await exitRoom()
   initMatch()
 }
 
 const initMatch = () => {
   isMatch.value = true
-  replaceQuery({ type: 'match' })
+  router.push('/match/chat')
   initSocketForMatch()
 }
 
@@ -795,11 +803,12 @@ const initSocket = () => {
   socket.on('saved-file', onSavedFile)
 }
 
-const replaceQuery = query => router.replace({ path, query })
+const replaceQuery = query => router.replace({ path: path.value, query })
 
 onMounted(async () => {
   if (roomId) {
-    // 如果获取到了远程房间，可能需要更新 query 参数
+    // 如果获取到了远程房间，可能需要更新 roomId 参数
+    // /match/chat 和 /room/chat 能正常通信，所以不处理路径
     replaceQuery({ roomId })
     initSocketForRoom()
 
@@ -811,6 +820,11 @@ onMounted(async () => {
   } else if (isMatch.value) {
     initSocketForMatch()
   }
+})
+
+onBeforeUnmount(() => {
+  // 离开时需要手动销毁 socket，才能让它从 matchClients 中移除
+  socket && socket.disconnect()
 })
 
 watch(pin, async v => {
