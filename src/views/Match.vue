@@ -19,7 +19,7 @@ const list = [
   {
     icon: '🎙️',
     title: '语音聊天',
-    desc: '高清音质，实时畅聊无延迟  ',
+    desc: '高清音质，实时畅聊无延迟',
     to: '/match/audio-chat'
   },
   {

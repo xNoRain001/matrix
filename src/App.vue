@@ -5,15 +5,25 @@
       reveal
       class="flex-center flex border-b !border-b-[#3d444d] !bg-[#010409]"
     >
-      <q-toolbar>
-        <q-btn v-if="isMobile" flat round dense icon="arrow_back_ios_new">
-          <q-tooltip class="!bg-[#0d1117]">返回主页</q-tooltip>
-        </q-btn>
-        <q-btn v-else flat @click="drawer = !drawer" round dense icon="menu">
+      <q-toolbar
+        :class="
+          !isMobile && remoteroomId ? 'w-full max-w-[var(--room-width)]' : ''
+        "
+      >
+        <q-btn v-if="isMobile" flat round dense icon=""></q-btn>
+        <q-btn
+          v-if="!isMobile && !remoteroomId"
+          flat
+          @click="drawer = !drawer"
+          round
+          dense
+          icon="menu"
+        >
           <q-tooltip class="!bg-[#0d1117]"
             >{{ drawer ? '折叠' : '展开' }}菜单</q-tooltip
           >
         </q-btn>
+        <div v-else class="h-[33.6px] w-[33.6px]"></div>
 
         <q-space v-if="remoteroomId" />
 
@@ -40,7 +50,7 @@
     </q-header>
 
     <q-drawer
-      v-if="!isMobile"
+      v-if="!isMobile && !remoteroomId"
       v-model="drawer"
       show-if-above
       mini-to-overlay
@@ -98,6 +108,7 @@
         class="text-grey-5"
       >
         <q-route-tab
+          :ripple="false"
           v-for="({ label, icon, to }, index) in menus"
           :key="index"
           :name="label"

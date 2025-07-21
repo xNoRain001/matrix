@@ -6,7 +6,7 @@
       :to="to"
     >
       <div
-        class="rounded-[12px] border border-[#202127] bg-[#202127] p-[24px] hover:border-[#a8b1ff]"
+        class="h-full rounded-[12px] border border-[#202127] bg-[#202127] p-[24px] hover:border-[#a8b1ff]"
       >
         <div
           class="flex-center mb-[20px] flex h-[48px] w-[48px] rounded-[6px] bg-[rgba(101,117,133,.16)] text-[24px]"

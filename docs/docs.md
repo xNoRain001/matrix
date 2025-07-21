@@ -23,29 +23,17 @@ hero:
       link: https://chat-7n0.pages.dev/
 
 features:
-  - title: 匹配文件传输
+  - title: 文件传输
     details: 文件高速传输，极速分享体验
-    link: https://chat-7n0.pages.dev/file-transfer
+    link: https://chat-7n0.pages.dev/room/file-transfer
     icon: 📁
-  - title: 匹配即时聊天
+  - title: 即时聊天
     details: 端到端加密，不留痕迹的安全对话
-    link: https://chat-7n0.pages.dev/chat
+    link: https://chat-7n0.pages.dev/room/chat
     icon: 💬
-  - title: 匹配语音聊天
+  - title: 语音聊天
     details: 高清音质，实时畅聊无延迟  
-    link: https://chat-7n0.pages.dev/audio-chat
-    icon: 🎙️
-  - title: 房间文件传输
-    details: 文件高速传输，极速分享体验
-    link: https://chat-7n0.pages.dev/file-transfer?type=match
-    icon: 📁
-  - title: 房间即时聊天
-    details: 端到端加密，不留痕迹的安全对话
-    link: https://chat-7n0.pages.dev/chat?type=match
-    icon: 💬
-  - title: 房间语音聊天
-    details: 高清音质，实时畅聊无延迟  
-    link: https://chat-7n0.pages.dev/audio-chat?type=match
+    link: https://chat-7n0.pages.dev/room/audio-chat
     icon: 🎙️
   
 ---
