@@ -21,11 +21,11 @@
 
     <div
       v-if="joined"
-      class="relative h-[var(--content-height)] w-full max-w-[500px]"
+      class="relative h-[var(--content-height)] w-full max-w-[var(--room-width)]"
     >
       <div v-if="!leaved" class="flex-center flex h-full flex-col">
         <div class="text-base">
-          {{ otherConnected ? '通话中...' : '等待对方接通...' }}
+          {{ online ? '通话中...' : '等待对方接通...' }}
         </div>
         <div
           :class="
@@ -136,11 +136,13 @@
           class="full-width !mt-4"
           color="primary"
           :label="
-            remoteroomId.startsWith('chat-') ? '重新进入房间' : '重新匹配'
+            remoteroomId.startsWith('audio-chat-') ? '重新进入房间' : '重新匹配'
           "
           rounded
           @click="
-            remoteroomId.startsWith('chat-') ? onBackRoomPIN() : onRematch()
+            remoteroomId.startsWith('audio-chat-')
+              ? onBackRoomPIN()
+              : onRematch()
           "
         ></q-btn>
       </div>
@@ -169,7 +171,6 @@ import {
   useGetAudioInputs,
   useGetAudioOutput,
   useGetAudioOutputs,
-  useGetRoomId,
   useGetUserMedia,
   useInitRtc,
   useInitSocket,
@@ -179,6 +180,8 @@ import {
   useSaveRoomId,
   useStartRTC
 } from '@/hooks'
+import { storeToRefs } from 'pinia'
+import { useRoomStore } from '@/store'
 
 let timer = null
 let makingOffer = false
@@ -213,7 +216,6 @@ const speakerOptions = reactive([
   ...(audioOutputLabelsLength ? audioOutputLabels : ['未发现扬声器设备'])
 ])
 const volume = ref(1)
-const otherConnected = ref(false)
 const localAudioRef = ref(null)
 const remoteAudioRef = ref(null)
 const leaveBtnRef = ref(null)
@@ -221,7 +223,7 @@ const { query, path } = useRoute()
 const router = useRouter()
 const isReconnect = ref(false)
 const leaved = ref(false)
-const remoteroomId = ref(useGetRoomId())
+const { online, remoteroomId } = storeToRefs(useRoomStore())
 let roomId = remoteroomId.value || (query.roomId as string)
 const isMatch = ref(query.type === 'match')
 const joined = ref(false)
@@ -392,7 +394,7 @@ const initSocketForMatch = () => {
 }
 
 const initPC = async () => {
-  pc = useCreatePeerConnection(socket, roomId, otherConnected, onTrack)
+  pc = useCreatePeerConnection(socket, roomId, online, onTrack)
   await initLocalMediaStream()
 }
 
@@ -476,6 +478,11 @@ onMounted(async () => {
   if (roomId) {
     replaceQuery({ roomId })
     initSocketForRoom()
+
+    if (!remoteroomId.value) {
+      remoteroomId.value = roomId
+      useSaveRoomId(roomId)
+    }
   } else if (isMatch.value) {
     initSocketForMatch()
   }

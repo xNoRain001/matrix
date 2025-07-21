@@ -21,17 +21,9 @@
 
     <div
       v-if="joined"
-      class="relative h-[var(--content-height)] w-full max-w-[500px]"
+      class="relative h-[var(--content-height)] w-full max-w-[var(--room-width)]"
     >
       <div v-if="!leaved" class="flex h-full flex-col justify-center">
-        <div class="flex items-center">
-          <q-badge
-            class="mr-2"
-            rounded
-            :color="otherConnected ? 'green' : 'red'"
-          />
-          对方{{ otherConnected ? '在线...' : '离线...' }}
-        </div>
         <q-uploader
           @added="onAdded"
           class="mt-4 !w-full bg-transparent"
@@ -78,9 +70,7 @@
                 @click="onSendFiles(scope.queuedFiles)"
                 round
                 dense
-                :disable="
-                  inSending || !scope.queuedFiles.length || !otherConnected
-                "
+                :disable="inSending || !scope.queuedFiles.length || !online"
               >
                 <q-tooltip class="!bg-[#3d444d]">开始传送</q-tooltip>
               </q-btn>
@@ -222,13 +212,13 @@
           class="full-width !mt-4"
           color="primary"
           :label="
-            remoteroomId.startsWith('file-transfer')
+            remoteroomId.startsWith('file-transfer-')
               ? '重新进入房间'
               : '重新匹配'
           "
           rounded
           @click="
-            remoteroomId.startsWith('file-transfer')
+            remoteroomId.startsWith('file-transfer-')
               ? onBackRoomPIN()
               : onRematch()
           "
@@ -245,7 +235,6 @@ import {
   useCreatePeerConnection,
   useDialog,
   useExtendFileStatus,
-  useGetRoomId,
   useInitDataChannel,
   useInitRtc,
   useInitSocket,
@@ -262,6 +251,8 @@ import { received, receiving, sending, sent } from '@/const'
 
 import type { Socket } from 'socket.io-client'
 import type { receivedFiles } from '@/types'
+import { storeToRefs } from 'pinia'
+import { useRoomStore } from '@/store'
 
 let timer = null
 let makingOffer = false
@@ -277,13 +268,12 @@ const inReceving = ref(false)
 const receivedFiles: receivedFiles = ref([])
 const pinLength = 4
 const pin = ref([])
-const otherConnected = ref(false)
 const { query, path } = useRoute()
 const router = useRouter()
 const isReconnect = ref(false)
 const leaved = ref(false)
 const otherLeaved = ref(false)
-const remoteroomId = ref(useGetRoomId())
+const { online, remoteroomId } = storeToRefs(useRoomStore())
 let roomId = remoteroomId.value || (query.roomId as string)
 const isMatch = ref(query.type === 'match')
 const joined = ref(false)
@@ -346,7 +336,7 @@ const onReceiveFileMetadata = () => (flag.value = true)
 const onSavedFile = () => (flag.value = true)
 
 const initPC = () => {
-  pc = useCreatePeerConnection(socket, roomId, otherConnected, () => {})
+  pc = useCreatePeerConnection(socket, roomId, online, () => {})
   pc.ondatachannel = onReceiveFile
   dataChannel = useInitDataChannel(pc)
 }
@@ -487,6 +477,11 @@ onMounted(() => {
   if (roomId) {
     replaceQuery({ roomId })
     initSocketForRoom()
+
+    if (!remoteroomId.value) {
+      remoteroomId.value = roomId
+      useSaveRoomId(roomId)
+    }
   } else if (isMatch.value) {
     initSocketForMatch()
   }

@@ -1,4 +1,11 @@
 <template>
+  <!-- <Header
+    v-if="remoteroomId"
+    :online="online"
+    avatar="https://cdn.quasar.dev/img/avatar4.jpg"
+    nickname="昵称"
+  ></Header> -->
+
   <div class="flex-center flex">
     <div
       v-if="!(roomId || remoteroomId || isMatch)"
@@ -22,7 +29,7 @@
     <div
       v-if="joined"
       :class="leaved ? '' : expanded ? 'pb-[calc(56px+13.25rem)]' : 'pb-[56px]'"
-      class="relative min-h-[var(--content-height)] w-full max-w-[500px]"
+      class="relative min-h-[var(--content-height)] w-full max-w-[var(--room-width)]"
     >
       <template
         v-for="(
@@ -121,7 +128,7 @@
         />
       </template>
 
-      <div v-if="!leaved && !otherConnected" class="flex-center flex">
+      <div v-if="!leaved && !online" class="flex-center flex">
         <q-badge class="my-4" rounded color="red" />对方未在线...
       </div>
 
@@ -138,13 +145,11 @@
           class="full-width !mt-4"
           color="primary"
           :label="
-            remoteroomId.startsWith('audio-chat-') ? '重新进入房间' : '重新匹配'
+            remoteroomId.startsWith('chat-') ? '重新进入房间' : '重新匹配'
           "
           rounded
           @click="
-            remoteroomId.startsWith('audio-chat-')
-              ? onBackRoomPIN()
-              : onRematch()
+            remoteroomId.startsWith('chat-') ? onBackRoomPIN() : onRematch()
           "
         ></q-btn>
       </div>
@@ -153,7 +158,7 @@
 
   <q-page-sticky v-if="joined && !leaved" expand position="bottom">
     <div
-      class="w-full max-w-[calc(500px+2rem)] rounded-t-md border-t border-t-[#0d1117] py-4 backdrop-blur-md"
+      class="w-full max-w-[calc(var(--room-width)+2rem)] rounded-t-[1rem] border-t border-t-[#0d1117] py-4 backdrop-blur-md"
     >
       <q-input
         @keydown.enter="onSendMsg"
@@ -162,7 +167,7 @@
         dense
         rounded
         v-model="message"
-        :disable="!otherConnected"
+        :disable="!online"
       >
         <template v-slot:before>
           <q-btn @click="onLeave" round icon="logout">
@@ -170,7 +175,7 @@
           </q-btn>
         </template>
         <template v-slot:after>
-          <!-- :disable="!otherConnected" -->
+          <!-- :disable="!online" -->
           <q-btn @click="onExpand" round icon="control_point">
             <q-tooltip class="!bg-[#0d1117]">选项</q-tooltip>
           </q-btn>
@@ -264,7 +269,6 @@ import {
   useDialog,
   useExtendFileStatus,
   useGetDB,
-  useGetRoomId,
   useInitDataChannel,
   useInitRtc,
   useInitSocket,
@@ -281,6 +285,8 @@ import { received, receiving, sending, sent } from '@/const'
 import type { Socket } from 'socket.io-client'
 import type { extendedFiles, fileTypes, receivedFiles } from '@/types'
 import { exportFile } from 'quasar'
+import { useRoomStore } from '@/store'
+import { storeToRefs } from 'pinia'
 
 let timer = null
 let lastMsgTimer = null
@@ -302,13 +308,13 @@ const isReconnect = ref(false)
 const leaved = ref(false)
 const otherLeaved = ref(false)
 // 如果服务器中还能获取到 roomId，说明没有退出房间，恢复到上次的房间
-const remoteroomId = ref(useGetRoomId())
+const { online, remoteroomId } = storeToRefs(useRoomStore())
 let roomId = remoteroomId.value || (query.roomId as string)
 const isMatch = ref(query.type === 'match')
 const pinLength = 4
 const pin = ref([])
 const joined = ref(false)
-const otherConnected = ref(false)
+
 const db = await useGetDB()
 const minute = 60 * 1000
 const fiveMins = 5 * minute
@@ -605,7 +611,7 @@ const onFileMetadata = async (roomId: string, data: any) => {
 }
 
 const initPC = () => {
-  pc = useCreatePeerConnection(socket, roomId, otherConnected, () => {})
+  pc = useCreatePeerConnection(socket, roomId, online, () => {})
   pc.ondatachannel = onReceiveMsg
   dataChannel = useInitDataChannel(pc)
 }
@@ -796,6 +802,12 @@ onMounted(async () => {
     // 如果获取到了远程房间，可能需要更新 query 参数
     replaceQuery({ roomId })
     initSocketForRoom()
+
+    // 有 roomId，但是没有 remoteroomId，说明是直接访问带 roomId 的链接
+    if (!remoteroomId.value) {
+      remoteroomId.value = roomId
+      useSaveRoomId(roomId)
+    }
   } else if (isMatch.value) {
     initSocketForMatch()
   }

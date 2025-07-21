@@ -34,7 +34,6 @@ const useReceiveFile = (
       ((timestamp - receiveStartTime.value) / 1000).toFixed(2) + ' s'
     // 深拷贝，否则下载时会被回收
     const blob = new Blob([...receivedBuffer])
-    console.log(blob)
     receivedFile.blob = blob
     receivedFile.status = receivedLabel
     receivedBuffer.length = 0

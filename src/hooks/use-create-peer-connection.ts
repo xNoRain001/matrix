@@ -25,7 +25,7 @@ const pcConfig: RTCConfiguration = {
 const useCreatePeerConnection = (
   socket: Socket,
   roomId: string,
-  otherConnected: Ref<boolean>,
+  online: Ref<boolean>,
   onTrack: (e: RTCTrackEvent) => any
 ): RTCPeerConnection => {
   // 创建PeerConnection 对象
@@ -47,7 +47,7 @@ const useCreatePeerConnection = (
       // pc.restartIce()
     } else if (iceConnectionState === 'disconnected') {
       console.log('disconnected...')
-      otherConnected.value = false
+      online.value = false
       // 关闭网页或点击取消
       // useNotify('对方离开了房间, 如果 30 s 内没有人加入，将返回主页')
       // socket.disconnect()
@@ -57,7 +57,7 @@ const useCreatePeerConnection = (
     } else if (iceConnectionState === 'connected') {
       console.log('connected...')
       // useNotify('连接已建立')
-      otherConnected.value = true
+      online.value = true
       clearTimeout(timer)
     }
   }
