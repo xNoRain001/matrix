@@ -1,10 +1,10 @@
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { defineStore } from 'pinia'
-import { useGetRoomId } from '@/hooks'
+import { useGetRoomInfo } from '@/hooks'
 
 const useRoomStore = defineStore('roomStore', () => ({
   online: ref(false),
-  remoteroomId: ref(useGetRoomId())
+  remoteRoomInfo: reactive(useGetRoomInfo())
 }))
 
 export default useRoomStore

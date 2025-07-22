@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="!(roomId || remoteroomId || isMatch)"
+    v-if="!(roomId || remoteRoomInfo.roomId || isMatch)"
     class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-end"
   >
     <UPinInput size="xl" :length="pinLength" v-model="pin" />
@@ -15,7 +15,7 @@
   </div>
 
   <div
-    v-if="!(roomId || remoteroomId)"
+    v-if="!(roomId || remoteRoomInfo.roomId)"
     class="absolute top-4 left-4 flex flex-col"
   >
     <q-breadcrumbs class="text-primary mt-4 cursor-pointer">
@@ -257,7 +257,7 @@ import {
   useInitSocket,
   useNotify,
   useReceiveFile,
-  useSaveRoomId,
+  useSaveRoomInfo,
   useSendFile,
   useStartRTC
 } from '@/hooks'
@@ -292,8 +292,9 @@ const router = useRouter()
 const isReconnect = ref(false)
 const leaved = ref(false)
 const otherLeaved = ref(false)
-const { online, remoteroomId } = storeToRefs(useRoomStore())
-let roomId = remoteroomId.value || (query.roomId as string)
+const { online, remoteRoomInfo } = storeToRefs(useRoomStore())
+const _remoteRoomInfo = remoteRoomInfo.value
+let roomId = _remoteRoomInfo.roomId || (query.roomId as string)
 const isMatch = ref(path.value === '/match/file-transfer' && !roomId)
 const joined = ref(false)
 
@@ -410,9 +411,10 @@ const onMatched = data => {
   } else if (type === 'suc') {
     // 可能出现匹配失败，等待再次匹配的过程中被别人给匹配到了
     clearTimeout(timer)
-    remoteroomId.value = roomId = message
+    _remoteRoomInfo.roomId = roomId = message
     // 记录房间号
-    useSaveRoomId(message)
+    console.log(path.value, message)
+    useSaveRoomInfo(path.value, message)
     replaceQuery({ roomId })
     isMatch.value = false
     socket.emit('join', roomId)
@@ -459,7 +461,7 @@ const exitRoom = async () => {
   useClosePC(pc)
   socket.disconnect()
   useClearRoomId()
-  remoteroomId.value = roomId = ''
+  _remoteRoomInfo.roomId = roomId = ''
   leaved.value = joined.value = false
 }
 
@@ -490,17 +492,24 @@ const initSocket = () => {
   socket.on('saved-file', onSavedFile)
 }
 
-const replaceQuery = query => router.replace({ path: path.value, query })
+const replaceQuery = (query, pathname?: string) =>
+  router.replace({ path: pathname ? pathname : path.value, query })
 
-onMounted(() => {
+onMounted(async () => {
   if (roomId) {
-    replaceQuery({ roomId })
-    initSocketForRoom()
-
-    if (!remoteroomId.value) {
-      remoteroomId.value = roomId
-      useSaveRoomId(roomId)
+    if (!_remoteRoomInfo.roomId) {
+      _remoteRoomInfo.roomId = roomId
+      useSaveRoomInfo(path.value, roomId)
+    } else {
+      if (_remoteRoomInfo.path === path.value) {
+        await replaceQuery({ roomId })
+      } else {
+        await replaceQuery({ roomId }, _remoteRoomInfo.path)
+        return
+      }
     }
+
+    initSocketForRoom()
   } else if (isMatch.value) {
     initSocketForMatch()
   }
@@ -510,8 +519,8 @@ onBeforeUnmount(() => socket && socket.disconnect())
 
 watch(pin, async v => {
   if (v.length === pinLength) {
-    remoteroomId.value = roomId = 'file-transfer' + v.join('')
-    useSaveRoomId(roomId)
+    _remoteRoomInfo.roomId = roomId = 'file-transfer' + v.join('')
+    useSaveRoomInfo(path.value, roomId)
     replaceQuery({ roomId })
     initSocketForRoom()
   }

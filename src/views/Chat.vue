@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="!(roomId || remoteroomId || isMatch)"
+    v-if="!(roomId || remoteRoomInfo.roomId || isMatch)"
     class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-end"
   >
     <UPinInput size="xl" :length="pinLength" v-model="pin" />
@@ -15,7 +15,7 @@
   </div>
 
   <div
-    v-if="!(roomId || remoteroomId)"
+    v-if="!(roomId || remoteRoomInfo.roomId)"
     class="absolute top-4 left-4 flex flex-col"
   >
     <q-breadcrumbs class="text-primary mt-4 cursor-pointer">
@@ -282,7 +282,7 @@ import {
   useInitSocket,
   useNotify,
   useReceiveFile,
-  useSaveRoomId,
+  useSaveRoomInfo,
   useSendFile,
   useStartRTC
 } from '@/hooks'
@@ -318,8 +318,9 @@ const isReconnect = ref(false)
 const leaved = ref(false)
 const otherLeaved = ref(false)
 // 如果服务器中还能获取到 roomId，说明没有退出房间，恢复到上次的房间
-const { online, remoteroomId } = storeToRefs(useRoomStore())
-let roomId = remoteroomId.value || (query.roomId as string)
+const { online, remoteRoomInfo } = storeToRefs(useRoomStore())
+const _remoteRoomInfo = remoteRoomInfo.value
+let roomId = _remoteRoomInfo.roomId || (query.roomId as string)
 const isMatch = ref(path.value === '/match/chat' && !roomId)
 const pinLength = 4
 const pin = ref([])
@@ -706,9 +707,9 @@ const onMatched = data => {
   } else if (type === 'suc') {
     // 可能出现匹配失败，等待再次匹配的过程中被别人给匹配到了
     clearTimeout(timer)
-    remoteroomId.value = roomId = message
+    _remoteRoomInfo.roomId = roomId = message
     // 记录房间号
-    useSaveRoomId(message)
+    useSaveRoomInfo(path.value, message)
     replaceQuery({ roomId })
     isMatch.value = false
     socket.emit('join', roomId)
@@ -767,7 +768,7 @@ const exitRoom = async () => {
   await useClearMessages(roomId)
   useClearRoomId()
   messageList.value = []
-  remoteroomId.value = roomId = ''
+  _remoteRoomInfo.roomId = roomId = ''
   leaved.value = joined.value = false
 }
 
@@ -803,20 +804,29 @@ const initSocket = () => {
   socket.on('saved-file', onSavedFile)
 }
 
-const replaceQuery = query => router.replace({ path: path.value, query })
+const replaceQuery = (query, pathname?: string) =>
+  router.replace({ path: pathname ? pathname : path.value, query })
 
 onMounted(async () => {
   if (roomId) {
-    // 如果获取到了远程房间，可能需要更新 roomId 参数
-    // /match/chat 和 /room/chat 能正常通信，所以不处理路径
-    replaceQuery({ roomId })
-    initSocketForRoom()
-
-    // 有 roomId，但是没有 remoteroomId，说明是直接访问带 roomId 的链接
-    if (!remoteroomId.value) {
-      remoteroomId.value = roomId
-      useSaveRoomId(roomId)
+    // 有 roomId，但是没有 remoteRoomInfo，说明是直接访问带 roomId 的链接
+    if (!_remoteRoomInfo.roomId) {
+      _remoteRoomInfo.roomId = roomId
+      useSaveRoomInfo(path.value, roomId)
+    } else {
+      // 如果获取到了远程房间，更新路由
+      if (_remoteRoomInfo.path === path.value) {
+        // 只需要替换 roomId，由于路径没有发生变化，组件不会被销毁
+        await replaceQuery({ roomId })
+      } else {
+        // 路径发生变化，组件会被销毁
+        await replaceQuery({ roomId }, _remoteRoomInfo.path)
+        // 阻止生成 socket，onBeforeUnmount 中来不及销毁
+        return
+      }
     }
+
+    initSocketForRoom()
   } else if (isMatch.value) {
     initSocketForMatch()
   }
@@ -829,8 +839,8 @@ onBeforeUnmount(() => {
 
 watch(pin, async v => {
   if (v.length === pinLength) {
-    remoteroomId.value = roomId = 'chat-' + v.join('')
-    useSaveRoomId(roomId)
+    _remoteRoomInfo.roomId = roomId = 'chat-' + v.join('')
+    useSaveRoomInfo(path.value, roomId)
     replaceQuery({ roomId })
     initSocketForRoom()
   }
