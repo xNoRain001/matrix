@@ -712,6 +712,7 @@ const onMatched = data => {
     useSaveRoomInfo(path.value, message)
     replaceQuery({ roomId })
     isMatch.value = false
+    // 不需要从匹配列表中移除，因为服务器在匹配成功时会自动将你从匹配列表中移除
     socket.emit('join', roomId)
     useNotify('匹配成功')
   }
@@ -780,8 +781,8 @@ const initSocketForRoom = () => {
 const initSocketForMatch = () => {
   initSocket()
   socket.on('matched', onMatched)
-  socket.emit('joinmatch')
-  socket.emit('match')
+  socket.emit('joinmatch', 'chat')
+  socket.emit('match', 'chat')
 }
 
 const onReceiveFileMetadata = () => (flag.value = true)

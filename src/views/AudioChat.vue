@@ -408,8 +408,8 @@ const initSocketForRoom = () => {
 const initSocketForMatch = () => {
   initSocket()
   socket.on('matched', onMatched)
-  socket.emit('joinmatch')
-  socket.emit('match')
+  socket.emit('joinmatch', 'audio-chat')
+  socket.emit('match', 'audio-chat')
 }
 
 const initPC = async () => {

@@ -473,8 +473,8 @@ const initSocketForRoom = () => {
 const initSocketForMatch = () => {
   initSocket()
   socket.on('matched', onMatched)
-  socket.emit('joinmatch')
-  socket.emit('match')
+  socket.emit('joinmatch', 'file-transfer')
+  socket.emit('match', 'file-transfer')
 }
 
 const initSocket = () => {
