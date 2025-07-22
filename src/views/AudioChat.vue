@@ -1,67 +1,16 @@
 <template>
-  <div
-    v-if="!(roomId || remoteRoomInfo.roomId || isMatch)"
-    class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-end"
-  >
-    <UPinInput size="xl" :length="pinLength" v-model="pin" />
-    <q-breadcrumbs class="text-primary mt-4 cursor-pointer">
-      <q-breadcrumbs-el
-        label="去匹配"
-        icon="near_me"
-        @click="router.push('/match/audio-chat')"
-      >
-      </q-breadcrumbs-el>
-    </q-breadcrumbs>
-  </div>
-
-  <div
-    v-if="!(roomId || remoteRoomInfo.roomId)"
-    class="absolute top-4 left-4 flex flex-col"
-  >
-    <q-breadcrumbs class="text-primary mt-4 cursor-pointer">
-      <q-breadcrumbs-el
-        label="返回"
-        icon="arrow_back_ios_new"
-        @click="useCancelMatch(isMatch, timer, router)"
-      >
-      </q-breadcrumbs-el>
-    </q-breadcrumbs>
-  </div>
-
-  <div
+  <PIN
+    v-if="!(remoteRoomInfo.roomId || isMatch)"
+    type="audio-chat"
+    :watch-pin-cb="watchPinCb"
+  ></PIN>
+  <Back v-if="!remoteRoomInfo.roomId" :back="onBack"></Back>
+  <Matching
     v-if="isMatch"
-    class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
-  >
-    <div v-if="offline" class="flex flex-col items-center">
-      <q-icon color="red" size="lg" name="wifi_off"></q-icon>
-      <div class="mt-4 text-red-600">网络错误</div>
-      <q-btn
-        @click="onRematchWithOffline"
-        class="!mt-4"
-        color="primary"
-        label="重新匹配"
-      ></q-btn>
-    </div>
-    <div v-else class="flex flex-col items-center">
-      <q-spinner-puff color="primary" size="lg" />
-      <div class="mt-4">正在匹配中...</div>
-    </div>
-  </div>
-
-  <div
-    v-if="isFull"
-    class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
-  >
-    <div class="flex flex-col items-center">
-      <q-btn label="离开房间" @click="onLeaveFullRoom" color="primary"></q-btn>
-      <q-btn
-        class="!mt-4"
-        label="返回主页"
-        @click="router.push('/room')"
-        color="primary"
-      ></q-btn>
-    </div>
-  </div>
+    :offline="offline"
+    :rematch="onRematchWithOffline"
+  ></Matching>
+  <Full v-if="isFull" :leave="onLeaveFullRoom"></Full>
 
   <div class="flex-center flex">
     <div
@@ -180,13 +129,9 @@
         <q-btn
           class="full-width !mt-4"
           color="primary"
-          :label="
-            path.startsWith('/room/audio-chat') ? '重新进入房间' : '重新匹配'
-          "
+          :label="inRoom ? '重新进入房间' : '重新匹配'"
           rounded
-          @click="
-            path.startsWith('/room/audio-chat') ? onBackRoomPIN() : onRematch()
-          "
+          @click="inRoom ? onBackPIN() : onRematch()"
         ></q-btn>
       </div>
     </div>
@@ -198,19 +143,19 @@
 
 <script lang="ts" setup>
 import { useRoute, useRouter } from 'vue-router'
-import { onBeforeUnmount, onMounted, reactive, ref, toRefs, watch } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 
 import type { Socket } from 'socket.io-client'
 
 import {
   useAddMediaStreamToPC,
   useBindMediaStream,
+  useBye,
   useCancelMatch,
   useClearRoomInfo,
   useCloseMediaStreamTracks,
   useClosePC,
   useCreatePeerConnection,
-  useDialog,
   useGetAudioInput,
   useGetAudioInputs,
   useGetAudioOutput,
@@ -218,18 +163,28 @@ import {
   useGetUserMedia,
   useInitRtc,
   useInitSocket,
+  useLeaveFullRoom,
   useNotify,
+  useOtherJoin,
   usePauseMediaStreamTracks,
   useResumeMediaStreamTracks,
-  useSaveRoomInfo,
-  useStartRTC
+  useWatchPinCb,
+  useLeaveRoom,
+  useJoined,
+  useBackPIN,
+  useInitSocketForRoom,
+  useRematchWithOffline,
+  useBeforeUnmount,
+  useMatched,
+  useRematch,
+  useMounted
 } from '@/hooks'
 import { storeToRefs } from 'pinia'
 import { useRoomStore } from '@/store'
 
 let timer = null
-let makingOffer = false
-let polite = true
+const makingOffer = ref(false)
+const polite = ref(true)
 let localMediaStream: MediaStream | null = null
 let pc: RTCPeerConnection | null = null
 let socket: Socket | null = null
@@ -243,8 +198,6 @@ const audioOutputLabels = audioOutputs.map(
 )
 const audioInputLabelsLength = audioInputLabels.length
 const audioOutputLabelsLength = audioOutputLabels.length
-const pinLength = 4
-const pin = ref([])
 const micLabel = ref(
   audioInputLabelsLength ? (await useGetAudioInput()).label : '未发现麦克风设备'
 )
@@ -263,16 +216,16 @@ const volume = ref(1)
 const localAudioRef = ref(null)
 const remoteAudioRef = ref(null)
 const leaveBtnRef = ref(null)
-const route = useRoute()
-const { query } = useRoute()
-const { path } = toRefs(route)
+const { path, query } = useRoute()
+const inRoom = path.startsWith('/room/audio-chat')
 const router = useRouter()
 const isReconnect = ref(false)
 const leaved = ref(false)
 const { online, remoteRoomInfo } = storeToRefs(useRoomStore())
 const _remoteRoomInfo = remoteRoomInfo.value
-let roomId = _remoteRoomInfo.roomId || (query.roomId as string)
-const isMatch = ref(path.value === '/match/audio-chat' && !roomId)
+const hasRemoteRoomId = Boolean(_remoteRoomInfo.roomId)
+_remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
+const isMatch = ref(path === '/match/audio-chat' && !_remoteRoomInfo.roomId)
 const joined = ref(false)
 const otherLeaved = ref(false)
 const micOpen = ref(Boolean(audioInputLabelsLength))
@@ -290,47 +243,19 @@ const constraints = {
 const offline = ref(false)
 const isFull = ref(false)
 
-const onLeaveFullRoom = () => {
-  joined.value = leaved.value = true
-  isFull.value = false
-}
+const onLeaveFullRoom = () => useLeaveFullRoom(joined, leaved, isFull)
 
-const onRematchWithOffline = () => {
-  offline.value = false
-  initSocketForMatch()
-}
+const onRematchWithOffline = () =>
+  useRematchWithOffline(initSocket, onMatched, offline, 'audio-chat')
 
 // 当自己加入房间时触发
-const onJoined = async (_, __, _polite) => {
-  polite = _polite
-  joined.value = true
+const onJoined = async (_, __, _polite) =>
+  useJoined(socket, polite, joined, _remoteRoomInfo.roomId, initPC, _polite)
 
-  // 如果你是后面加入的，在这里初始化 pc
-  if (!polite) {
-    await initPC()
-    // 初始化完成后通知对方发起连接
-    socket.emit('otherjoin', roomId)
-  }
-}
+const onOtherJoin = () =>
+  useOtherJoin(pc, socket, _remoteRoomInfo.roomId, polite, makingOffer, initPC)
 
-// 当其他人加入房间时触发
-const onOtherJoin = async roomId => {
-  // 可能你是第一个进入的，所以会收到别人进入房间的通知，此时你是有礼貌方
-  // 也可能你本身是没礼貌方，但是对面后来退出了，又新进来一个，你此时需要变成礼貌方
-  polite = true
-  // pc 存在，说明对面退出后又新进来一个，此时需要重新创建 pc
-  useClosePC(pc)
-  await initPC()
-
-  try {
-    makingOffer = true
-    await useStartRTC(pc, socket, roomId)
-  } catch (err) {
-    console.error(err)
-  }
-
-  makingOffer = false
-}
+// const onDisconnect = () => useDisconnect(pc, isMatch, offline, leaved, isReconnect)
 
 const onDisconnect = () => {
   // 满员的情况下，不会触发 joined，此时 pc 为 null
@@ -371,66 +296,17 @@ const onTrack = ({ track, streams }) => {
 }
 
 // 服务端中会关闭连接，从而触发 disconnect
-const onLeave = () => {
-  useDialog({
-    class: 'bg-[#0d1117]',
-    title: '离开',
-    message: '你确定要离开房间吗？',
-    persistent: true,
-    dark: true,
-    ok: '确定',
-    cancel: '取消',
-    color: 'primary'
-  }).onOk(async () => {
-    // 服务器 leave 回调中发送 bye，然后触发本地 leaved
-    leaved.value = true
-    // 这里不直接返回主页，因为最终会断开 socket 连接，那里会返回主页
-    // 发送通知能够第一时间通知到对方我离开了，否则会有几秒钟延迟
-    socket.emit('leave', roomId)
-  })
-}
+const onLeave = async () => useLeaveRoom(socket, _remoteRoomInfo.roomId, leaved)
 
-const onMatched = data => {
-  const { type, message } = data
+const onMatched = data =>
+  useMatched(data, socket, path, _remoteRoomInfo, isMatch, router)
 
-  if (type === 'fail') {
-    useNotify(message, 'negative')
-    timer = setTimeout(() => {
-      socket.emit('match')
-      clearTimeout(timer)
-    }, 10000)
-  } else if (type === 'suc') {
-    // 可能出现匹配失败，等待再次匹配的过程中被别人给匹配到了
-    clearTimeout(timer)
-    const _path = path.value
-    _remoteRoomInfo.roomId = roomId = message
-    _remoteRoomInfo.path = _path
-    // 记录房间号
-    useSaveRoomInfo(_path, message)
-    replaceQuery({ roomId })
-    isMatch.value = false
-    socket.emit('join', roomId)
-  }
-}
+const onBackPIN = async () => useBackPIN(exitRoom, router)
 
-const onBackRoomPIN = async () => {
-  exitRoom()
-  replaceQuery({})
-  pin.value.length = 0
-}
+const onBye = () => useBye(leaved, otherLeaved)
 
-const onBye = () => (leaved.value = otherLeaved.value = true)
-
-const onRematch = async () => {
-  exitRoom()
-  initMatch()
-}
-
-const initMatch = () => {
-  isMatch.value = true
-  replaceQuery({ type: 'match' })
-  initSocketForMatch()
-}
+const onRematch = () =>
+  useRematch(exitRoom, initSocket, onMatched, router, isMatch, 'audio-chat')
 
 const exitRoom = async () => {
   useClosePC(pc)
@@ -441,25 +317,14 @@ const exitRoom = async () => {
 
   socket.disconnect()
   useClearRoomInfo()
-  _remoteRoomInfo.roomId = _remoteRoomInfo.path = roomId = ''
+  _remoteRoomInfo.roomId = _remoteRoomInfo.path = ''
   leaved.value = joined.value = false
 }
 
-const initSocketForRoom = () => {
-  initSocket()
-  socket.emit('join', roomId)
-}
-
-const initSocketForMatch = () => {
-  initSocket()
-  socket.on('matched', onMatched)
-  socket.emit('joinmatch', 'audio-chat')
-  socket.emit('match', 'audio-chat')
-}
-
 const initPC = async () => {
-  pc = useCreatePeerConnection(socket, roomId, online, onTrack)
+  pc = useCreatePeerConnection(socket, _remoteRoomInfo.roomId, online, onTrack)
   await initLocalMediaStream()
+  return pc
 }
 
 const updateSpeakerLabel = (label: string) => (speakerLabel.value = label)
@@ -531,50 +396,41 @@ const initSocket = () => {
     onDisconnect,
     onRtc,
     isReconnect,
-    roomId,
+    _remoteRoomInfo.roomId,
     isFull
   )
   socket.on('bye', onBye)
+  return socket
 }
 
-const replaceQuery = (query, pathname?: string) =>
-  router.replace({ path: pathname ? pathname : path.value, query })
-
 onMounted(async () => {
-  if (roomId) {
-    const _path = path.value
-
-    if (!_remoteRoomInfo.roomId) {
-      _remoteRoomInfo.roomId = roomId
-      _remoteRoomInfo.path = _path
-      useSaveRoomInfo(_path, roomId)
-    } else {
-      if (_remoteRoomInfo.path === _path) {
-        await replaceQuery({ roomId })
-      } else {
-        await replaceQuery({ roomId }, _remoteRoomInfo.path)
-        return
-      }
-    }
-
-    initSocketForRoom()
-  } else if (isMatch.value) {
-    initSocketForMatch()
-  }
+  useMounted(
+    initSocket,
+    onMatched,
+    router,
+    hasRemoteRoomId,
+    path,
+    _remoteRoomInfo,
+    isMatch,
+    'audio-chat'
+  )
 })
 
-onBeforeUnmount(() => socket && socket.disconnect())
-
-watch(pin, v => {
-  if (v.length === pinLength) {
-    const _path = path.value
-    _remoteRoomInfo.roomId = roomId = 'audio-chat-' + v.join('')
-    _remoteRoomInfo.path = _path
-    useSaveRoomInfo(_path, roomId)
-    replaceQuery({ roomId })
-    initSocketForRoom()
-  }
+onBeforeUnmount(() => {
+  useBeforeUnmount(socket)
 })
+
+const watchPinCb = (pin: string) => {
+  useWatchPinCb(
+    'audio-chat',
+    _remoteRoomInfo.roomId,
+    pin,
+    path,
+    remoteRoomInfo,
+    router
+  )
+  useInitSocketForRoom(initSocket, _remoteRoomInfo.roomId)
+}
 
 watch(volume, v => (remoteAudioRef.value.volume = v))
 
@@ -595,4 +451,6 @@ watch(micLabel, async v => {
   })
   localAudioRef.value.srcObject = localMediaStream
 })
+
+const onBack = () => useCancelMatch(isMatch.value, timer, router)
 </script>

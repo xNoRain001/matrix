@@ -1,67 +1,16 @@
 <template>
-  <div
-    v-if="!(roomId || remoteRoomInfo.roomId || isMatch)"
-    class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-end"
-  >
-    <UPinInput size="xl" :length="pinLength" v-model="pin" />
-    <q-breadcrumbs class="text-primary mt-4 cursor-pointer">
-      <q-breadcrumbs-el
-        label="去匹配"
-        icon="near_me"
-        @click="router.push('/match/chat')"
-      >
-      </q-breadcrumbs-el>
-    </q-breadcrumbs>
-  </div>
-
-  <div
-    v-if="!(roomId || remoteRoomInfo.roomId)"
-    class="absolute top-4 left-4 flex flex-col"
-  >
-    <q-breadcrumbs class="text-primary mt-4 cursor-pointer">
-      <q-breadcrumbs-el
-        label="返回"
-        icon="arrow_back_ios_new"
-        @click="useCancelMatch(isMatch, timer, router)"
-      >
-      </q-breadcrumbs-el>
-    </q-breadcrumbs>
-  </div>
-
-  <div
+  <PIN
+    v-if="!(remoteRoomInfo.roomId || isMatch)"
+    :watch-pin-cb="watchPinCb"
+    type="chat"
+  ></PIN>
+  <Back v-if="!remoteRoomInfo.roomId" :back="onBack"></Back>
+  <Matching
     v-if="isMatch"
-    class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
-  >
-    <div v-if="offline" class="flex flex-col items-center">
-      <q-icon color="red" size="lg" name="wifi_off"></q-icon>
-      <div class="mt-4 text-red-600">网络错误</div>
-      <q-btn
-        @click="onRematchWithOffline"
-        class="!mt-4"
-        color="primary"
-        label="重新匹配"
-      ></q-btn>
-    </div>
-    <div v-else class="flex flex-col items-center">
-      <q-spinner-puff color="primary" size="lg" />
-      <div class="mt-4">正在匹配中...</div>
-    </div>
-  </div>
-
-  <div
-    v-if="isFull"
-    class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
-  >
-    <div class="flex flex-col items-center">
-      <q-btn label="离开房间" @click="onLeaveFullRoom" color="primary"></q-btn>
-      <q-btn
-        class="!mt-4"
-        label="返回主页"
-        @click="router.push('/room')"
-        color="primary"
-      ></q-btn>
-    </div>
-  </div>
+    :offline="offline"
+    :rematch="onRematchWithOffline"
+  ></Matching>
+  <Full v-if="isFull" :leave="onLeaveFullRoom"></Full>
 
   <div class="flex-center flex">
     <div
@@ -182,9 +131,9 @@
         <q-btn
           class="full-width !mt-4"
           color="primary"
-          :label="path.startsWith('/room/chat') ? '重新进入房间' : '重新匹配'"
+          :label="inRoom ? '重新进入房间' : '重新匹配'"
           rounded
-          @click="path.startsWith('/room/chat') ? onBackRoomPIN() : onRematch()"
+          @click="inRoom ? onBackPIN() : onRematch()"
         ></q-btn>
       </div>
     </div>
@@ -296,24 +245,35 @@
 
 <script lang="ts" setup>
 import {
+  useBye,
   useCancelMatch,
   useClearMessages,
   useClearRoomInfo,
   useClosePC,
   useCreatePeerConnection,
-  useDialog,
+  useDisconnect,
   useExtendFileStatus,
   useGetDB,
   useInitDataChannel,
   useInitRtc,
   useInitSocket,
-  useNotify,
+  useLeaveFullRoom,
+  useOtherJoin,
   useReceiveFile,
-  useSaveRoomInfo,
+  useScrollToBottom,
   useSendFile,
-  useStartRTC
+  useWatchPinCb,
+  useLeaveRoom,
+  useJoined,
+  useBackPIN,
+  useInitSocketForRoom,
+  useRematchWithOffline,
+  useBeforeUnmount,
+  useMatched,
+  useRematch,
+  useMounted
 } from '@/hooks'
-import { onBeforeUnmount, onMounted, ref, toRefs, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { received, receiving, sending, sent } from '@/const'
 
@@ -326,8 +286,8 @@ import { storeToRefs } from 'pinia'
 let timer = null
 let lastMsgTimer = null
 let lastMsgStampIndex = 0
-let makingOffer = false
-let polite = true
+const makingOffer = ref(false)
+const polite = ref(true)
 let avatar = 'https://cdn.quasar.dev/img/avatar4.jpg'
 let pc: RTCPeerConnection | null = null
 let socket: Socket | null = null
@@ -336,9 +296,8 @@ let dataChannel: RTCDataChannel | null = null
 const flag = ref(false)
 const message = ref('')
 const expanded = ref(false)
-const route = useRoute()
-const { query } = route
-const { path } = toRefs(route)
+const { path, query } = useRoute()
+const inRoom = path.startsWith('/room/chat')
 const router = useRouter()
 const isReconnect = ref(false)
 // 双方中任意一方离开时，值会修改为 true
@@ -347,10 +306,9 @@ const otherLeaved = ref(false)
 // 如果服务器中还能获取到 roomId，说明没有退出房间，恢复到上次的房间
 const { online, remoteRoomInfo } = storeToRefs(useRoomStore())
 const _remoteRoomInfo = remoteRoomInfo.value
-let roomId = _remoteRoomInfo.roomId || (query.roomId as string)
-const isMatch = ref(path.value === '/match/chat' && !roomId)
-const pinLength = 4
-const pin = ref([])
+const hasRemoteRoomId = Boolean(_remoteRoomInfo.roomId)
+_remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
+const isMatch = ref(path === '/match/chat' && !_remoteRoomInfo.roomId)
 const joined = ref(false)
 const db = await useGetDB()
 const minute = 60 * 1000
@@ -377,13 +335,7 @@ const receiveStartTime = ref(0)
 const offline = ref(false)
 const isFull = ref(false)
 
-const onLeaveFullRoom = () => {
-  // 满员时是加入不了房间的，但是需要显示底部的重新加入房间或匹配的按钮
-  // 所以手动更新 joined 和 leaved 的值
-  joined.value = leaved.value = true
-  // 将 isFull 修改为 false，让这部分的视图不会显示在匹配或 PIN 中
-  isFull.value = false
-}
+const onLeaveFullRoom = () => useLeaveFullRoom(joined, leaved, isFull)
 
 const onDownload = (url, filename) => {
   fetch(url)
@@ -417,7 +369,7 @@ const sendFile = async (files: extendedFiles, type: fileTypes) => {
       pc,
       socket,
       dataChannel,
-      roomId,
+      _remoteRoomInfo.roomId,
       file as any,
       flag,
       sending,
@@ -494,7 +446,11 @@ const addMessageToDB = async (message: dbMessage) =>
 
 // 获取所有聊天记录
 const getMessages = async () => {
-  const data = await db.getAllFromIndex('messages', 'roomId', roomId)
+  const data = await db.getAllFromIndex(
+    'messages',
+    'roomId',
+    _remoteRoomInfo.roomId
+  )
   data.forEach(({ type, content }) => {
     if (
       type === 'image' ||
@@ -508,7 +464,9 @@ const getMessages = async () => {
   return data
 }
 
-const messageList = ref<message[]>(roomId ? [...(await getMessages())] : [])
+const messageList = ref<message[]>(
+  _remoteRoomInfo.roomId ? [...(await getMessages())] : []
+)
 const t = messageList.value
 let lastMsgTimeStamp = t[t.length - 1]?.timestamp || 0
 
@@ -516,7 +474,11 @@ const overFiveMins = timestamp => timestamp - lastMsgTimeStamp > fiveMins
 
 const addMessageLabelToDB = async (timestamp: number) => {
   if (overFiveMins(timestamp)) {
-    await addMessageToDB({ roomId, type: 'label', timestamp })
+    await addMessageToDB({
+      roomId: _remoteRoomInfo.roomId,
+      type: 'label',
+      timestamp
+    })
   }
 
   // 不在这里更新 lastMsgTimeStamp，因为此时视图中还没添加 message label
@@ -565,7 +527,11 @@ const addMessageLabelToView = (messageRecord: dbMessage) => {
   const { timestamp } = messageRecord
 
   if (overFiveMins(timestamp)) {
-    messageList.value.push({ roomId, type: 'label', timestamp })
+    messageList.value.push({
+      roomId: _remoteRoomInfo.roomId,
+      type: 'label',
+      timestamp
+    })
   }
 
   lastMsgTimeStamp = timestamp
@@ -584,23 +550,12 @@ const addMessageToView = (messageRecord: dbMessage) => {
 
   _messageList.push(messageRecord as message)
   removeLastMsgStamp(stampMsg)
-  scrollToBottom()
+  useScrollToBottom()
 }
 
 const addMessagesToDB = async (messageRecord: dbMessage) => {
   await addMessageLabelToDB(messageRecord.timestamp)
-  await addMessageToDB({ roomId, ...messageRecord })
-}
-
-const scrollToBottom = () => {
-  const html = document.documentElement
-  const timer = setTimeout(() => {
-    html.scrollTo({
-      top: html.scrollHeight,
-      behavior: 'smooth'
-    })
-    clearTimeout(timer)
-  })
+  await addMessageToDB({ roomId: _remoteRoomInfo.roomId, ...messageRecord })
 }
 
 const onReceiveMsg = ({ channel }: { channel: RTCDataChannel }) => {
@@ -614,7 +569,7 @@ const onReceiveMsg = ({ channel }: { channel: RTCDataChannel }) => {
         inReceving,
         receivedFiles,
         received,
-        roomId,
+        _remoteRoomInfo.roomId,
         receiveStartTime
       )
 
@@ -656,10 +611,12 @@ const onFileMetadata = async (roomId: string, data: any) => {
   socket.emit('receive-file-metadata', roomId, null)
 }
 
+// TODO: 和 file-transfer 合并
 const initPC = () => {
-  pc = useCreatePeerConnection(socket, roomId, online, () => {})
+  pc = useCreatePeerConnection(socket, _remoteRoomInfo.roomId, online, () => {})
   pc.ondatachannel = onReceiveMsg
   dataChannel = useInitDataChannel(pc)
+  return pc
 }
 
 const formatTimeAgo = timestamp => {
@@ -686,17 +643,10 @@ const updateLastMsgStamp = () => {
 }
 
 // 当自己加入房间时触发
-const onJoined = async (_, __, _polite) => {
+const onJoined = (_, __, _polite) => {
   clearInterval(lastMsgTimer)
-  polite = _polite
-  joined.value = true
-
-  if (!polite) {
-    initPC()
-    socket.emit('otherjoin', roomId)
-  }
-
-  scrollToBottom()
+  useJoined(socket, polite, joined, _remoteRoomInfo.roomId, initPC, _polite)
+  useScrollToBottom()
   updateLastMsgStamp()
   lastMsgTimer = setInterval(() => {
     updateLastMsgStamp()
@@ -704,106 +654,30 @@ const onJoined = async (_, __, _polite) => {
 }
 
 // 当其他人加入房间时触发
-const onOtherJoin = async (roomId, _) => {
-  polite = true
-  useClosePC(pc)
-  initPC()
+const onOtherJoin = () =>
+  useOtherJoin(pc, socket, _remoteRoomInfo.roomId, polite, makingOffer, initPC)
 
-  try {
-    makingOffer = true
-    await useStartRTC(pc, socket, roomId)
-  } catch (err) {
-    console.error(err)
-  }
-
-  makingOffer = false
-}
-
-const onDisconnect = _ => {
-  useClosePC(pc)
-
-  if (isMatch.value) {
-    offline.value = true
-    return
-  }
-
-  // connect 回调中判断出如果是重连，会发送 join
-  // socket 连接成功时是重连的前提是双方都没有离开
-  if (!leaved.value) {
-    isReconnect.value = true
-  }
-}
+const onDisconnect = () =>
+  useDisconnect(pc, isMatch, offline, leaved, isReconnect)
 
 const onRtc = (roomId: string, data: any) =>
   useInitRtc(pc, socket, roomId, data, makingOffer, polite)
 
-const onMatched = data => {
-  const { type, message } = data
+const onMatched = data =>
+  useMatched(data, socket, path, _remoteRoomInfo, isMatch, router)
 
-  if (type === 'fail') {
-    useNotify(message, 'negative')
-    timer = setTimeout(() => {
-      socket.emit('match')
-      clearTimeout(timer)
-    }, 10000)
-  } else if (type === 'suc') {
-    // 可能出现匹配失败，等待再次匹配的过程中被别人给匹配到了
-    clearTimeout(timer)
-    const _path = path.value
-    _remoteRoomInfo.roomId = roomId = message
-    _remoteRoomInfo.path = _path
-    // 记录房间号
-    useSaveRoomInfo(_path, message)
-    replaceQuery({ roomId })
-    isMatch.value = false
-    // 不需要从匹配列表中移除，因为服务器在匹配成功时会自动将你从匹配列表中移除
-    socket.emit('join', roomId)
-  }
-}
+const onLeave = async () =>
+  useLeaveRoom(socket, _remoteRoomInfo.roomId, leaved, true)
 
-const onLeave = async () => {
-  useDialog({
-    class: 'bg-[#0d1117]',
-    title: '离开',
-    message: '你确定要离开房间吗？',
-    persistent: true,
-    dark: true,
-    ok: '确定',
-    cancel: '取消',
-    color: 'primary'
-  }).onOk(async () => {
-    // 服务器 leave 回调中发送 bye，然后触发本地 leaved
-    leaved.value = true
-    socket.emit('leave', roomId)
-    scrollToBottom()
-  })
+const onBackPIN = async () => useBackPIN(exitRoom, router)
 
-  // 在对方离线的时候，我离开了，对方在线后应该先去服务器看我还在不在
-}
+const onBye = () => useBye(leaved, otherLeaved)
 
-const onBackRoomPIN = async () => {
-  await exitRoom()
-  replaceQuery({})
-  pin.value.length = 0
-}
+const onRematch = () =>
+  useRematch(exitRoom, initSocket, onMatched, router, isMatch, 'chat')
 
-const onBye = () => (leaved.value = otherLeaved.value = true)
-
-const onRematch = async () => {
-  await exitRoom()
-  initMatch()
-}
-
-const onRematchWithOffline = () => {
-  offline.value = false
-  initSocketForMatch()
-}
-
-const initMatch = () => {
-  isMatch.value = true
-  router.push('/match/chat')
-  initSocketForMatch()
-}
+const onRematchWithOffline = () =>
+  useRematchWithOffline(initSocket, onMatched, offline, 'chat')
 
 const exitRoom = async () => {
   // 重新匹配时，你可能是没选择离开的人，此时 socket 和 pc 都还存在，需要手动断开
@@ -814,23 +688,11 @@ const exitRoom = async () => {
   useClosePC(pc)
   socket.disconnect()
   // 重新匹配时删除聊天记录
-  await useClearMessages(roomId)
+  await useClearMessages(_remoteRoomInfo.roomId)
   useClearRoomInfo()
   messageList.value = []
-  _remoteRoomInfo.roomId = _remoteRoomInfo.path = roomId = ''
+  _remoteRoomInfo.roomId = _remoteRoomInfo.path = ''
   leaved.value = joined.value = false
-}
-
-const initSocketForRoom = () => {
-  initSocket()
-  socket.emit('join', roomId)
-}
-
-const initSocketForMatch = () => {
-  initSocket()
-  socket.on('matched', onMatched)
-  socket.emit('joinmatch', 'chat')
-  socket.emit('match', 'chat')
 }
 
 const onReceiveFileMetadata = () => (flag.value = true)
@@ -844,7 +706,7 @@ const initSocket = () => {
     onDisconnect,
     onRtc,
     isReconnect,
-    roomId,
+    _remoteRoomInfo.roomId,
     isFull
   )
   // 其他人离开房间
@@ -852,52 +714,38 @@ const initSocket = () => {
   socket.on('file-metadata', onFileMetadata)
   socket.on('receive-file-metadata', onReceiveFileMetadata)
   socket.on('saved-file', onSavedFile)
+
+  return socket
 }
 
-const replaceQuery = (query, pathname?: string) =>
-  router.replace({ path: pathname ? pathname : path.value, query })
-
 onMounted(async () => {
-  if (roomId) {
-    const _path = path.value
-
-    // 有 roomId，但是没有 remoteRoomInfo，说明是直接访问带 roomId 的链接
-    if (!_remoteRoomInfo.roomId) {
-      _remoteRoomInfo.roomId = roomId
-      _remoteRoomInfo.path = _path
-      useSaveRoomInfo(_path, roomId)
-    } else {
-      // 如果获取到了远程房间，更新路由
-      if (_remoteRoomInfo.path === _path) {
-        // 只需要替换 roomId，由于路径没有发生变化，组件不会被销毁
-        await replaceQuery({ roomId })
-      } else {
-        // 路径发生变化，组件会被销毁
-        await replaceQuery({ roomId }, _remoteRoomInfo.path)
-        // 阻止生成 socket，onBeforeUnmount 中来不及销毁
-        return
-      }
-    }
-
-    initSocketForRoom()
-  } else if (isMatch.value) {
-    initSocketForMatch()
-  }
+  useMounted(
+    initSocket,
+    onMatched,
+    router,
+    hasRemoteRoomId,
+    path,
+    _remoteRoomInfo,
+    isMatch,
+    'chat'
+  )
 })
 
 onBeforeUnmount(() => {
-  // 离开时需要手动销毁 socket，才能让它从 matchClients 中移除
-  socket && socket.disconnect()
+  useBeforeUnmount(socket)
 })
 
-watch(pin, async v => {
-  if (v.length === pinLength) {
-    const _path = path.value
-    _remoteRoomInfo.roomId = roomId = 'chat-' + v.join('')
-    _remoteRoomInfo.path = _path
-    useSaveRoomInfo(_path, roomId)
-    replaceQuery({ roomId })
-    initSocketForRoom()
-  }
-})
+const watchPinCb = (pin: string) => {
+  useWatchPinCb(
+    'chat',
+    _remoteRoomInfo.roomId,
+    pin,
+    path,
+    remoteRoomInfo,
+    router
+  )
+  useInitSocketForRoom(initSocket, _remoteRoomInfo.roomId)
+}
+
+const onBack = () => useCancelMatch(isMatch.value, timer, router)
 </script>

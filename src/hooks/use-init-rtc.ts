@@ -1,12 +1,13 @@
 import type { Socket } from 'socket.io-client'
+import type { Ref } from 'vue'
 
 type useInitRtcFn = (
   pc: RTCPeerConnection,
   socket: Socket,
   roomId: string,
   data: { description: RTCSessionDescriptionInit; candidate: RTCIceCandidate },
-  makingOffer: boolean,
-  polite: boolean
+  makingOffer: Ref<boolean>,
+  polite: Ref<boolean>
 ) => {}
 
 let ignoreOffer = false
@@ -23,8 +24,9 @@ const useInitRtc: useInitRtcFn = async (
     if (description) {
       const { type } = description
       const offerCollision =
-        type === 'offer' && (makingOffer || pc.signalingState !== 'stable')
-      ignoreOffer = !polite && offerCollision
+        type === 'offer' &&
+        (makingOffer.value || pc.signalingState !== 'stable')
+      ignoreOffer = !polite.value && offerCollision
 
       if (ignoreOffer) {
         return

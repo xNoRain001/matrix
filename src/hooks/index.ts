@@ -16,40 +16,64 @@ import useGetAudioInput from './use-get-audio-input'
 import useGetAudioInputs from './use-get-audio-inputs'
 import useGetAudioOutput from './use-get-audio-output'
 import useGetAudioOutputs from './use-get-audio-outputs'
-import useStartRTC from './use-start-rtc'
 import useBindMediaStream from './use-bind-media-stream'
 import useClosePC from './use-close-pc'
 import useBack from './use-back'
-import useAddRoomID from './use-add-room-id'
 import useGetDB from './use-get-db'
 import useClearMessages from './use-clear-messages'
 import useDeleteDB from './use-delete-db'
 import useDialog from './use-dialog'
-import useSaveRoomInfo from './use-save-room-info'
 import useGetRoomInfo from './use-get-room-info'
 import useClearRoomInfo from './use-clear-room-info'
 import useSendFile from './use-send-file'
 import useReceiveFile from './use-receive-file'
 import useExtendFileStatus from './use-extend-file-status'
 import useCancelMatch from './use-cancel-match'
+import useWatchPinCb from './use-watch-pin-cb'
+import useLeaveFullRoom from './use-leave-full-room'
+import useScrollToBottom from './use-scroll-to-bottom'
+import useMatched from './use-matched'
+import useDisconnect from './use-disconnect'
+import useOtherJoin from './use-other-join'
+import useBye from './use-bye'
+import useLeaveRoom from './use-leave-room'
+import useJoined from './use-joined'
+import useBackPIN from './use-back-pin'
+import useInitSocketForRoom from './use-init-socket-for-room'
+import useRematchWithOffline from './use-rematch-with-offline'
+import useBeforeUnmount from './use-before-unmount'
+import useRematch from './use-rematch'
+import useMounted from './use-mounted'
 
 export {
+  useRematch,
+  useMounted,
+  useBeforeUnmount,
+  useRematchWithOffline,
+  useInitSocketForRoom,
+  useBackPIN,
+  useJoined,
+  useLeaveRoom,
+  useBye,
+  useOtherJoin,
+  useDisconnect,
+  useMatched,
+  useScrollToBottom,
+  useLeaveFullRoom,
+  useWatchPinCb,
   useCancelMatch,
   useExtendFileStatus,
   useReceiveFile,
   useSendFile,
   useClearRoomInfo,
-  useSaveRoomInfo,
   useGetRoomInfo,
   useDialog,
   useDeleteDB,
   useClearMessages,
   useGetDB,
-  useAddRoomID,
   useBack,
   useClosePC,
   useBindMediaStream,
-  useStartRTC,
   useGetAudioInput,
   useGetAudioInputs,
   useGetAudioOutput,
