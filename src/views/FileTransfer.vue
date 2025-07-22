@@ -247,7 +247,7 @@
 <script lang="ts" setup>
 import {
   useCancelMatch,
-  useClearRoomId,
+  useClearRoomInfo,
   useClosePC,
   useCreatePeerConnection,
   useDialog,
@@ -411,10 +411,11 @@ const onMatched = data => {
   } else if (type === 'suc') {
     // 可能出现匹配失败，等待再次匹配的过程中被别人给匹配到了
     clearTimeout(timer)
+    const _path = path.value
     _remoteRoomInfo.roomId = roomId = message
+    _remoteRoomInfo.path = _path
     // 记录房间号
-    console.log(path.value, message)
-    useSaveRoomInfo(path.value, message)
+    useSaveRoomInfo(_path, message)
     replaceQuery({ roomId })
     isMatch.value = false
     socket.emit('join', roomId)
@@ -460,8 +461,8 @@ const initMatch = () => {
 const exitRoom = async () => {
   useClosePC(pc)
   socket.disconnect()
-  useClearRoomId()
-  _remoteRoomInfo.roomId = roomId = ''
+  useClearRoomInfo()
+  _remoteRoomInfo.roomId = _remoteRoomInfo.path = roomId = ''
   leaved.value = joined.value = false
 }
 
@@ -497,11 +498,14 @@ const replaceQuery = (query, pathname?: string) =>
 
 onMounted(async () => {
   if (roomId) {
+    const _path = path.value
+
     if (!_remoteRoomInfo.roomId) {
       _remoteRoomInfo.roomId = roomId
-      useSaveRoomInfo(path.value, roomId)
+      _remoteRoomInfo.path = _path
+      useSaveRoomInfo(_path, roomId)
     } else {
-      if (_remoteRoomInfo.path === path.value) {
+      if (_remoteRoomInfo.path === _path) {
         await replaceQuery({ roomId })
       } else {
         await replaceQuery({ roomId }, _remoteRoomInfo.path)
@@ -519,8 +523,10 @@ onBeforeUnmount(() => socket && socket.disconnect())
 
 watch(pin, async v => {
   if (v.length === pinLength) {
+    const _path = path.value
     _remoteRoomInfo.roomId = roomId = 'file-transfer' + v.join('')
-    useSaveRoomInfo(path.value, roomId)
+    _remoteRoomInfo.path = _path
+    useSaveRoomInfo(_path, roomId)
     replaceQuery({ roomId })
     initSocketForRoom()
   }

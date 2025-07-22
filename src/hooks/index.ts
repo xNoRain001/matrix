@@ -27,7 +27,7 @@ import useDeleteDB from './use-delete-db'
 import useDialog from './use-dialog'
 import useSaveRoomInfo from './use-save-room-info'
 import useGetRoomInfo from './use-get-room-info'
-import useClearRoomId from './use-clear-room-id'
+import useClearRoomInfo from './use-clear-room-info'
 import useSendFile from './use-send-file'
 import useReceiveFile from './use-receive-file'
 import useExtendFileStatus from './use-extend-file-status'
@@ -38,7 +38,7 @@ export {
   useExtendFileStatus,
   useReceiveFile,
   useSendFile,
-  useClearRoomId,
+  useClearRoomInfo,
   useSaveRoomInfo,
   useGetRoomInfo,
   useDialog,

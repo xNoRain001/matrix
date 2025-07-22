@@ -32,8 +32,20 @@
     v-if="isMatch"
     class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
   >
-    <q-spinner-puff color="primary" size="lg" />
-    <div class="mt-4">正在匹配中...</div>
+    <div v-if="offline" class="flex flex-col items-center">
+      <q-icon color="red" size="lg" name="wifi_off"></q-icon>
+      <div class="mt-4 text-red-600">网络错误</div>
+      <q-btn
+        @click="onRematchWithOffline"
+        class="!mt-4"
+        color="primary"
+        label="重新匹配"
+      ></q-btn>
+    </div>
+    <div v-else class="flex flex-col items-center">
+      <q-spinner-puff color="primary" size="lg" />
+      <div class="mt-4">正在匹配中...</div>
+    </div>
   </div>
 
   <div class="flex-center flex">
@@ -271,7 +283,7 @@
 import {
   useCancelMatch,
   useClearMessages,
-  useClearRoomId,
+  useClearRoomInfo,
   useClosePC,
   useCreatePeerConnection,
   useDialog,
@@ -347,6 +359,7 @@ const inReceving = ref(false)
 const receivedFiles: receivedFiles = ref([])
 const sendFiles = ref<extendedFiles>([])
 const receiveStartTime = ref(0)
+const offline = ref(false)
 
 const onDownload = (url, filename) => {
   fetch(url)
@@ -685,6 +698,11 @@ const onOtherJoin = async (roomId, _) => {
 const onDisconnect = _ => {
   useClosePC(pc)
 
+  if (isMatch.value) {
+    offline.value = true
+    return
+  }
+
   // connect 回调中判断出如果是重连，会发送 join
   // socket 连接成功时是重连的前提是双方都没有离开
   if (!leaved.value) {
@@ -707,9 +725,11 @@ const onMatched = data => {
   } else if (type === 'suc') {
     // 可能出现匹配失败，等待再次匹配的过程中被别人给匹配到了
     clearTimeout(timer)
+    const _path = path.value
     _remoteRoomInfo.roomId = roomId = message
+    _remoteRoomInfo.path = _path
     // 记录房间号
-    useSaveRoomInfo(path.value, message)
+    useSaveRoomInfo(_path, message)
     replaceQuery({ roomId })
     isMatch.value = false
     // 不需要从匹配列表中移除，因为服务器在匹配成功时会自动将你从匹配列表中移除
@@ -751,6 +771,11 @@ const onRematch = async () => {
   initMatch()
 }
 
+const onRematchWithOffline = () => {
+  offline.value = false
+  initSocketForMatch()
+}
+
 const initMatch = () => {
   isMatch.value = true
   router.push('/match/chat')
@@ -767,9 +792,9 @@ const exitRoom = async () => {
   socket.disconnect()
   // 重新匹配时删除聊天记录
   await useClearMessages(roomId)
-  useClearRoomId()
+  useClearRoomInfo()
   messageList.value = []
-  _remoteRoomInfo.roomId = roomId = ''
+  _remoteRoomInfo.roomId = _remoteRoomInfo.path = roomId = ''
   leaved.value = joined.value = false
 }
 
@@ -810,13 +835,16 @@ const replaceQuery = (query, pathname?: string) =>
 
 onMounted(async () => {
   if (roomId) {
+    const _path = path.value
+
     // 有 roomId，但是没有 remoteRoomInfo，说明是直接访问带 roomId 的链接
     if (!_remoteRoomInfo.roomId) {
       _remoteRoomInfo.roomId = roomId
-      useSaveRoomInfo(path.value, roomId)
+      _remoteRoomInfo.path = _path
+      useSaveRoomInfo(_path, roomId)
     } else {
       // 如果获取到了远程房间，更新路由
-      if (_remoteRoomInfo.path === path.value) {
+      if (_remoteRoomInfo.path === _path) {
         // 只需要替换 roomId，由于路径没有发生变化，组件不会被销毁
         await replaceQuery({ roomId })
       } else {
@@ -840,8 +868,10 @@ onBeforeUnmount(() => {
 
 watch(pin, async v => {
   if (v.length === pinLength) {
+    const _path = path.value
     _remoteRoomInfo.roomId = roomId = 'chat-' + v.join('')
-    useSaveRoomInfo(path.value, roomId)
+    _remoteRoomInfo.path = _path
+    useSaveRoomInfo(_path, roomId)
     replaceQuery({ roomId })
     initSocketForRoom()
   }
