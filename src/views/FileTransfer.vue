@@ -32,8 +32,35 @@
     v-if="isMatch"
     class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
   >
-    <q-spinner-puff color="primary" size="lg" />
-    <div class="mt-4">正在匹配中...</div>
+    <div v-if="offline" class="flex flex-col items-center">
+      <q-icon color="red" size="lg" name="wifi_off"></q-icon>
+      <div class="mt-4 text-red-600">网络错误</div>
+      <q-btn
+        @click="onRematchWithOffline"
+        class="!mt-4"
+        color="primary"
+        label="重新匹配"
+      ></q-btn>
+    </div>
+    <div v-else class="flex flex-col items-center">
+      <q-spinner-puff color="primary" size="lg" />
+      <div class="mt-4">正在匹配中...</div>
+    </div>
+  </div>
+
+  <div
+    v-if="isFull"
+    class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+  >
+    <div class="flex flex-col items-center">
+      <q-btn label="离开房间" @click="onLeaveFullRoom" color="primary"></q-btn>
+      <q-btn
+        class="!mt-4"
+        label="返回主页"
+        @click="router.push('/room')"
+        color="primary"
+      ></q-btn>
+    </div>
   </div>
 
   <div class="flex-center flex">
@@ -297,6 +324,18 @@ const _remoteRoomInfo = remoteRoomInfo.value
 let roomId = _remoteRoomInfo.roomId || (query.roomId as string)
 const isMatch = ref(path.value === '/match/file-transfer' && !roomId)
 const joined = ref(false)
+const offline = ref(false)
+const isFull = ref(false)
+
+const onLeaveFullRoom = () => {
+  joined.value = leaved.value = true
+  isFull.value = false
+}
+
+const onRematchWithOffline = () => {
+  offline.value = false
+  initSocketForMatch()
+}
 
 const onClearReceivedFiles = () => {
   receivedFiles.value = []
@@ -391,6 +430,11 @@ const onOtherJoin = async (_, __) => {
 const onDisconnect = _ => {
   useClosePC(pc)
 
+  if (isMatch.value) {
+    offline.value = true
+    return
+  }
+
   if (!leaved.value) {
     isReconnect.value = true
   }
@@ -419,7 +463,6 @@ const onMatched = data => {
     replaceQuery({ roomId })
     isMatch.value = false
     socket.emit('join', roomId)
-    useNotify('匹配成功')
   }
 }
 
@@ -485,7 +528,8 @@ const initSocket = () => {
     onDisconnect,
     onRtc,
     isReconnect,
-    roomId
+    roomId,
+    isFull
   )
   socket.on('bye', onBye)
   socket.on('file-metadata', onFileMetadata)

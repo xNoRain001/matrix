@@ -48,6 +48,21 @@
     </div>
   </div>
 
+  <div
+    v-if="isFull"
+    class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+  >
+    <div class="flex flex-col items-center">
+      <q-btn label="离开房间" @click="onLeaveFullRoom" color="primary"></q-btn>
+      <q-btn
+        class="!mt-4"
+        label="返回主页"
+        @click="router.push('/room')"
+        color="primary"
+      ></q-btn>
+    </div>
+  </div>
+
   <div class="flex-center flex">
     <div
       v-if="joined"
@@ -360,6 +375,15 @@ const receivedFiles: receivedFiles = ref([])
 const sendFiles = ref<extendedFiles>([])
 const receiveStartTime = ref(0)
 const offline = ref(false)
+const isFull = ref(false)
+
+const onLeaveFullRoom = () => {
+  // 满员时是加入不了房间的，但是需要显示底部的重新加入房间或匹配的按钮
+  // 所以手动更新 joined 和 leaved 的值
+  joined.value = leaved.value = true
+  // 将 isFull 修改为 false，让这部分的视图不会显示在匹配或 PIN 中
+  isFull.value = false
+}
 
 const onDownload = (url, filename) => {
   fetch(url)
@@ -734,7 +758,6 @@ const onMatched = data => {
     isMatch.value = false
     // 不需要从匹配列表中移除，因为服务器在匹配成功时会自动将你从匹配列表中移除
     socket.emit('join', roomId)
-    useNotify('匹配成功')
   }
 }
 
@@ -821,7 +844,8 @@ const initSocket = () => {
     onDisconnect,
     onRtc,
     isReconnect,
-    roomId
+    roomId,
+    isFull
   )
   // 其他人离开房间
   socket.on('bye', onBye)

@@ -32,8 +32,35 @@
     v-if="isMatch"
     class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
   >
-    <q-spinner-puff color="primary" size="lg" />
-    <div class="mt-4">正在匹配中...</div>
+    <div v-if="offline" class="flex flex-col items-center">
+      <q-icon color="red" size="lg" name="wifi_off"></q-icon>
+      <div class="mt-4 text-red-600">网络错误</div>
+      <q-btn
+        @click="onRematchWithOffline"
+        class="!mt-4"
+        color="primary"
+        label="重新匹配"
+      ></q-btn>
+    </div>
+    <div v-else class="flex flex-col items-center">
+      <q-spinner-puff color="primary" size="lg" />
+      <div class="mt-4">正在匹配中...</div>
+    </div>
+  </div>
+
+  <div
+    v-if="isFull"
+    class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+  >
+    <div class="flex flex-col items-center">
+      <q-btn label="离开房间" @click="onLeaveFullRoom" color="primary"></q-btn>
+      <q-btn
+        class="!mt-4"
+        label="返回主页"
+        @click="router.push('/room')"
+        color="primary"
+      ></q-btn>
+    </div>
   </div>
 
   <div class="flex-center flex">
@@ -260,6 +287,18 @@ const constraints = {
     autoGainControl: true // 自动增益
   }
 }
+const offline = ref(false)
+const isFull = ref(false)
+
+const onLeaveFullRoom = () => {
+  joined.value = leaved.value = true
+  isFull.value = false
+}
+
+const onRematchWithOffline = () => {
+  offline.value = false
+  initSocketForMatch()
+}
 
 // 当自己加入房间时触发
 const onJoined = async (_, __, _polite) => {
@@ -296,6 +335,11 @@ const onOtherJoin = async roomId => {
 const onDisconnect = () => {
   // 满员的情况下，不会触发 joined，此时 pc 为 null
   useClosePC(pc)
+
+  if (isMatch.value) {
+    offline.value = true
+    return
+  }
 
   // 关闭本地媒体
   if (localMediaStream) {
@@ -366,7 +410,6 @@ const onMatched = data => {
     replaceQuery({ roomId })
     isMatch.value = false
     socket.emit('join', roomId)
-    useNotify('匹配成功')
   }
 }
 
@@ -488,7 +531,8 @@ const initSocket = () => {
     onDisconnect,
     onRtc,
     isReconnect,
-    roomId
+    roomId,
+    isFull
   )
   socket.on('bye', onBye)
 }

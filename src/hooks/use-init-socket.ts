@@ -7,8 +7,9 @@ const useInitSocket = (
   onOtherJoin: Function,
   onDisconnect: Function,
   onRtc: Function,
-  isReconnect?: Ref<boolean>,
-  roomId?: string
+  isReconnect: Ref<boolean>,
+  roomId: string,
+  isFull: Ref<boolean>
 ) => {
   // @ts-ignore
   const socket = io.connect(import.meta.env.VITE_API_BASE_URL, {
@@ -17,6 +18,7 @@ const useInitSocket = (
 
   const onFull = (/** roomId, data */) => {
     useNotify('房间已经满员了')
+    isFull.value = true
     socket.disconnect()
   }
 
