@@ -1,6 +1,7 @@
 <template>
-  <div class="flex justify-center">
+  <div class="flex h-[var(--content-height)] items-center justify-center">
     <q-list
+      v-if="logined"
       class="w-full max-w-[var(--room-width)] rounded-[12px] bg-[#202127]"
       separator
     >
@@ -51,8 +52,10 @@
       </q-item>
     </q-list>
 
+    <Login v-else></Login>
+
     <q-dialog v-model="showBirthdayDialog" persistent>
-      <q-date v-model="date">
+      <q-date v-model="date" :locale="dateLocale">
         <div class="flex justify-end">
           <q-btn class="!mr-4" v-close-popup label="取消" color="primary" />
           <q-btn
@@ -68,6 +71,7 @@
 </template>
 
 <script lang="ts" setup>
+import { dateLocale } from '@/const'
 import { useDialog } from '@/hooks'
 import { ref } from 'vue'
 
@@ -78,6 +82,7 @@ const gender = ref('未知')
 const birthday = ref('未知')
 const date = ref('')
 const showBirthdayDialog = ref(false)
+const logined = ref(false)
 
 const updateBirthday = () => (birthday.value = date.value)
 

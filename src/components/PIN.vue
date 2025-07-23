@@ -2,7 +2,7 @@
   <div
     class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-end"
   >
-    <UPinInput size="xl" :length="pinLength" v-model="pin" />
+    <UPinInput autofocus size="xl" :length="pinLength" v-model="pin" />
     <q-breadcrumbs class="text-primary mt-4 cursor-pointer">
       <q-breadcrumbs-el
         label="去匹配"
