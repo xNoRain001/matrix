@@ -1,10 +1,10 @@
 import type { Socket } from 'socket.io-client'
 import type { Ref } from 'vue'
-import useNotify from './use-notify'
 import useSaveRoomInfo from './use-save-room-info'
 import type { Router } from 'vue-router'
 
 let timer = null
+let timer2 = null
 
 const useMatched = (
   data,
@@ -15,14 +15,21 @@ const useMatched = (
     roomId: string
   },
   isMatch: Ref<boolean>,
-  router: Router
+  router: Router,
+  pause: Ref<boolean>,
+  matchType: 'chat' | 'audio-chat' | 'file-transfer'
 ) => {
   const { type, message } = data
 
   if (type === 'fail') {
-    useNotify(message, 'negative')
+    // 设置一个延时，否则用户刚点击匹配就立马出现匹配失败
+    timer2 = setTimeout(() => {
+      pause.value = true
+      clearTimeout(timer2)
+    }, 2000)
     timer = setTimeout(() => {
-      socket.emit('match')
+      pause.value = false
+      socket.emit('match', matchType)
       clearTimeout(timer)
     }, 10000)
   } else if (type === 'suc') {

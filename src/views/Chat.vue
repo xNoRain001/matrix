@@ -8,6 +8,7 @@
   <Matching
     v-if="isMatch"
     :offline="offline"
+    :pause="pause"
     :rematch="onRematchWithOffline"
   ></Matching>
   <Full v-if="isFull" :leave="onLeaveFullRoom"></Full>
@@ -334,6 +335,7 @@ const sendFiles = ref<extendedFiles>([])
 const receiveStartTime = ref(0)
 const offline = ref(false)
 const isFull = ref(false)
+const pause = ref(false)
 
 const onLeaveFullRoom = () => useLeaveFullRoom(joined, leaved, isFull)
 
@@ -664,7 +666,16 @@ const onRtc = (roomId: string, data: any) =>
   useInitRtc(pc, socket, roomId, data, makingOffer, polite)
 
 const onMatched = data =>
-  useMatched(data, socket, path, _remoteRoomInfo, isMatch, router)
+  useMatched(
+    data,
+    socket,
+    path,
+    _remoteRoomInfo,
+    isMatch,
+    router,
+    pause,
+    'chat'
+  )
 
 const onLeave = async () =>
   useLeaveRoom(socket, _remoteRoomInfo.roomId, leaved, true)

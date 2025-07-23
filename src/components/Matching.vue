@@ -14,7 +14,8 @@
     </div>
     <div v-else class="flex flex-col items-center">
       <q-spinner-puff color="primary" size="lg" />
-      <div class="mt-4">正在匹配中...</div>
+      <div class="mt-4" v-if="pause">暂未匹配到对方，10 秒后重试...</div>
+      <div class="mt-4" v-else>正在匹配中...</div>
     </div>
   </div>
 </template>
@@ -22,6 +23,7 @@
 <script lang="ts" setup>
 defineProps<{
   offline: boolean
+  pause: boolean
   rematch: () => void
 }>()
 </script>

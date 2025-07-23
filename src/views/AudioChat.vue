@@ -8,6 +8,7 @@
   <Matching
     v-if="isMatch"
     :offline="offline"
+    :pause="pause"
     :rematch="onRematchWithOffline"
   ></Matching>
   <Full v-if="isFull" :leave="onLeaveFullRoom"></Full>
@@ -242,6 +243,7 @@ const constraints = {
 }
 const offline = ref(false)
 const isFull = ref(false)
+const pause = ref(false)
 
 const onLeaveFullRoom = () => useLeaveFullRoom(joined, leaved, isFull)
 
@@ -299,7 +301,16 @@ const onTrack = ({ track, streams }) => {
 const onLeave = async () => useLeaveRoom(socket, _remoteRoomInfo.roomId, leaved)
 
 const onMatched = data =>
-  useMatched(data, socket, path, _remoteRoomInfo, isMatch, router)
+  useMatched(
+    data,
+    socket,
+    path,
+    _remoteRoomInfo,
+    isMatch,
+    router,
+    pause,
+    'audio-chat'
+  )
 
 const onBackPIN = async () => useBackPIN(exitRoom, router)
 
