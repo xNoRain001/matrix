@@ -1,0 +1,23 @@
+import hasVerification from './has-verification-code'
+import getPublicKey from './get-public-key'
+import isExistedUser from './is-existed-user'
+import register from './register'
+import validateVerificationCode from './validate-verification-code'
+import updateProfile from './update-profile'
+import login from './login'
+import getUserInfo from './get-user-info'
+import sendVerificationCodeToEmail from './send-verification-code-to-email'
+import updatePassword from './update-password'
+
+export {
+  updatePassword,
+  sendVerificationCodeToEmail,
+  getUserInfo,
+  login,
+  updateProfile,
+  isExistedUser,
+  hasVerification,
+  getPublicKey,
+  register,
+  validateVerificationCode
+}

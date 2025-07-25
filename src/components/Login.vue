@@ -1,7 +1,7 @@
 <template>
   <q-stepper
-    v-if="register"
-    class="w-full max-w-[var(--room-width)] !bg-[#0d1117]"
+    v-if="isRegister"
+    class="w-full max-w-[var(--room-width)] !rounded-[12px] !bg-[#0d1117]"
     v-model="step"
     ref="stepperRef"
     color="primary"
@@ -13,7 +13,7 @@
       icon="how_to_reg"
       :done="step > 1"
     >
-      <q-form ref="formRef">
+      <q-form ref="registerFormRef">
         <q-input
           placeholder="example@gmail.com"
           outlined
@@ -56,7 +56,7 @@
         autofocus
         size="xl"
         :length="pinLength"
-        v-model="pin"
+        v-model="registerPin"
       />
     </q-step>
 
@@ -176,6 +176,19 @@
 import { dateLocale } from '@/const'
 import { watch, reactive, ref } from 'vue'
 
+import { useNotify } from '@/hooks'
+import {
+  hasVerification,
+  getPublicKey,
+  isExistedUser,
+  register,
+  validateVerificationCode,
+  updateProfile,
+  login
+} from '@/apis'
+
+let timer = null
+let pause = false
 const userInfo = ref({
   nickname: '',
   avatar: '',
@@ -185,10 +198,10 @@ const userInfo = ref({
 })
 const birthday = ref('未知')
 const genderOptions = ['男', '女']
-const pin = ref([])
+const registerPin = ref([])
 const pinLength = 4
 const step = ref(1)
-const formRef = ref(null)
+const registerFormRef = ref(null)
 const stepperRef = ref(null)
 const userInfoFormRef = ref(null)
 const loginFormRef = ref(null)
@@ -200,50 +213,143 @@ const registerForm = reactive({
   email: '',
   password: ''
 })
-const register = ref(false)
+const isRegister = ref(true)
+const pemHeader = '-----BEGIN PUBLIC KEY-----'
+const pemFooter = '-----END PUBLIC KEY-----'
 
-const onNext = () => {
+const importPublicKey = async () => {
+  const { data: publicKey } = await getPublicKey()
+  const pemContents = publicKey
+    .replace(pemHeader, '')
+    .replace(pemFooter, '')
+    .replace(/\s+/g, '')
+  const binaryDer = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0))
+
+  return crypto.subtle.importKey(
+    'spki',
+    binaryDer,
+    { name: 'RSA-OAEP', hash: 'SHA-256' },
+    true,
+    ['encrypt']
+  )
+}
+
+const getEncryptedUserInfo = async userInfo => {
+  const publicKey = await importPublicKey()
+  const encoded = new TextEncoder().encode(JSON.stringify(userInfo))
+  const encrypted = await crypto.subtle.encrypt(
+    { name: 'RSA-OAEP' },
+    publicKey,
+    encoded
+  )
+  return btoa(String.fromCharCode(...new Uint8Array(encrypted)))
+}
+
+const onNext = async () => {
   const _step = step.value
 
   if (_step === 1) {
-    formRef.value.validate().then(success => {
-      if (success) {
+    const success = await registerFormRef.value.validate()
+
+    if (success) {
+      try {
+        const { email } = registerForm
+        // 先判断邮箱是否已经被注册
+        await isExistedUser(email)
+        // 如果邮箱没有被注册，再判断是不是给这个邮箱发送过验证码并且还没过期
+        const { data: has } = await hasVerification(email, 'register')
+
+        // 验证码存在且未过期
+        if (has) {
+          // 直接进行到下一步让用户输入验证码
+          useNotify('已经发送过验证码')
+          return next()
+        }
+
+        const encryptedUserInfo = await getEncryptedUserInfo(registerForm)
+        const { message } = await register(encryptedUserInfo)
+        useNotify(message)
         next()
+      } catch (error) {
+        useNotify(error, 'negative')
       }
-    })
+    }
   } else if (_step === 3) {
-    userInfoFormRef.value.validate().then(success => {
-      if (success) {
+    const success = userInfoFormRef.value.validate()
+
+    if (success) {
+      try {
+        await updateProfile(registerForm.email, userInfo.value)
+      } catch (error) {
+        useNotify(error, 'negative')
       }
-    })
+    }
   }
 }
 
-const onCancelRegister = () => (register.value = false)
+const onCancelRegister = () => (isRegister.value = false)
 
-const onRegister = () => (register.value = true)
+const onRegister = () => (isRegister.value = true)
 
-const onLogin = () => {
-  loginFormRef.value.validate().then(success => {
-    if (success) {
-    }
-  })
+const initTimeout = () =>
+  setTimeout(() => {
+    pause = false
+    clearTimeout(timer)
+  }, 5000)
+
+// TODO: 使用验证码登录
+const onLogin = async () => {
+  // 表单通过验证后这里面的代码才会执行
+  if (pause) {
+    clearTimeout(timer)
+    timer = initTimeout()
+    useNotify('操作过于频繁，请在 5 秒后重试', 'warning')
+    return
+  }
+
+  pause = true
+  timer = initTimeout()
+
+  try {
+    // await isExistedUser(email)
+    // 不进行存在性检测，因为 loginService 内部会检测
+    const encryptedUserInfo = await getEncryptedUserInfo(loginForm)
+    const { data: token } = await login(encryptedUserInfo)
+    localStorage.setItem('token', token)
+
+    useNotify('登录成功')
+  } catch (error) {
+    useNotify(error, 'negative')
+  }
 }
 
 const next = () => stepperRef.value.next()
 
-watch(pin, v => {
+watch(registerPin, async v => {
   if (v.length === pinLength) {
-    if (true) {
-      // 从服务器获取用户信息
-      userInfo.value = {
-        nickname: '用户1234',
-        avatar: 'https://cdn.quasar.dev/img/avatar4.jpg',
-        gender: '未知',
-        birthday: '2000/01/01',
-        region: '未知'
-      }
+    if (pause) {
+      clearTimeout(timer)
+      timer = initTimeout()
+      useNotify('操作过于频繁，请在 5 秒后重试', 'warning')
+      return
+    }
+
+    pause = true
+    timer = initTimeout()
+
+    try {
+      const { data } = await validateVerificationCode(
+        'register',
+        registerForm.email,
+        v.join('')
+      )
+      // other -> '未知'
+      data.gender = '未知'
+      userInfo.value = data
       next()
+    } catch (error) {
+      useNotify(error, 'negative')
+      registerPin.value = []
     }
   }
 })

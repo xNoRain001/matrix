@@ -1,7 +1,7 @@
 <template>
   <q-layout class="bg-[#010409]">
     <q-header
-      v-if="!isMobile || (isMobile && showUserInfo)"
+      v-if="(userInfo && !isMobile) || (isMobile && showUserInfo)"
       reveal
       class="flex-center flex border-b !border-b-[#3d444d] !bg-[#010409]"
     >
@@ -50,7 +50,7 @@
     </q-header>
 
     <q-drawer
-      v-if="!isMobile && !showUserInfo"
+      v-if="userInfo && !isMobile && !showUserInfo"
       v-model="drawer"
       show-if-above
       mini-to-overlay
@@ -96,6 +96,7 @@
 
     <q-footer
       v-show="
+        userInfo &&
         isMobile &&
         !(path.startsWith('/match/chat') || path.startsWith('/room/chat'))
       "
@@ -125,7 +126,7 @@
 import { computed, ref, toRefs, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
-import { useRoomStore } from './store'
+import { useRoomStore, useUserInfoStore } from './store'
 import { useRoute } from 'vue-router'
 
 const isMobile =
@@ -163,6 +164,7 @@ const menus = [
   }
 ]
 const { online, remoteRoomInfo } = storeToRefs(useRoomStore())
+const { userInfo } = storeToRefs(useUserInfoStore())
 const tab = ref('mails')
 const { path } = toRefs(useRoute())
 const showUserInfo = computed(() => path.value === remoteRoomInfo.value.path)

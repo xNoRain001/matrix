@@ -30,3 +30,21 @@ export type sendFileStatus = Reactive<{
 export type extendedFile = File & { fileStatus: sendFileStatus }
 
 export type extendedFiles = extendedFile[]
+
+interface BaseResponse<T = any> {
+  code: number
+  data: T
+  message?: string
+}
+
+declare module 'axios' {
+  interface AxiosResponse<T = any> extends BaseResponse<T> {}
+}
+
+export type userInfo = {
+  nickname: string
+  avatar: string
+  gender: 'male' | 'female' | 'other'
+  birthday: string
+  region: string
+}

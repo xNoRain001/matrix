@@ -47,6 +47,10 @@ const router = createRouter({
       path: '/profile',
       component: () => import('@/views/Profile.vue')
     },
+    {
+      path: '/login',
+      component: () => import('@/views/Login.vue')
+    },
     // 404 路由
     {
       path: '/:pathMatch(.*)*',
@@ -55,10 +59,18 @@ const router = createRouter({
   ]
 })
 
+// TODO: 双重认证机制
 router.beforeEach(({ path }, _, next) => {
   if (path === '/') {
     location.href = '/docs.html'
     return next(false)
+  }
+
+  if (path === '/login') {
+    if (localStorage.getItem('token')) {
+      router.push('/match')
+      return next(false)
+    }
   }
 
   next()
