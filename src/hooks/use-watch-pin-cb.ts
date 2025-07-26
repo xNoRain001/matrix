@@ -1,4 +1,4 @@
-import useSaveRoomInfo from './use-save-room-info'
+import { setLatestRoom } from '@/apis'
 
 import type { Ref } from 'vue'
 import type { Router } from 'vue-router'
@@ -14,7 +14,7 @@ const useWatchPinCb = (
   const _remoteRoomInfo = remoteRoomInfo.value
   _remoteRoomInfo.roomId = roomId = `${type}-${pin}`
   _remoteRoomInfo.path = path
-  useSaveRoomInfo(path, roomId)
+  setLatestRoom(path, roomId)
   router.replace({ query: { roomId } })
 }
 

@@ -1,8 +1,8 @@
 import type { Ref } from 'vue'
 import type { Router } from 'vue-router'
-import useSaveRoomInfo from './use-save-room-info'
 import useInitSocketForRoom from './use-init-socket-for-room'
 import useInitSocketForMatch from './use-init-socket-for-match'
+import { setLatestRoom } from '@/apis'
 
 const useMounted = (
   initSocket: Function,
@@ -20,7 +20,7 @@ const useMounted = (
     // 直接访问带 roomId 的链接
     if (!hasRemoteRoomId) {
       remoteRoomInfo.path = path
-      useSaveRoomInfo(path, roomId)
+      setLatestRoom(path, roomId)
     } else {
       // 如果获取到了远程房间，更新路由
       if (remoteRoomInfo.path === path) {

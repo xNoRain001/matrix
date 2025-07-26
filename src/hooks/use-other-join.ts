@@ -2,6 +2,7 @@ import type { Socket } from 'socket.io-client'
 import type { Ref } from 'vue'
 import useClosePC from './use-close-pc'
 import useStartRTC from './use-start-rtc'
+import type { userInfo } from '@/types'
 
 const useOtherJoin = async (
   pc: RTCPeerConnection,
@@ -9,7 +10,8 @@ const useOtherJoin = async (
   roomId: string,
   polite: Ref<boolean>,
   makingOffer: Ref<boolean>,
-  initPC: Function
+  initPC: Function,
+  userInfo: userInfo
 ) => {
   polite.value = true
   useClosePC(pc)
@@ -17,7 +19,7 @@ const useOtherJoin = async (
 
   try {
     makingOffer.value = true
-    await useStartRTC(pc, socket, roomId)
+    await useStartRTC(pc, socket, roomId, userInfo)
   } catch (err) {
     console.error(err)
   }

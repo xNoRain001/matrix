@@ -1,18 +1,18 @@
 <template>
   <q-layout class="bg-[#010409]">
     <q-header
-      v-if="(userInfo && !isMobile) || (isMobile && showUserInfo)"
+      v-if="(userInfo && !isMobile) || (isMobile && otherInfo)"
       reveal
       class="flex-center flex border-b !border-b-[#3d444d] !bg-[#010409]"
     >
       <q-toolbar
         :class="
-          !isMobile && showUserInfo ? 'w-full max-w-[var(--room-width)]' : ''
+          !isMobile && otherInfo ? 'w-full max-w-[var(--room-width)]' : ''
         "
       >
         <q-btn v-if="isMobile" flat round dense icon=""></q-btn>
         <q-btn
-          v-if="!isMobile && !showUserInfo"
+          v-if="!isMobile && !otherInfo"
           flat
           @click="drawer = !drawer"
           round
@@ -25,19 +25,20 @@
         </q-btn>
         <div v-else class="h-[33.6px] w-[33.6px]"></div>
 
-        <q-space v-if="showUserInfo" />
+        <q-space v-if="otherInfo" />
 
-        <q-avatar v-if="showUserInfo">
+        <q-avatar v-if="otherInfo">
           <img src="https://cdn.quasar.dev/img/avatar4.jpg" />
         </q-avatar>
 
-        <div v-if="showUserInfo" class="flex-center ml-2 flex">
-          昵称<q-badge class="ml-2" rounded :color="online ? 'green' : 'red'" />
+        <div v-if="otherInfo" class="flex-center ml-2 flex">
+          {{ otherInfo.nickname || '等待对方加入中...'
+          }}<q-badge class="ml-2" rounded :color="online ? 'green' : 'red'" />
         </div>
 
-        <q-space v-if="showUserInfo" />
+        <q-space v-if="otherInfo" />
 
-        <q-btn v-if="showUserInfo" dense round flat icon="more_vert">
+        <q-btn v-if="otherInfo" dense round flat icon="more_vert">
           <q-menu auto-close class="!bg-[#0d1117]">
             <q-list class="w-40">
               <q-item clickable>
@@ -50,7 +51,7 @@
     </q-header>
 
     <q-drawer
-      v-if="userInfo && !isMobile && !showUserInfo"
+      v-if="userInfo && !isMobile && !otherInfo"
       v-model="drawer"
       show-if-above
       mini-to-overlay
@@ -123,7 +124,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, toRefs, watch } from 'vue'
+import { ref, toRefs, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { useRoomStore, useUserInfoStore } from './store'
@@ -158,16 +159,15 @@ const menus = [
   },
   {
     icon: 'face',
-    label: '我',
+    label: '我的',
     to: '/profile',
     separator: false
   }
 ]
-const { online, remoteRoomInfo } = storeToRefs(useRoomStore())
+const { online, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const tab = ref('mails')
 const { path } = toRefs(useRoute())
-const showUserInfo = computed(() => path.value === remoteRoomInfo.value.path)
 
 watch(
   dark,

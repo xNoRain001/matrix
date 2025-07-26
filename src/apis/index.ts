@@ -8,8 +8,14 @@ import login from './login'
 import getUserInfo from './get-user-info'
 import sendVerificationCodeToEmail from './send-verification-code-to-email'
 import updatePassword from './update-password'
+import getLatestRoom from './get-latest-room'
+import setLatestRoom from './set-latest-room'
+import clearLatestRoom from './clear-latest-room'
 
 export {
+  clearLatestRoom,
+  setLatestRoom,
+  getLatestRoom,
   updatePassword,
   sendVerificationCodeToEmail,
   getUserInfo,

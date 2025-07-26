@@ -2,6 +2,7 @@ import type { Ref } from 'vue'
 import useDialog from './use-dialog'
 import type { Socket } from 'socket.io-client'
 import useScrollToBottom from './use-scroll-to-bottom'
+import { useRoomStore } from '@/store'
 
 const useLeaveRoom = (
   socket: Socket,
@@ -21,9 +22,9 @@ const useLeaveRoom = (
   }).onOk(async () => {
     // 服务器 leave 回调中发送 bye，然后触发本地 leaved
     leaved.value = true
-    // 这里不直接返回主页，因为最终会断开 socket 连接，那里会返回主页
     // 发送通知能够第一时间通知到对方我离开了，否则会有几秒钟延迟
     socket.emit('leave', roomId)
+    useRoomStore().otherInfo = null
 
     if (scrollToBottom) {
       useScrollToBottom()

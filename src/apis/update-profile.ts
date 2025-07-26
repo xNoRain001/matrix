@@ -1,7 +1,7 @@
 import HTTP from './http'
 
 const updateProfile = async (email, userInfo) =>
-  HTTP.request('/register', {
+  HTTP.request('/update-profile', {
     method: 'POST',
     data: { email, userInfo }
   })

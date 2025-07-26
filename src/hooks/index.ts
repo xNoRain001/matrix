@@ -23,8 +23,6 @@ import useGetDB from './use-get-db'
 import useClearMessages from './use-clear-messages'
 import useDeleteDB from './use-delete-db'
 import useDialog from './use-dialog'
-import useGetRoomInfo from './use-get-room-info'
-import useClearRoomInfo from './use-clear-room-info'
 import useSendFile from './use-send-file'
 import useReceiveFile from './use-receive-file'
 import useExtendFileStatus from './use-extend-file-status'
@@ -65,8 +63,6 @@ export {
   useExtendFileStatus,
   useReceiveFile,
   useSendFile,
-  useClearRoomInfo,
-  useGetRoomInfo,
   useDialog,
   useDeleteDB,
   useClearMessages,

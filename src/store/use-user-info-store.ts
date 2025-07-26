@@ -22,8 +22,9 @@ const useUserInfoStore = defineStore('userInfoStore', () => {
           ].map(c => c.charCodeAt(0))
         )
       )
-    )
-  } catch (error) {
+    ).data
+  } catch {
+    userInfo = null
     // 没有 token 或者 token 被篡改
     localStorage.removeItem('token')
     useRouter().push('/login')

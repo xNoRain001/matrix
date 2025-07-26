@@ -117,7 +117,7 @@
       </template>
 
       <div v-if="!leaved && !online" class="flex-center flex">
-        <q-badge class="my-4" rounded color="red" />对方未在线...
+        <q-badge class="my-4 mr-2" rounded color="red" />对方未在线...
       </div>
 
       <div
@@ -249,7 +249,6 @@ import {
   useBye,
   useCancelMatch,
   useClearMessages,
-  useClearRoomInfo,
   useClosePC,
   useCreatePeerConnection,
   useDisconnect,
@@ -281,12 +280,14 @@ import { received, receiving, sending, sent } from '@/const'
 import type { Socket } from 'socket.io-client'
 import type { extendedFiles, fileTypes, receivedFiles } from '@/types'
 import { exportFile } from 'quasar'
-import { useRoomStore } from '@/store'
+import { useRoomStore, useUserInfoStore } from '@/store'
 import { storeToRefs } from 'pinia'
+import { clearLatestRoom, getLatestRoom } from '@/apis'
 
 let timer = null
 let lastMsgTimer = null
 let lastMsgStampIndex = 0
+const { userInfo } = storeToRefs(useUserInfoStore())
 const makingOffer = ref(false)
 const polite = ref(true)
 let avatar = 'https://cdn.quasar.dev/img/avatar4.jpg'
@@ -305,7 +306,12 @@ const isReconnect = ref(false)
 const leaved = ref(false)
 const otherLeaved = ref(false)
 // 如果服务器中还能获取到 roomId，说明没有退出房间，恢复到上次的房间
-const { online, remoteRoomInfo } = storeToRefs(useRoomStore())
+const { online } = storeToRefs(useRoomStore())
+const latestRoomInfo = (await getLatestRoom(userInfo.value.email)).data
+console.log(latestRoomInfo)
+const remoteRoomInfo = ref<{ path: string; roomId: string }>(
+  latestRoomInfo ? JSON.parse(latestRoomInfo) : { path: '', roomId: '' }
+)
 const _remoteRoomInfo = remoteRoomInfo.value
 const hasRemoteRoomId = Boolean(_remoteRoomInfo.roomId)
 _remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
@@ -657,13 +663,21 @@ const onJoined = (_, __, _polite) => {
 
 // 当其他人加入房间时触发
 const onOtherJoin = () =>
-  useOtherJoin(pc, socket, _remoteRoomInfo.roomId, polite, makingOffer, initPC)
+  useOtherJoin(
+    pc,
+    socket,
+    _remoteRoomInfo.roomId,
+    polite,
+    makingOffer,
+    initPC,
+    userInfo.value
+  )
 
 const onDisconnect = () =>
   useDisconnect(pc, isMatch, offline, leaved, isReconnect)
 
 const onRtc = (roomId: string, data: any) =>
-  useInitRtc(pc, socket, roomId, data, makingOffer, polite)
+  useInitRtc(pc, socket, roomId, data, makingOffer, polite, userInfo.value)
 
 const onMatched = data =>
   useMatched(
@@ -700,7 +714,7 @@ const exitRoom = async () => {
   socket.disconnect()
   // 重新匹配时删除聊天记录
   await useClearMessages(_remoteRoomInfo.roomId)
-  useClearRoomInfo()
+  clearLatestRoom(userInfo.value.email)
   messageList.value = []
   _remoteRoomInfo.roomId = _remoteRoomInfo.path = ''
   leaved.value = joined.value = false

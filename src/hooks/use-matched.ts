@@ -1,6 +1,6 @@
+import { setLatestRoom } from '@/apis'
 import type { Socket } from 'socket.io-client'
 import type { Ref } from 'vue'
-import useSaveRoomInfo from './use-save-room-info'
 import type { Router } from 'vue-router'
 
 let timer = null
@@ -38,7 +38,7 @@ const useMatched = (
     remoteRoomInfo.roomId = message
     remoteRoomInfo.path = path
     // 记录房间号
-    useSaveRoomInfo(path, message)
+    setLatestRoom(path, message)
     router.replace({ query: { roomId: message } })
     isMatch.value = false
     // 不需要从匹配列表中移除，因为服务器在匹配成功时会自动将你从匹配列表中移除

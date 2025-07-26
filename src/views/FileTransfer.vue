@@ -219,7 +219,6 @@
 import {
   useBye,
   useCancelMatch,
-  useClearRoomInfo,
   useClosePC,
   useCreatePeerConnection,
   useDisconnect,
@@ -250,7 +249,8 @@ import { received, receiving, sending, sent } from '@/const'
 import type { Socket } from 'socket.io-client'
 import type { receivedFiles } from '@/types'
 import { storeToRefs } from 'pinia'
-import { useRoomStore } from '@/store'
+import { useRoomStore, useUserInfoStore } from '@/store'
+import { clearLatestRoom, getLatestRoom } from '@/apis'
 
 let timer = null
 const makingOffer = ref(false)
@@ -270,7 +270,12 @@ const router = useRouter()
 const isReconnect = ref(false)
 const leaved = ref(false)
 const otherLeaved = ref(false)
-const { online, remoteRoomInfo } = storeToRefs(useRoomStore())
+const { online } = storeToRefs(useRoomStore())
+const { userInfo } = storeToRefs(useUserInfoStore())
+const latestRoomInfo = (await getLatestRoom(userInfo.value.email)).data
+const remoteRoomInfo = ref<{ path: string; roomId: string }>(
+  latestRoomInfo ? JSON.parse(latestRoomInfo) : { path: '', roomId: '' }
+)
 const _remoteRoomInfo = remoteRoomInfo.value
 const hasRemoteRoomId = Boolean(_remoteRoomInfo.roomId)
 _remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
@@ -354,7 +359,15 @@ const onJoined = async (_, __, _polite) =>
   useJoined(socket, polite, joined, _remoteRoomInfo.roomId, initPC, _polite)
 
 const onOtherJoin = () =>
-  useOtherJoin(pc, socket, _remoteRoomInfo.roomId, polite, makingOffer, initPC)
+  useOtherJoin(
+    pc,
+    socket,
+    _remoteRoomInfo.roomId,
+    polite,
+    makingOffer,
+    initPC,
+    userInfo.value
+  )
 
 const onDisconnect = () =>
   useDisconnect(pc, isMatch, offline, leaved, isReconnect)
@@ -386,7 +399,7 @@ const onRematch = () =>
 const exitRoom = async () => {
   useClosePC(pc)
   socket.disconnect()
-  useClearRoomInfo()
+  clearLatestRoom(userInfo.value.email)
   _remoteRoomInfo.roomId = _remoteRoomInfo.path = ''
   leaved.value = joined.value = false
 }

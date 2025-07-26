@@ -41,10 +41,16 @@ declare module 'axios' {
   interface AxiosResponse<T = any> extends BaseResponse<T> {}
 }
 
-export type userInfo = {
+type commonUserInfo = {
   nickname: string
   avatar: string
   gender: 'male' | 'female' | 'other'
   birthday: string
   region: string
 }
+
+export type userInfo = commonUserInfo & {
+  email: string
+}
+
+export type otherInfo = commonUserInfo
