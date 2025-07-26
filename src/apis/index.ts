@@ -11,8 +11,10 @@ import updatePassword from './update-password'
 import getLatestRoom from './get-latest-room'
 import setLatestRoom from './set-latest-room'
 import clearLatestRoom from './clear-latest-room'
+import isExitRoom from './is-exit-room'
 
 export {
+  isExitRoom,
   clearLatestRoom,
   setLatestRoom,
   getLatestRoom,

@@ -1,9 +1,10 @@
 import type { Ref } from 'vue'
 import type { Socket } from 'socket.io-client'
+import { useRoomStore } from '@/store'
+import { setLatestRoom } from '@/apis'
 
 let timer = null
 
-// @ts-ignore
 const pcConfig: RTCConfiguration = {
   // 直连时，数据不经过 STUN/TURN
   // 只有在无法直连时，数据才会经过 TURN 服务器
@@ -23,6 +24,7 @@ const pcConfig: RTCConfiguration = {
 }
 
 const useCreatePeerConnection = (
+  path: string,
   socket: Socket,
   roomId: string,
   online: Ref<boolean>,
@@ -58,6 +60,7 @@ const useCreatePeerConnection = (
       console.log('connected...')
       // useNotify('连接已建立')
       online.value = true
+      setLatestRoom(path, roomId, useRoomStore().otherInfo.id)
       clearTimeout(timer)
     }
   }

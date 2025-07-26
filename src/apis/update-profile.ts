@@ -1,9 +1,9 @@
 import HTTP from './http'
 
-const updateProfile = async (email, userInfo) =>
+const updateProfile = async (id, userInfo) =>
   HTTP.request('/update-profile', {
     method: 'POST',
-    data: { email, userInfo }
+    data: { id, userInfo }
   })
 
 export default updateProfile

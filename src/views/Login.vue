@@ -53,7 +53,7 @@
           autofocus
           size="xl"
           :length="pinLength"
-          v-model="pin"
+          v-model="registerPin"
         />
       </q-step>
 
@@ -356,7 +356,7 @@ let timer = null
 let pause = false
 const birthday = ref('未知')
 const genderOptions = ['男', '女']
-const pin = ref([])
+const registerPin = ref([])
 const updatePasswordPin = ref([])
 const loginWithVCPin = ref([])
 const pinLength = 4
@@ -573,7 +573,7 @@ const onRegisterNext = async () => {
       try {
         const {
           data: { token, userInfo: _userInfo }
-        } = await updateProfile(registerForm.email, userInfo.value)
+        } = await updateProfile(userInfo.value.id, userInfo.value)
         localStorage.setItem('token', token)
         userInfo.value = _userInfo
       } catch (error) {
@@ -646,7 +646,7 @@ const registerNext = () => registerStepperRef.value.next()
 
 const updatePasswordNext = () => updatePasswordStepperRef.value.next()
 
-watch(pin, async v => {
+watch(registerPin, async v => {
   if (v.length === pinLength) {
     if (pause) {
       clearTimeout(timer)
@@ -671,7 +671,7 @@ watch(pin, async v => {
       registerNext()
     } catch (error) {
       useNotify(error, 'negative')
-      pin.value = []
+      registerPin.value = []
     }
   }
 })

@@ -181,7 +181,7 @@ import {
 } from '@/hooks'
 import { storeToRefs } from 'pinia'
 import { useRoomStore, useUserInfoStore } from '@/store'
-import { clearLatestRoom, getLatestRoom } from '@/apis'
+import { clearLatestRoom, getLatestRoom, isExitRoom } from '@/apis'
 
 let timer = null
 const makingOffer = ref(false)
@@ -221,19 +221,24 @@ const { path, query } = useRoute()
 const inRoom = path.startsWith('/room/audio-chat')
 const router = useRouter()
 const isReconnect = ref(false)
-const leaved = ref(false)
 const { online } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
-const latestRoomInfo = (await getLatestRoom(userInfo.value.email)).data
-const remoteRoomInfo = ref<{ path: string; roomId: string }>(
-  latestRoomInfo ? JSON.parse(latestRoomInfo) : { path: '', roomId: '' }
+const _userInfo = userInfo.value
+const { id } = _userInfo
+const latestRoomInfo = (await getLatestRoom(id)).data
+const remoteRoomInfo = ref<{ path: string; roomId: string; latestId: string }>(
+  latestRoomInfo ? latestRoomInfo : { path: '', roomId: '', latestId: '' }
 )
 const _remoteRoomInfo = remoteRoomInfo.value
 const hasRemoteRoomId = Boolean(_remoteRoomInfo.roomId)
-_remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
+const isExit = hasRemoteRoomId
+  ? !(await isExitRoom(id, _remoteRoomInfo.latestId)).data
+  : false
 const isMatch = ref(path === '/match/audio-chat' && !_remoteRoomInfo.roomId)
 const joined = ref(false)
-const otherLeaved = ref(false)
+const leaved = ref(isExit)
+const otherLeaved = ref(isExit)
+_remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
 const micOpen = ref(Boolean(audioInputLabelsLength))
 const speakerOpen = ref(Boolean(audioOutputLabelsLength))
 const hasMic = ref(!audioInputLabelsLength)
@@ -340,13 +345,19 @@ const exitRoom = async () => {
   }
 
   socket.disconnect()
-  clearLatestRoom(userInfo.value.email)
+  clearLatestRoom(userInfo.value.id)
   _remoteRoomInfo.roomId = _remoteRoomInfo.path = ''
   leaved.value = joined.value = false
 }
 
 const initPC = async () => {
-  pc = useCreatePeerConnection(socket, _remoteRoomInfo.roomId, online, onTrack)
+  pc = useCreatePeerConnection(
+    inRoom ? '/room/audio-chat' : '/match/audio-chat',
+    socket,
+    _remoteRoomInfo.roomId,
+    online,
+    onTrack
+  )
   await initLocalMediaStream()
   return pc
 }

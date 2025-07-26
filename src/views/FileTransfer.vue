@@ -250,7 +250,7 @@ import type { Socket } from 'socket.io-client'
 import type { receivedFiles } from '@/types'
 import { storeToRefs } from 'pinia'
 import { useRoomStore, useUserInfoStore } from '@/store'
-import { clearLatestRoom, getLatestRoom } from '@/apis'
+import { clearLatestRoom, getLatestRoom, isExitRoom } from '@/apis'
 
 let timer = null
 const makingOffer = ref(false)
@@ -268,16 +268,21 @@ const { path, query } = useRoute()
 const inRoom = path.startsWith('/room/file-transfer')
 const router = useRouter()
 const isReconnect = ref(false)
-const leaved = ref(false)
-const otherLeaved = ref(false)
 const { online } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
-const latestRoomInfo = (await getLatestRoom(userInfo.value.email)).data
-const remoteRoomInfo = ref<{ path: string; roomId: string }>(
-  latestRoomInfo ? JSON.parse(latestRoomInfo) : { path: '', roomId: '' }
+const _userInfo = userInfo.value
+const { id } = _userInfo
+const latestRoomInfo = (await getLatestRoom(id)).data
+const remoteRoomInfo = ref<{ path: string; roomId: string; latestId: string }>(
+  latestRoomInfo ? latestRoomInfo : { path: '', roomId: '', latestId: '' }
 )
 const _remoteRoomInfo = remoteRoomInfo.value
 const hasRemoteRoomId = Boolean(_remoteRoomInfo.roomId)
+const isExit = hasRemoteRoomId
+  ? !(await isExitRoom(id, _remoteRoomInfo.latestId)).data
+  : false
+const leaved = ref(isExit)
+const otherLeaved = ref(isExit)
 _remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
 const isMatch = ref(path === '/match/file-transfer' && !_remoteRoomInfo.roomId)
 const joined = ref(false)
@@ -348,7 +353,13 @@ const onReceiveFileMetadata = () => (flag.value = true)
 const onSavedFile = () => (flag.value = true)
 
 const initPC = () => {
-  pc = useCreatePeerConnection(socket, _remoteRoomInfo.roomId, online, () => {})
+  pc = useCreatePeerConnection(
+    inRoom ? '/room/file-transfer' : '/match/file-transfer',
+    socket,
+    _remoteRoomInfo.roomId,
+    online,
+    () => {}
+  )
   pc.ondatachannel = onReceiveFile
   dataChannel = useInitDataChannel(pc)
   return pc
@@ -399,7 +410,7 @@ const onRematch = () =>
 const exitRoom = async () => {
   useClosePC(pc)
   socket.disconnect()
-  clearLatestRoom(userInfo.value.email)
+  clearLatestRoom(userInfo.value.id)
   _remoteRoomInfo.roomId = _remoteRoomInfo.path = ''
   leaved.value = joined.value = false
 }

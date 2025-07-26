@@ -282,12 +282,14 @@ import type { extendedFiles, fileTypes, receivedFiles } from '@/types'
 import { exportFile } from 'quasar'
 import { useRoomStore, useUserInfoStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { clearLatestRoom, getLatestRoom } from '@/apis'
+import { clearLatestRoom, getLatestRoom, isExitRoom } from '@/apis'
 
 let timer = null
 let lastMsgTimer = null
 let lastMsgStampIndex = 0
 const { userInfo } = storeToRefs(useUserInfoStore())
+const _userInfo = userInfo.value
+const { id } = _userInfo
 const makingOffer = ref(false)
 const polite = ref(true)
 let avatar = 'https://cdn.quasar.dev/img/avatar4.jpg'
@@ -302,18 +304,20 @@ const { path, query } = useRoute()
 const inRoom = path.startsWith('/room/chat')
 const router = useRouter()
 const isReconnect = ref(false)
-// 双方中任意一方离开时，值会修改为 true
-const leaved = ref(false)
-const otherLeaved = ref(false)
 // 如果服务器中还能获取到 roomId，说明没有退出房间，恢复到上次的房间
 const { online } = storeToRefs(useRoomStore())
-const latestRoomInfo = (await getLatestRoom(userInfo.value.email)).data
-console.log(latestRoomInfo)
-const remoteRoomInfo = ref<{ path: string; roomId: string }>(
-  latestRoomInfo ? JSON.parse(latestRoomInfo) : { path: '', roomId: '' }
+const latestRoomInfo = (await getLatestRoom(id)).data
+const remoteRoomInfo = ref<{ path: string; roomId: string; latestId: string }>(
+  latestRoomInfo ? latestRoomInfo : { path: '', roomId: '', latestId: '' }
 )
 const _remoteRoomInfo = remoteRoomInfo.value
 const hasRemoteRoomId = Boolean(_remoteRoomInfo.roomId)
+const isExit = hasRemoteRoomId
+  ? !(await isExitRoom(id, _remoteRoomInfo.latestId)).data
+  : false
+// 双方中任意一方离开时，值会修改为 true
+const leaved = ref(isExit)
+const otherLeaved = ref(isExit)
 _remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
 const isMatch = ref(path === '/match/chat' && !_remoteRoomInfo.roomId)
 const joined = ref(false)
@@ -621,7 +625,13 @@ const onFileMetadata = async (roomId: string, data: any) => {
 
 // TODO: 和 file-transfer 合并
 const initPC = () => {
-  pc = useCreatePeerConnection(socket, _remoteRoomInfo.roomId, online, () => {})
+  pc = useCreatePeerConnection(
+    inRoom ? '/room/chat' : '/match/chat',
+    socket,
+    _remoteRoomInfo.roomId,
+    online,
+    () => {}
+  )
   pc.ondatachannel = onReceiveMsg
   dataChannel = useInitDataChannel(pc)
   return pc
@@ -670,14 +680,14 @@ const onOtherJoin = () =>
     polite,
     makingOffer,
     initPC,
-    userInfo.value
+    _userInfo
   )
 
 const onDisconnect = () =>
   useDisconnect(pc, isMatch, offline, leaved, isReconnect)
 
 const onRtc = (roomId: string, data: any) =>
-  useInitRtc(pc, socket, roomId, data, makingOffer, polite, userInfo.value)
+  useInitRtc(pc, socket, roomId, data, makingOffer, polite, _userInfo)
 
 const onMatched = data =>
   useMatched(
@@ -714,7 +724,7 @@ const exitRoom = async () => {
   socket.disconnect()
   // 重新匹配时删除聊天记录
   await useClearMessages(_remoteRoomInfo.roomId)
-  clearLatestRoom(userInfo.value.email)
+  clearLatestRoom(id)
   messageList.value = []
   _remoteRoomInfo.roomId = _remoteRoomInfo.path = ''
   leaved.value = joined.value = false

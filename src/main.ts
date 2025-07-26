@@ -12,13 +12,6 @@ import { createPinia } from 'pinia'
 const app = createApp(App)
 const pinia = createPinia()
 
-pinia.use(({ store }) => {
-  const initialState = JSON.parse(JSON.stringify(store.$state))
-  store.$reset = () => {
-    store.$state = JSON.parse(JSON.stringify(initialState))
-  }
-})
-
 app
   .use(Quasar, { plugins: { Notify, Loading, Dialog } })
   .use(ui)

@@ -47,6 +47,7 @@ type commonUserInfo = {
   gender: 'male' | 'female' | 'other'
   birthday: string
   region: string
+  id: string
 }
 
 export type userInfo = commonUserInfo & {

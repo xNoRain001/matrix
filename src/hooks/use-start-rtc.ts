@@ -9,7 +9,13 @@ const useStartRTC = async (
 ) => {
   const offer = await pc.createOffer()
   await pc.setLocalDescription(offer)
-  socket.emit('rtc', roomId, { description: offer, otherInfo: userInfo })
+  // 移除邮箱
+  const filteredUserInfo = { ...userInfo }
+  delete filteredUserInfo.email
+  socket.emit('rtc', roomId, {
+    description: offer,
+    otherInfo: filteredUserInfo
+  })
 }
 
 export default useStartRTC

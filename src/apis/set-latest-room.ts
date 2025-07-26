@@ -1,9 +1,9 @@
 import { useUserInfoStore } from '@/store'
 import HTTP from './http'
 
-const setLatestRoom = async (path, roomId) =>
+const setLatestRoom = async (path, roomId: string, latestId?: string) =>
   HTTP.request(
-    `/set-latest-room?email=${useUserInfoStore().userInfo.email}&path=${path}&roomId=${roomId}`
+    `/set-latest-room?id=${useUserInfoStore().userInfo.id}&path=${path}&roomId=${roomId}${latestId ? `&latestId=${latestId}` : ''}`
   )
 
 export default setLatestRoom
