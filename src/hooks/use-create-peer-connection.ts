@@ -2,8 +2,7 @@ import type { Ref } from 'vue'
 import type { Socket } from 'socket.io-client'
 import { useRoomStore } from '@/store'
 import { setLatestRoom } from '@/apis'
-
-let timer = null
+import type { remoteRoomInfo } from '@/types'
 
 const pcConfig: RTCConfiguration = {
   // 直连时，数据不经过 STUN/TURN
@@ -26,10 +25,11 @@ const pcConfig: RTCConfiguration = {
 const useCreatePeerConnection = (
   path: string,
   socket: Socket,
-  roomId: string,
+  remoteRoomInfo: remoteRoomInfo,
   online: Ref<boolean>,
   onTrack: (e: RTCTrackEvent) => any
 ): RTCPeerConnection => {
+  const { roomId } = remoteRoomInfo
   // 创建PeerConnection 对象
   let pc = new RTCPeerConnection(pcConfig)
   // 当收到 Candidate 后
@@ -50,18 +50,17 @@ const useCreatePeerConnection = (
     } else if (iceConnectionState === 'disconnected') {
       console.log('disconnected...')
       online.value = false
-      // 关闭网页或点击取消
-      // useNotify('对方离开了房间, 如果 30 s 内没有人加入，将返回主页')
-      // socket.disconnect()
-      // timer = setTimeout(() => {
-      //   location.href = '/'
-      // }, 30000)
     } else if (iceConnectionState === 'connected') {
       console.log('connected...')
       // useNotify('连接已建立')
       online.value = true
-      setLatestRoom(path, roomId, useRoomStore().otherInfo.id)
-      clearTimeout(timer)
+      const latestId = useRoomStore().otherInfo.id
+      remoteRoomInfo.inRoom = true
+
+      if (remoteRoomInfo.latestId !== latestId) {
+        remoteRoomInfo.latestId = latestId
+        setLatestRoom(path, roomId, latestId)
+      }
     }
   }
 

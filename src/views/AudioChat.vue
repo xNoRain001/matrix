@@ -15,7 +15,7 @@
 
   <div class="flex-center flex">
     <div
-      v-if="joined"
+      v-if="remoteRoomInfo.roomId"
       class="relative h-[var(--content-height)] w-full max-w-[var(--room-width)]"
     >
       <div v-if="!leaved" class="flex-center flex h-full flex-col">
@@ -130,9 +130,9 @@
         <q-btn
           class="full-width !mt-4"
           color="primary"
-          :label="inRoom ? '重新进入房间' : '重新匹配'"
+          :label="isRoomMode ? '重新进入房间' : '重新匹配'"
           rounded
-          @click="inRoom ? onBackPIN() : onRematch()"
+          @click="isRoomMode ? onBackPIN() : onRematch()"
         ></q-btn>
       </div>
     </div>
@@ -218,27 +218,24 @@ const localAudioRef = ref(null)
 const remoteAudioRef = ref(null)
 const leaveBtnRef = ref(null)
 const { path, query } = useRoute()
-const inRoom = path.startsWith('/room/audio-chat')
+const isRoomMode = path === '/room/audio-chat'
 const router = useRouter()
 const isReconnect = ref(false)
-const { online } = storeToRefs(useRoomStore())
+const { online, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
 const { id } = _userInfo
 const latestRoomInfo = (await getLatestRoom(id)).data
-const remoteRoomInfo = ref<{ path: string; roomId: string; latestId: string }>(
-  latestRoomInfo ? latestRoomInfo : { path: '', roomId: '', latestId: '' }
-)
-const _remoteRoomInfo = remoteRoomInfo.value
-const hasRemoteRoomId = Boolean(_remoteRoomInfo.roomId)
-const isExit = hasRemoteRoomId
-  ? !(await isExitRoom(id, _remoteRoomInfo.latestId)).data
-  : false
-const isMatch = ref(path === '/match/audio-chat' && !_remoteRoomInfo.roomId)
-const joined = ref(false)
+const { latestId } = latestRoomInfo
+latestId ? (remoteRoomInfo.value = latestRoomInfo) : null
+const hasRemoteRoomId = Boolean(latestId)
+const isExit = hasRemoteRoomId ? (await isExitRoom(id, latestId)).data : false
+let _remoteRoomInfo = remoteRoomInfo.value
+_remoteRoomInfo.inRoom = latestId && !isExit
+_remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
 const leaved = ref(isExit)
 const otherLeaved = ref(isExit)
-_remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
+const isMatch = ref(path === '/match/audio-chat' && !_remoteRoomInfo.roomId)
 const micOpen = ref(Boolean(audioInputLabelsLength))
 const speakerOpen = ref(Boolean(audioOutputLabelsLength))
 const hasMic = ref(!audioInputLabelsLength)
@@ -255,14 +252,14 @@ const offline = ref(false)
 const isFull = ref(false)
 const pause = ref(false)
 
-const onLeaveFullRoom = () => useLeaveFullRoom(joined, leaved, isFull)
+const onLeaveFullRoom = () => useLeaveFullRoom(leaved, isFull)
 
 const onRematchWithOffline = () =>
   useRematchWithOffline(initSocket, onMatched, offline, 'audio-chat')
 
 // 当自己加入房间时触发
 const onJoined = async (_, __, _polite) =>
-  useJoined(socket, polite, joined, _remoteRoomInfo.roomId, initPC, _polite)
+  useJoined(socket, polite, _remoteRoomInfo.roomId, initPC, _polite)
 
 const onOtherJoin = () =>
   useOtherJoin(
@@ -272,7 +269,7 @@ const onOtherJoin = () =>
     polite,
     makingOffer,
     initPC,
-    userInfo.value
+    _userInfo
   )
 
 // const onDisconnect = () => useDisconnect(pc, isMatch, offline, leaved, isReconnect)
@@ -297,7 +294,7 @@ const onDisconnect = () => {
 }
 
 const onRtc = (roomId: string, data: any) =>
-  useInitRtc(pc, socket, roomId, data, makingOffer, polite)
+  useInitRtc(pc, socket, roomId, data, makingOffer, polite, _userInfo)
 
 const onTrack = ({ track, streams }) => {
   const remoteAudio = remoteAudioRef.value
@@ -316,7 +313,7 @@ const onTrack = ({ track, streams }) => {
 }
 
 // 服务端中会关闭连接，从而触发 disconnect
-const onLeave = async () => useLeaveRoom(socket, _remoteRoomInfo.roomId, leaved)
+const onLeave = async () => useLeaveRoom(socket, _remoteRoomInfo.roomId)
 
 const onMatched = data =>
   useMatched(
@@ -330,12 +327,22 @@ const onMatched = data =>
     'audio-chat'
   )
 
-const onBackPIN = async () => useBackPIN(exitRoom, router)
+const onBackPIN = async () => useBackPIN(_exitRoom, router)
 
-const onBye = () => useBye(leaved, otherLeaved)
+const onBye = () => useBye(exitRoom, otherLeaved)
 
 const onRematch = () =>
-  useRematch(exitRoom, initSocket, onMatched, router, isMatch, 'audio-chat')
+  useRematch(_exitRoom, initSocket, onMatched, router, isMatch, 'audio-chat')
+
+const _exitRoom = async () => {
+  if (!_remoteRoomInfo.inRoom) {
+    await exitRoom()
+  }
+
+  _remoteRoomInfo.roomId = _remoteRoomInfo.path = _remoteRoomInfo.latestId = ''
+  _remoteRoomInfo.inRoom = false
+  leaved.value = otherLeaved.value = false
+}
 
 const exitRoom = async () => {
   useClosePC(pc)
@@ -345,16 +352,17 @@ const exitRoom = async () => {
   }
 
   socket.disconnect()
-  clearLatestRoom(userInfo.value.id)
-  _remoteRoomInfo.roomId = _remoteRoomInfo.path = ''
-  leaved.value = joined.value = false
+  await clearLatestRoom(id)
+  leaved.value = true
+  online.value = false
+  otherInfo.value = null
 }
 
 const initPC = async () => {
   pc = useCreatePeerConnection(
-    inRoom ? '/room/audio-chat' : '/match/audio-chat',
+    isRoomMode ? '/room/audio-chat' : '/match/audio-chat',
     socket,
-    _remoteRoomInfo.roomId,
+    _remoteRoomInfo,
     online,
     onTrack
   )
@@ -432,7 +440,8 @@ const initSocket = () => {
     onRtc,
     isReconnect,
     _remoteRoomInfo.roomId,
-    isFull
+    isFull,
+    exitRoom
   )
   socket.on('bye', onBye)
   return socket
@@ -456,14 +465,7 @@ onBeforeUnmount(() => {
 })
 
 const watchPinCb = (pin: string) => {
-  useWatchPinCb(
-    'audio-chat',
-    _remoteRoomInfo.roomId,
-    pin,
-    path,
-    remoteRoomInfo,
-    router
-  )
+  useWatchPinCb('audio-chat', _remoteRoomInfo, pin, path, router)
   useInitSocketForRoom(initSocket, _remoteRoomInfo.roomId)
 }
 

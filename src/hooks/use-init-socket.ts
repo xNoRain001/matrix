@@ -9,7 +9,8 @@ const useInitSocket = (
   onRtc: Function,
   isReconnect: Ref<boolean>,
   roomId: string,
-  isFull: Ref<boolean>
+  isFull: Ref<boolean>,
+  exitRoom: Function
 ) => {
   // @ts-ignore
   const socket = io.connect(import.meta.env.VITE_API_BASE_URL, {
@@ -23,7 +24,7 @@ const useInitSocket = (
   }
 
   const onLeaved = () => {
-    socket.disconnect()
+    exitRoom()
   }
 
   // 不断开 socket 连接，30 s 内没人进入再返回主页

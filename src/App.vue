@@ -1,18 +1,20 @@
 <template>
   <q-layout class="bg-[#010409]">
     <q-header
-      v-if="(userInfo && !isMobile) || (isMobile && otherInfo)"
+      v-if="(userInfo && !isMobile) || (isMobile && remoteRoomInfo.roomId)"
       reveal
       class="flex-center flex border-b !border-b-[#3d444d] !bg-[#010409]"
     >
       <q-toolbar
         :class="
-          !isMobile && otherInfo ? 'w-full max-w-[var(--room-width)]' : ''
+          !isMobile && remoteRoomInfo.roomId
+            ? 'w-full max-w-[var(--room-width)]'
+            : ''
         "
       >
         <q-btn v-if="isMobile" flat round dense icon=""></q-btn>
         <q-btn
-          v-if="!isMobile && !otherInfo"
+          v-if="!isMobile && !remoteRoomInfo.roomId"
           flat
           @click="drawer = !drawer"
           round
@@ -25,20 +27,29 @@
         </q-btn>
         <div v-else class="h-[33.6px] w-[33.6px]"></div>
 
-        <q-space v-if="otherInfo" />
+        <q-space v-if="remoteRoomInfo.roomId" />
 
-        <q-avatar v-if="otherInfo">
+        <q-avatar v-if="remoteRoomInfo.roomId">
           <img src="https://cdn.quasar.dev/img/avatar4.jpg" />
         </q-avatar>
 
-        <div v-if="otherInfo" class="flex-center ml-2 flex">
-          {{ otherInfo.nickname || '等待对方加入中...'
-          }}<q-badge class="ml-2" rounded :color="online ? 'green' : 'red'" />
+        <div v-if="remoteRoomInfo.roomId" class="flex-center ml-2 flex">
+          {{
+            remoteRoomInfo.latestId
+              ? remoteRoomInfo.inRoom
+                ? online
+                  ? otherInfo.nickname
+                  : '对方未在线...'
+                : '对方已退出房间'
+              : '对方未加入房间...'
+          }}
+
+          <q-badge class="ml-2" rounded :color="online ? 'green' : 'red'" />
         </div>
 
-        <q-space v-if="otherInfo" />
+        <q-space v-if="remoteRoomInfo.roomId" />
 
-        <q-btn v-if="otherInfo" dense round flat icon="more_vert">
+        <q-btn v-if="remoteRoomInfo.roomId" dense round flat icon="more_vert">
           <q-menu auto-close class="!bg-[#0d1117]">
             <q-list class="w-40">
               <q-item clickable>
@@ -51,7 +62,7 @@
     </q-header>
 
     <q-drawer
-      v-if="userInfo && !isMobile && !otherInfo"
+      v-if="userInfo && !isMobile && !remoteRoomInfo.roomId"
       v-model="drawer"
       show-if-above
       mini-to-overlay
@@ -164,7 +175,7 @@ const menus = [
     separator: false
   }
 ]
-const { online, otherInfo } = storeToRefs(useRoomStore())
+const { online, otherInfo, remoteRoomInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const tab = ref('mails')
 const { path } = toRefs(useRoute())

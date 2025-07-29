@@ -1,4 +1,4 @@
-import { setLatestRoom } from '@/apis'
+import type { remoteRoomInfo } from '@/types'
 import type { Socket } from 'socket.io-client'
 import type { Ref } from 'vue'
 import type { Router } from 'vue-router'
@@ -10,10 +10,7 @@ const useMatched = (
   data,
   socket: Socket,
   path: string,
-  remoteRoomInfo: {
-    path: string
-    roomId: string
-  },
+  remoteRoomInfo: remoteRoomInfo,
   isMatch: Ref<boolean>,
   router: Router,
   pause: Ref<boolean>,
@@ -37,8 +34,8 @@ const useMatched = (
     clearTimeout(timer)
     remoteRoomInfo.roomId = message
     remoteRoomInfo.path = path
-    // 记录房间号
-    setLatestRoom(path, message)
+    // // 记录房间号
+    // setLatestRoom(path, message)
     router.replace({ query: { roomId: message } })
     isMatch.value = false
     // 不需要从匹配列表中移除，因为服务器在匹配成功时会自动将你从匹配列表中移除

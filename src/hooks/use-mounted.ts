@@ -2,7 +2,7 @@ import type { Ref } from 'vue'
 import type { Router } from 'vue-router'
 import useInitSocketForRoom from './use-init-socket-for-room'
 import useInitSocketForMatch from './use-init-socket-for-match'
-import { setLatestRoom } from '@/apis'
+import type { remoteRoomInfo } from '@/types'
 
 const useMounted = (
   initSocket: Function,
@@ -10,7 +10,7 @@ const useMounted = (
   router: Router,
   hasRemoteRoomId: boolean,
   path: string,
-  remoteRoomInfo: { roomId: string; path: string },
+  remoteRoomInfo: remoteRoomInfo,
   isMatch: Ref<boolean>,
   type: 'chat' | 'audio-chat' | 'file-transfer'
 ) => {
@@ -20,7 +20,7 @@ const useMounted = (
     // 直接访问带 roomId 的链接
     if (!hasRemoteRoomId) {
       remoteRoomInfo.path = path
-      setLatestRoom(path, roomId)
+      // setLatestRoom(path, roomId)
     } else {
       // 如果获取到了远程房间，更新路由
       if (remoteRoomInfo.path === path) {

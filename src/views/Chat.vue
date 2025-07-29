@@ -15,7 +15,7 @@
 
   <div class="flex-center flex">
     <div
-      v-if="joined"
+      v-if="remoteRoomInfo.roomId"
       :class="leaved ? '' : expanded ? 'pb-[calc(56px+13.25rem)]' : 'pb-[56px]'"
       class="relative min-h-[var(--content-height)] w-full max-w-[var(--room-width)]"
     >
@@ -116,10 +116,6 @@
         />
       </template>
 
-      <div v-if="!leaved && !online" class="flex-center flex">
-        <q-badge class="my-4 mr-2" rounded color="red" />对方未在线...
-      </div>
-
       <div
         v-if="leaved"
         class="flex-center absolute bottom-0 flex w-full flex-col"
@@ -132,15 +128,19 @@
         <q-btn
           class="full-width !mt-4"
           color="primary"
-          :label="inRoom ? '重新进入房间' : '重新匹配'"
+          :label="isRoomMode ? '重新进入房间' : '重新匹配'"
           rounded
-          @click="inRoom ? onBackPIN() : onRematch()"
+          @click="isRoomMode ? onBackPIN() : onRematch()"
         ></q-btn>
       </div>
     </div>
   </div>
 
-  <q-page-sticky v-if="joined && !leaved" expand position="bottom">
+  <q-page-sticky
+    v-if="remoteRoomInfo.roomId && !leaved"
+    expand
+    position="bottom"
+  >
     <div
       class="w-full max-w-[calc(var(--room-width)+2rem)] rounded-t-[1rem] border-t border-t-[#0d1117] py-4 backdrop-blur-md"
     >
@@ -287,9 +287,6 @@ import { clearLatestRoom, getLatestRoom, isExitRoom } from '@/apis'
 let timer = null
 let lastMsgTimer = null
 let lastMsgStampIndex = 0
-const { userInfo } = storeToRefs(useUserInfoStore())
-const _userInfo = userInfo.value
-const { id } = _userInfo
 const makingOffer = ref(false)
 const polite = ref(true)
 let avatar = 'https://cdn.quasar.dev/img/avatar4.jpg'
@@ -301,26 +298,26 @@ const flag = ref(false)
 const message = ref('')
 const expanded = ref(false)
 const { path, query } = useRoute()
-const inRoom = path.startsWith('/room/chat')
+const isRoomMode = path === '/room/chat'
 const router = useRouter()
 const isReconnect = ref(false)
-// 如果服务器中还能获取到 roomId，说明没有退出房间，恢复到上次的房间
-const { online } = storeToRefs(useRoomStore())
+const { online, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
+const { userInfo } = storeToRefs(useUserInfoStore())
+const _userInfo = userInfo.value
+const { id } = _userInfo
 const latestRoomInfo = (await getLatestRoom(id)).data
-const remoteRoomInfo = ref<{ path: string; roomId: string; latestId: string }>(
-  latestRoomInfo ? latestRoomInfo : { path: '', roomId: '', latestId: '' }
-)
-const _remoteRoomInfo = remoteRoomInfo.value
-const hasRemoteRoomId = Boolean(_remoteRoomInfo.roomId)
-const isExit = hasRemoteRoomId
-  ? !(await isExitRoom(id, _remoteRoomInfo.latestId)).data
-  : false
+// 如果 latestId 有值，说明自身还没离开房间
+const { latestId } = latestRoomInfo
+latestId ? (remoteRoomInfo.value = latestRoomInfo) : null
+const hasRemoteRoomId = Boolean(latestId)
+const isExit = hasRemoteRoomId ? (await isExitRoom(id, latestId)).data : false
+let _remoteRoomInfo = remoteRoomInfo.value
+_remoteRoomInfo.inRoom = latestId && !isExit
+_remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
 // 双方中任意一方离开时，值会修改为 true
 const leaved = ref(isExit)
 const otherLeaved = ref(isExit)
-_remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
 const isMatch = ref(path === '/match/chat' && !_remoteRoomInfo.roomId)
-const joined = ref(false)
 const db = await useGetDB()
 const minute = 60 * 1000
 const fiveMins = 5 * minute
@@ -347,7 +344,7 @@ const offline = ref(false)
 const isFull = ref(false)
 const pause = ref(false)
 
-const onLeaveFullRoom = () => useLeaveFullRoom(joined, leaved, isFull)
+const onLeaveFullRoom = () => useLeaveFullRoom(leaved, isFull)
 
 const onDownload = (url, filename) => {
   fetch(url)
@@ -626,9 +623,9 @@ const onFileMetadata = async (roomId: string, data: any) => {
 // TODO: 和 file-transfer 合并
 const initPC = () => {
   pc = useCreatePeerConnection(
-    inRoom ? '/room/chat' : '/match/chat',
+    isRoomMode ? '/room/chat' : '/match/chat',
     socket,
-    _remoteRoomInfo.roomId,
+    _remoteRoomInfo,
     online,
     () => {}
   )
@@ -663,7 +660,7 @@ const updateLastMsgStamp = () => {
 // 当自己加入房间时触发
 const onJoined = (_, __, _polite) => {
   clearInterval(lastMsgTimer)
-  useJoined(socket, polite, joined, _remoteRoomInfo.roomId, initPC, _polite)
+  useJoined(socket, polite, _remoteRoomInfo.roomId, initPC, _polite)
   useScrollToBottom()
   updateLastMsgStamp()
   lastMsgTimer = setInterval(() => {
@@ -701,33 +698,38 @@ const onMatched = data =>
     'chat'
   )
 
-const onLeave = async () =>
-  useLeaveRoom(socket, _remoteRoomInfo.roomId, leaved, true)
+const onLeave = async () => useLeaveRoom(socket, _remoteRoomInfo.roomId)
 
-const onBackPIN = async () => useBackPIN(exitRoom, router)
+const onBackPIN = async () => useBackPIN(_exitRoom, router)
 
-const onBye = () => useBye(leaved, otherLeaved)
+const onBye = () => useBye(exitRoom, otherLeaved)
 
 const onRematch = () =>
-  useRematch(exitRoom, initSocket, onMatched, router, isMatch, 'chat')
+  useRematch(_exitRoom, initSocket, onMatched, router, isMatch, 'chat')
 
 const onRematchWithOffline = () =>
   useRematchWithOffline(initSocket, onMatched, offline, 'chat')
 
+const _exitRoom = async () => {
+  if (!_remoteRoomInfo.inRoom) {
+    await exitRoom()
+  }
+
+  messageList.value = []
+  _remoteRoomInfo.roomId = _remoteRoomInfo.path = _remoteRoomInfo.latestId = ''
+  _remoteRoomInfo.inRoom = false
+  leaved.value = otherLeaved.value = false
+}
+
 const exitRoom = async () => {
-  // 重新匹配时，你可能是没选择离开的人，此时 socket 和 pc 都还存在，需要手动断开
-  // 否则新的 socket 生成后，旧的会在几秒后才断开，会触发 disconnect 回调关闭新的 pc
-  // 为什么不把关闭的行为放在 onBye 回调中，因为我离开时对方可能不在线，对方在线时
-  // 发现我已经离开了，只能点击重新匹配按钮，进入到这里，如果我离开时对方在线，也只能
-  // 点击重新匹配按钮，进入到这里
   useClosePC(pc)
   socket.disconnect()
-  // 重新匹配时删除聊天记录
   await useClearMessages(_remoteRoomInfo.roomId)
-  clearLatestRoom(id)
-  messageList.value = []
-  _remoteRoomInfo.roomId = _remoteRoomInfo.path = ''
-  leaved.value = joined.value = false
+  await clearLatestRoom(id)
+  leaved.value = true
+  online.value = false
+  otherInfo.value = null
+  useScrollToBottom()
 }
 
 const onReceiveFileMetadata = () => (flag.value = true)
@@ -742,7 +744,8 @@ const initSocket = () => {
     onRtc,
     isReconnect,
     _remoteRoomInfo.roomId,
-    isFull
+    isFull,
+    exitRoom
   )
   // 其他人离开房间
   socket.on('bye', onBye)
@@ -771,14 +774,7 @@ onBeforeUnmount(() => {
 })
 
 const watchPinCb = (pin: string) => {
-  useWatchPinCb(
-    'chat',
-    _remoteRoomInfo.roomId,
-    pin,
-    path,
-    remoteRoomInfo,
-    router
-  )
+  useWatchPinCb('chat', _remoteRoomInfo, pin, path, router)
   useInitSocketForRoom(initSocket, _remoteRoomInfo.roomId)
 }
 

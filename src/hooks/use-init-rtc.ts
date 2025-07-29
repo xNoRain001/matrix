@@ -14,7 +14,7 @@ type useInitRtcFn = (
   },
   makingOffer: Ref<boolean>,
   polite: Ref<boolean>,
-  userInfo?: userInfo
+  userInfo: userInfo
 ) => {}
 
 let ignoreOffer = false

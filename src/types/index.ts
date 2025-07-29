@@ -55,3 +55,10 @@ export type userInfo = commonUserInfo & {
 }
 
 export type otherInfo = commonUserInfo
+
+export type remoteRoomInfo = {
+  path: string
+  roomId: string
+  latestId: string
+  inRoom: boolean
+}

@@ -1,9 +1,8 @@
-import { useRoomStore } from '@/store'
 import type { Ref } from 'vue'
 
-const useBye = (leaved: Ref<boolean>, otherLeaved: Ref<boolean>) => {
-  leaved.value = otherLeaved.value = true
-  useRoomStore().otherInfo = null
+const useBye = async (exitRoom: Function, otherLeaved: Ref<boolean>) => {
+  await exitRoom()
+  otherLeaved.value = true
 }
 
 export default useBye
