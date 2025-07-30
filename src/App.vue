@@ -162,12 +162,12 @@ const menus = [
     to: '/room',
     separator: false
   },
-  {
-    icon: 'chat',
-    label: '聊天',
-    to: '/message-list',
-    separator: false
-  },
+  // {
+  //   icon: 'chat',
+  //   label: '聊天',
+  //   to: '/message-list',
+  //   separator: false
+  // },
   {
     icon: 'face',
     label: '我的',

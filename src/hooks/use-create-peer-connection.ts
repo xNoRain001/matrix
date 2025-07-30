@@ -57,7 +57,7 @@ const useCreatePeerConnection = (
       const latestId = useRoomStore().otherInfo.id
       remoteRoomInfo.inRoom = true
 
-      if (remoteRoomInfo.latestId !== latestId) {
+      if (!remoteRoomInfo.latestId) {
         remoteRoomInfo.latestId = latestId
         setLatestRoom(path, roomId, latestId)
       }

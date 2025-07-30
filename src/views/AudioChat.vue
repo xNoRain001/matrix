@@ -224,12 +224,11 @@ const isReconnect = ref(false)
 const { online, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
-const { id } = _userInfo
-const latestRoomInfo = (await getLatestRoom(id)).data
-const { latestId } = latestRoomInfo
+const latestRoomInfo = (await getLatestRoom()).data
+const latestId = latestRoomInfo?.latestId
 latestId ? (remoteRoomInfo.value = latestRoomInfo) : null
 const hasRemoteRoomId = Boolean(latestId)
-const isExit = hasRemoteRoomId ? (await isExitRoom(id, latestId)).data : false
+const isExit = hasRemoteRoomId ? (await isExitRoom(latestId)).data : false
 let _remoteRoomInfo = remoteRoomInfo.value
 _remoteRoomInfo.inRoom = latestId && !isExit
 _remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
@@ -352,7 +351,7 @@ const exitRoom = async () => {
   }
 
   socket.disconnect()
-  await clearLatestRoom(id)
+  await clearLatestRoom()
   leaved.value = true
   online.value = false
   otherInfo.value = null

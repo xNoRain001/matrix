@@ -1,5 +1,5 @@
 import HTTP from './http'
 
-const getLatestRoom = async id => HTTP.request(`/get-latest-room?id=${id}`)
+const getLatestRoom = async () => HTTP.request(`/get-latest-room`)
 
 export default getLatestRoom

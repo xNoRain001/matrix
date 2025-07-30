@@ -1,9 +1,10 @@
 import HTTP from './http'
 
-const updateProfile = async (id, userInfo) =>
+const updateProfile = async userInfo =>
   HTTP.request('/update-profile', {
     method: 'POST',
-    data: { id, userInfo }
+    headers: { 'Content-Type': 'application/json' },
+    data: JSON.stringify(userInfo)
   })
 
 export default updateProfile

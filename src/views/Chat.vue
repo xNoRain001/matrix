@@ -304,13 +304,12 @@ const isReconnect = ref(false)
 const { online, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
-const { id } = _userInfo
-const latestRoomInfo = (await getLatestRoom(id)).data
+const latestRoomInfo = (await getLatestRoom()).data
 // 如果 latestId 有值，说明自身还没离开房间
-const { latestId } = latestRoomInfo
+const latestId = latestRoomInfo?.latestId
 latestId ? (remoteRoomInfo.value = latestRoomInfo) : null
 const hasRemoteRoomId = Boolean(latestId)
-const isExit = hasRemoteRoomId ? (await isExitRoom(id, latestId)).data : false
+const isExit = hasRemoteRoomId ? (await isExitRoom(latestId)).data : false
 let _remoteRoomInfo = remoteRoomInfo.value
 _remoteRoomInfo.inRoom = latestId && !isExit
 _remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
@@ -725,7 +724,7 @@ const exitRoom = async () => {
   useClosePC(pc)
   socket.disconnect()
   await useClearMessages(_remoteRoomInfo.roomId)
-  await clearLatestRoom(id)
+  await clearLatestRoom()
   leaved.value = true
   online.value = false
   otherInfo.value = null

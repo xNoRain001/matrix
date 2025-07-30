@@ -57,57 +57,13 @@
         />
       </q-step>
 
-      <q-step :name="3" title="资料" active-icon="face" icon="face">
-        <q-form ref="userInfoFormRef" class="q-gutter-md">
-          <q-input label="头像" outlined v-model="userInfo.avatar"></q-input>
-          <q-input
-            label="昵称"
-            outlined
-            v-model="userInfo.nickname"
-            lazy-rules
-            :rules="[val => Boolean(val) || '昵称不能为空']"
-          ></q-input>
-          <q-select
-            label="性别"
-            outlined
-            :options="genderOptions"
-            v-model="userInfo.gender"
-          ></q-select>
-          <q-input
-            label="出生日期"
-            outlined
-            v-model="userInfo.birthday"
-            mask="date"
-            lazy-rules
-            :rules="['date']"
-          >
-            <template v-slot:append>
-              <q-icon name="event" class="cursor-pointer">
-                <q-popup-proxy
-                  cover
-                  transition-show="scale"
-                  transition-hide="scale"
-                >
-                  <q-date :locale="dateLocale" v-model="birthday">
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="关闭" color="primary" />
-                    </div>
-                  </q-date>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-          </q-input>
-          <q-input label="地区" outlined v-model="userInfo.region"></q-input>
-        </q-form>
-      </q-step>
-
       <template v-slot:navigation>
-        <q-stepper-navigation :class="registerStep !== 3 ? '' : 'mt-6'">
+        <q-stepper-navigation>
           <q-btn
-            v-if="registerStep !== 2"
+            v-if="registerStep === 1"
             @click="onRegisterNext"
             color="primary"
-            :label="registerStep === 3 ? '完成' : '注册'"
+            label="注册"
           />
           <q-btn
             v-if="registerStep === 1"
@@ -333,7 +289,6 @@
 </template>
 
 <script lang="ts" setup>
-import { dateLocale } from '@/const'
 import { watch, reactive, ref } from 'vue'
 
 import { useNotify } from '@/hooks'
@@ -343,7 +298,6 @@ import {
   isExistedUser,
   register,
   validateVerificationCode,
-  updateProfile,
   login,
   sendVerificationCodeToEmail,
   updatePassword
@@ -354,8 +308,6 @@ import { storeToRefs } from 'pinia'
 
 let timer = null
 let pause = false
-const birthday = ref('未知')
-const genderOptions = ['男', '女']
 const registerPin = ref([])
 const updatePasswordPin = ref([])
 const loginWithVCPin = ref([])
@@ -369,7 +321,6 @@ const registerStepperRef = ref(null)
 const loginStepperRef = ref(null)
 const loginWithVCStepperRef = ref(null)
 const updatePasswordStepperRef = ref(null)
-const userInfoFormRef = ref(null)
 const loginWithVCFormRef = ref(null)
 const loginFormRef = ref(null)
 const updatePasswordFormRef = ref(null)
@@ -566,20 +517,6 @@ const onRegisterNext = async () => {
         useNotify(error, 'negative')
       }
     }
-  } else if (_step === 3) {
-    const success = userInfoFormRef.value.validate()
-
-    if (success) {
-      try {
-        const {
-          data: { token, userInfo: _userInfo }
-        } = await updateProfile(userInfo.value.id, userInfo.value)
-        localStorage.setItem('token', token)
-        userInfo.value = _userInfo
-      } catch (error) {
-        useNotify(error, 'negative')
-      }
-    }
   }
 }
 
@@ -668,7 +605,8 @@ watch(registerPin, async v => {
       )
       localStorage.setItem('token', token)
       userInfo.value = _userInfo
-      registerNext()
+      router.push('/match')
+      useNotify('登录成功')
     } catch (error) {
       useNotify(error, 'negative')
       registerPin.value = []

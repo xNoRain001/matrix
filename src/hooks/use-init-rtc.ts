@@ -46,11 +46,9 @@ const useInitRtc: useInitRtcFn = async (
 
       if (type === 'offer') {
         await pc.setLocalDescription()
-        const filteredUserInfo = { ...userInfo }
-        delete filteredUserInfo.email
         socket.emit('rtc', roomId, {
           description: pc.localDescription,
-          otherInfo: filteredUserInfo
+          otherInfo: userInfo
         })
       }
     } else if (candidate) {
