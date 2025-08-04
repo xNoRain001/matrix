@@ -45,7 +45,7 @@
           label="重置密码"
           color="primary"
           rounded
-          class="full-width !mb-4"
+          class="full-width"
         ></q-btn>
       </div>
     </q-step>
@@ -63,8 +63,8 @@ const {
 } = useRoute()
 const router = useRouter()
 const passwordForm = reactive({
-  password: '111222333',
-  confirmPassword: '111222333'
+  password: '',
+  confirmPassword: ''
 })
 const isPwd = ref(true)
 const step = ref(1)

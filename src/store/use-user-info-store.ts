@@ -1,6 +1,5 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { useRouter } from 'vue-router'
 
 import type { userInfo } from '@/types'
 
@@ -27,7 +26,6 @@ const useUserInfoStore = defineStore('userInfoStore', () => {
     userInfo = null
     // 没有 token 或者 token 被篡改
     localStorage.removeItem('token')
-    useRouter().push('/login')
   }
 
   return { userInfo: ref<userInfo>(userInfo) }
