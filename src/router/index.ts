@@ -51,6 +51,10 @@ const router = createRouter({
       path: '/login',
       component: () => import('@/views/Login.vue')
     },
+    {
+      path: '/reset-password',
+      component: () => import('@/views/ResetPassword.vue')
+    },
     // 404 路由
     {
       path: '/:pathMatch(.*)*',
@@ -65,6 +69,8 @@ router.beforeEach(({ path }, _, next) => {
     location.href = '/docs.html'
     return next(false)
   }
+
+  console.log(path)
 
   if (path === '/login') {
     if (localStorage.getItem('token')) {

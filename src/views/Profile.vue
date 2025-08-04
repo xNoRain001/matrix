@@ -21,7 +21,7 @@
           <q-list>
             <q-item
               class="rounded-[12px]"
-              @click="panel = 'profile'"
+              @click="onUpdatePanel('profile')"
               clickable
               v-ripple
             >
@@ -30,6 +30,18 @@
                 side
                 class="flex !flex-row !items-center !text-gray-500"
               >
+                <q-icon name="arrow_forward_ios" class="ml-2"></q-icon>
+              </q-item-section>
+            </q-item>
+            <q-separator />
+            <q-item
+              class="rounded-[12px]"
+              @click="onUpdatePanel('updatePassword')"
+              clickable
+              v-ripple
+            >
+              <q-item-section class="text-base">修改密码</q-item-section>
+              <q-item-section side class="!text-gray-500">
                 <q-icon name="arrow_forward_ios" class="ml-2"></q-icon>
               </q-item-section>
             </q-item>
@@ -126,6 +138,60 @@
             </q-item>
           </q-list>
         </q-tab-panel>
+
+        <q-tab-panel name="updatePassword" class="grid gap-y-4">
+          <q-input
+            :type="isPwd ? 'password' : 'text'"
+            dense
+            v-model="passwordForm.oldPassword"
+            label="旧密码"
+            outlined
+          >
+            <template v-slot:append>
+              <q-icon
+                :name="isPwd ? 'visibility_off' : 'visibility'"
+                class="cursor-pointer"
+                @click="isPwd = !isPwd"
+              />
+            </template>
+          </q-input>
+          <q-input
+            :type="isPwd ? 'password' : 'text'"
+            dense
+            v-model="passwordForm.password"
+            label="新密码（长度至少为 8 位）"
+            outlined
+          >
+            <template v-slot:append>
+              <q-icon
+                :name="isPwd ? 'visibility_off' : 'visibility'"
+                class="cursor-pointer"
+                @click="isPwd = !isPwd"
+              />
+            </template>
+          </q-input>
+          <q-input
+            :type="isPwd ? 'password' : 'text'"
+            dense
+            v-model="passwordForm.confirmPassword"
+            label="确认新密码"
+            outlined
+          >
+            <template v-slot:append>
+              <q-icon
+                :name="isPwd ? 'visibility_off' : 'visibility'"
+                class="cursor-pointer"
+                @click="isPwd = !isPwd"
+              /> </template
+          ></q-input>
+          <q-btn
+            @click="onUpdatePassword"
+            label="修改密码"
+            color="primary"
+            rounded
+            class="full-width"
+          ></q-btn>
+        </q-tab-panel>
       </q-tab-panels>
     </div>
 
@@ -141,12 +207,12 @@
 </template>
 
 <script lang="ts" setup>
-import { updateProfile } from '@/apis/user'
+import { updatePassword, updateProfile } from '@/apis/user'
 import { dateLocale } from '@/const'
-import { useDialog, useNotify } from '@/hooks'
+import { useDialog, useEncryptUserInfo, useNotify } from '@/hooks'
 import { useUserInfoStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const panel = ref('default')
@@ -155,6 +221,44 @@ const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
 let oldUserInfo = JSON.parse(JSON.stringify(_userInfo))
 const router = useRouter()
+const passwordForm = reactive({
+  oldPassword: '',
+  password: '',
+  confirmPassword: ''
+})
+const isPwd = ref(true)
+
+const onUpdatePassword = async () => {
+  const { oldPassword, password, confirmPassword } = passwordForm
+
+  if (oldPassword.length < 8) {
+    return useNotify('旧密码长度至少为 8 位', 'negative')
+  }
+
+  if (password !== confirmPassword) {
+    return useNotify('两次密码不一致', 'negative')
+  }
+
+  if (password.length < 8) {
+    return useNotify('新密码长度至少为 8 位', 'negative')
+  }
+
+  try {
+    const encryptedUserInfo = await useEncryptUserInfo({
+      oldPassword,
+      password
+    })
+    const { message } = await updatePassword(encryptedUserInfo)
+    useNotify(message)
+    localStorage.removeItem('token')
+    userInfo.value = null
+    router.push('/login')
+  } catch (error) {
+    useNotify(error, 'negative')
+  }
+}
+
+const onUpdatePanel = v => (panel.value = v)
 
 const onBackFromProfile = async () => {
   panel.value = 'default'

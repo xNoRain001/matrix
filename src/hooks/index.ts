@@ -42,8 +42,10 @@ import useRematchWithOffline from './use-rematch-with-offline'
 import useBeforeUnmount from './use-before-unmount'
 import useRematch from './use-rematch'
 import useMounted from './use-mounted'
+import useEncryptUserInfo from './use-encrypt-userinfo'
 
 export {
+  useEncryptUserInfo,
   useRematch,
   useMounted,
   useBeforeUnmount,

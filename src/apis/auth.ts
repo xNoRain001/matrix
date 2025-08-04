@@ -32,3 +32,9 @@ export const getPublicKey = async () => HTTP.request(`${prefix}/get-public-key`)
 
 export const isExistedUser = async (email: string) =>
   HTTP.request(`${prefix}/is-existed-user?email=${email}`)
+
+export const hasResetPasswordURL = async (email: string) =>
+  HTTP.request(`${prefix}/has-reset-password-url?email=${email}`)
+
+export const sendResetPasswordURL = async (email: string) =>
+  HTTP.request(`${prefix}/send-reset-password-url?email=${email}`)

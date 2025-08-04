@@ -28,14 +28,22 @@
             ]"
           />
           <q-input
+            :type="isPwd ? 'password' : 'text'"
             placeholder="password"
             outlined
-            type="password"
             v-model="registerForm.password"
             label="密码"
             lazy-rules
             :rules="[val => val.length >= 8 || '密码长度至少为 8 位']"
-          />
+          >
+            <template v-slot:append>
+              <q-icon
+                :name="isPwd ? 'visibility_off' : 'visibility'"
+                class="cursor-pointer"
+                @click="isPwd = !isPwd"
+              />
+            </template>
+          </q-input>
         </q-form>
       </q-step>
 
@@ -103,13 +111,21 @@
             ]"
           />
           <q-input
+            :type="isPwd ? 'password' : 'text'"
             outlined
-            type="password"
             v-model="loginForm.password"
             label="密码"
             lazy-rules
             :rules="[val => val.length >= 8 || '密码长度至少为 8 位']"
-          />
+          >
+            <template v-slot:append>
+              <q-icon
+                :name="isPwd ? 'visibility_off' : 'visibility'"
+                class="cursor-pointer"
+                @click="isPwd = !isPwd"
+              />
+            </template>
+          </q-input>
           <div class="text-primary mb-4 flex justify-between">
             <div @click="onUpdatePassword" class="cursor-pointer underline">
               忘记密码
@@ -201,7 +217,6 @@
       v-if="isUpdatePassword"
       class="w-full max-w-[var(--room-width)] !rounded-[12px] !bg-[#0d1117]"
       v-model="updatePasswordStep"
-      ref="updatePasswordStepperRef"
     >
       <q-step
         :name="1"
@@ -227,52 +242,14 @@
         </q-form>
       </q-step>
 
-      <q-step
-        :name="2"
-        title="验证"
-        active-icon="verified"
-        icon="verified"
-        :done="updatePasswordStep > 2"
-      >
-        <div>输入邮箱中收到的验证码</div>
-        <UPinInput
-          class="mt-4"
-          autofocus
-          size="xl"
-          :length="pinLength"
-          v-model="updatePasswordPin"
-        />
-      </q-step>
-
-      <q-step :name="3" title="密码" active-icon="key" icon="key">
-        <q-form ref="newPasswordFormRef">
-          <q-input
-            type="password"
-            :rules="[val => val.length >= 8 || '密码长度至少为 8 位']"
-            label="新密码"
-            outlined
-            v-model="newPasswordForm.newPassword"
-          ></q-input>
-          <q-input
-            type="password"
-            :rules="[val => val.length >= 8 || '密码长度至少为 8 位']"
-            label="确认新密码"
-            outlined
-            v-model="newPasswordForm.confirmNewPassword"
-          ></q-input>
-        </q-form>
-      </q-step>
-
       <template v-slot:navigation>
         <q-stepper-navigation>
           <q-btn
-            v-if="updatePasswordStep !== 2"
             @click="onUpdatePasswordNext"
             color="primary"
-            :label="updatePasswordStep === 3 ? '完成' : '发送验证码'"
+            :label="sentResetPasswordURL ? '已发送验证码' : '发送验证码'"
           />
           <q-btn
-            v-if="updatePasswordStep === 1"
             class="!ml-4"
             @click="onCancelUpadtePassword"
             color="primary"
@@ -287,20 +264,20 @@
 <script lang="ts" setup>
 import { watch, reactive, ref } from 'vue'
 
-import { useNotify } from '@/hooks'
+import { useEncryptUserInfo, useNotify } from '@/hooks'
 import { useRouter } from 'vue-router'
 import { useUserInfoStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import {
-  getPublicKey,
   hasPin,
+  hasResetPasswordURL,
   isExistedUser,
   login,
   register,
   sendPin,
+  sendResetPasswordURL,
   validatePin
 } from '@/apis/auth'
-import { updatePassword } from '@/apis/user'
 
 let timer = null
 let pause = false
@@ -320,7 +297,6 @@ const updatePasswordStepperRef = ref(null)
 const loginWithVCFormRef = ref(null)
 const loginFormRef = ref(null)
 const updatePasswordFormRef = ref(null)
-const newPasswordFormRef = ref(null)
 const loginForm = reactive({
   email: '',
   password: ''
@@ -329,10 +305,6 @@ const registerForm = reactive({
   email: '',
   password: ''
 })
-const newPasswordForm = reactive({
-  newPassword: '',
-  confirmNewPassword: ''
-})
 const loginWithVCForm = reactive({
   email: '',
   code: ''
@@ -340,12 +312,12 @@ const loginWithVCForm = reactive({
 const updatePasswordForm = reactive({ email: '' })
 const isLogin = ref(true)
 const isRegister = ref(false)
-const pemHeader = '-----BEGIN PUBLIC KEY-----'
-const pemFooter = '-----END PUBLIC KEY-----'
 const router = useRouter()
 const { userInfo } = storeToRefs(useUserInfoStore())
 const isUpdatePassword = ref(false)
 const isLoginWithVC = ref(false)
+const sentResetPasswordURL = ref(false)
+const isPwd = ref(true)
 
 const onLoginWithVCNext = async () => {
   const _step = loginWithVCStep.value
@@ -389,89 +361,30 @@ const onCancelUpadtePassword = () => {
   isLogin.value = true
 }
 
-const importPublicKey = async () => {
-  const { data: publicKey } = await getPublicKey()
-  const pemContents = publicKey
-    .replace(pemHeader, '')
-    .replace(pemFooter, '')
-    .replace(/\s+/g, '')
-  const binaryDer = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0))
-
-  return crypto.subtle.importKey(
-    'spki',
-    binaryDer,
-    { name: 'RSA-OAEP', hash: 'SHA-256' },
-    true,
-    ['encrypt']
-  )
-}
-
-const getEncryptedUserInfo = async userInfo => {
-  const publicKey = await importPublicKey()
-  const encoded = new TextEncoder().encode(JSON.stringify(userInfo))
-  const encrypted = await crypto.subtle.encrypt(
-    { name: 'RSA-OAEP' },
-    publicKey,
-    encoded
-  )
-  return btoa(String.fromCharCode(...new Uint8Array(encrypted)))
-}
-
 const onUpdatePasswordNext = async () => {
-  const _updatePasswordStep = updatePasswordStep.value
+  const success = await updatePasswordFormRef.value.validate()
 
-  if (_updatePasswordStep === 1) {
-    const success = await updatePasswordFormRef.value.validate()
+  if (success) {
+    try {
+      const { email } = updatePasswordForm
+      const { data: existed } = await isExistedUser(email)
 
-    if (success) {
-      try {
-        const { email } = updatePasswordForm
-        const { data: existed } = await isExistedUser(email)
-
-        if (!existed) {
-          throw new Error('邮箱未注册')
-        }
-
-        const { data: has } = await hasPin(email, 'update-password')
-
-        if (has) {
-          useNotify('已经发送过验证码')
-        } else {
-          const { message } = await sendPin(email, 'update-password')
-          useNotify(message)
-        }
-
-        updatePasswordNext()
-      } catch (error) {
-        useNotify(error, 'negative')
-      }
-    }
-  } else if (_updatePasswordStep === 3) {
-    const success = newPasswordFormRef.value.validate()
-
-    if (success) {
-      const { newPassword, confirmNewPassword } = newPasswordForm
-      if (newPassword !== confirmNewPassword) {
-        return useNotify('两次密码不一致')
+      if (!existed) {
+        throw new Error('邮箱未注册')
       }
 
-      try {
-        const encryptedUserInfo = await getEncryptedUserInfo({
-          email: updatePasswordForm.email,
-          password: newPassword
-        })
-        const { message } = await updatePassword(encryptedUserInfo)
-        isUpdatePassword.value = false
-        isLogin.value = true
-        updatePasswordStep.value = 1
-        updatePasswordForm.email = ''
-        newPasswordForm.newPassword = ''
-        newPasswordForm.confirmNewPassword = ''
-        updatePasswordPin.value = []
+      const { data: has } = await hasResetPasswordURL(email)
+
+      if (has) {
+        sentResetPasswordURL.value = true
+        useNotify('已经发送过验证码')
+      } else {
+        const { message } = await sendResetPasswordURL(email)
+        sentResetPasswordURL.value = true
         useNotify(message)
-      } catch (error) {
-        useNotify(error, 'negative')
       }
+    } catch (error) {
+      useNotify(error, 'negative')
     }
   }
 }
@@ -500,7 +413,7 @@ const onRegisterNext = async () => {
           // 直接进行到下一步让用户输入验证码
           useNotify('已经发送过验证码')
         } else {
-          const encryptedUserInfo = await getEncryptedUserInfo(registerForm)
+          const encryptedUserInfo = await useEncryptUserInfo(registerForm)
           const { message } = await register(encryptedUserInfo)
           useNotify(message)
         }
@@ -556,7 +469,7 @@ const onLogin = async () => {
     try {
       // await isExistedUser(email)
       // 不进行存在性检测，因为 loginService 内部会检测
-      const encryptedUserInfo = await getEncryptedUserInfo(loginForm)
+      const encryptedUserInfo = await useEncryptUserInfo(loginForm)
       const {
         data: { token, userInfo: _userInfo }
       } = await login(encryptedUserInfo)
