@@ -250,7 +250,7 @@ import type { Socket } from 'socket.io-client'
 import type { receivedFiles } from '@/types'
 import { storeToRefs } from 'pinia'
 import { useRoomStore, useUserInfoStore } from '@/store'
-import { clearLatestRoom, getLatestRoom, isExitRoom } from '@/apis'
+import { updateLatestRoom, getLatestRoom, isExitRoom } from '@/apis/latest-room'
 
 let timer = null
 const makingOffer = ref(false)
@@ -416,7 +416,7 @@ const _exitRoom = async () => {
 const exitRoom = async () => {
   useClosePC(pc)
   socket.disconnect()
-  await clearLatestRoom()
+  await updateLatestRoom()
   leaved.value = true
   online.value = false
   otherInfo.value = null

@@ -288,19 +288,19 @@
 import { watch, reactive, ref } from 'vue'
 
 import { useNotify } from '@/hooks'
-import {
-  hasVerification,
-  getPublicKey,
-  isExistedUser,
-  register,
-  validateVerificationCode,
-  login,
-  sendVerificationCodeToEmail,
-  updatePassword
-} from '@/apis'
 import { useRouter } from 'vue-router'
 import { useUserInfoStore } from '@/store'
 import { storeToRefs } from 'pinia'
+import {
+  getPublicKey,
+  hasPin,
+  isExistedUser,
+  login,
+  register,
+  sendPin,
+  validatePin
+} from '@/apis/auth'
+import { updatePassword } from '@/apis/user'
 
 let timer = null
 let pause = false
@@ -362,12 +362,12 @@ const onLoginWithVCNext = async () => {
           throw new Error('邮箱不存在')
         }
 
-        const { data: has } = await hasVerification(email, 'login')
+        const { data: has } = await hasPin(email, 'login')
 
         if (has) {
           useNotify('已经发送过验证码')
         } else {
-          const { message } = await sendVerificationCodeToEmail(email, 'login')
+          const { message } = await sendPin(email, 'login')
           useNotify(message)
         }
 
@@ -432,15 +432,12 @@ const onUpdatePasswordNext = async () => {
           throw new Error('邮箱未注册')
         }
 
-        const { data: has } = await hasVerification(email, 'update-password')
+        const { data: has } = await hasPin(email, 'update-password')
 
         if (has) {
           useNotify('已经发送过验证码')
         } else {
-          const { message } = await sendVerificationCodeToEmail(
-            email,
-            'update-password'
-          )
+          const { message } = await sendPin(email, 'update-password')
           useNotify(message)
         }
 
@@ -496,7 +493,7 @@ const onRegisterNext = async () => {
         }
 
         // 如果邮箱没有被注册，再判断是不是给这个邮箱发送过验证码并且还没过期
-        const { data: has } = await hasVerification(email, 'register')
+        const { data: has } = await hasPin(email, 'register')
 
         // 验证码存在且未过期
         if (has) {
@@ -594,11 +591,7 @@ watch(registerPin, async v => {
     try {
       const {
         data: { token, userInfo: _userInfo }
-      } = await validateVerificationCode(
-        'register',
-        registerForm.email,
-        v.join('')
-      )
+      } = await validatePin('register', registerForm.email, v.join(''))
       localStorage.setItem('token', token)
       userInfo.value = _userInfo
       router.push('/match')
@@ -623,11 +616,7 @@ watch(updatePasswordPin, async v => {
     timer = initTimeout()
 
     try {
-      await validateVerificationCode(
-        'update-password',
-        updatePasswordForm.email,
-        v.join('')
-      )
+      await validatePin('update-password', updatePasswordForm.email, v.join(''))
       updatePasswordNext()
     } catch (error) {
       useNotify(error, 'negative')
@@ -651,11 +640,7 @@ watch(loginWithVCPin, async v => {
     try {
       const {
         data: { token, userInfo: _userInfo }
-      } = await validateVerificationCode(
-        'login',
-        loginWithVCForm.email,
-        v.join('')
-      )
+      } = await validatePin('login', loginWithVCForm.email, v.join(''))
       localStorage.setItem('token', token)
       userInfo.value = _userInfo
       router.push('/match')

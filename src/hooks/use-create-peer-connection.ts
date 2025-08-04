@@ -1,7 +1,7 @@
 import type { Ref } from 'vue'
 import type { Socket } from 'socket.io-client'
 import { useRoomStore } from '@/store'
-import { setLatestRoom } from '@/apis'
+import { updateLatestRoom } from '@/apis/latest-room'
 import type { remoteRoomInfo } from '@/types'
 
 const pcConfig: RTCConfiguration = {
@@ -59,7 +59,7 @@ const useCreatePeerConnection = (
 
       if (!remoteRoomInfo.latestId) {
         remoteRoomInfo.latestId = latestId
-        setLatestRoom(path, roomId, latestId)
+        updateLatestRoom(path, roomId, latestId)
       }
     }
   }

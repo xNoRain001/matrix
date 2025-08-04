@@ -141,7 +141,7 @@
 </template>
 
 <script lang="ts" setup>
-import { updateProfile } from '@/apis'
+import { updateProfile } from '@/apis/user'
 import { dateLocale } from '@/const'
 import { useDialog, useNotify } from '@/hooks'
 import { useUserInfoStore } from '@/store'

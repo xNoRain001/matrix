@@ -274,7 +274,7 @@ import type { extendedFiles, fileTypes, receivedFiles } from '@/types'
 import { exportFile } from 'quasar'
 import { useRoomStore, useUserInfoStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { clearLatestRoom, getLatestRoom, isExitRoom } from '@/apis'
+import { updateLatestRoom, getLatestRoom, isExitRoom } from '@/apis/latest-room'
 
 let timer = null
 let lastMsgTimer = null
@@ -716,7 +716,7 @@ const exitRoom = async () => {
   useClosePC(pc)
   socket.disconnect()
   await useClearMessages(_remoteRoomInfo.roomId)
-  await clearLatestRoom()
+  await updateLatestRoom()
   leaved.value = true
   online.value = false
   otherInfo.value = null

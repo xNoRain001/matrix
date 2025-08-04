@@ -181,7 +181,7 @@ import {
 } from '@/hooks'
 import { storeToRefs } from 'pinia'
 import { useRoomStore, useUserInfoStore } from '@/store'
-import { clearLatestRoom, getLatestRoom, isExitRoom } from '@/apis'
+import { updateLatestRoom, getLatestRoom, isExitRoom } from '@/apis/latest-room'
 
 let timer = null
 const makingOffer = ref(false)
@@ -351,7 +351,7 @@ const exitRoom = async () => {
   }
 
   socket.disconnect()
-  await clearLatestRoom()
+  await updateLatestRoom()
   leaved.value = true
   online.value = false
   otherInfo.value = null
