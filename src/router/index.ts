@@ -70,8 +70,6 @@ router.beforeEach(({ path }, _, next) => {
     return next(false)
   }
 
-  console.log(path)
-
   if (path === '/login') {
     if (localStorage.getItem('token')) {
       router.push('/match')

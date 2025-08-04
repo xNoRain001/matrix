@@ -1,4 +1,3 @@
-import { useNotify } from '@/hooks'
 import router from '@/router'
 import axios from 'axios'
 import qs from 'querystring'
@@ -24,9 +23,18 @@ class HTTP {
     }
   }
 
-  request(url, options = {}) {
+  request(url, options: any = {}) {
+    const { defaults } = this
     const instance = axios.create()
-    const config = { ...this.defaults, ...{ url, ...options } }
+    const config = {
+      ...defaults,
+      url,
+      ...options,
+      headers: {
+        ...defaults.headers,
+        ...(options.headers || {})
+      }
+    }
     this.setInterceptor(instance)
     return instance(config)
   }
@@ -59,7 +67,6 @@ class HTTP {
 
           if (code === 401) {
             localStorage.removeItem('token')
-            useNotify('login')
             router.push('/login')
           }
 
