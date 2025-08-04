@@ -27,6 +27,12 @@ const list = [
     title: '文件传输',
     desc: '文件高速传输，极速分享体验',
     to: '/match/file-transfer'
+  },
+  {
+    icon: '🖥️',
+    title: '屏幕共享',
+    desc: '开发中...',
+    to: '/match'
   }
 ]
 </script>

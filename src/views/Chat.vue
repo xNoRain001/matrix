@@ -136,80 +136,72 @@
     </div>
   </div>
 
-  <q-page-sticky
+  <div
     v-if="remoteRoomInfo.roomId && !leaved"
-    expand
-    position="bottom"
+    class="fixed bottom-0 left-1/2 w-full max-w-[calc(var(--room-width)+2rem)] -translate-x-1/2 rounded-t-[1rem] border-t border-t-[#0d1117] py-4 backdrop-blur-md"
   >
-    <div
-      class="w-full max-w-[calc(var(--room-width)+2rem)] rounded-t-[1rem] border-t border-t-[#0d1117] py-4 backdrop-blur-md"
+    <q-input
+      @keydown.enter="onSendMsg"
+      class="mx-4"
+      standout
+      dense
+      rounded
+      v-model="message"
+      :disable="!online"
     >
-      <q-input
-        @keydown.enter="onSendMsg"
-        class="mx-4"
-        standout
-        dense
-        rounded
-        v-model="message"
-        :disable="!online"
-      >
-        <template v-slot:before>
-          <q-btn @click="onLeave" round icon="logout">
-            <q-tooltip class="!bg-[#0d1117]">退出</q-tooltip>
-          </q-btn>
-        </template>
-        <template v-slot:after>
-          <!-- :disable="!online" -->
-          <q-btn @click="onExpand" round icon="control_point">
-            <q-tooltip class="!bg-[#0d1117]">选项</q-tooltip>
-          </q-btn>
-        </template>
-      </q-input>
-      <div
-        :class="expanded ? 'h-53' : 'h-0'"
-        class="transition-all duration-200"
-      >
-        <div class="grid grid-cols-4 gap-y-4 p-4">
-          <div class="flex-center flex flex-col">
-            <q-btn
-              @click="onOpenFileSelector(photoInputRef)"
-              round
-              size="lg"
-              icon="photo_size_select_actual"
-            ></q-btn>
-            <div>照片</div>
-          </div>
-          <div class="flex-center flex flex-col">
-            <q-btn
-              @click="onOpenFileSelector(videoInputRef)"
-              round
-              size="lg"
-              icon="duo"
-            ></q-btn>
-            <div>视频</div>
-          </div>
-          <div class="flex-center flex flex-col">
-            <q-btn
-              @click="onOpenFileSelector(fileInputRef)"
-              round
-              size="lg"
-              icon="folder"
-            ></q-btn>
-            <div>文件</div>
-          </div>
-          <div class="flex-center flex flex-col">
-            <q-btn
-              @click="onOpenFileSelector(musicInputRef)"
-              round
-              size="lg"
-              icon="music_note"
-            ></q-btn>
-            <div>音乐</div>
-          </div>
+      <template v-slot:before>
+        <q-btn @click="onLeave" round icon="logout">
+          <q-tooltip class="!bg-[#0d1117]">退出</q-tooltip>
+        </q-btn>
+      </template>
+      <template v-slot:after>
+        <!-- :disable="!online" -->
+        <q-btn @click="onExpand" round icon="control_point">
+          <q-tooltip class="!bg-[#0d1117]">选项</q-tooltip>
+        </q-btn>
+      </template>
+    </q-input>
+    <div :class="expanded ? 'h-27' : 'h-0'" class="transition-all duration-200">
+      <div class="grid grid-cols-4 gap-y-4 pt-4">
+        <div class="flex-center flex flex-col">
+          <q-btn
+            @click="onOpenFileSelector(photoInputRef)"
+            round
+            size="lg"
+            icon="photo_size_select_actual"
+          ></q-btn>
+          <div>照片</div>
+        </div>
+        <div class="flex-center flex flex-col">
+          <q-btn
+            @click="onOpenFileSelector(videoInputRef)"
+            round
+            size="lg"
+            icon="duo"
+          ></q-btn>
+          <div>视频</div>
+        </div>
+        <div class="flex-center flex flex-col">
+          <q-btn
+            @click="onOpenFileSelector(fileInputRef)"
+            round
+            size="lg"
+            icon="folder"
+          ></q-btn>
+          <div>文件</div>
+        </div>
+        <div class="flex-center flex flex-col">
+          <q-btn
+            @click="onOpenFileSelector(musicInputRef)"
+            round
+            size="lg"
+            icon="music_note"
+          ></q-btn>
+          <div>音乐</div>
         </div>
       </div>
     </div>
-  </q-page-sticky>
+  </div>
 
   <input
     ref="photoInputRef"

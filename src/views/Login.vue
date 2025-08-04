@@ -5,7 +5,6 @@
       class="w-full max-w-[var(--room-width)] !rounded-[12px] !bg-[#0d1117]"
       v-model="registerStep"
       ref="registerStepperRef"
-      color="primary"
     >
       <q-step
         :name="1"
@@ -81,7 +80,6 @@
       class="w-full max-w-[var(--room-width)] !rounded-[12px] !bg-[#0d1117]"
       v-model="loginStep"
       ref="loginStepperRef"
-      color="primary"
     >
       <q-step
         :name="1"
@@ -141,7 +139,6 @@
       class="w-full max-w-[var(--room-width)] !rounded-[12px] !bg-[#0d1117]"
       v-model="loginWithVCStep"
       ref="loginWithVCStepperRef"
-      color="primary"
     >
       <q-step
         :name="1"
@@ -205,7 +202,6 @@
       class="w-full max-w-[var(--room-width)] !rounded-[12px] !bg-[#0d1117]"
       v-model="updatePasswordStep"
       ref="updatePasswordStepperRef"
-      color="primary"
     >
       <q-step
         :name="1"

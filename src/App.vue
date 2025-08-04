@@ -55,6 +55,9 @@
               <q-item clickable>
                 <q-item-section>清除聊天记录</q-item-section>
               </q-item>
+              <q-item clickable>
+                <q-item-section>举报对方</q-item-section>
+              </q-item>
             </q-list>
           </q-menu>
         </q-btn>
@@ -90,10 +93,6 @@
             </q-item>
             <q-separator :key="'sep' + index" v-if="separator" />
           </template>
-
-          <q-avatar class="absolute bottom-4">
-            <img src="/images/logo.svg" />
-          </q-avatar>
         </q-list>
       </q-scroll-area>
     </q-drawer>
