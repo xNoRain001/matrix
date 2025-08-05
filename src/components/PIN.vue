@@ -7,7 +7,7 @@
       <q-breadcrumbs-el
         label="去匹配"
         icon="near_me"
-        @click="router.push(`/match/${type}`)"
+        @click="router.replace(`/match/${type}`)"
       >
       </q-breadcrumbs-el>
     </q-breadcrumbs>

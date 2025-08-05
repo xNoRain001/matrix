@@ -12,7 +12,7 @@ const useRematch = async (
 ) => {
   await exitRoom()
   isMatch.value = true
-  router.push(`/match/${type}`)
+  router.replace(`/match/${type}`)
   useInitSocketForMatch(initSocket, onMatched, type)
 }
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-center flex h-[calc(100vh-32px)]">
+  <div class="flex-center flex h-[calc(100vh-2rem)]">
     <q-stepper
       v-if="isRegister"
       class="w-full max-w-[var(--room-width)] !rounded-[12px] !bg-[#0d1117]"
@@ -13,38 +13,30 @@
         icon="how_to_reg"
         :done="registerStep > 1"
       >
-        <q-form ref="registerFormRef">
-          <q-input
-            placeholder="example@gmail.com"
-            outlined
-            type="email"
-            v-model="registerForm.email"
-            label="邮箱"
-            lazy-rules
-            :rules="[
-              val =>
-                /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(val) ||
-                '邮箱格式不正确'
-            ]"
-          />
-          <q-input
-            :type="isPwd ? 'password' : 'text'"
-            placeholder="password"
-            outlined
-            v-model="registerForm.password"
-            label="密码"
-            lazy-rules
-            :rules="[val => val.length >= 8 || '密码长度至少为 8 位']"
-          >
-            <template v-slot:append>
-              <q-icon
-                :name="isPwd ? 'visibility_off' : 'visibility'"
-                class="cursor-pointer"
-                @click="isPwd = !isPwd"
-              />
-            </template>
-          </q-input>
-        </q-form>
+        <q-input
+          dense
+          placeholder="example@gmail.com"
+          outlined
+          type="email"
+          v-model="registerForm.email"
+          label="邮箱"
+        />
+        <q-input
+          dense
+          :type="isPwd ? 'password' : 'text'"
+          outlined
+          v-model="registerForm.password"
+          label="密码（长度至少为 8 位）"
+          class="mt-4"
+        >
+          <template v-slot:append>
+            <q-icon
+              :name="isPwd ? 'visibility_off' : 'visibility'"
+              class="cursor-pointer"
+              @click="isPwd = !isPwd"
+            />
+          </template>
+        </q-input>
       </q-step>
 
       <q-step
@@ -65,19 +57,20 @@
       </q-step>
 
       <template v-slot:navigation>
-        <q-stepper-navigation>
+        <q-stepper-navigation class="mt-4">
           <q-btn
             v-if="registerStep === 1"
             @click="onRegisterNext"
             color="primary"
             label="注册"
+            rounded
           />
           <q-btn
-            v-if="registerStep === 1"
-            class="!ml-4"
+            :class="registerStep === 1 ? '!ml-4' : ''"
             @click="onCancelRegister"
             color="primary"
             label="返回登录"
+            rounded
           />
         </q-stepper-navigation>
       </template>
@@ -96,55 +89,49 @@
         icon="how_to_reg"
         :done="loginStep > 1"
       >
-        <q-form ref="loginFormRef">
-          <q-input
-            placeholder="example@gmail.com"
-            outlined
-            type="email"
-            v-model="loginForm.email"
-            label="邮箱"
-            lazy-rules
-            :rules="[
-              val =>
-                /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(val) ||
-                '邮箱格式不正确'
-            ]"
-          />
-          <q-input
-            :type="isPwd ? 'password' : 'text'"
-            outlined
-            v-model="loginForm.password"
-            label="密码"
-            lazy-rules
-            :rules="[val => val.length >= 8 || '密码长度至少为 8 位']"
-          >
-            <template v-slot:append>
-              <q-icon
-                :name="isPwd ? 'visibility_off' : 'visibility'"
-                class="cursor-pointer"
-                @click="isPwd = !isPwd"
-              />
-            </template>
-          </q-input>
-          <div class="text-primary mb-4 flex justify-between">
-            <div @click="onUpdatePassword" class="cursor-pointer underline">
-              忘记密码
-            </div>
-            <div @click="onLoginWithVC" class="cursor-pointer">
-              使用验证码登录
-            </div>
+        <q-input
+          dense
+          placeholder="example@gmail.com"
+          outlined
+          type="email"
+          v-model="loginForm.email"
+          label="邮箱"
+        />
+        <q-input
+          dense
+          :type="isPwd ? 'password' : 'text'"
+          outlined
+          v-model="loginForm.password"
+          label="密码"
+          class="mt-4"
+        >
+          <template v-slot:append>
+            <q-icon
+              :name="isPwd ? 'visibility_off' : 'visibility'"
+              class="cursor-pointer"
+              @click="isPwd = !isPwd"
+            />
+          </template>
+        </q-input>
+        <div class="text-primary mt-4 flex justify-between">
+          <div @click="onUpdatePassword" class="cursor-pointer underline">
+            忘记密码
           </div>
-        </q-form>
+          <div @click="onLoginWithVC" class="cursor-pointer">
+            使用验证码登录
+          </div>
+        </div>
       </q-step>
 
       <template v-slot:navigation>
-        <q-stepper-navigation>
-          <q-btn @click="onLogin" label="登录" color="primary" />
+        <q-stepper-navigation class="mt-4">
+          <q-btn @click="onLogin" label="登录" color="primary" rounded />
           <q-btn
             @click="onRegister"
             class="!ml-4"
             label="注册"
             color="primary"
+            rounded
           />
         </q-stepper-navigation>
       </template>
@@ -163,21 +150,14 @@
         icon="email"
         :done="loginWithVCStep > 1"
       >
-        <q-form ref="loginWithVCFormRef">
-          <q-input
-            placeholder="example@gmail.com"
-            outlined
-            type="email"
-            v-model="loginWithVCForm.email"
-            label="邮箱"
-            lazy-rules
-            :rules="[
-              val =>
-                /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(val) ||
-                '邮箱格式不正确'
-            ]"
-          />
-        </q-form>
+        <q-input
+          dense
+          placeholder="example@gmail.com"
+          outlined
+          type="email"
+          v-model="loginWithVCForm.email"
+          label="邮箱"
+        />
       </q-step>
 
       <q-step
@@ -190,7 +170,7 @@
         <div>
           <div>输入邮箱中收到的验证码</div>
           <UPinInput
-            class="my-4"
+            class="mt-4"
             autofocus
             size="xl"
             :length="pinLength"
@@ -199,16 +179,22 @@
         </div>
       </q-step>
 
-      <template v-slot:navigation v-if="loginWithVCStep === 1">
-        <q-stepper-navigation class="flex items-center justify-between">
+      <template v-slot:navigation>
+        <q-stepper-navigation class="mt-4">
           <q-btn
+            v-if="loginWithVCStep === 1"
             @click="onLoginWithVCNext"
             label="发送验证码"
             color="primary"
+            rounded
           />
-          <div @click="onCancleLoginWithVC" class="text-primary cursor-pointer">
-            使用密码登录
-          </div>
+          <q-btn
+            :class="loginWithVCStep === 1 ? '!ml-4' : ''"
+            @click="onCancleLoginWithVC"
+            label="使用密码登录"
+            color="primary"
+            rounded
+          />
         </q-stepper-navigation>
       </template>
     </q-stepper>
@@ -220,40 +206,35 @@
     >
       <q-step
         :name="1"
-        title="邮箱"
+        title="重置密码"
         active-icon="email"
         icon="email"
         :done="updatePasswordStep > 1"
       >
-        <q-form ref="updatePasswordFormRef">
-          <q-input
-            placeholder="example@gmail.com"
-            outlined
-            type="email"
-            v-model="updatePasswordForm.email"
-            label="邮箱"
-            lazy-rules
-            :rules="[
-              val =>
-                /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(val) ||
-                '邮箱格式不正确'
-            ]"
-          />
-        </q-form>
+        <q-input
+          dense
+          placeholder="example@gmail.com"
+          outlined
+          type="email"
+          v-model="updatePasswordForm.email"
+          label="邮箱"
+        />
       </q-step>
 
       <template v-slot:navigation>
-        <q-stepper-navigation>
+        <q-stepper-navigation class="mt-4">
           <q-btn
             @click="onUpdatePasswordNext"
             color="primary"
             :label="sentResetPasswordURL ? '已发送验证码' : '发送验证码'"
+            rounded
           />
           <q-btn
             class="!ml-4"
             @click="onCancelUpadtePassword"
             color="primary"
             label="返回登录"
+            rounded
           />
         </q-stepper-navigation>
       </template>
@@ -279,8 +260,6 @@ import {
   validatePin
 } from '@/apis/auth'
 
-let timer = null
-let pause = false
 const registerPin = ref([])
 const updatePasswordPin = ref([])
 const loginWithVCPin = ref([])
@@ -289,14 +268,10 @@ const registerStep = ref(1)
 const loginStep = ref(1)
 const loginWithVCStep = ref(1)
 const updatePasswordStep = ref(1)
-const registerFormRef = ref(null)
 const registerStepperRef = ref(null)
 const loginStepperRef = ref(null)
 const loginWithVCStepperRef = ref(null)
 const updatePasswordStepperRef = ref(null)
-const loginWithVCFormRef = ref(null)
-const loginFormRef = ref(null)
-const updatePasswordFormRef = ref(null)
 const loginForm = reactive({
   email: '',
   password: ''
@@ -323,30 +298,31 @@ const onLoginWithVCNext = async () => {
   const _step = loginWithVCStep.value
 
   if (_step === 1) {
-    const success = await loginWithVCFormRef.value.validate()
+    const { email } = loginWithVCForm
 
-    if (success) {
-      try {
-        const { email } = loginWithVCForm
-        const { data: existed } = await isExistedUser(email)
+    if (!isValidEmail(email)) {
+      return useNotify('邮箱格式不正确', 'negative')
+    }
 
-        if (!existed) {
-          throw new Error('邮箱不存在')
-        }
+    try {
+      const { data: existed } = await isExistedUser(email)
 
-        const { data: has } = await hasPin(email, 'login')
-
-        if (has) {
-          useNotify('已经发送过验证码')
-        } else {
-          const { message } = await sendPin(email, 'login')
-          useNotify(message)
-        }
-
-        loginWithVCNext()
-      } catch (error) {
-        useNotify(error, 'negative')
+      if (!existed) {
+        throw new Error('邮箱不存在')
       }
+
+      const { data: has } = await hasPin(email, 'login')
+
+      if (has) {
+        useNotify('已经发送过验证码')
+      } else {
+        const { message } = await sendPin(email, 'login')
+        useNotify(message)
+      }
+
+      loginWithVCNext()
+    } catch (error) {
+      useNotify(error, 'negative')
     }
   }
 }
@@ -358,76 +334,90 @@ const onUpdatePassword = () => {
 
 const onCancelUpadtePassword = () => {
   isUpdatePassword.value = false
+  updatePasswordStep.value = 1
   isLogin.value = true
 }
 
 const onUpdatePasswordNext = async () => {
-  const success = await updatePasswordFormRef.value.validate()
+  const { email } = updatePasswordForm
 
-  if (success) {
-    try {
-      const { email } = updatePasswordForm
-      const { data: existed } = await isExistedUser(email)
+  if (!isValidEmail(email)) {
+    return useNotify('邮箱格式不正确', 'negative')
+  }
 
-      if (!existed) {
-        throw new Error('邮箱未注册')
-      }
+  try {
+    const { data: existed } = await isExistedUser(email)
 
-      const { data: has } = await hasResetPasswordURL(email)
-
-      if (has) {
-        sentResetPasswordURL.value = true
-        useNotify('已经发送过验证码')
-      } else {
-        const { message } = await sendResetPasswordURL(email)
-        sentResetPasswordURL.value = true
-        useNotify(message)
-      }
-    } catch (error) {
-      useNotify(error, 'negative')
+    if (!existed) {
+      throw new Error('邮箱未注册')
     }
+
+    const { data: has } = await hasResetPasswordURL(email)
+
+    if (has) {
+      sentResetPasswordURL.value = true
+      useNotify('已经发送过验证码')
+    } else {
+      const { message } = await sendResetPasswordURL(email)
+      sentResetPasswordURL.value = true
+      useNotify(message)
+    }
+  } catch (error) {
+    useNotify(error, 'negative')
   }
 }
+
+const isValidEmail = email =>
+  /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)
+
+const isValidPassword = password => password.length >= 8
 
 const onRegisterNext = async () => {
   const _step = registerStep.value
 
   if (_step === 1) {
-    const success = await registerFormRef.value.validate()
+    const { email, password } = registerForm
 
-    if (success) {
-      try {
-        const { email } = registerForm
-        // 先判断邮箱是否已经被注册
-        const { data: existed } = await isExistedUser(email)
+    if (!isValidEmail(email)) {
+      return useNotify('邮箱格式不正确', 'negative')
+    }
 
-        if (existed) {
-          throw new Error('邮箱已被注册')
-        }
+    if (!isValidPassword(password)) {
+      return useNotify('密码要求长度至少为 8 位', 'negative')
+    }
 
-        // 如果邮箱没有被注册，再判断是不是给这个邮箱发送过验证码并且还没过期
-        const { data: has } = await hasPin(email, 'register')
+    try {
+      // 先判断邮箱是否已经被注册
+      const { data: existed } = await isExistedUser(email)
 
-        // 验证码存在且未过期
-        if (has) {
-          // 直接进行到下一步让用户输入验证码
-          useNotify('已经发送过验证码')
-        } else {
-          const encryptedUserInfo = await useEncryptUserInfo(registerForm)
-          const { message } = await register(encryptedUserInfo)
-          useNotify(message)
-        }
-
-        registerNext()
-      } catch (error) {
-        useNotify(error, 'negative')
+      if (existed) {
+        throw new Error('邮箱已被注册')
       }
+
+      // 如果邮箱没有被注册，再判断是不是给这个邮箱发送过验证码并且还没过期
+      const { data: has } = await hasPin(email, 'register')
+
+      // 验证码存在且未过期
+      if (has) {
+        // 直接进行到下一步让用户输入验证码
+        // TODO: 解决之前的密码已经保存在 redis 中，此次输入的密码是无用的
+        useNotify('已经发送过验证码')
+      } else {
+        const encryptedUserInfo = await useEncryptUserInfo(registerForm)
+        const { message } = await register(encryptedUserInfo)
+        useNotify(message)
+      }
+
+      registerNext()
+    } catch (error) {
+      useNotify(error.message, 'negative')
     }
   }
 }
 
 const onCancelRegister = () => {
   isRegister.value = false
+  registerStep.value = 1
   isLogin.value = true
 }
 
@@ -436,12 +426,6 @@ const onRegister = () => {
   isRegister.value = true
 }
 
-const initTimeout = () =>
-  setTimeout(() => {
-    pause = false
-    clearTimeout(timer)
-  }, 5000)
-
 const onLoginWithVC = () => {
   isLogin.value = false
   isLoginWithVC.value = true
@@ -449,37 +433,34 @@ const onLoginWithVC = () => {
 
 const onCancleLoginWithVC = () => {
   isLoginWithVC.value = false
+  loginWithVCStep.value = 1
   isLogin.value = true
 }
 
 const onLogin = async () => {
-  const success = await loginFormRef.value.validate()
+  const { email, password } = loginForm
 
-  if (success) {
-    if (pause) {
-      clearTimeout(timer)
-      timer = initTimeout()
-      useNotify('操作过于频繁，请在 5 秒后重试', 'warning')
-      return
-    }
+  if (!isValidEmail(email)) {
+    return useNotify('邮箱格式不正确', 'negative')
+  }
 
-    pause = true
-    timer = initTimeout()
+  if (!isValidPassword(password)) {
+    return useNotify('密码要求长度至少为 8 位', 'negative')
+  }
 
-    try {
-      // await isExistedUser(email)
-      // 不进行存在性检测，因为 loginService 内部会检测
-      const encryptedUserInfo = await useEncryptUserInfo(loginForm)
-      const {
-        data: { token, userInfo: _userInfo }
-      } = await login(encryptedUserInfo)
-      localStorage.setItem('token', token)
-      userInfo.value = _userInfo
-      router.push('/match')
-      useNotify('登录成功')
-    } catch (error) {
-      useNotify(error, 'negative')
-    }
+  try {
+    // await isExistedUser(email)
+    // 不进行存在性检测，因为 loginService 内部会检测
+    const encryptedUserInfo = await useEncryptUserInfo(loginForm)
+    const {
+      data: { token, userInfo: _userInfo }
+    } = await login(encryptedUserInfo)
+    localStorage.setItem('token', token)
+    userInfo.value = _userInfo
+    router.replace('/match')
+    useNotify('登录成功')
+  } catch (error) {
+    useNotify(error, 'negative')
   }
 }
 
@@ -491,23 +472,13 @@ const updatePasswordNext = () => updatePasswordStepperRef.value.next()
 
 watch(registerPin, async v => {
   if (v.length === pinLength) {
-    if (pause) {
-      clearTimeout(timer)
-      timer = initTimeout()
-      useNotify('操作过于频繁，请在 5 秒后重试', 'warning')
-      return
-    }
-
-    pause = true
-    timer = initTimeout()
-
     try {
       const {
         data: { token, userInfo: _userInfo }
       } = await validatePin('register', registerForm.email, v.join(''))
       localStorage.setItem('token', token)
       userInfo.value = _userInfo
-      router.push('/match')
+      router.replace('/match')
       useNotify('登录成功')
     } catch (error) {
       useNotify(error, 'negative')
@@ -518,16 +489,6 @@ watch(registerPin, async v => {
 
 watch(updatePasswordPin, async v => {
   if (v.length === pinLength) {
-    if (pause) {
-      clearTimeout(timer)
-      timer = initTimeout()
-      useNotify('操作过于频繁，请在 5 秒后重试', 'warning')
-      return
-    }
-
-    pause = true
-    timer = initTimeout()
-
     try {
       await validatePin('update-password', updatePasswordForm.email, v.join(''))
       updatePasswordNext()
@@ -540,23 +501,13 @@ watch(updatePasswordPin, async v => {
 
 watch(loginWithVCPin, async v => {
   if (v.length === pinLength) {
-    if (pause) {
-      clearTimeout(timer)
-      timer = initTimeout()
-      useNotify('操作过于频繁，请在 5 秒后重试', 'warning')
-      return
-    }
-
-    pause = true
-    timer = initTimeout()
-
     try {
       const {
         data: { token, userInfo: _userInfo }
       } = await validatePin('login', loginWithVCForm.email, v.join(''))
       localStorage.setItem('token', token)
       userInfo.value = _userInfo
-      router.push('/match')
+      router.replace('/match')
     } catch (error) {
       useNotify(error, 'negative')
       loginWithVCPin.value = []
@@ -568,9 +519,5 @@ watch(loginWithVCPin, async v => {
 <style>
 .q-stepper--horizontal .q-stepper__step-inner {
   padding-bottom: 0;
-}
-
-.q-field--error .q-field__bottom {
-  font-weight: 600;
 }
 </style>

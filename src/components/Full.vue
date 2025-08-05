@@ -7,7 +7,7 @@
       <q-btn
         class="!mt-4"
         label="返回主页"
-        @click="router.push('/room')"
+        @click="router.replace('/room')"
         color="primary"
       ></q-btn>
     </div>

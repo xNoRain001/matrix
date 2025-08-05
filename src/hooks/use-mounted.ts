@@ -25,10 +25,10 @@ const useMounted = (
       // 如果获取到了远程房间，更新路由
       if (remoteRoomInfo.path === path) {
         // 只需要替换 roomId，由于路径没有发生变化，组件不会被销毁
-        router.push({ query: { roomId } })
+        router.replace({ query: { roomId } })
       } else {
         // 路径发生变化，组件会被销毁
-        router.push({ path: remoteRoomInfo.path, query: { roomId } })
+        router.replace({ path: remoteRoomInfo.path, query: { roomId } })
         // 阻止生成 socket，onBeforeUnmount 中来不及销毁
         return
       }

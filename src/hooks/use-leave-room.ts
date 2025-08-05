@@ -3,7 +3,7 @@ import type { Socket } from 'socket.io-client'
 
 const useLeaveRoom = (socket: Socket, roomId: string) => {
   useDialog({
-    class: 'bg-[#0d1117]',
+    class: '!bg-[#202127]',
     title: '离开',
     message: '你确定要离开房间吗？',
     persistent: true,

@@ -43,8 +43,10 @@ import useBeforeUnmount from './use-before-unmount'
 import useRematch from './use-rematch'
 import useMounted from './use-mounted'
 import useEncryptUserInfo from './use-encrypt-userinfo'
+import useLogout from './use-logout'
 
 export {
+  useLogout,
   useEncryptUserInfo,
   useRematch,
   useMounted,

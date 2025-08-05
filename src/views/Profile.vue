@@ -209,7 +209,7 @@
 <script lang="ts" setup>
 import { updatePassword, updateProfile } from '@/apis/user'
 import { dateLocale } from '@/const'
-import { useDialog, useEncryptUserInfo, useNotify } from '@/hooks'
+import { useDialog, useEncryptUserInfo, useLogout, useNotify } from '@/hooks'
 import { useUserInfoStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { reactive, ref } from 'vue'
@@ -250,9 +250,8 @@ const onUpdatePassword = async () => {
     })
     const { message } = await updatePassword(encryptedUserInfo)
     useNotify(message)
-    localStorage.removeItem('token')
-    userInfo.value = null
-    router.push('/login')
+    useLogout()
+    router.replace('/login')
   } catch (error) {
     useNotify(error, 'negative')
   }
@@ -271,6 +270,7 @@ const onBackFromProfile = async () => {
       const s = JSON.stringify(_userInfo)
       const data = JSON.parse(s)
       delete data.id
+      delete data.tokenVersion
       try {
         const {
           data: { token }
@@ -288,17 +288,16 @@ const onBackFromProfile = async () => {
 
 const onLogout = () => {
   useDialog({
-    class: 'bg-[#0d1117]',
     title: '离开',
+    class: '!bg-[#202127]',
     message: '你确定要退出账号码？',
     persistent: true,
     ok: '确定',
     cancel: '取消',
     color: 'primary'
   }).onOk(() => {
-    localStorage.removeItem('token')
-    userInfo.value = null
-    router.push('/login')
+    useLogout()
+    router.replace('/login')
   })
 }
 
@@ -307,6 +306,7 @@ const onEditBirthday = () => (showBirthdayDialog.value = true)
 const onEditGender = () => {
   useDialog({
     title: '修改性别',
+    class: '!bg-[#202127]',
     options: {
       type: 'radio',
       model: _userInfo.gender,
@@ -325,9 +325,11 @@ const onEditGender = () => {
 const onEditNickname = () => {
   useDialog({
     title: '修改昵称',
+    class: '!bg-[#202127]',
     prompt: {
       model: _userInfo.nickname,
-      type: 'text'
+      type: 'text',
+      hint: `最大长度为 30`
     },
     color: 'primary',
     persistent: true,

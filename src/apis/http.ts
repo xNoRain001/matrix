@@ -1,4 +1,4 @@
-import router from '@/router'
+import { useLogout } from '@/hooks'
 import axios from 'axios'
 import qs from 'querystring'
 
@@ -66,8 +66,8 @@ class HTTP {
           const { code, message } = response.data
 
           if (code === 401) {
-            localStorage.removeItem('token')
-            router.push('/login')
+            useLogout()
+            location.href = '/login'
           }
 
           throw Error(message)
