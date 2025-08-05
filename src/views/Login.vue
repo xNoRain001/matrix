@@ -508,6 +508,7 @@ watch(loginWithVCPin, async v => {
       localStorage.setItem('token', token)
       userInfo.value = _userInfo
       router.replace('/match')
+      useNotify('登录成功')
     } catch (error) {
       useNotify(error, 'negative')
       loginWithVCPin.value = []
