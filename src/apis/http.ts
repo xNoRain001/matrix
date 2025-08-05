@@ -72,13 +72,14 @@ class HTTP {
 
           throw Error(message)
         } else {
-          // 服务器连结果都没返回 1.服务器崩溃 2.用户断网
-          if (!window.navigator.onLine) {
-            // 断网处理: 可以跳转到断网界面
-            return
+          // 服务器连结果都没返回，要么是用户断网，要么是服务器故障
+          if (navigator.onLine) {
+            // 用户在线，说明是服务器奔溃
+            throw Error('服务器故障')
+          } else {
+            // 用户断网
+            throw Error('网络错误')
           }
-          // 服务器奔溃
-          return Promise.reject(error)
         }
       }
     )

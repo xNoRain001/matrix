@@ -203,16 +203,22 @@
       </q-tab-panels>
     </div>
 
-    <q-dialog v-model="showBirthdayDialog" persistent>
+    <q-dialog v-model="showBirthdayDialog" :position="dialogPosition">
       <q-date v-model="userInfo.birthday" :locale="dateLocale">
         <div class="flex justify-end">
-          <q-btn class="!mr-4" v-close-popup label="取消" color="primary" />
-          <q-btn v-close-popup label="确认" color="primary" />
+          <q-btn
+            rounded
+            class="!mr-4"
+            v-close-popup
+            label="取消"
+            color="primary"
+          />
+          <q-btn rounded v-close-popup label="确认" color="primary" />
         </div>
       </q-date>
     </q-dialog>
 
-    <q-dialog v-model="showRegionDialog" position="bottom">
+    <q-dialog v-model="showRegionDialog" :position="dialogPosition">
       <div class="bg-x-card w-full">
         <q-select
           filled
@@ -253,11 +259,12 @@
 import { updatePassword, updateProfile } from '@/apis/user'
 import { dateLocale } from '@/const'
 import { useDialog, useEncryptUserInfo, useLogout, useNotify } from '@/hooks'
-import { useUserInfoStore } from '@/store'
+import { useDeviceInfoStore, useUserInfoStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
+const { isMobile } = useDeviceInfoStore()
 const panel = ref('default')
 const showBirthdayDialog = ref(false)
 const showRegionDialog = ref(false)
@@ -753,6 +760,7 @@ const provinceCityMap = {
 const sourceProvinceOptions = Object.keys(provinceCityMap)
 const provinceOptions = ref(sourceProvinceOptions)
 const cityOptions = ref(provinceCityMap[_province] || [])
+const dialogPosition = isMobile ? 'bottom' : 'standard'
 
 watch(province, v => {
   cityOptions.value = provinceCityMap[v]
@@ -842,12 +850,7 @@ const onBackFromProfile = async () => {
 const onLogout = () => {
   useDialog({
     title: '离开',
-    class: 'bg-x-card',
-    message: '你确定要退出账号码？',
-    persistent: true,
-    ok: '确定',
-    cancel: '取消',
-    color: 'primary'
+    message: '你确定要退出账号吗？'
   }).onOk(() => {
     useLogout()
     router.replace('/login')
@@ -861,7 +864,7 @@ const onEditBirthday = () => (showBirthdayDialog.value = true)
 const onEditGender = () => {
   useDialog({
     title: '修改性别',
-    class: 'bg-x-card',
+    position: dialogPosition,
     options: {
       type: 'radio',
       model: _userInfo.gender,
@@ -869,27 +872,19 @@ const onEditGender = () => {
         { label: '男', value: 'male' },
         { label: '女', value: 'female' }
       ]
-    },
-    color: 'primary',
-    persistent: true,
-    cancel: '取消',
-    ok: '确认'
+    }
   }).onOk(data => (_userInfo.gender = data))
 }
 
 const onEditNickname = () => {
   useDialog({
     title: '修改昵称',
-    class: 'bg-x-card',
+    position: dialogPosition,
     prompt: {
       model: _userInfo.nickname,
       type: 'text',
-      hint: `最大长度为 30`
-    },
-    color: 'primary',
-    persistent: true,
-    cancel: '取消',
-    ok: '确认'
+      hint: `最大长度为 30 个字符`
+    }
   }).onOk(data => {
     if (!data.length) {
       _userInfo.nickname = oldUserInfo.value.nickname

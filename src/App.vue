@@ -89,12 +89,9 @@
 import { ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
-import { useRoomStore, useUserInfoStore } from './store'
+import { useDeviceInfoStore, useRoomStore, useUserInfoStore } from './store'
 
-const isMobile =
-  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  )
+const { isMobile } = useDeviceInfoStore()
 const $q = useQuasar()
 const dark = ref(true)
 const drawer = ref(false)
