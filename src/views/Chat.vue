@@ -152,13 +152,13 @@
     >
       <template v-slot:before>
         <q-btn round icon="mic">
-          <q-tooltip class="!bg-[#0d1117]">语音</q-tooltip>
+          <q-tooltip class="bg-x-drawer">语音</q-tooltip>
         </q-btn>
       </template>
       <template v-slot:after>
         <!-- :disable="!online" -->
         <q-btn @click="onExpand" round icon="control_point">
-          <q-tooltip class="!bg-[#0d1117]">选项</q-tooltip>
+          <q-tooltip class="bg-x-drawer">选项</q-tooltip>
         </q-btn>
       </template>
     </q-input>

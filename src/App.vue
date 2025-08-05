@@ -1,13 +1,13 @@
 <template>
-  <q-layout class="bg-[#010409]">
+  <q-layout class="bg-x-dark">
     <q-header
       v-if="userInfo && !remoteRoomInfo.roomId && !isMobile"
       reveal
-      class="flex-center flex border-b !border-b-[#3d444d] !bg-[#010409]"
+      class="flex-center bg-x-dark flex border-b !border-b-[#3d444d]"
     >
       <q-toolbar>
         <q-btn flat @click="drawer = !drawer" round dense icon="menu">
-          <q-tooltip class="!bg-[#0d1117]"
+          <q-tooltip class="bg-x-drawer"
             >{{ drawer ? '折叠' : '展开' }}菜单</q-tooltip
           >
         </q-btn>
@@ -31,7 +31,7 @@
       :width="260"
       :breakpoint="500"
       bordered
-      class="bg-[#0d1117]"
+      class="bg-x-drawer"
     >
       <q-scroll-area class="fit">
         <q-list padding>
@@ -63,7 +63,7 @@
 
     <div
       v-show="userInfo && !remoteRoomInfo.roomId && isMobile"
-      class="fixed bottom-0 w-full !bg-[#0d1117]"
+      class="bg-x-drawer fixed bottom-0 w-full"
     >
       <q-tabs
         v-model="tab"

@@ -1,7 +1,7 @@
 <template>
   <div class="flex h-[calc(100vh-2rem)] items-center justify-center">
     <q-stepper
-      class="w-full max-w-[var(--room-width)] !rounded-[12px] !bg-[#0d1117]"
+      class="bg-x-drawer w-full max-w-[var(--room-width)] !rounded-[12px]"
       v-model="step"
     >
       <q-step

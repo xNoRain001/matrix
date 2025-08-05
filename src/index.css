@@ -1,17 +1,21 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
-.text-x-tools-green {
-  color: #238636 !important;
+.bg-x-card {
+  background-color: #202127 !important;
 }
 
-.bg-x-tools-green {
-  background-color: #238636 !important;
+.bg-x-dark {
+  background-color: #010409 !important;
+}
+
+.bg-x-drawer {
+  background-color: #0d1117 !important;
 }
 
 :root {
-  --content-height: calc(100vh - 83px);
-  --tab-content-height: calc(100% - 48.8px);
+  /* header 高度为 50px，page 的 padding 为 2rem */
+  --content-height: calc(100vh - 50px - 2rem - 1px);
   --room-width: 650px;
 }
 

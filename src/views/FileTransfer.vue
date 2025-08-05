@@ -27,7 +27,7 @@
         >
           <template v-slot:header="scope">
             <div
-              class="row no-wrap q-pa-sm q-gutter-xs items-center bg-[#0d1117]"
+              class="row no-wrap q-pa-sm q-gutter-xs bg-x-drawer items-center"
             >
               <q-btn
                 icon="clear_all"
@@ -36,7 +36,7 @@
                 dense
                 :disable="inSending || !scope.queuedFiles.length"
               >
-                <q-tooltip class="!bg-[#3d444d]">清空所有文件</q-tooltip>
+                <q-tooltip class="bg-x-drawer">清空所有文件</q-tooltip>
               </q-btn>
               <div class="col">
                 <div class="q-uploader__title">
@@ -51,7 +51,7 @@
                 :disable="inSending"
               >
                 <q-uploader-add-trigger v-if="!inSending" />
-                <q-tooltip class="!bg-[#3d444d]">添加文件</q-tooltip>
+                <q-tooltip class="bg-x-drawer">添加文件</q-tooltip>
               </q-btn>
               <q-btn
                 icon="play_arrow"
@@ -60,7 +60,7 @@
                 dense
                 :disable="inSending || !scope.queuedFiles.length || !online"
               >
-                <q-tooltip class="!bg-[#3d444d]">开始传送</q-tooltip>
+                <q-tooltip class="bg-x-drawer">开始传送</q-tooltip>
               </q-btn>
             </div>
           </template>
@@ -121,7 +121,7 @@
         <q-uploader draggable="false" class="mt-4 !w-full bg-transparent">
           <template v-slot:header>
             <div
-              class="row no-wrap q-pa-sm q-gutter-xs items-center bg-[#0d1117]"
+              class="row no-wrap q-pa-sm q-gutter-xs bg-x-drawer items-center"
             >
               <q-btn
                 icon="clear_all"
@@ -130,7 +130,7 @@
                 dense
                 :disable="inReceving || !receivedFiles.length"
               >
-                <q-tooltip class="!bg-[#3d444d]">清空所有文件</q-tooltip>
+                <q-tooltip class="bg-x-drawer">清空所有文件</q-tooltip>
               </q-btn>
               <div class="col">
                 <div class="q-uploader__title">接收到的文件</div>
@@ -142,7 +142,7 @@
                 dense
                 :disable="inReceving || !receivedFiles.length"
               >
-                <q-tooltip class="!bg-[#3d444d]">下载所有文件</q-tooltip>
+                <q-tooltip class="bg-x-drawer">下载所有文件</q-tooltip>
               </q-btn>
             </div>
           </template>

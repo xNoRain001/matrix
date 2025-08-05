@@ -2,7 +2,7 @@
   <div class="flex-center flex h-[calc(100vh-2rem)]">
     <q-stepper
       v-if="isRegister"
-      class="w-full max-w-[var(--room-width)] !rounded-[12px] !bg-[#0d1117]"
+      class="bg-x-drawer w-full max-w-[var(--room-width)] !rounded-[12px]"
       v-model="registerStep"
       ref="registerStepperRef"
     >
@@ -78,7 +78,7 @@
 
     <q-stepper
       v-if="isLogin"
-      class="w-full max-w-[var(--room-width)] !rounded-[12px] !bg-[#0d1117]"
+      class="bg-x-drawer w-full max-w-[var(--room-width)] !rounded-[12px]"
       v-model="loginStep"
       ref="loginStepperRef"
     >
@@ -139,7 +139,7 @@
 
     <q-stepper
       v-if="isLoginWithVC"
-      class="w-full max-w-[var(--room-width)] !rounded-[12px] !bg-[#0d1117]"
+      class="bg-x-drawer w-full max-w-[var(--room-width)] !rounded-[12px]"
       v-model="loginWithVCStep"
       ref="loginWithVCStepperRef"
     >
@@ -201,7 +201,7 @@
 
     <q-stepper
       v-if="isUpdatePassword"
-      class="w-full max-w-[var(--room-width)] !rounded-[12px] !bg-[#0d1117]"
+      class="bg-x-drawer w-full max-w-[var(--room-width)] !rounded-[12px]"
       v-model="updatePasswordStep"
     >
       <q-step
