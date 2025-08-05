@@ -1,4 +1,5 @@
 <template>
+  <RoomHeader :leaved="leaved" :on-leave="onLeave"></RoomHeader>
   <PIN
     v-if="!(remoteRoomInfo.roomId || isMatch)"
     type="audio-chat"

@@ -5,6 +5,7 @@
     <UPinInput autofocus size="xl" :length="pinLength" v-model="pin" />
     <q-breadcrumbs class="text-primary mt-4 cursor-pointer">
       <q-breadcrumbs-el
+        class="text-base"
         label="去匹配"
         icon="near_me"
         @click="router.replace(`/match/${type}`)"

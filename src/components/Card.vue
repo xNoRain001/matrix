@@ -1,5 +1,5 @@
 <template>
-  <div class="grid grid-cols-2 gap-4">
+  <div class="grid grid-cols-2 gap-4 pb-[72px]">
     <router-link
       v-for="({ icon, title, desc, to }, index) in list"
       :key="index"
@@ -27,7 +27,56 @@
 </template>
 
 <script lang="ts" setup>
-defineProps<{
-  list: { icon: string; title: string; desc: string; to: string }[]
+import { useScrollToTop } from '@/hooks'
+import { onMounted } from 'vue'
+
+const { type } = defineProps<{
+  type: 'room' | 'match'
 }>()
+const list = [
+  {
+    icon: '💬',
+    title: '即时聊天',
+    desc: '端到端加密，不留痕迹的安全对话',
+    to: `/${type}/chat`
+  },
+  {
+    icon: '🎙️',
+    title: '语音聊天',
+    desc: '高清音质，实时畅聊无延迟',
+    to: `/${type}/audio-chat`
+  },
+  {
+    icon: '📁',
+    title: '文件传输',
+    desc: '文件高速传输，极速分享体验',
+    to: `/${type}/file-transfer`
+  },
+  {
+    icon: '🎥',
+    title: '视频聊天',
+    desc: '开发中...',
+    to: `/${type}`
+  },
+  {
+    icon: '🖥️',
+    title: '屏幕共享',
+    desc: '开发中...',
+    to: `/${type}`
+  },
+  {
+    icon: '🎨',
+    title: '多人绘画',
+    desc: '开发中...',
+    to: `/${type}`
+  },
+  {
+    icon: '🗳️',
+    title: '实时投票',
+    desc: '开发中...',
+    to: `/${type}`
+  }
+]
+
+onMounted(useScrollToTop)
 </script>

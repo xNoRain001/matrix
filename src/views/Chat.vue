@@ -1,4 +1,5 @@
 <template>
+  <RoomHeader :leaved="leaved" :on-leave="onLeave"></RoomHeader>
   <PIN
     v-if="!(remoteRoomInfo.roomId || isMatch)"
     :watch-pin-cb="watchPinCb"
@@ -150,8 +151,8 @@
       :disable="!online"
     >
       <template v-slot:before>
-        <q-btn @click="onLeave" round icon="logout">
-          <q-tooltip class="!bg-[#0d1117]">退出</q-tooltip>
+        <q-btn round icon="mic">
+          <q-tooltip class="!bg-[#0d1117]">语音</q-tooltip>
         </q-btn>
       </template>
       <template v-slot:after>

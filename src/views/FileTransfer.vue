@@ -1,4 +1,5 @@
 <template>
+  <RoomHeader :leaved="leaved" :on-leave="onLeave"></RoomHeader>
   <PIN
     v-if="!(remoteRoomInfo.roomId || isMatch)"
     type="file-transfer"
@@ -42,14 +43,6 @@
                   选择需要上传的文件（支持拖拽）
                 </div>
               </div>
-              <q-btn
-                @click="onLeave"
-                icon="logout"
-                round
-                dense
-                :disable="inSending"
-                ><q-tooltip class="!bg-[#3d444d]">退出</q-tooltip></q-btn
-              >
               <q-btn
                 icon="add_box"
                 @click="scope.pickFiles"

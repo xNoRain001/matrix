@@ -20,7 +20,6 @@ const useMounted = (
     // 直接访问带 roomId 的链接
     if (!hasRemoteRoomId) {
       remoteRoomInfo.path = path
-      // setLatestRoom(path, roomId)
     } else {
       // 如果获取到了远程房间，更新路由
       if (remoteRoomInfo.path === path) {

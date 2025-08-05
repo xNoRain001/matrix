@@ -1,66 +1,22 @@
 <template>
   <q-layout class="bg-[#010409]">
     <q-header
-      v-if="(userInfo && !isMobile) || (isMobile && remoteRoomInfo.roomId)"
+      v-if="userInfo && !remoteRoomInfo.roomId && !isMobile"
       reveal
       class="flex-center flex border-b !border-b-[#3d444d] !bg-[#010409]"
     >
-      <q-toolbar
-        :class="
-          !isMobile && remoteRoomInfo.roomId
-            ? 'w-full max-w-[var(--room-width)]'
-            : ''
-        "
-      >
-        <q-btn v-if="isMobile" flat round dense icon=""></q-btn>
-        <q-btn
-          v-if="!isMobile && !remoteRoomInfo.roomId"
-          flat
-          @click="drawer = !drawer"
-          round
-          dense
-          icon="menu"
-        >
+      <q-toolbar>
+        <q-btn flat @click="drawer = !drawer" round dense icon="menu">
           <q-tooltip class="!bg-[#0d1117]"
             >{{ drawer ? '折叠' : '展开' }}菜单</q-tooltip
           >
         </q-btn>
-        <div v-else class="h-[33.6px] w-[33.6px]"></div>
-
-        <q-space v-if="remoteRoomInfo.roomId" />
-
-        <q-avatar v-if="remoteRoomInfo.roomId">
-          <img src="https://cdn.quasar.dev/img/avatar4.jpg" />
+        <q-avatar class="ml-4">
+          <img
+            style="filter: drop-shadow(rgba(0, 122, 204, 0.3) 0px 8px 24px)"
+            src="/images/logo.svg"
+          />
         </q-avatar>
-
-        <div v-if="remoteRoomInfo.roomId" class="flex-center ml-2 flex">
-          {{
-            remoteRoomInfo.latestId
-              ? remoteRoomInfo.inRoom
-                ? online
-                  ? otherInfo.nickname
-                  : '对方未在线...'
-                : '对方已退出房间'
-              : '对方未加入房间...'
-          }}
-
-          <q-badge class="ml-2" rounded :color="online ? 'green' : 'red'" />
-        </div>
-
-        <q-space v-if="remoteRoomInfo.roomId" />
-
-        <q-btn v-if="remoteRoomInfo.roomId" dense round flat icon="more_vert">
-          <q-menu auto-close class="!bg-[#0d1117]">
-            <q-list class="w-40">
-              <q-item clickable>
-                <q-item-section>清除聊天记录</q-item-section>
-              </q-item>
-              <q-item clickable>
-                <q-item-section>举报对方</q-item-section>
-              </q-item>
-            </q-list>
-          </q-menu>
-        </q-btn>
       </q-toolbar>
     </q-header>
 
@@ -105,13 +61,9 @@
       </q-page>
     </q-page-container>
 
-    <q-footer
-      v-show="
-        userInfo &&
-        isMobile &&
-        !(path.startsWith('/match/chat') || path.startsWith('/room/chat'))
-      "
-      class="!bg-[#0d1117]"
+    <div
+      v-show="userInfo && !remoteRoomInfo.roomId && isMobile"
+      class="fixed bottom-0 w-full !bg-[#0d1117]"
     >
       <q-tabs
         v-model="tab"
@@ -129,16 +81,15 @@
           :to="to"
         />
       </q-tabs>
-    </q-footer>
+    </div>
   </q-layout>
 </template>
 
 <script lang="ts" setup>
-import { ref, toRefs, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { useRoomStore, useUserInfoStore } from './store'
-import { useRoute } from 'vue-router'
 
 const isMobile =
   /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -174,10 +125,9 @@ const menus = [
     separator: false
   }
 ]
-const { online, otherInfo, remoteRoomInfo } = storeToRefs(useRoomStore())
+const { remoteRoomInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const tab = ref('mails')
-const { path } = toRefs(useRoute())
 
 watch(
   dark,

@@ -1,7 +1,7 @@
 <template>
-  <div class="flex flex-col items-center justify-center">
+  <div class="flex flex-col items-center">
     <div class="w-full max-w-[var(--room-width)]">
-      <div v-if="panel !== 'default'" class="flex items-center">
+      <div v-if="!isDefaultPanel" class="flex items-center">
         <q-btn
           dense
           flat
@@ -9,11 +9,14 @@
           @click="onBackFromProfile"
           icon="arrow_back_ios_new"
         ></q-btn>
-        <div class="absolute left-1/2 -translate-x-1/2 text-base">返回</div>
+        <div class="absolute left-1/2 -translate-x-1/2 text-base">
+          {{ tip }}
+        </div>
       </div>
 
       <q-tab-panels
-        class="mt-4 rounded-[12px] !bg-[#202127]"
+        :class="isDefaultPanel ? '' : 'mt-4'"
+        class="rounded-[12px] !bg-[#202127]"
         v-model="panel"
         animated
       >
@@ -57,7 +60,7 @@
 
         <q-tab-panel name="profile">
           <q-list>
-            <q-item class="rounded-[12px]" clickable v-ripple>
+            <!-- <q-item class="rounded-[12px]" clickable v-ripple>
               <q-item-section class="text-base">头像</q-item-section>
               <q-item-section
                 side
@@ -67,7 +70,7 @@
                 <q-icon name="arrow_forward_ios" class="ml-2"></q-icon>
               </q-item-section>
             </q-item>
-            <q-separator />
+            <q-separator /> -->
             <q-item
               class="rounded-[12px]"
               @click="onEditNickname"
@@ -212,7 +215,7 @@ import { dateLocale } from '@/const'
 import { useDialog, useEncryptUserInfo, useLogout, useNotify } from '@/hooks'
 import { useUserInfoStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const panel = ref('default')
@@ -227,6 +230,12 @@ const passwordForm = reactive({
   confirmPassword: ''
 })
 const isPwd = ref(true)
+const tip = ref('')
+const tipMap = {
+  profile: '个人资料',
+  updatePassword: '修改密码'
+}
+const isDefaultPanel = computed(() => panel.value === 'default')
 
 const onUpdatePassword = async () => {
   const { oldPassword, password, confirmPassword } = passwordForm
@@ -257,7 +266,10 @@ const onUpdatePassword = async () => {
   }
 }
 
-const onUpdatePanel = v => (panel.value = v)
+const onUpdatePanel = v => {
+  panel.value = v
+  tip.value = tipMap[v]
+}
 
 const onBackFromProfile = async () => {
   panel.value = 'default'

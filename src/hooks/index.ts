@@ -44,8 +44,10 @@ import useRematch from './use-rematch'
 import useMounted from './use-mounted'
 import useEncryptUserInfo from './use-encrypt-userinfo'
 import useLogout from './use-logout'
+import useScrollToTop from './use-scroll-to-top'
 
 export {
+  useScrollToTop,
   useLogout,
   useEncryptUserInfo,
   useRematch,
