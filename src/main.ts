@@ -1,20 +1,32 @@
-import { createApp } from 'vue'
-import { Quasar, Notify, Loading, Dialog } from 'quasar'
 import ui from '@nuxt/ui/vue-plugin'
-
-import '@quasar/extras/material-icons/material-icons.css'
-import 'quasar/dist/quasar.css'
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 
 import App from './App.vue'
 import router from './router'
-import { createPinia } from 'pinia'
+import { appConfig } from './const'
+import { useUpdateTheme } from './hooks'
 
 const app = createApp(App)
 const pinia = createPinia()
 
 app
-  .use(Quasar, { plugins: { Notify, Loading, Dialog } })
-  .use(ui)
+  .use(ui, {
+    notifications: {
+      position: 'top-center'
+    }
+  })
   .use(router)
   .use(pinia)
   .mount('#app')
+
+const {
+  ui: {
+    colors: { neutral, primary }
+  },
+  theme: { radius, blackAsPrimary }
+} = appConfig
+useUpdateTheme('blackAsPrimary', blackAsPrimary)
+useUpdateTheme('radius', radius)
+useUpdateTheme('primary', primary)
+useUpdateTheme('neutral', neutral)

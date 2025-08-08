@@ -1,26 +1,18 @@
 <template>
-  <RoomHeader :leaved="leaved" :on-leave="onLeave"></RoomHeader>
-  <PIN
-    v-if="!(remoteRoomInfo.roomId || isMatch)"
-    type="file-transfer"
-    :watch-pin-cb="watchPinCb"
-  ></PIN>
-  <Back v-if="!remoteRoomInfo.roomId" :back="onBack"></Back>
-  <Matching
-    v-if="isMatch"
-    :offline="offline"
-    :pause="pause"
-    :rematch="onRematchWithOffline"
-  ></Matching>
-  <Full v-if="isFull" :leave="onLeaveFullRoom"></Full>
+  <Full v-if="isFull"></Full>
 
-  <div class="flex-center flex">
-    <div
-      v-if="remoteRoomInfo.roomId"
-      class="relative h-[var(--content-height)] w-full max-w-[var(--room-width)]"
-    >
+  <UModal v-else v-model:open="oepnModal" fullscreen title=" " description=" ">
+    <template #content></template>
+    <template #header>
+      <RoomHeader
+        :online="online"
+        :leaved="leaved"
+        :on-click="onLeave"
+      ></RoomHeader>
+    </template>
+    <template #body>
       <div v-if="!leaved" class="flex h-full flex-col justify-center">
-        <q-uploader
+        <!-- <q-uploader
           @added="onAdded"
           class="mt-4 !w-full bg-transparent"
           multiple
@@ -91,12 +83,6 @@
                     进度:
                     {{ file.fileStatus.formatedProgress }}
                   </q-item-label>
-                  <!-- <q-item-label
-                  v-if="(file.fileStatus).status === receiving"
-                  caption
-                >
-                  速度: {{ (file.fileStatus).speed }}
-                </q-item-label> -->
                   <q-item-label caption>
                     用时: {{ file.fileStatus.time }}
                   </q-item-label>
@@ -116,9 +102,9 @@
               </q-item>
             </q-list>
           </template>
-        </q-uploader>
+        </q-uploader> -->
 
-        <q-uploader draggable="false" class="mt-4 !w-full bg-transparent">
+        <!-- <q-uploader draggable="false" class="mt-4 !w-full bg-transparent">
           <template v-slot:header>
             <div
               class="row no-wrap q-pa-sm q-gutter-xs bg-x-drawer items-center"
@@ -169,9 +155,6 @@
                   <q-item-label v-if="status === receiving" caption>
                     进度: {{ progress }}
                   </q-item-label>
-                  <!-- <q-item-label v-if="file.status === receiving" caption>
-                    速度: {{ file.speed }}
-                  </q-item-label> -->
                   <q-item-label caption> 用时: {{ time }} </q-item-label>
                 </q-item-section>
 
@@ -187,31 +170,27 @@
               </q-item>
             </q-list>
           </template>
-        </q-uploader>
+        </q-uploader> -->
       </div>
-
-      <div v-else class="flex-center absolute bottom-0 flex w-full flex-col">
-        <div class="flex items-center">
-          <q-badge class="mr-2" rounded color="red" />{{
-            otherLeaved ? '对方' : '你'
-          }}已离开房间...
+    </template>
+    <template #footer>
+      <div class="flex w-full items-center justify-center">
+        <div v-if="leaved">
+          <div>{{ otherLeaved ? '对方' : '你' }}已离开房间...</div>
+          <UButton
+            class="mt-4"
+            @click="simpleLeave"
+            :label="isRoomMode ? '重新进入房间' : '重新匹配'"
+          ></UButton>
         </div>
-        <q-btn
-          class="full-width !mt-4"
-          color="primary"
-          :label="isRoomMode ? '重新进入房间' : '重新匹配'"
-          rounded
-          @click="isRoomMode ? onBackPIN() : onRematch()"
-        ></q-btn>
       </div>
-    </div>
-  </div>
+    </template>
+  </UModal>
 </template>
 
 <script lang="ts" setup>
 import {
   useBye,
-  useCancelMatch,
   useClosePC,
   useCreatePeerConnection,
   useDisconnect,
@@ -219,22 +198,15 @@ import {
   useInitDataChannel,
   useInitRtc,
   useInitSocket,
-  useLeaveFullRoom,
   useOtherJoin,
   useReceiveFile,
   useSendFile,
-  useWatchPinCb,
-  useLeaveRoom,
   useJoined,
-  useBackPIN,
-  useInitSocketForRoom,
-  useRematchWithOffline,
   useBeforeUnmount,
-  useMatched,
-  useRematch,
-  useMounted
+  useMounted,
+  useLeave
 } from '@/hooks'
-import { exportFile } from 'quasar'
+// import { exportFile } from 'quasar'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { received, receiving, sending, sent } from '@/const'
@@ -245,7 +217,7 @@ import { storeToRefs } from 'pinia'
 import { useRoomStore, useUserInfoStore } from '@/store'
 import { updateLatestRoom, getLatestRoom, isExitRoom } from '@/apis/latest-room'
 
-let timer = null
+const oepnModal = ref(true)
 const makingOffer = ref(false)
 const polite = ref(true)
 let pc: RTCPeerConnection | null = null
@@ -257,32 +229,38 @@ const flag = ref(false)
 const inSending = ref(false)
 const inReceving = ref(false)
 const receivedFiles: receivedFiles = ref([])
-const { path, query } = useRoute()
-const isRoomMode = path === '/room/file-transfer'
+const {
+  path,
+  query,
+  meta: { tab, parentPath }
+} = useRoute()
+const isRoomMode = tab === 'room'
 const router = useRouter()
 const isReconnect = ref(false)
-const { online, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
+const online = ref(false)
+const { remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
-const latestRoomInfo = (await getLatestRoom()).data
-const latestId = latestRoomInfo?.latestId
-latestId ? (remoteRoomInfo.value = latestRoomInfo) : null
-const hasRemoteRoomId = Boolean(latestId)
-const isExit = hasRemoteRoomId ? (await isExitRoom(latestId)).data : false
+let hasRemoteRoomId = false
+let isExit = false
+const updateRoomInfo = async () => {
+  const latestRoomInfo = (await getLatestRoom()).data
+  // 如果 latestId 有值，说明自身还没离开房间
+  const latestId = latestRoomInfo?.latestId
+  hasRemoteRoomId = Boolean(latestId)
+
+  if (hasRemoteRoomId) {
+    remoteRoomInfo.value = latestRoomInfo
+    isExit = (await isExitRoom(latestId)).data
+    latestRoomInfo.inRoom = !isExit
+  }
+}
+remoteRoomInfo.value.skipRequest ? null : await updateRoomInfo()
 let _remoteRoomInfo = remoteRoomInfo.value
-_remoteRoomInfo.inRoom = latestId && !isExit
 _remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
 const leaved = ref(isExit)
 const otherLeaved = ref(isExit)
-const isMatch = ref(path === '/match/file-transfer' && !_remoteRoomInfo.roomId)
-const offline = ref(false)
 const isFull = ref(false)
-const pause = ref(false)
-
-const onLeaveFullRoom = () => useLeaveFullRoom(leaved, isFull)
-
-const onRematchWithOffline = () =>
-  useRematchWithOffline(initSocket, onMatched, offline, 'file-transfer')
 
 const onClearReceivedFiles = () => {
   receivedFiles.value = []
@@ -354,7 +332,6 @@ const initPC = () => {
   return pc
 }
 
-// 当自己加入房间时触发
 const onJoined = async (_, __, _polite) =>
   useJoined(socket, polite, _remoteRoomInfo.roomId, initPC, _polite)
 
@@ -369,51 +346,30 @@ const onOtherJoin = () =>
     _userInfo
   )
 
-const onDisconnect = () =>
-  useDisconnect(pc, isMatch, offline, leaved, isReconnect)
+const onDisconnect = () => useDisconnect(pc, leaved, isReconnect)
 
 const onRtc = (roomId: string, data: any) =>
   useInitRtc(pc, socket, roomId, data, makingOffer, polite, _userInfo)
 
-const onMatched = data =>
-  useMatched(
-    data,
-    socket,
-    path,
-    _remoteRoomInfo,
-    isMatch,
-    router,
-    pause,
-    'file-transfer'
-  )
-
-const onLeave = async () => useLeaveRoom(socket, _remoteRoomInfo.roomId)
-
-const onBackPIN = async () => useBackPIN(_exitRoom, router)
-
-const onBye = () => useBye(exitRoom, otherLeaved)
-
-const onRematch = () =>
-  useRematch(_exitRoom, initSocket, onMatched, router, isMatch, 'file-transfer')
-
-const _exitRoom = async () => {
-  if (!_remoteRoomInfo.inRoom) {
-    await exitRoom()
-  }
-
+const simpleLeave = () => {
   _remoteRoomInfo.roomId = _remoteRoomInfo.path = _remoteRoomInfo.latestId = ''
   _remoteRoomInfo.inRoom = false
-  leaved.value = otherLeaved.value = false
+  router.replace(parentPath)
 }
 
-const exitRoom = async () => {
+const leaveAfterConnected = async () => {
   useClosePC(pc)
   socket.disconnect()
   await updateLatestRoom()
   leaved.value = true
-  online.value = false
   otherInfo.value = null
+  online.value = false
 }
+
+const onLeave = async close =>
+  useLeave(close, _remoteRoomInfo, socket, simpleLeave)
+
+const onBye = () => useBye(leaveAfterConnected, otherLeaved)
 
 const initSocket = () => {
   socket = useInitSocket(
@@ -424,36 +380,20 @@ const initSocket = () => {
     isReconnect,
     _remoteRoomInfo.roomId,
     isFull,
-    exitRoom
+    leaveAfterConnected
   )
   socket.on('bye', onBye)
   socket.on('file-metadata', onFileMetadata)
   socket.on('receive-file-metadata', onReceiveFileMetadata)
   socket.on('saved-file', onSavedFile)
+  socket.emit('join', _remoteRoomInfo.roomId)
+
   return socket
 }
 
 onMounted(async () => {
-  useMounted(
-    initSocket,
-    onMatched,
-    router,
-    hasRemoteRoomId,
-    path,
-    _remoteRoomInfo,
-    isMatch,
-    'file-transfer'
-  )
+  useMounted(initSocket, router, hasRemoteRoomId, path, _remoteRoomInfo)
 })
 
-onBeforeUnmount(() => {
-  useBeforeUnmount(socket)
-})
-
-const watchPinCb = (pin: string) => {
-  useWatchPinCb('file-transfer', _remoteRoomInfo, pin, path, router)
-  useInitSocketForRoom(initSocket, _remoteRoomInfo.roomId)
-}
-
-const onBack = () => useCancelMatch(isMatch.value, timer, router)
+onBeforeUnmount(() => useBeforeUnmount(socket))
 </script>

@@ -1,64 +1,84 @@
 <template>
-  <div class="flex h-[calc(100vh-2rem)] items-center justify-center">
-    <q-stepper
-      class="bg-x-drawer w-full max-w-[var(--room-width)] !rounded-[12px]"
-      v-model="step"
-    >
-      <q-step
-        :name="1"
-        title="重置密码"
-        active-icon="key"
-        icon="key"
-        :done="step > 1"
+  <div class="flex h-[calc(100vh-2rem)] w-full items-center justify-center">
+    <div class="bg-elevated w-full max-w-[30rem] rounded-xl p-4">
+      <div class="text-center font-bold">重置密码</div>
+
+      <UForm
+        :schema="resetPasswordSchema"
+        :state="passwordForm"
+        class="mt-4 space-y-4"
       >
-        <div class="grid gap-y-4">
-          <q-input
-            :type="isPwd ? 'password' : 'text'"
-            dense
+        <UFormField name="password">
+          <UInput
+            class="w-full"
             v-model="passwordForm.password"
-            label="新密码（长度至少为 8 位）"
-            outlined
+            placeholder=""
+            :type="isPwd ? 'password' : 'text'"
+            :ui="{ base: 'peer' }"
           >
-            <template v-slot:append>
-              <q-icon
-                :name="isPwd ? 'visibility_off' : 'visibility'"
-                class="cursor-pointer"
+            <label
+              class="text-highlighted peer-focus:text-highlighted peer-placeholder-shown:text-dimmed pointer-events-none absolute -top-2.5 left-0 px-1.5 text-xs font-medium transition-all peer-placeholder-shown:top-1.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-2.5 peer-focus:text-xs peer-focus:font-medium"
+            >
+              <span class="bg-default inline-flex px-1">新密码</span>
+            </label>
+            <template #trailing>
+              <UButton
+                color="neutral"
+                variant="link"
+                size="sm"
+                :icon="isPwd ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                :aria-label="isPwd ? 'Hide password' : 'Show password'"
+                :aria-pressed="isPwd"
+                aria-controls="password"
                 @click="isPwd = !isPwd"
               />
             </template>
-          </q-input>
-          <q-input
-            :type="isPwd ? 'password' : 'text'"
-            dense
+          </UInput>
+        </UFormField>
+        <UFormField name="confirmPassword">
+          <UInput
+            class="w-full"
             v-model="passwordForm.confirmPassword"
-            label="确认新密码"
-            outlined
+            placeholder=""
+            :type="isPwd ? 'password' : 'text'"
+            :ui="{ base: 'peer' }"
           >
-            <template v-slot:append>
-              <q-icon
-                :name="isPwd ? 'visibility_off' : 'visibility'"
-                class="cursor-pointer"
+            <label
+              class="text-highlighted peer-focus:text-highlighted peer-placeholder-shown:text-dimmed pointer-events-none absolute -top-2.5 left-0 px-1.5 text-xs font-medium transition-all peer-placeholder-shown:top-1.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-2.5 peer-focus:text-xs peer-focus:font-medium"
+            >
+              <span class="bg-default inline-flex px-1">确认新密码</span>
+            </label>
+            <template #trailing>
+              <UButton
+                color="neutral"
+                variant="link"
+                size="sm"
+                :icon="isPwd ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                :aria-label="isPwd ? 'Hide password' : 'Show password'"
+                :aria-pressed="isPwd"
+                aria-controls="password"
                 @click="isPwd = !isPwd"
-              /> </template
-          ></q-input>
-          <q-btn
-            @click="onUpdatePassword"
-            label="重置密码"
-            color="primary"
-            rounded
-            class="full-width"
-          ></q-btn>
-        </div>
-      </q-step>
-    </q-stepper>
+              />
+            </template>
+          </UInput>
+        </UFormField>
+        <UButton @click="onResetPassword" label="重置密码"></UButton>
+      </UForm>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { resetPassword } from '@/apis/user'
-import { useEncryptUserInfo, useNotify } from '@/hooks'
+import { useEncryptUserInfo } from '@/hooks'
 import { reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import * as z from 'zod'
+
+const resetPasswordSchema = z.object({
+  password: z.string().min(8, '密码长度至少为 8 位'),
+  confirmPassword: z.string().min(8, '密码长度至少为 8 位')
+})
 
 const {
   query: { token }
@@ -69,30 +89,36 @@ const passwordForm = reactive({
   confirmPassword: ''
 })
 const isPwd = ref(true)
-const step = ref(1)
+const toast = useToast()
 
-const onUpdatePassword = async () => {
+const onResetPassword = async () => {
   if (!token) {
-    return useNotify('身份错误', 'negative')
+    toast.add({
+      title: '身份错误',
+      color: 'error'
+    })
+    return
   }
 
-  const { password, confirmPassword } = passwordForm
-
-  if (password !== confirmPassword) {
-    return useNotify('两次密码不一致', 'negative')
+  if (!resetPasswordSchema.safeParse(passwordForm).success) {
+    return
   }
 
-  if (password.length < 8) {
-    return useNotify('密码长度至少为 8 位', 'negative')
-  }
+  const { password } = passwordForm
 
   try {
     const encryptedUserInfo = await useEncryptUserInfo({ password })
     const { message } = await resetPassword(token, encryptedUserInfo)
-    useNotify(message)
+    toast.add({
+      title: message,
+      color: 'success'
+    })
     router.replace('/login')
   } catch (error) {
-    useNotify(error, 'negative')
+    toast.add({
+      title: error.message,
+      color: 'error'
+    })
   }
 }
 </script>

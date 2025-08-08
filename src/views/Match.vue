@@ -1,6 +1,6 @@
 <template>
-  <Card type="match" v-if="showCards"></Card>
-  <router-view v-else></router-view>
+  <Card v-show="showCards"></Card>
+  <router-view v-if="!showCards"></router-view>
 </template>
 
 <script lang="ts" setup>

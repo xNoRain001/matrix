@@ -1,6 +1,8 @@
 <template>
-  <Card type="room" v-if="showCards"></Card>
-  <router-view v-else></router-view>
+  <div>
+    <Card v-show="showCards"></Card>
+  </div>
+  <router-view v-if="!showCards"></router-view>
 </template>
 
 <script lang="ts" setup>

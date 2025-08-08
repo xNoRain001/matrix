@@ -1,42 +1,31 @@
-import type { Ref } from 'vue'
 import type { Router } from 'vue-router'
-import useInitSocketForRoom from './use-init-socket-for-room'
-import useInitSocketForMatch from './use-init-socket-for-match'
 import type { remoteRoomInfo } from '@/types'
 
 const useMounted = (
   initSocket: Function,
-  onMatched: Function,
   router: Router,
   hasRemoteRoomId: boolean,
-  path: string,
-  remoteRoomInfo: remoteRoomInfo,
-  isMatch: Ref<boolean>,
-  type: 'chat' | 'audio-chat' | 'file-transfer'
+  currentPath: string,
+  remoteRoomInfo: remoteRoomInfo
 ) => {
-  if (remoteRoomInfo.roomId) {
-    const { roomId } = remoteRoomInfo
+  const { roomId, path } = remoteRoomInfo
 
-    // 直接访问带 roomId 的链接
-    if (!hasRemoteRoomId) {
-      remoteRoomInfo.path = path
+  // 直接访问带 roomId 的链接
+  if (!hasRemoteRoomId) {
+    remoteRoomInfo.path = currentPath
+  } else {
+    // 如果获取到了远程房间，更新路由
+    if (path === currentPath) {
+      // 只需要替换 roomId，由于路径没有发生变化，组件不会被销毁
+      router.replace({ query: { roomId } })
     } else {
-      // 如果获取到了远程房间，更新路由
-      if (remoteRoomInfo.path === path) {
-        // 只需要替换 roomId，由于路径没有发生变化，组件不会被销毁
-        router.replace({ query: { roomId } })
-      } else {
-        // 路径发生变化，组件会被销毁
-        router.replace({ path: remoteRoomInfo.path, query: { roomId } })
-        // 阻止生成 socket，onBeforeUnmount 中来不及销毁
-        return
-      }
+      // 路径发生变化，组件会被销毁，然后重新加载
+      router.replace({ path, query: { roomId } })
+      return
     }
-
-    useInitSocketForRoom(initSocket, roomId)
-  } else if (isMatch.value) {
-    useInitSocketForMatch(initSocket, onMatched, type)
   }
+
+  initSocket()
 }
 
 export default useMounted

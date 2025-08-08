@@ -1,143 +1,113 @@
 <template>
-  <q-layout class="bg-x-dark">
-    <q-header
-      v-if="userInfo && !remoteRoomInfo.roomId && !isMobile"
-      reveal
-      class="flex-center bg-x-dark flex border-b !border-b-[#3d444d]"
+  <UApp :toaster="{ position: 'top-center' }">
+    <!-- header -->
+    <div
+      v-if="userInfo && !remoteRoomInfo.roomId && isDesktop"
+      class="flex h-16 justify-center border-b border-b-zinc-700"
     >
-      <q-toolbar>
-        <q-btn flat @click="drawer = !drawer" round dense icon="menu">
-          <q-tooltip class="bg-x-drawer"
-            >{{ drawer ? '折叠' : '展开' }}菜单</q-tooltip
-          >
-        </q-btn>
-        <q-avatar class="ml-4">
-          <img
-            style="filter: drop-shadow(rgba(0, 122, 204, 0.3) 0px 8px 24px)"
-            src="/images/logo.svg"
-          />
-        </q-avatar>
-      </q-toolbar>
-    </q-header>
+      <div class="flex items-center justify-between px-4">
+        <UButton
+          icon="ic:baseline-menu"
+          variant="ghost"
+          :ui="{ leadingIcon: '' }"
+        ></UButton>
+        <ThemePicker></ThemePicker>
+      </div>
+    </div>
 
-    <q-drawer
-      v-if="userInfo && !isMobile && !remoteRoomInfo.roomId"
-      v-model="drawer"
-      show-if-above
-      mini-to-overlay
-      :mini="mini"
-      @mouseover="mini = false"
-      @mouseout="mini = true"
-      :width="260"
-      :breakpoint="500"
-      bordered
-      class="bg-x-drawer"
-    >
-      <q-scroll-area class="fit">
-        <q-list padding>
-          <template
-            v-for="({ label, icon, to, separator }, index) in menus"
-            :key="index"
-          >
-            <q-item :to="to" clickable v-ripple>
-              <q-item-section avatar>
-                <q-icon :name="icon" />
-              </q-item-section>
-              <q-item-section>
-                {{ label }}
-              </q-item-section>
-            </q-item>
-            <q-separator :key="'sep' + index" v-if="separator" />
+    <div class="">
+      <div class="flex justify-center">
+        <UNavigationMenu
+          v-if="userInfo && isDesktop && !remoteRoomInfo.roomId"
+          collapsed
+          orientation="vertical"
+          tooltip
+          class="h-full min-h-[calc(100vh-4rem)] border-r border-r-zinc-700 p-4"
+          :ui="{
+            list: '',
+            linkLeadingIcon: 'pr-0',
+            item: 'mt-4'
+          }"
+          :items="navs"
+        >
+          <template #list-leading>
+            <img
+              class="size-10"
+              style="filter: drop-shadow(rgba(0, 122, 204, 0.3) 0px 8px 24px)"
+              src="/images/logo.svg"
+            />
           </template>
-        </q-list>
-      </q-scroll-area>
-    </q-drawer>
-
-    <q-page-container>
-      <q-page class="p-4">
-        <Suspense>
-          <router-view></router-view>
-        </Suspense>
-      </q-page>
-    </q-page-container>
+        </UNavigationMenu>
+        <div
+          :class="isDesktop ? '' : 'h-[calc(100vh-4rem)]'"
+          class="shrink grow p-4"
+        >
+          <Suspense>
+            <RouterView />
+          </Suspense>
+        </div>
+      </div>
+    </div>
 
     <div
-      v-show="userInfo && !remoteRoomInfo.roomId && isMobile"
+      v-show="userInfo && !remoteRoomInfo.roomId && !isDesktop"
       class="bg-x-drawer fixed bottom-0 w-full"
     >
-      <q-tabs
+      <UTabs
         v-model="tab"
-        indicator-color="transparent"
-        active-color="primary"
-        class="text-grey-5"
-      >
-        <q-route-tab
-          :ripple="false"
-          v-for="({ label, icon, to }, index) in menus"
-          :key="index"
-          :name="label"
-          :icon="icon"
-          :label="label"
-          :to="to"
-        />
-      </q-tabs>
+        variant="link"
+        class="w-full"
+        :ui="{
+          list: 'bg-x-card flex justify-evenly',
+          trigger: 'flex flex-col'
+          // leadingIcon: 'size-6'
+        }"
+        :content="false"
+        :items="menus"
+      />
     </div>
-  </q-layout>
+  </UApp>
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue'
-import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
-import { useDeviceInfoStore, useRoomStore, useUserInfoStore } from './store'
+import { useRoomStore, useUserInfoStore } from './store'
+import { useMediaQuery } from '@vueuse/core'
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-const { isMobile } = useDeviceInfoStore()
-const $q = useQuasar()
-const dark = ref(true)
-const drawer = ref(false)
-const mini = ref(true)
+const isDesktop = useMediaQuery('(min-width: 768px)')
 const menus = [
   {
-    icon: 'auto_awesome',
     label: '匹配',
+    icon: 'ic:baseline-auto-awesome',
     to: '/match',
-    separator: false
+    value: 'match'
   },
   {
-    icon: 'chair',
     label: '房间',
+    icon: 'ic:baseline-chair',
     to: '/room',
-    separator: false
+    value: 'room'
   },
-  // {
-  //   icon: 'chat',
-  //   label: '聊天',
-  //   to: '/message-list',
-  //   separator: false
-  // },
   {
-    icon: 'face',
     label: '我的',
+    icon: 'ic:baseline-face',
     to: '/profile',
-    separator: false
+    value: 'profile'
   }
 ]
+const navs = [menus]
 const { remoteRoomInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
-const tab = ref('mails')
-
-watch(
-  dark,
-  v => {
-    $q.dark.set(v ? false : true)
-    $q.dark.toggle()
+const route = useRoute()
+const router = useRouter()
+const tab = computed({
+  get() {
+    return route.meta.tab as string
   },
-  { immediate: true }
-)
+  set(tab) {
+    router.push(`/${tab}`)
+  }
+})
 </script>
-
-<style>
-.q-tab__label {
-  font-size: 12px;
-}
-</style>

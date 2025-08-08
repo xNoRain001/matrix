@@ -6,18 +6,21 @@ const router = createRouter({
     {
       path: '/match',
       component: () => import('@/views/Match.vue'),
-      meta: { auth: true },
+      meta: { auth: true, tab: 'match' },
       children: [
         {
           path: 'chat',
+          meta: { requireRoomId: true, parentPath: '/match' },
           component: () => import('@/views/Chat.vue')
         },
         {
           path: 'audio-chat',
+          meta: { requireRoomId: true, parentPath: '/match' },
           component: () => import('@/views/AudioChat.vue')
         },
         {
           path: 'file-transfer',
+          meta: { requireRoomId: true, parentPath: '/match' },
           component: () => import('@/views/FileTransfer.vue')
         }
       ]
@@ -25,30 +28,28 @@ const router = createRouter({
     {
       path: '/room',
       component: () => import('@/views/Room.vue'),
-      meta: { auth: true },
+      meta: { auth: true, tab: 'room' },
       children: [
         {
           path: 'chat',
+          meta: { requireRoomId: true, parentPath: '/room' },
           component: () => import('@/views/Chat.vue')
         },
         {
           path: 'audio-chat',
+          meta: { requireRoomId: true, parentPath: '/room' },
           component: () => import('@/views/AudioChat.vue')
         },
         {
           path: 'file-transfer',
+          meta: { requireRoomId: true, parentPath: '/room' },
           component: () => import('@/views/FileTransfer.vue')
         }
       ]
     },
     {
-      path: '/message-list',
-      meta: { auth: true },
-      component: () => import('@/views/MessageList.vue')
-    },
-    {
       path: '/profile',
-      meta: { auth: true },
+      meta: { auth: true, tab: 'profile' },
       component: () => import('@/views/Profile.vue')
     },
     {
@@ -71,7 +72,7 @@ const router = createRouter({
 
 router.beforeEach(({ path, query, meta }, _, next) => {
   const token = localStorage.getItem('token')
-  const { auth } = meta
+  const { auth, requireRoomId, parentPath } = meta
 
   // 未登录状态访问需要 token 的页面，跳转到登录页面
   if (auth === true && !token) {
@@ -93,6 +94,13 @@ router.beforeEach(({ path, query, meta }, _, next) => {
       // vitepress 页面
       location.href = '/docs.html'
       return next(false)
+    }
+  }
+
+  // 没有 roomId 时返回上级路由
+  if (requireRoomId) {
+    if (!query.roomId) {
+      return next({ path: parentPath as string })
     }
   }
 

@@ -1,23 +1,28 @@
 <template>
-  <div
-    class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
-  >
-    <div class="flex flex-col items-center">
-      <q-btn label="离开房间" @click="leave" color="primary"></q-btn>
-      <q-btn
-        class="!mt-4"
-        label="返回主页"
-        @click="router.replace('/room')"
-        color="primary"
-      ></q-btn>
-    </div>
+  <div class="absolute top-1/2 left-1/2 -translate-1/2">
+    <div>房间已满员...</div>
+    <UButton class="mt-4" @click="useLeaveFullRoom" label="退出房间"></UButton>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { useRouter } from 'vue-router'
-
-defineProps<{ leave: () => void }>()
+import { updateLatestRoom } from '@/apis/latest-room'
+import { useRoomStore } from '@/store'
+import { storeToRefs } from 'pinia'
+import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
+const {
+  meta: { parentPath }
+} = useRoute()
+const { remoteRoomInfo } = storeToRefs(useRoomStore())
+const _remoteRoomInfo = remoteRoomInfo.value
+
+const useLeaveFullRoom = async () => {
+  // 满员时是加入不了房间的，但是需要显示底部的重新加入房间或匹配的按钮
+  _remoteRoomInfo.roomId = _remoteRoomInfo.path = _remoteRoomInfo.latestId = ''
+  _remoteRoomInfo.inRoom = false
+  await updateLatestRoom()
+  router.replace(parentPath)
+}
 </script>

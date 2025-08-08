@@ -1,273 +1,457 @@
 <template>
+  <DefineNicknameFormBodyTemplate>
+    <UFormField
+      :ui="{ help: 'text-right pr-4' }"
+      :help="`${userInfo.nickname.length} / 30`"
+    >
+      <UInput v-model="userInfo.nickname" class="w-full" maxlength="30">
+        <template v-if="userInfo.nickname" #trailing>
+          <UButton
+            color="neutral"
+            variant="link"
+            icon="i-lucide-circle-x"
+            aria-label="Clear input"
+            @click="userInfo.nickname = ''"
+          />
+        </template>
+      </UInput>
+    </UFormField>
+  </DefineNicknameFormBodyTemplate>
+  <DefineGenderFormBodyTemplate>
+    <USelect class="w-full" v-model="userInfo.gender" :items="genderOptions" />
+  </DefineGenderFormBodyTemplate>
+  <DefineBirthdayFormBodyTemplate>
+    <UInput
+      class="w-full"
+      v-model="userInfo.birthday"
+      v-maska="'####/##/##'"
+      placeholder="YYYY/MM/DD"
+      icon="i-lucide-calendar"
+    />
+  </DefineBirthdayFormBodyTemplate>
+  <DefineRegionFormBodyTemplate>
+    <div class="space-x-2">
+      <USelectMenu class="w-1/3" v-model="province" :items="provinceOptions" />
+      <USelectMenu class="w-1/3" v-model="city" :items="cityOptions" />
+    </div>
+  </DefineRegionFormBodyTemplate>
+  <DefineLogoutFooterTemplate>
+    <UButton
+      label="取消"
+      color="neutral"
+      variant="outline"
+      class="justify-center"
+      @click="openLogoutDrawer = false"
+    />
+    <UButton label="确认" class="justify-center" @click="onLogout" />
+  </DefineLogoutFooterTemplate>
+
   <div class="flex flex-col items-center">
     <div class="w-full max-w-[var(--room-width)]">
-      <div v-if="!isDefaultPanel" class="flex items-center">
-        <q-btn
-          dense
-          flat
-          round
-          @click="onBackFromProfile"
-          icon="arrow_back_ios_new"
-        ></q-btn>
-        <div class="absolute left-1/2 -translate-x-1/2 text-base">
-          {{ tip }}
+      <div class="flex">
+        <div
+          class="bg-primary h-12 w-12 rounded-full text-center text-xl leading-12"
+        >
+          {{ userInfo.nickname?.[0] }}
+        </div>
+        <div class="ml-4 w-[calc(100%-4rem)]">
+          <span class="text-xl font-bold">您好</span>
+          <div class="overflow-hidden text-ellipsis whitespace-nowrap">
+            {{ userInfo.nickname }}
+          </div>
         </div>
       </div>
 
-      <q-tab-panels
-        :class="isDefaultPanel ? '' : 'mt-4'"
-        class="bg-x-card rounded-[12px]"
-        v-model="panel"
-        animated
-      >
-        <q-tab-panel name="default">
-          <q-list>
-            <q-item
-              class="rounded-[12px]"
-              @click="onUpdatePanel('profile')"
-              clickable
-              v-ripple
-            >
-              <q-item-section class="text-base">个人资料</q-item-section>
-              <q-item-section
-                side
-                class="flex !flex-row !items-center !text-gray-500"
-              >
-                <q-icon name="arrow_forward_ios" class="ml-2"></q-icon>
-              </q-item-section>
-            </q-item>
-            <q-separator />
-            <q-item
-              class="rounded-[12px]"
-              @click="onUpdatePanel('updatePassword')"
-              clickable
-              v-ripple
-            >
-              <q-item-section class="text-base">修改密码</q-item-section>
-              <q-item-section side class="!text-gray-500">
-                <q-icon name="arrow_forward_ios" class="ml-2"></q-icon>
-              </q-item-section>
-            </q-item>
-            <q-separator />
-            <q-item class="rounded-[12px]" @click="onLogout" clickable v-ripple>
-              <q-item-section class="text-base">退出登录</q-item-section>
-              <q-item-section side class="!text-gray-500">
-                <q-icon name="arrow_forward_ios" class="ml-2"></q-icon>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-tab-panel>
-
-        <q-tab-panel name="profile">
-          <q-list>
-            <!-- <q-item class="rounded-[12px]" clickable v-ripple>
-              <q-item-section class="text-base">头像</q-item-section>
-              <q-item-section
-                side
-                class="flex !flex-row !items-center !text-gray-500"
-              >
-                <img class="w-[32px] rounded-full" :src="userInfo.avatar" />
-                <q-icon name="arrow_forward_ios" class="ml-2"></q-icon>
-              </q-item-section>
-            </q-item>
-            <q-separator /> -->
-            <q-item
-              class="rounded-[12px]"
-              @click="onEditNickname"
-              clickable
-              v-ripple
-            >
-              <q-item-section class="text-base">昵称</q-item-section>
-              <q-item-section
-                side
-                class="flex !flex-row !items-center !text-gray-500"
-              >
-                <div>{{ userInfo.nickname }}</div>
-                <q-icon name="arrow_forward_ios" class="ml-2"></q-icon>
-              </q-item-section>
-            </q-item>
-            <q-separator />
-            <q-item
-              class="rounded-[12px]"
-              @click="onEditGender"
-              clickable
-              v-ripple
-            >
-              <q-item-section class="text-base">性别</q-item-section>
-              <q-item-section
-                side
-                class="flex !flex-row !items-center !text-gray-500"
-              >
-                <div>
-                  {{
-                    userInfo.gender === 'other'
-                      ? '未知'
-                      : userInfo.gender === 'male'
-                        ? '男'
-                        : '女'
-                  }}
-                </div>
-                <q-icon name="arrow_forward_ios" class="ml-2"></q-icon>
-              </q-item-section>
-            </q-item>
-            <q-separator />
-            <q-item
-              class="rounded-[12px]"
-              @click="onEditBirthday"
-              clickable
-              v-ripple
-            >
-              <q-item-section class="text-base">生日</q-item-section>
-              <q-item-section
-                side
-                class="flex !flex-row !items-center !text-gray-500"
-              >
-                <div>
-                  {{ !userInfo.birthday ? '未知' : userInfo.birthday }}
-                </div>
-                <q-icon name="arrow_forward_ios" class="ml-2"></q-icon>
-              </q-item-section>
-            </q-item>
-            <q-separator />
-            <q-item
-              @click="onEditRegion"
-              class="rounded-[12px]"
-              clickable
-              v-ripple
-            >
-              <q-item-section class="text-base">地区</q-item-section>
-              <q-item-section
-                side
-                class="flex !flex-row !items-center !text-gray-500"
-              >
-                <div>{{ userInfo.region }}</div>
-                <q-icon name="arrow_forward_ios" class="ml-2"></q-icon>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-tab-panel>
-
-        <q-tab-panel name="updatePassword" class="grid gap-y-4">
-          <q-input
-            :type="isPwd ? 'password' : 'text'"
-            dense
-            v-model="passwordForm.oldPassword"
-            label="旧密码"
-            outlined
-          >
-            <template v-slot:append>
-              <q-icon
-                :name="isPwd ? 'visibility_off' : 'visibility'"
-                class="cursor-pointer"
-                @click="isPwd = !isPwd"
-              />
-            </template>
-          </q-input>
-          <q-input
-            :type="isPwd ? 'password' : 'text'"
-            dense
-            v-model="passwordForm.password"
-            label="新密码（长度至少为 8 位）"
-            outlined
-          >
-            <template v-slot:append>
-              <q-icon
-                :name="isPwd ? 'visibility_off' : 'visibility'"
-                class="cursor-pointer"
-                @click="isPwd = !isPwd"
-              />
-            </template>
-          </q-input>
-          <q-input
-            :type="isPwd ? 'password' : 'text'"
-            dense
-            v-model="passwordForm.confirmPassword"
-            label="确认新密码"
-            outlined
-          >
-            <template v-slot:append>
-              <q-icon
-                :name="isPwd ? 'visibility_off' : 'visibility'"
-                class="cursor-pointer"
-                @click="isPwd = !isPwd"
-              /> </template
-          ></q-input>
-          <q-btn
-            @click="onUpdatePassword"
-            label="修改密码"
-            color="primary"
-            rounded
-            class="full-width"
-          ></q-btn>
-        </q-tab-panel>
-      </q-tab-panels>
+      <div v-for="items in cards" class="bg-elevated mt-4 rounded-xl p-4">
+        <div
+          v-for="{ click, label, icon } in items"
+          @click="click"
+          class="hover:bg-accented flex h-12 cursor-pointer items-center justify-between rounded-xl px-2"
+        >
+          <div class="flex items-center">
+            <UIcon :name="icon" class="size-5" />
+            <div class="ml-2">{{ label }}</div>
+          </div>
+          <UIcon name="lucide:chevron-right" class="size-5" />
+        </div>
+      </div>
     </div>
 
-    <q-dialog v-model="showBirthdayDialog" :position="dialogPosition">
-      <q-date v-model="userInfo.birthday" :locale="dateLocale">
-        <div class="flex justify-end">
-          <q-btn
-            rounded
-            class="!mr-4"
-            v-close-popup
-            label="取消"
-            color="primary"
+    <UDrawer
+      :handle="false"
+      v-model:open="openProfileDrawer"
+      direction="right"
+      :class="isDesktop ? 'w-[30vw]' : 'w-screen max-w-screen'"
+      title=" "
+      description=" "
+    >
+      <template #header>
+        <div class="flex items-center">
+          <UButton
+            variant="ghost"
+            color="neutral"
+            icon="lucide:chevron-left"
+            class="cursor-pointer"
+            @click="onBackFromProfile"
           />
-          <q-btn rounded v-close-popup label="确认" color="primary" />
+          <div class="absolute left-1/2 -translate-x-1/2">个人资料</div>
         </div>
-      </q-date>
-    </q-dialog>
+      </template>
+      <template #content></template>
+      <template #body>
+        <div class="bg-elevated rounded-xl p-4">
+          <div
+            v-for="{ label, click, key } in profileItems"
+            @click="click"
+            class="hover:bg-accented flex h-12 cursor-pointer items-center justify-between rounded-xl px-2"
+          >
+            <div>{{ label }}</div>
+            <div class="flex items-center">
+              <div class="mr-2 text-(--ui-text-dimmed)">
+                {{
+                  key === 'gender'
+                    ? transformGender(userInfo[key])
+                    : userInfo[key]
+                }}
+              </div>
+              <UIcon
+                name="lucide:chevron-right"
+                class="size-5 text-(--ui-text-dimmed)"
+              />
+            </div>
+          </div>
+        </div>
+      </template>
+    </UDrawer>
 
-    <q-dialog v-model="showRegionDialog" :position="dialogPosition">
-      <div class="bg-x-card w-full">
-        <q-select
-          filled
-          v-model="province"
-          use-input
-          input-debounce="0"
-          label="省份"
-          :options="provinceOptions"
-          @filter="filterProvinceFn"
-          behavior="menu"
-        >
-          <template v-slot:no-option>
-            <q-item>
-              <q-item-section class="text-grey">未找到结果</q-item-section>
-            </q-item>
-          </template>
-        </q-select>
-        <q-select
-          :disable="!province"
-          filled
-          v-model="city"
-          label="市区"
-          :options="cityOptions"
-          behavior="menu"
-        >
-          <template v-slot:no-option>
-            <q-item>
-              <q-item-section class="text-grey">未找到结果</q-item-section>
-            </q-item>
-          </template>
-        </q-select>
-      </div>
-    </q-dialog>
+    <UDrawer
+      :handle="false"
+      v-model:open="openUpdatePasswordDrawer"
+      direction="right"
+      :class="isDesktop ? 'w-[30vw]' : 'w-screen max-w-screen'"
+      title=" "
+      description=" "
+    >
+      <template #header>
+        <div class="flex items-center">
+          <UButton
+            variant="ghost"
+            color="neutral"
+            icon="lucide:chevron-left"
+            class="cursor-pointer"
+            @click="openUpdatePasswordDrawer = false"
+          />
+          <div class="absolute left-1/2 -translate-x-1/2">修改密码</div>
+        </div>
+      </template>
+      <template #content></template>
+      <template #body>
+        <div class="bg-elevated rounded-xl p-4">
+          <UForm
+            :schema="schema"
+            :state="passwordForm"
+            class="space-y-4"
+            @submit="onUpdatePassword"
+          >
+            <UFormField name="oldPassword">
+              <UInput
+                class="w-full"
+                v-model="passwordForm.oldPassword"
+                placeholder=""
+                :type="isPwd ? 'password' : 'text'"
+                :ui="{ base: 'peer' }"
+              >
+                <label
+                  class="text-highlighted peer-focus:text-highlighted peer-placeholder-shown:text-dimmed pointer-events-none absolute -top-2.5 left-0 px-1.5 text-xs font-medium transition-all peer-placeholder-shown:top-1.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-2.5 peer-focus:text-xs peer-focus:font-medium"
+                >
+                  <span class="bg-default inline-flex px-1">旧密码</span>
+                </label>
+                <template #trailing>
+                  <UButton
+                    color="neutral"
+                    variant="link"
+                    size="sm"
+                    :icon="isPwd ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                    :aria-label="isPwd ? 'Hide password' : 'Show password'"
+                    :aria-pressed="isPwd"
+                    aria-controls="password"
+                    @click="isPwd = !isPwd"
+                  />
+                </template>
+              </UInput>
+            </UFormField>
+            <UFormField name="password">
+              <UInput
+                class="w-full"
+                v-model="passwordForm.password"
+                placeholder=""
+                :type="isPwd ? 'password' : 'text'"
+                :ui="{ base: ' peer' }"
+              >
+                <label
+                  class="text-highlighted peer-focus:text-highlighted peer-placeholder-shown:text-dimmed pointer-events-none absolute -top-2.5 left-0 px-1.5 text-xs font-medium transition-all peer-placeholder-shown:top-1.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-2.5 peer-focus:text-xs peer-focus:font-medium"
+                >
+                  <span class="bg-default inline-flex px-1">新密码</span>
+                </label>
+                <template #trailing>
+                  <UButton
+                    color="neutral"
+                    variant="link"
+                    size="sm"
+                    :icon="isPwd ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                    :aria-label="isPwd ? 'Hide password' : 'Show password'"
+                    :aria-pressed="isPwd"
+                    aria-controls="password"
+                    @click="isPwd = !isPwd"
+                  />
+                </template>
+              </UInput>
+            </UFormField>
+            <UFormField name="confirmPassword">
+              <UInput
+                class="w-full"
+                v-model="passwordForm.confirmPassword"
+                placeholder=""
+                :type="isPwd ? 'password' : 'text'"
+                :ui="{ base: 'peer' }"
+              >
+                <!-- class="text-highlighted peer-focus:text-highlighted peer-placeholder-shown:text-dimmed pointer-events-none absolute -top-1.5 left-0 px-1.5 text-xs font-medium transition-all peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-1.5 peer-focus:text-xs peer-focus:font-medium" -->
+                <label
+                  class="text-highlighted peer-focus:text-highlighted peer-placeholder-shown:text-dimmed pointer-events-none absolute -top-2.5 left-0 px-1.5 text-xs font-medium transition-all peer-placeholder-shown:top-1.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-2.5 peer-focus:text-xs peer-focus:font-medium"
+                >
+                  <span class="bg-default inline-flex px-1">确认新密码</span>
+                </label>
+                <template #trailing>
+                  <UButton
+                    color="neutral"
+                    variant="link"
+                    size="sm"
+                    :icon="isPwd ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                    :aria-label="isPwd ? 'Hide password' : 'Show password'"
+                    :aria-pressed="isPwd"
+                    aria-controls="password"
+                    @click="isPwd = !isPwd"
+                  />
+                </template>
+              </UInput>
+            </UFormField>
+            <UButton type="submit">修改密码</UButton>
+          </UForm>
+        </div>
+      </template>
+    </UDrawer>
+
+    <UModal
+      v-if="isDesktop"
+      v-model:open="openLogoutDrawer"
+      title="退出登录"
+      description=" "
+    >
+      <template #footer>
+        <ReuseLogoutFooterTemplate></ReuseLogoutFooterTemplate>
+      </template>
+    </UModal>
+    <UDrawer
+      v-else
+      v-model:open="openLogoutDrawer"
+      direction="bottom"
+      title="退出登录"
+      description=" "
+    >
+      <template #footer>
+        <ReuseLogoutFooterTemplate></ReuseLogoutFooterTemplate>
+      </template>
+    </UDrawer>
+
+    <UModal
+      v-if="isDesktop"
+      v-model:open="openNicknameDrawer"
+      title="修改昵称"
+      description=" "
+    >
+      <!-- <template #header>
+        <ReuseNicknameFormHeaderTemplate></ReuseNicknameFormHeaderTemplate>
+      </template> -->
+      <!-- <template #content></template> -->
+      <template #body>
+        <ReuseNicknameFormBodyTemplate></ReuseNicknameFormBodyTemplate>
+      </template>
+    </UModal>
+    <UDrawer
+      v-else
+      v-model:open="openNicknameDrawer"
+      title="修改昵称"
+      description=" "
+    >
+      <!-- <template #header>
+        <ReuseNicknameFormHeaderTemplate></ReuseNicknameFormHeaderTemplate>
+      </template>
+      <template #content></template> -->
+      <template #body>
+        <ReuseNicknameFormBodyTemplate></ReuseNicknameFormBodyTemplate>
+      </template>
+    </UDrawer>
+
+    <UModal
+      v-if="isDesktop"
+      v-model:open="openGenderDrawer"
+      title="修改性别"
+      description=" "
+    >
+      <!-- <template #header>
+        <ReuseGenderFormHeaderTemplate></ReuseGenderFormHeaderTemplate>
+      </template>
+      <template #content></template> -->
+      <template #body>
+        <ReuseGenderFormBodyTemplate></ReuseGenderFormBodyTemplate>
+      </template>
+    </UModal>
+    <UDrawer
+      v-else
+      v-model:open="openGenderDrawer"
+      title="修改性别"
+      description=" "
+    >
+      <!-- <template #header>
+        <ReuseGenderFormHeaderTemplate></ReuseGenderFormHeaderTemplate>
+      </template>
+      <template #content></template> -->
+      <template #body>
+        <ReuseGenderFormBodyTemplate></ReuseGenderFormBodyTemplate>
+      </template>
+    </UDrawer>
+
+    <UModal
+      v-if="isDesktop"
+      v-model:open="openBirthdayDrawer"
+      title="修改生日"
+      description=" "
+    >
+      <template #body>
+        <ReuseBirthdayFormBodyTemplate></ReuseBirthdayFormBodyTemplate>
+      </template>
+    </UModal>
+    <UDrawer
+      v-else
+      v-model:open="openBirthdayDrawer"
+      title="修改生日"
+      description=" "
+    >
+      <template #body>
+        <ReuseBirthdayFormBodyTemplate></ReuseBirthdayFormBodyTemplate>
+      </template>
+    </UDrawer>
+
+    <UModal
+      v-if="isDesktop"
+      v-model:open="openRegionDrawer"
+      title="修改地区"
+      description=" "
+    >
+      <template #body>
+        <ReuseRegionFormBodyTemplate></ReuseRegionFormBodyTemplate>
+      </template>
+    </UModal>
+    <UDrawer
+      v-else
+      v-model:open="openRegionDrawer"
+      title="修改地区"
+      description=" "
+    >
+      <template #body>
+        <ReuseRegionFormBodyTemplate></ReuseRegionFormBodyTemplate>
+      </template>
+    </UDrawer>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { updatePassword, updateProfile } from '@/apis/user'
-import { dateLocale } from '@/const'
-import { useDialog, useEncryptUserInfo, useLogout, useNotify } from '@/hooks'
-import { useDeviceInfoStore, useUserInfoStore } from '@/store'
+import { useEncryptUserInfo, useLogout } from '@/hooks'
+import { useUserInfoStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { computed, reactive, ref, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { vMaska } from 'maska/vue'
+import * as z from 'zod'
+import { createReusableTemplate, useMediaQuery } from '@vueuse/core'
 
-const { isMobile } = useDeviceInfoStore()
-const panel = ref('default')
-const showBirthdayDialog = ref(false)
-const showRegionDialog = ref(false)
+const [DefineNicknameFormBodyTemplate, ReuseNicknameFormBodyTemplate] =
+  createReusableTemplate()
+const [DefineGenderFormBodyTemplate, ReuseGenderFormBodyTemplate] =
+  createReusableTemplate()
+const [DefineBirthdayFormBodyTemplate, ReuseBirthdayFormBodyTemplate] =
+  createReusableTemplate()
+const [DefineRegionFormBodyTemplate, ReuseRegionFormBodyTemplate] =
+  createReusableTemplate()
+const [DefineLogoutFooterTemplate, ReuseLogoutFooterTemplate] =
+  createReusableTemplate()
+const isDesktop = useMediaQuery('(min-width: 768px)')
+const openProfileDrawer = ref(false)
+const openGenderDrawer = ref(false)
+const openBirthdayDrawer = ref(false)
+const openRegionDrawer = ref(false)
+const openNicknameDrawer = ref(false)
+const openUpdatePasswordDrawer = ref(false)
+const openLogoutDrawer = ref(false)
+const schema = z.object({
+  oldPassword: z.string().min(8, '密码长度至少为 8 位'),
+  password: z.string().min(8, '密码长度至少为 8 位'),
+  confirmPassword: z
+    .string()
+    .refine(
+      () => passwordForm.password === passwordForm.confirmPassword,
+      '新密码不一致'
+    )
+})
+const cards = [
+  [
+    {
+      icon: 'lucide:user-round',
+      label: '个人资料',
+      click: () => (openProfileDrawer.value = true)
+    },
+    {
+      icon: 'lucide:user-round',
+      label: '意见反馈',
+      click: () => (openProfileDrawer.value = true)
+    }
+  ],
+  [
+    {
+      icon: 'lucide:key',
+      label: '修改密码',
+      click: () => (openUpdatePasswordDrawer.value = true)
+    },
+    {
+      icon: 'lucide:log-out',
+      label: '退出登录',
+      click: () => (openLogoutDrawer.value = true)
+    }
+  ]
+]
+const profileItems = [
+  {
+    label: '昵称',
+    key: 'nickname',
+    click: () => (openNicknameDrawer.value = true)
+  },
+  {
+    label: '性别',
+    key: 'gender',
+    click: () => (openGenderDrawer.value = true)
+  },
+  {
+    label: '生日',
+    key: 'birthday',
+    click: () => (openBirthdayDrawer.value = true)
+  },
+  {
+    label: '地区',
+    key: 'region',
+    click: () => (openRegionDrawer.value = true)
+  }
+]
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
 let oldUserInfo = JSON.parse(JSON.stringify(_userInfo))
@@ -278,12 +462,6 @@ const passwordForm = reactive({
   confirmPassword: ''
 })
 const isPwd = ref(true)
-const tip = ref('')
-const tipMap = {
-  profile: '个人资料',
-  updatePassword: '修改密码'
-}
-const isDefaultPanel = computed(() => panel.value === 'default')
 const { region } = _userInfo
 const [_province, _city] = region === '未知' ? ['', ''] : region.split(' - ')
 const province = ref(_province)
@@ -760,12 +938,25 @@ const provinceCityMap = {
 const sourceProvinceOptions = Object.keys(provinceCityMap)
 const provinceOptions = ref(sourceProvinceOptions)
 const cityOptions = ref(provinceCityMap[_province] || [])
-const dialogPosition = isMobile ? 'bottom' : 'standard'
+const genderOptions = [
+  {
+    label: '男',
+    value: 'male'
+  },
+  {
+    label: '女',
+    value: 'female'
+  }
+]
+const toast = useToast()
+
+const transformGender = v =>
+  v === 'other' ? '未知' : v === 'male' ? '男' : '女'
 
 watch(province, v => {
   cityOptions.value = provinceCityMap[v]
   // 切换省份时清空市区
-  city.value = ''
+  city.value = null // 赋值为 '' 会引起样式问题
   _userInfo.region = v
 })
 
@@ -776,30 +967,8 @@ watch(city, v => {
   }
 })
 
-const filterProvinceFn = (val, update) => {
-  if (val === '') {
-    return update(() => (provinceOptions.value = sourceProvinceOptions))
-  }
-
-  update(() => {
-    provinceOptions.value = sourceProvinceOptions.filter(v => v.includes(val))
-  })
-}
-
 const onUpdatePassword = async () => {
-  const { oldPassword, password, confirmPassword } = passwordForm
-
-  if (oldPassword.length < 8) {
-    return useNotify('旧密码长度至少为 8 位', 'negative')
-  }
-
-  if (password !== confirmPassword) {
-    return useNotify('两次密码不一致', 'negative')
-  }
-
-  if (password.length < 8) {
-    return useNotify('新密码长度至少为 8 位', 'negative')
-  }
+  const { oldPassword, password } = passwordForm
 
   try {
     const encryptedUserInfo = await useEncryptUserInfo({
@@ -807,21 +976,22 @@ const onUpdatePassword = async () => {
       password
     })
     const { message } = await updatePassword(encryptedUserInfo)
-    useNotify(message)
+    toast.add({
+      title: message,
+      color: 'success'
+    })
     useLogout()
     router.replace('/login')
   } catch (error) {
-    useNotify(error, 'negative')
+    toast.add({
+      title: error.essage,
+      color: 'error'
+    })
   }
 }
 
-const onUpdatePanel = v => {
-  panel.value = v
-  tip.value = tipMap[v]
-}
-
 const onBackFromProfile = async () => {
-  panel.value = 'default'
+  openProfileDrawer.value = false
   const keys = Object.keys(oldUserInfo)
 
   for (let i = 0, l = keys.length; i < l; i++) {
@@ -838,9 +1008,15 @@ const onBackFromProfile = async () => {
         } = await updateProfile(data)
         localStorage.setItem('token', token)
         oldUserInfo = JSON.parse(s)
-        useNotify('修改资料成功')
+        toast.add({
+          title: '修改资料成功',
+          color: 'success'
+        })
       } catch (error) {
-        useNotify(error, 'negative')
+        toast.add({
+          title: error.message,
+          color: 'error'
+        })
       }
       break
     }
@@ -848,50 +1024,7 @@ const onBackFromProfile = async () => {
 }
 
 const onLogout = () => {
-  useDialog({
-    title: '离开',
-    message: '你确定要退出账号吗？'
-  }).onOk(() => {
-    useLogout()
-    router.replace('/login')
-  })
-}
-
-const onEditRegion = () => (showRegionDialog.value = true)
-
-const onEditBirthday = () => (showBirthdayDialog.value = true)
-
-const onEditGender = () => {
-  useDialog({
-    title: '修改性别',
-    position: dialogPosition,
-    options: {
-      type: 'radio',
-      model: _userInfo.gender,
-      items: [
-        { label: '男', value: 'male' },
-        { label: '女', value: 'female' }
-      ]
-    }
-  }).onOk(data => (_userInfo.gender = data))
-}
-
-const onEditNickname = () => {
-  useDialog({
-    title: '修改昵称',
-    position: dialogPosition,
-    prompt: {
-      model: _userInfo.nickname,
-      type: 'text',
-      hint: `最大长度为 30 个字符`
-    }
-  }).onOk(data => {
-    if (!data.length) {
-      _userInfo.nickname = oldUserInfo.value.nickname
-      useNotify('昵称不能为空', 'warning')
-    } else {
-      _userInfo.nickname = data
-    }
-  })
+  useLogout()
+  router.replace('/login')
 }
 </script>

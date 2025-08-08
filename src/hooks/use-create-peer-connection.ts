@@ -52,7 +52,6 @@ const useCreatePeerConnection = (
       online.value = false
     } else if (iceConnectionState === 'connected') {
       console.log('connected...')
-      // useNotify('连接已建立')
       online.value = true
       const latestId = useRoomStore().otherInfo.id
       remoteRoomInfo.inRoom = true

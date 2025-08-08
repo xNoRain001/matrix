@@ -1,7 +1,4 @@
 import useNoop from './use-noop'
-import useNotify from './use-notify'
-import useCopyToClipboard from './use-copy-to-clipboard'
-import useLoading from './use-loading'
 import useCreatePeerConnection from './use-create-peer-connection'
 import useInitRtc from './use-init-rtc'
 import useInitSocket from './use-init-socket'
@@ -22,7 +19,6 @@ import useBack from './use-back'
 import useGetDB from './use-get-db'
 import useClearMessages from './use-clear-messages'
 import useDeleteDB from './use-delete-db'
-import useDialog from './use-dialog'
 import useSendFile from './use-send-file'
 import useReceiveFile from './use-receive-file'
 import useExtendFileStatus from './use-extend-file-status'
@@ -34,7 +30,7 @@ import useMatched from './use-matched'
 import useDisconnect from './use-disconnect'
 import useOtherJoin from './use-other-join'
 import useBye from './use-bye'
-import useLeaveRoom from './use-leave-room'
+import useLeave from './use-leave'
 import useJoined from './use-joined'
 import useBackPIN from './use-back-pin'
 import useInitSocketForRoom from './use-init-socket-for-room'
@@ -45,8 +41,12 @@ import useMounted from './use-mounted'
 import useEncryptUserInfo from './use-encrypt-userinfo'
 import useLogout from './use-logout'
 import useScrollToTop from './use-scroll-to-top'
+import useUpdateTheme from './use-update-theme'
+import useExportFile from './use-export-file'
 
 export {
+  useExportFile,
+  useUpdateTheme,
   useScrollToTop,
   useLogout,
   useEncryptUserInfo,
@@ -57,7 +57,7 @@ export {
   useInitSocketForRoom,
   useBackPIN,
   useJoined,
-  useLeaveRoom,
+  useLeave,
   useBye,
   useOtherJoin,
   useDisconnect,
@@ -69,7 +69,6 @@ export {
   useExtendFileStatus,
   useReceiveFile,
   useSendFile,
-  useDialog,
   useDeleteDB,
   useClearMessages,
   useGetDB,
@@ -90,8 +89,5 @@ export {
   useInitSocket,
   useInitRtc,
   useCreatePeerConnection,
-  useLoading,
-  useNoop,
-  useNotify,
-  useCopyToClipboard
+  useNoop
 }

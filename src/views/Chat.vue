@@ -1,25 +1,16 @@
 <template>
-  <RoomHeader :leaved="leaved" :on-leave="onLeave"></RoomHeader>
-  <PIN
-    v-if="!(remoteRoomInfo.roomId || isMatch)"
-    :watch-pin-cb="watchPinCb"
-    type="chat"
-  ></PIN>
-  <Back v-if="!remoteRoomInfo.roomId" :back="onBack"></Back>
-  <Matching
-    v-if="isMatch"
-    :offline="offline"
-    :pause="pause"
-    :rematch="onRematchWithOffline"
-  ></Matching>
-  <Full v-if="isFull" :leave="onLeaveFullRoom"></Full>
+  <Full v-if="isFull"></Full>
 
-  <div class="flex-center flex">
-    <div
-      v-if="remoteRoomInfo.roomId"
-      :class="leaved ? '' : expanded ? 'pb-[calc(56px+13.25rem)]' : 'pb-[56px]'"
-      class="relative min-h-[var(--content-height)] w-full max-w-[var(--room-width)]"
-    >
+  <UModal v-else v-model:open="oepnModal" fullscreen title=" " description=" ">
+    <template #content></template>
+    <template #header>
+      <RoomHeader
+        :online="online"
+        :leaved="leaved"
+        :on-click="onLeave"
+      ></RoomHeader>
+    </template>
+    <template #body>
       <template
         v-for="(
           { type, timestamp, content, sent, stamp, showProgress }, index
@@ -116,93 +107,80 @@
           bg-color="green"
         />
       </template>
-
-      <div
-        v-if="leaved"
-        class="flex-center absolute bottom-0 flex w-full flex-col"
-      >
-        <div class="flex items-center">
-          <q-badge class="mr-2" rounded color="red" />{{
-            otherLeaved ? '对方' : '你'
-          }}已离开房间...
+    </template>
+    <template #footer>
+      <div class="flex w-full items-center justify-center">
+        <div v-if="leaved">
+          <div>{{ otherLeaved ? '对方' : '你' }}已离开房间...</div>
+          <UButton
+            class="mt-4"
+            @click="simpleLeave"
+            :label="isRoomMode ? '重新进入房间' : '重新匹配'"
+          ></UButton>
         </div>
-        <q-btn
-          class="full-width !mt-4"
-          color="primary"
-          :label="isRoomMode ? '重新进入房间' : '重新匹配'"
-          rounded
-          @click="isRoomMode ? onBackPIN() : onRematch()"
-        ></q-btn>
-      </div>
-    </div>
-  </div>
-
-  <div
-    v-if="remoteRoomInfo.roomId && !leaved"
-    class="fixed bottom-0 left-1/2 w-full max-w-[calc(var(--room-width)+2rem)] -translate-x-1/2 rounded-t-[1rem] border-t border-t-[#0d1117] py-4 backdrop-blur-md"
-  >
-    <q-input
-      @keydown.enter="onSendMsg"
-      class="mx-4"
-      standout
-      dense
-      rounded
-      v-model="message"
-      :disable="!online"
-    >
-      <template v-slot:before>
-        <q-btn round icon="mic">
-          <q-tooltip class="bg-x-drawer">语音</q-tooltip>
-        </q-btn>
-      </template>
-      <template v-slot:after>
-        <!-- :disable="!online" -->
-        <q-btn @click="onExpand" round icon="control_point">
-          <q-tooltip class="bg-x-drawer">选项</q-tooltip>
-        </q-btn>
-      </template>
-    </q-input>
-    <div :class="expanded ? 'h-27' : 'h-0'" class="transition-all duration-200">
-      <div class="grid grid-cols-4 gap-y-4 pt-4">
-        <div class="flex-center flex flex-col">
-          <q-btn
-            @click="onOpenFileSelector(photoInputRef)"
-            round
-            size="lg"
-            icon="photo_size_select_actual"
-          ></q-btn>
-          <div>照片</div>
-        </div>
-        <div class="flex-center flex flex-col">
-          <q-btn
-            @click="onOpenFileSelector(videoInputRef)"
-            round
-            size="lg"
-            icon="duo"
-          ></q-btn>
-          <div>视频</div>
-        </div>
-        <div class="flex-center flex flex-col">
-          <q-btn
-            @click="onOpenFileSelector(fileInputRef)"
-            round
-            size="lg"
-            icon="folder"
-          ></q-btn>
-          <div>文件</div>
-        </div>
-        <div class="flex-center flex flex-col">
-          <q-btn
-            @click="onOpenFileSelector(musicInputRef)"
-            round
-            size="lg"
-            icon="music_note"
-          ></q-btn>
-          <div>音乐</div>
+        <div v-else class="flex w-full max-w-(--room-width) flex-col">
+          <div class="flex w-full">
+            <UButton
+              variant="ghost"
+              color="neutral"
+              icon="lucide:mic"
+            ></UButton>
+            <UInput
+              class="grow"
+              @keydown.enter="onSendMsg"
+              v-model="message"
+              :disabled="!online"
+            >
+            </UInput>
+            <UButton
+              variant="ghost"
+              color="neutral"
+              icon="lucide:circle-plus"
+              @click="expanded = true"
+            ></UButton>
+          </div>
+          <UCollapsible v-model:open="expanded">
+            <template #content>
+              <div class="mt-4 grid grid-cols-4 gap-y-4">
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  icon="lucide:file-image"
+                  @click="onOpenFileSelector(photoInputRef)"
+                  label="照片"
+                  class="flex flex-col"
+                ></UButton>
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  icon="lucide:file-video"
+                  @click="onOpenFileSelector(videoInputRef)"
+                  label="视频"
+                  class="flex flex-col"
+                ></UButton>
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  icon="lucide:file"
+                  @click="onOpenFileSelector(fileInputRef)"
+                  label="文件"
+                  class="flex flex-col"
+                ></UButton>
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  icon="lucide:file-music"
+                  @click="onOpenFileSelector(musicInputRef)"
+                  label="音乐"
+                  class="flex flex-col"
+                ></UButton>
+              </div>
+            </template>
+          </UCollapsible>
         </div>
       </div>
-    </div>
-  </div>
+    </template>
+  </UModal>
 
   <input
     ref="photoInputRef"
@@ -239,8 +217,6 @@
 
 <script lang="ts" setup>
 import {
-  useBye,
-  useCancelMatch,
   useClearMessages,
   useClosePC,
   useCreatePeerConnection,
@@ -250,21 +226,16 @@ import {
   useInitDataChannel,
   useInitRtc,
   useInitSocket,
-  useLeaveFullRoom,
   useOtherJoin,
   useReceiveFile,
   useScrollToBottom,
   useSendFile,
-  useWatchPinCb,
-  useLeaveRoom,
   useJoined,
-  useBackPIN,
-  useInitSocketForRoom,
-  useRematchWithOffline,
+  useMounted,
   useBeforeUnmount,
-  useMatched,
-  useRematch,
-  useMounted
+  useBye,
+  useLeave,
+  useExportFile
 } from '@/hooks'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -272,14 +243,14 @@ import { received, receiving, sending, sent } from '@/const'
 
 import type { Socket } from 'socket.io-client'
 import type { extendedFiles, fileTypes, receivedFiles } from '@/types'
-import { exportFile } from 'quasar'
+// import { exportFile } from 'quasar'
 import { useRoomStore, useUserInfoStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { updateLatestRoom, getLatestRoom, isExitRoom } from '@/apis/latest-room'
 
-let timer = null
 let lastMsgTimer = null
 let lastMsgStampIndex = 0
+const oepnModal = ref(true)
 const makingOffer = ref(false)
 const polite = ref(true)
 let avatar = 'https://cdn.quasar.dev/img/avatar4.jpg'
@@ -290,26 +261,38 @@ let dataChannel: RTCDataChannel | null = null
 const flag = ref(false)
 const message = ref('')
 const expanded = ref(false)
-const { path, query } = useRoute()
-const isRoomMode = path === '/room/chat'
+const {
+  path,
+  query,
+  meta: { tab, parentPath }
+} = useRoute()
+const isRoomMode = tab === 'room'
 const router = useRouter()
 const isReconnect = ref(false)
-const { online, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
+const online = ref(false)
+const { remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
-const latestRoomInfo = (await getLatestRoom()).data
-// 如果 latestId 有值，说明自身还没离开房间
-const latestId = latestRoomInfo?.latestId
-latestId ? (remoteRoomInfo.value = latestRoomInfo) : null
-const hasRemoteRoomId = Boolean(latestId)
-const isExit = hasRemoteRoomId ? (await isExitRoom(latestId)).data : false
+let hasRemoteRoomId = false
+let isExit = false
+const updateRoomInfo = async () => {
+  const latestRoomInfo = (await getLatestRoom()).data
+  // 如果 latestId 有值，说明自身还没离开房间
+  const latestId = latestRoomInfo?.latestId
+  hasRemoteRoomId = Boolean(latestId)
+
+  if (hasRemoteRoomId) {
+    remoteRoomInfo.value = latestRoomInfo
+    isExit = (await isExitRoom(latestId)).data
+    latestRoomInfo.inRoom = !isExit
+  }
+}
+remoteRoomInfo.value.skipRequest ? null : await updateRoomInfo()
 let _remoteRoomInfo = remoteRoomInfo.value
-_remoteRoomInfo.inRoom = latestId && !isExit
 _remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
 // 双方中任意一方离开时，值会修改为 true
 const leaved = ref(isExit)
 const otherLeaved = ref(isExit)
-const isMatch = ref(path === '/match/chat' && !_remoteRoomInfo.roomId)
 const db = await useGetDB()
 const minute = 60 * 1000
 const fiveMins = 5 * minute
@@ -332,16 +315,12 @@ const inReceving = ref(false)
 const receivedFiles: receivedFiles = ref([])
 const sendFiles = ref<extendedFiles>([])
 const receiveStartTime = ref(0)
-const offline = ref(false)
 const isFull = ref(false)
-const pause = ref(false)
-
-const onLeaveFullRoom = () => useLeaveFullRoom(leaved, isFull)
 
 const onDownload = (url, filename) => {
   fetch(url)
     .then(res => res.blob())
-    .then(blob => exportFile(filename, blob))
+    .then(blob => useExportFile(filename, blob))
 }
 
 const onOpenFileSelector = target => target.click()
@@ -410,8 +389,6 @@ const onPhotoInputChange = async () => {
   sendFile(files as unknown as extendedFiles, 'image')
   photoInput.value = ''
 }
-
-const onExpand = () => (expanded.value = !expanded.value)
 
 const formatTimestamp = (timestamp: number) => {
   // TODO: 更久远的记录显示日期甚至年份
@@ -612,20 +589,6 @@ const onFileMetadata = async (roomId: string, data: any) => {
   socket.emit('receive-file-metadata', roomId, null)
 }
 
-// TODO: 和 file-transfer 合并
-const initPC = () => {
-  pc = useCreatePeerConnection(
-    isRoomMode ? '/room/chat' : '/match/chat',
-    socket,
-    _remoteRoomInfo,
-    online,
-    () => {}
-  )
-  pc.ondatachannel = onReceiveMsg
-  dataChannel = useInitDataChannel(pc)
-  return pc
-}
-
 const formatTimeAgo = timestamp => {
   const diff = Date.now() - timestamp
 
@@ -647,6 +610,20 @@ const updateLastMsgStamp = () => {
     const lastMsg = _messageList[lastMsgStampIndex]
     lastMsg.stamp = formatTimeAgo(lastMsg.timestamp)
   }
+}
+
+// TODO: 和 file-transfer 合并
+const initPC = () => {
+  pc = useCreatePeerConnection(
+    isRoomMode ? '/room/chat' : '/match/chat',
+    socket,
+    _remoteRoomInfo,
+    online,
+    () => {}
+  )
+  pc.ondatachannel = onReceiveMsg
+  dataChannel = useInitDataChannel(pc)
+  return pc
 }
 
 // 当自己加入房间时触发
@@ -672,61 +649,36 @@ const onOtherJoin = () =>
     _userInfo
   )
 
-const onDisconnect = () =>
-  useDisconnect(pc, isMatch, offline, leaved, isReconnect)
+const onDisconnect = () => useDisconnect(pc, leaved, isReconnect)
 
 const onRtc = (roomId: string, data: any) =>
   useInitRtc(pc, socket, roomId, data, makingOffer, polite, _userInfo)
 
-const onMatched = data =>
-  useMatched(
-    data,
-    socket,
-    path,
-    _remoteRoomInfo,
-    isMatch,
-    router,
-    pause,
-    'chat'
-  )
-
-const onLeave = async () => useLeaveRoom(socket, _remoteRoomInfo.roomId)
-
-const onBackPIN = async () => useBackPIN(_exitRoom, router)
-
-const onBye = () => useBye(exitRoom, otherLeaved)
-
-const onRematch = () =>
-  useRematch(_exitRoom, initSocket, onMatched, router, isMatch, 'chat')
-
-const onRematchWithOffline = () =>
-  useRematchWithOffline(initSocket, onMatched, offline, 'chat')
-
-const _exitRoom = async () => {
-  if (!_remoteRoomInfo.inRoom) {
-    await exitRoom()
-  }
-
-  messageList.value = []
+const simpleLeave = () => {
   _remoteRoomInfo.roomId = _remoteRoomInfo.path = _remoteRoomInfo.latestId = ''
   _remoteRoomInfo.inRoom = false
-  leaved.value = otherLeaved.value = false
+  router.replace(parentPath)
 }
 
-const exitRoom = async () => {
+// 双方已建立连接后，其中一方离开
+const leaveAfterConnected = async () => {
   useClosePC(pc)
   socket.disconnect()
+  // 清空房间信息
   await useClearMessages(_remoteRoomInfo.roomId)
   await updateLatestRoom()
-  leaved.value = true
-  online.value = false
-  otherInfo.value = null
   useScrollToBottom()
+  leaved.value = true
+  otherInfo.value = null
+  online.value = false
 }
 
-const onReceiveFileMetadata = () => (flag.value = true)
+// 主动离开
+const onLeave = async close => {
+  useLeave(close, _remoteRoomInfo, socket, simpleLeave)
+}
 
-const onSavedFile = () => (flag.value = true)
+const onBye = async () => useBye(leaveAfterConnected, otherLeaved)
 
 const initSocket = () => {
   socket = useInitSocket(
@@ -737,38 +689,25 @@ const initSocket = () => {
     isReconnect,
     _remoteRoomInfo.roomId,
     isFull,
-    exitRoom
+    leaveAfterConnected
   )
   // 其他人离开房间
   socket.on('bye', onBye)
   socket.on('file-metadata', onFileMetadata)
   socket.on('receive-file-metadata', onReceiveFileMetadata)
   socket.on('saved-file', onSavedFile)
+  socket.emit('join', _remoteRoomInfo.roomId)
 
   return socket
 }
 
+const onReceiveFileMetadata = () => (flag.value = true)
+
+const onSavedFile = () => (flag.value = true)
+
 onMounted(async () => {
-  useMounted(
-    initSocket,
-    onMatched,
-    router,
-    hasRemoteRoomId,
-    path,
-    _remoteRoomInfo,
-    isMatch,
-    'chat'
-  )
+  useMounted(initSocket, router, hasRemoteRoomId, path, _remoteRoomInfo)
 })
 
-onBeforeUnmount(() => {
-  useBeforeUnmount(socket)
-})
-
-const watchPinCb = (pin: string) => {
-  useWatchPinCb('chat', _remoteRoomInfo, pin, path, router)
-  useInitSocketForRoom(initSocket, _remoteRoomInfo.roomId)
-}
-
-const onBack = () => useCancelMatch(isMatch.value, timer, router)
+onBeforeUnmount(() => useBeforeUnmount(socket))
 </script>

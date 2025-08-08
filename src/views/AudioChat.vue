@@ -1,146 +1,152 @@
 <template>
-  <RoomHeader :leaved="leaved" :on-leave="onLeave"></RoomHeader>
-  <PIN
-    v-if="!(remoteRoomInfo.roomId || isMatch)"
-    type="audio-chat"
-    :watch-pin-cb="watchPinCb"
-  ></PIN>
-  <Back v-if="!remoteRoomInfo.roomId" :back="onBack"></Back>
-  <Matching
-    v-if="isMatch"
-    :offline="offline"
-    :pause="pause"
-    :rematch="onRematchWithOffline"
-  ></Matching>
-  <Full v-if="isFull" :leave="onLeaveFullRoom"></Full>
+  <Full v-if="isFull"></Full>
 
-  <div class="flex-center flex">
-    <div
-      v-if="remoteRoomInfo.roomId"
-      class="relative h-[var(--content-height)] w-full max-w-[var(--room-width)]"
-    >
-      <div v-if="!leaved" class="flex-center flex h-full flex-col">
-        <div class="text-base">
-          {{ online ? '通话中...' : '等待对方接通...' }}
-        </div>
-        <div
-          :class="
-            hasMic && hasSpeaker
-              ? 'grid-cols-1'
-              : hasMic || hasSpeaker
-                ? 'grid-cols-2'
-                : 'grid-cols-3'
-          "
-          class="mt-16 grid"
-        >
-          <div v-if="!hasMic" class="flex-center relative flex flex-col">
-            <q-btn
-              round
-              :class="micOpen ? 'bg-white' : '!bg-gray-900'"
-              class="text-black"
-              size="lg"
-              :icon="micOpen ? 'mic' : 'mic_off'"
-              @click="updateMicStatus"
-            ></q-btn>
-            <q-btn-dropdown
-              class="!mt-4"
-              :label="`麦克风已${micOpen ? '开' : '关'}`"
+  <UModal v-else v-model:open="oepnModal" fullscreen title=" " description=" ">
+    <template #content></template>
+    <template #header>
+      <RoomHeader
+        :online="online"
+        :leaved="leaved"
+        :on-click="onLeave"
+      ></RoomHeader>
+    </template>
+    <template #body>
+      <div v-if="!leaved" class="flex h-full items-center justify-center">
+        <div class="relative w-full max-w-[var(--room-width)]">
+          <div class="flex-center flex h-full flex-col">
+            <div class="text-center">
+              {{ online ? '通话中...' : '等待对方接通...' }}
+            </div>
+            <div
+              :class="
+                hasMic && hasSpeaker
+                  ? 'grid-cols-1'
+                  : hasMic || hasSpeaker
+                    ? 'grid-cols-2'
+                    : 'grid-cols-3'
+              "
+              class="mt-16 grid"
             >
-              <q-list>
-                <q-item
-                  v-for="(item, index) in micOptions"
-                  clickable
-                  v-close-popup
-                  @click="updateMicLabel(item)"
-                  :key="index"
-                  :disable="!micOpen"
-                >
-                  <q-item-section avatar>
-                    <q-icon :name="micLabel === item ? 'done' : ''"></q-icon>
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label>{{ item }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-              </q-list>
-            </q-btn-dropdown>
-          </div>
-          <div class="flex-center flex flex-col">
-            <q-btn
-              size="lg"
-              icon="call_end"
-              ref="leaveBtnRef"
-              @click="onLeave"
-              round
-              class="!bg-red-400 text-black"
-            ></q-btn>
-            <q-btn label="取消" class="!mt-4"></q-btn>
-          </div>
-          <div v-if="!hasSpeaker" class="flex-center relative flex flex-col">
-            <q-btn
-              round
-              :class="speakerOpen ? 'bg-white' : '!bg-gray-900'"
-              class="group bg-white text-black"
-              size="lg"
-              :icon="speakerOpen ? 'volume_up' : 'volume_off'"
-              @click="updateSpeakerStatus"
-            >
-            </q-btn>
-            <q-btn-dropdown
-              class="!mt-4"
-              :label="`扬声器已${speakerOpen ? '开' : '关'}`"
-            >
-              <q-list>
-                <q-item
-                  v-for="(item, index) in speakerOptions"
-                  clickable
-                  v-close-popup
-                  @click="updateSpeakerLabel(item)"
-                  :key="index"
-                  :disable="!speakerOpen"
-                >
-                  <q-item-section avatar>
-                    <q-icon
-                      :name="speakerLabel === item ? 'done' : ''"
-                    ></q-icon>
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label>{{ item }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-              </q-list>
-            </q-btn-dropdown>
-            <q-slider
-              :disable="!speakerOpen"
-              class="absolute -bottom-6 px-4"
-              v-model="volume"
-              :min="0"
-              :max="1"
-              :step="0.1"
-              label
-            />
+              <div
+                v-if="!hasMic"
+                class="flex flex-col items-center justify-center"
+              >
+                <UButton
+                  class="flex flex-col"
+                  @click="updateMicStatus"
+                  :icon="micOpen ? 'lucide:mic' : 'lucide:mic-off'"
+                  variant="ghost"
+                  :color="micOpen ? 'neutral' : 'info'"
+                  :ui="{ label: 'mt-4' }"
+                ></UButton>
+                <div class="mt-4 flex items-center">
+                  <div class="mr-2 text-sm">
+                    麦克风已{{ micOpen ? '开' : '关' }}
+                  </div>
+                  <UDropdownMenu
+                    :disabled="!micOpen"
+                    :items="_micOptions"
+                    :ui="{
+                      content: 'w-80'
+                    }"
+                  >
+                    <UButton
+                      icon="lucide:chevron-down"
+                      color="neutral"
+                      variant="ghost"
+                    />
+                    <template #item="{ item: { label } }">
+                      <div
+                        class="flex w-full justify-between"
+                        @click="updateMicLabel(label)"
+                      >
+                        <div>{{ label }}</div>
+                        <UIcon
+                          v-if="micLabel === label"
+                          name="i-lucide-badge-check"
+                          class="text-primary size-5"
+                        />
+                      </div>
+                    </template>
+                  </UDropdownMenu>
+                </div>
+              </div>
+              <div class="flex flex-col items-center justify-center">
+                <UButton
+                  class="flex flex-col"
+                  icon="lucide:phone-off"
+                  @click="onLeave"
+                  variant="ghost"
+                  color="error"
+                  :ui="{ label: 'mt-4' }"
+                ></UButton>
+                <div class="text-error mt-4 text-center text-sm">取消</div>
+              </div>
+              <div
+                v-if="!hasSpeaker"
+                class="flex flex-col items-center justify-center"
+              >
+                <UButton
+                  class="flex flex-col"
+                  :icon="speakerOpen ? 'lucide:volume-2' : 'lucide:volume-off'"
+                  @click="updateSpeakerStatus"
+                  variant="ghost"
+                  :color="speakerOpen ? 'neutral' : 'info'"
+                  :ui="{ label: 'mt-4' }"
+                ></UButton>
+                <div class="mt-4 flex items-center">
+                  <div class="mr-2 text-sm">
+                    扬声器已{{ speakerOpen ? '开' : '关' }}
+                  </div>
+                  <UDropdownMenu
+                    :disabled="!speakerOpen"
+                    :items="_speakerOptions"
+                    :ui="{
+                      content: 'w-80'
+                    }"
+                  >
+                    <UButton
+                      icon="lucide:chevron-down"
+                      color="neutral"
+                      variant="ghost"
+                    />
+                    <template #item="{ item: { label } }">
+                      <div
+                        class="flex w-full justify-between"
+                        @click="updateSpeakerLabel(label)"
+                      >
+                        <div>{{ label }}</div>
+                        <UIcon
+                          v-if="speakerLabel === label"
+                          name="i-lucide-badge-check"
+                          class="text-primary size-5"
+                        />
+                      </div>
+                    </template>
+                  </UDropdownMenu>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <div v-else class="flex-center absolute bottom-0 flex w-full flex-col">
-        <div class="flex items-center">
-          <q-badge class="mr-2" rounded color="red" />{{
-            otherLeaved ? '对方' : '你'
-          }}已离开房间...
+    </template>
+    <template #footer>
+      <div class="flex w-full items-center justify-center">
+        <div v-if="leaved">
+          <div>{{ otherLeaved ? '对方' : '你' }}已离开房间...</div>
+          <UButton
+            class="mt-4"
+            @click="simpleLeave"
+            :label="isRoomMode ? '重新进入房间' : '重新匹配'"
+          ></UButton>
         </div>
-        <q-btn
-          class="full-width !mt-4"
-          color="primary"
-          :label="isRoomMode ? '重新进入房间' : '重新匹配'"
-          rounded
-          @click="isRoomMode ? onBackPIN() : onRematch()"
-        ></q-btn>
       </div>
-    </div>
+    </template>
+  </UModal>
 
-    <audio hidden ref="localAudioRef" muted></audio>
-    <audio hidden ref="remoteAudioRef" autoplay></audio>
-  </div>
+  <audio hidden ref="localAudioRef" muted></audio>
+  <audio hidden ref="remoteAudioRef" autoplay></audio>
 </template>
 
 <script lang="ts" setup>
@@ -153,7 +159,6 @@ import {
   useAddMediaStreamToPC,
   useBindMediaStream,
   useBye,
-  useCancelMatch,
   useCloseMediaStreamTracks,
   useClosePC,
   useCreatePeerConnection,
@@ -164,27 +169,20 @@ import {
   useGetUserMedia,
   useInitRtc,
   useInitSocket,
-  useLeaveFullRoom,
-  useNotify,
   useOtherJoin,
   usePauseMediaStreamTracks,
   useResumeMediaStreamTracks,
-  useWatchPinCb,
-  useLeaveRoom,
   useJoined,
-  useBackPIN,
-  useInitSocketForRoom,
-  useRematchWithOffline,
   useBeforeUnmount,
-  useMatched,
-  useRematch,
-  useMounted
+  useMounted,
+  useLeave
 } from '@/hooks'
+
 import { storeToRefs } from 'pinia'
 import { useRoomStore, useUserInfoStore } from '@/store'
 import { updateLatestRoom, getLatestRoom, isExitRoom } from '@/apis/latest-room'
 
-let timer = null
+const oepnModal = ref(true)
 const makingOffer = ref(false)
 const polite = ref(true)
 let localMediaStream: MediaStream | null = null
@@ -203,9 +201,10 @@ const audioOutputLabelsLength = audioOutputLabels.length
 const micLabel = ref(
   audioInputLabelsLength ? (await useGetAudioInput()).label : '未发现麦克风设备'
 )
-const micOptions = reactive([
+const micOptions = [
   ...(audioInputLabelsLength ? audioInputLabels : ['未发现麦克风设备'])
-])
+]
+const _micOptions = micOptions.map(item => ({ label: item, icon: '' }))
 const speakerLabel = ref(
   audioOutputLabelsLength
     ? (await useGetAudioOutput()).label
@@ -214,28 +213,41 @@ const speakerLabel = ref(
 const speakerOptions = reactive([
   ...(audioOutputLabelsLength ? audioOutputLabels : ['未发现扬声器设备'])
 ])
+const _speakerOptions = speakerOptions.map(item => ({ label: item, icon: '' }))
 const volume = ref(1)
 const localAudioRef = ref(null)
 const remoteAudioRef = ref(null)
-const leaveBtnRef = ref(null)
-const { path, query } = useRoute()
-const isRoomMode = path === '/room/audio-chat'
+const {
+  path,
+  query,
+  meta: { tab, parentPath }
+} = useRoute()
+const isRoomMode = tab === 'room'
 const router = useRouter()
 const isReconnect = ref(false)
-const { online, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
+const online = ref(false)
+const { remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
-const latestRoomInfo = (await getLatestRoom()).data
-const latestId = latestRoomInfo?.latestId
-latestId ? (remoteRoomInfo.value = latestRoomInfo) : null
-const hasRemoteRoomId = Boolean(latestId)
-const isExit = hasRemoteRoomId ? (await isExitRoom(latestId)).data : false
+let hasRemoteRoomId = false
+let isExit = false
+const updateRoomInfo = async () => {
+  const latestRoomInfo = (await getLatestRoom()).data
+  // 如果 latestId 有值，说明自身还没离开房间
+  const latestId = latestRoomInfo?.latestId
+  hasRemoteRoomId = Boolean(latestId)
+
+  if (hasRemoteRoomId) {
+    remoteRoomInfo.value = latestRoomInfo
+    isExit = (await isExitRoom(latestId)).data
+    latestRoomInfo.inRoom = !isExit
+  }
+}
+remoteRoomInfo.value.skipRequest ? null : await updateRoomInfo()
 let _remoteRoomInfo = remoteRoomInfo.value
-_remoteRoomInfo.inRoom = latestId && !isExit
 _remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
 const leaved = ref(isExit)
 const otherLeaved = ref(isExit)
-const isMatch = ref(path === '/match/audio-chat' && !_remoteRoomInfo.roomId)
 const micOpen = ref(Boolean(audioInputLabelsLength))
 const speakerOpen = ref(Boolean(audioOutputLabelsLength))
 const hasMic = ref(!audioInputLabelsLength)
@@ -248,16 +260,20 @@ const constraints = {
     autoGainControl: true // 自动增益
   }
 }
-const offline = ref(false)
 const isFull = ref(false)
-const pause = ref(false)
 
-const onLeaveFullRoom = () => useLeaveFullRoom(leaved, isFull)
+const initPC = async () => {
+  pc = useCreatePeerConnection(
+    isRoomMode ? '/room/audio-chat' : '/match/audio-chat',
+    socket,
+    _remoteRoomInfo,
+    online,
+    onTrack
+  )
+  await initLocalMediaStream()
+  return pc
+}
 
-const onRematchWithOffline = () =>
-  useRematchWithOffline(initSocket, onMatched, offline, 'audio-chat')
-
-// 当自己加入房间时触发
 const onJoined = async (_, __, _polite) =>
   useJoined(socket, polite, _remoteRoomInfo.roomId, initPC, _polite)
 
@@ -272,16 +288,11 @@ const onOtherJoin = () =>
     _userInfo
   )
 
-// const onDisconnect = () => useDisconnect(pc, isMatch, offline, leaved, isReconnect)
+// const onDisconnect = () => useDisconnect(pc, leaved, isReconnect)
 
 const onDisconnect = () => {
   // 满员的情况下，不会触发 joined，此时 pc 为 null
   useClosePC(pc)
-
-  if (isMatch.value) {
-    offline.value = true
-    return
-  }
 
   // 关闭本地媒体
   if (localMediaStream) {
@@ -312,63 +323,25 @@ const onTrack = ({ track, streams }) => {
   }
 }
 
-// 服务端中会关闭连接，从而触发 disconnect
-const onLeave = async () => useLeaveRoom(socket, _remoteRoomInfo.roomId)
-
-const onMatched = data =>
-  useMatched(
-    data,
-    socket,
-    path,
-    _remoteRoomInfo,
-    isMatch,
-    router,
-    pause,
-    'audio-chat'
-  )
-
-const onBackPIN = async () => useBackPIN(_exitRoom, router)
-
-const onBye = () => useBye(exitRoom, otherLeaved)
-
-const onRematch = () =>
-  useRematch(_exitRoom, initSocket, onMatched, router, isMatch, 'audio-chat')
-
-const _exitRoom = async () => {
-  if (!_remoteRoomInfo.inRoom) {
-    await exitRoom()
-  }
-
+const simpleLeave = () => {
   _remoteRoomInfo.roomId = _remoteRoomInfo.path = _remoteRoomInfo.latestId = ''
   _remoteRoomInfo.inRoom = false
-  leaved.value = otherLeaved.value = false
+  router.replace(parentPath)
 }
 
-const exitRoom = async () => {
+const leaveAfterConnected = async () => {
   useClosePC(pc)
-
-  if (localMediaStream) {
-    useCloseMediaStreamTracks(localMediaStream)
-  }
-
   socket.disconnect()
   await updateLatestRoom()
   leaved.value = true
-  online.value = false
   otherInfo.value = null
+  online.value = false
 }
 
-const initPC = async () => {
-  pc = useCreatePeerConnection(
-    isRoomMode ? '/room/audio-chat' : '/match/audio-chat',
-    socket,
-    _remoteRoomInfo,
-    online,
-    onTrack
-  )
-  await initLocalMediaStream()
-  return pc
-}
+const onLeave = async close =>
+  useLeave(close, _remoteRoomInfo, socket, simpleLeave)
+
+const onBye = () => useBye(leaveAfterConnected, otherLeaved)
 
 const updateSpeakerLabel = (label: string) => (speakerLabel.value = label)
 
@@ -426,7 +399,7 @@ const initLocalMediaStream = async () => {
     useAddMediaStreamToPC(pc, localMediaStream)
   } catch (err) {
     console.error(err)
-    useNotify('未获取到用户设备', 'negative')
+    console.log('未获取到用户设备')
     micOpen.value = false
     hasMic.value = true
   }
@@ -441,33 +414,19 @@ const initSocket = () => {
     isReconnect,
     _remoteRoomInfo.roomId,
     isFull,
-    exitRoom
+    leaveAfterConnected
   )
   socket.on('bye', onBye)
+  socket.emit('join', _remoteRoomInfo.roomId)
+
   return socket
 }
 
 onMounted(async () => {
-  useMounted(
-    initSocket,
-    onMatched,
-    router,
-    hasRemoteRoomId,
-    path,
-    _remoteRoomInfo,
-    isMatch,
-    'audio-chat'
-  )
+  useMounted(initSocket, router, hasRemoteRoomId, path, _remoteRoomInfo)
 })
 
-onBeforeUnmount(() => {
-  useBeforeUnmount(socket)
-})
-
-const watchPinCb = (pin: string) => {
-  useWatchPinCb('audio-chat', _remoteRoomInfo, pin, path, router)
-  useInitSocketForRoom(initSocket, _remoteRoomInfo.roomId)
-}
+onBeforeUnmount(() => useBeforeUnmount(socket))
 
 watch(volume, v => (remoteAudioRef.value.volume = v))
 
@@ -488,6 +447,4 @@ watch(micLabel, async v => {
   })
   localAudioRef.value.srcObject = localMediaStream
 })
-
-const onBack = () => useCancelMatch(isMatch.value, timer, router)
 </script>

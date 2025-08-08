@@ -1,251 +1,215 @@
 <template>
-  <div class="flex-center flex h-[calc(100vh-2rem)]">
-    <q-stepper
-      v-if="isRegister"
-      class="bg-x-drawer w-full max-w-[var(--room-width)] !rounded-[12px]"
-      v-model="registerStep"
-      ref="registerStepperRef"
-    >
-      <q-step
-        :name="1"
-        title="注册"
-        active-icon="how_to_reg"
-        icon="how_to_reg"
-        :done="registerStep > 1"
-      >
-        <q-input
-          dense
-          placeholder="example@gmail.com"
-          outlined
-          type="email"
-          v-model="registerForm.email"
-          label="邮箱"
-        />
-        <q-input
-          dense
-          :type="isPwd ? 'password' : 'text'"
-          outlined
-          v-model="registerForm.password"
-          label="密码（长度至少为 8 位）"
-          class="mt-4"
-        >
-          <template v-slot:append>
-            <q-icon
-              :name="isPwd ? 'visibility_off' : 'visibility'"
-              class="cursor-pointer"
-              @click="isPwd = !isPwd"
-            />
-          </template>
-        </q-input>
-      </q-step>
-
-      <q-step
-        :name="2"
-        title="验证"
-        active-icon="verified"
-        icon="verified"
-        :done="registerStep > 2"
-      >
-        <div>输入邮箱中收到的验证码</div>
-        <UPinInput
-          class="mt-4"
-          autofocus
-          size="xl"
-          :length="pinLength"
-          v-model="registerPin"
-        />
-      </q-step>
-
-      <template v-slot:navigation>
-        <q-stepper-navigation class="mt-4">
-          <q-btn
-            v-if="registerStep === 1"
-            @click="onRegisterNext"
-            color="primary"
-            label="注册"
-            rounded
-          />
-          <q-btn
-            :class="registerStep === 1 ? '!ml-4' : ''"
-            @click="onCancelRegister"
-            color="primary"
-            label="返回登录"
-            rounded
-          />
-        </q-stepper-navigation>
-      </template>
-    </q-stepper>
-
-    <q-stepper
-      v-if="isLogin"
-      class="bg-x-drawer w-full max-w-[var(--room-width)] !rounded-[12px]"
-      v-model="loginStep"
-      ref="loginStepperRef"
-    >
-      <q-step
-        :name="1"
-        title="登录"
-        active-icon="how_to_reg"
-        icon="how_to_reg"
-        :done="loginStep > 1"
-      >
-        <q-input
-          dense
-          placeholder="example@gmail.com"
-          outlined
-          type="email"
-          v-model="loginForm.email"
-          label="邮箱"
-        />
-        <q-input
-          dense
-          :type="isPwd ? 'password' : 'text'"
-          outlined
-          v-model="loginForm.password"
-          label="密码"
-          class="mt-4"
-        >
-          <template v-slot:append>
-            <q-icon
-              :name="isPwd ? 'visibility_off' : 'visibility'"
-              class="cursor-pointer"
-              @click="isPwd = !isPwd"
-            />
-          </template>
-        </q-input>
-        <div class="text-primary mt-4 flex justify-between">
-          <div @click="onUpdatePassword" class="cursor-pointer underline">
-            忘记密码
-          </div>
-          <div @click="onLoginWithVC" class="cursor-pointer">
-            使用验证码登录
-          </div>
+  <div class="flex h-[calc(100vh-2rem)] w-full items-center justify-center">
+    <div class="bg-elevated w-full max-w-[30rem] rounded-xl p-4">
+      <div class="relative flex items-center justify-center">
+        <UButton
+          @click="backToLogin"
+          v-if="!isLogin"
+          class="absolute left-0"
+          variant="soft"
+          color="neutral"
+          icon="lucide:chevron-left"
+        ></UButton>
+        <div class="text-center font-bold">
+          {{
+            isLogin
+              ? '登录'
+              : isRegister
+                ? '注册'
+                : isLoginWithVC
+                  ? '验证码登录'
+                  : '重置密码'
+          }}
         </div>
-      </q-step>
+      </div>
 
-      <template v-slot:navigation>
-        <q-stepper-navigation class="mt-4">
-          <q-btn @click="onLogin" label="登录" color="primary" rounded />
-          <q-btn
-            @click="onRegister"
-            class="!ml-4"
-            label="注册"
-            color="primary"
-            rounded
-          />
-        </q-stepper-navigation>
-      </template>
-    </q-stepper>
+      <div v-if="isLogin">
+        <UForm :schema="loginSchema" :state="loginForm" class="mt-4 space-y-4">
+          <UFormField name="email">
+            <UInput
+              class="w-full"
+              v-model="loginForm.email"
+              placeholder=""
+              :ui="{ base: 'peer' }"
+            >
+              <label
+                class="text-highlighted peer-focus:text-highlighted peer-placeholder-shown:text-dimmed pointer-events-none absolute -top-2.5 left-0 px-1.5 text-xs font-medium transition-all peer-placeholder-shown:top-1.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-2.5 peer-focus:text-xs peer-focus:font-medium"
+              >
+                <span class="bg-default inline-flex px-1">邮箱</span>
+              </label>
+            </UInput>
+          </UFormField>
+          <UFormField name="password">
+            <UInput
+              class="w-full"
+              v-model="loginForm.password"
+              placeholder=""
+              :type="isPwd ? 'password' : 'text'"
+              :ui="{ base: 'peer' }"
+            >
+              <label
+                class="text-highlighted peer-focus:text-highlighted peer-placeholder-shown:text-dimmed pointer-events-none absolute -top-2.5 left-0 px-1.5 text-xs font-medium transition-all peer-placeholder-shown:top-1.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-2.5 peer-focus:text-xs peer-focus:font-medium"
+              >
+                <span class="bg-default inline-flex px-1">密码</span>
+              </label>
+              <template #trailing>
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  size="sm"
+                  :icon="isPwd ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                  :aria-label="isPwd ? 'Hide password' : 'Show password'"
+                  :aria-pressed="isPwd"
+                  aria-controls="password"
+                  @click="isPwd = !isPwd"
+                />
+              </template>
+            </UInput>
+          </UFormField>
+          <div class="flex justify-between text-sm">
+            <div @click="goResetPassword" class="cursor-pointer underline">
+              忘记密码
+            </div>
+            <div @click="goLoginWithVC" class="cursor-pointer">验证码登录</div>
+          </div>
+          <div class="space-x-2">
+            <UButton @click="onLogin" label="登录" />
+            <UButton @click="goRegister" label="注册" />
+          </div>
+        </UForm>
+      </div>
 
-    <q-stepper
-      v-if="isLoginWithVC"
-      class="bg-x-drawer w-full max-w-[var(--room-width)] !rounded-[12px]"
-      v-model="loginWithVCStep"
-      ref="loginWithVCStepperRef"
-    >
-      <q-step
-        :name="1"
-        title="邮箱"
-        active-icon="email"
-        icon="email"
-        :done="loginWithVCStep > 1"
-      >
-        <q-input
-          dense
-          placeholder="example@gmail.com"
-          outlined
-          type="email"
-          v-model="loginWithVCForm.email"
-          label="邮箱"
-        />
-      </q-step>
-
-      <q-step
-        :name="2"
-        title="验证"
-        active-icon="verified"
-        icon="verified"
-        :done="loginWithVCStep > 2"
-      >
-        <div>
-          <div>输入邮箱中收到的验证码</div>
+      <div v-if="isRegister">
+        <UForm
+          :schema="loginSchema"
+          :state="registerForm"
+          class="mt-4 space-y-4"
+        >
           <UPinInput
-            class="mt-4"
+            class="flex justify-center"
             autofocus
-            size="xl"
+            v-if="hasRegisterPin"
+            :length="pinLength"
+            v-model="registerPin"
+          />
+          <UFormField v-if="!hasRegisterPin" name="email">
+            <UInput
+              class="w-full"
+              v-model="registerForm.email"
+              placeholder=""
+              :ui="{ base: 'peer' }"
+            >
+              <label
+                class="text-highlighted peer-focus:text-highlighted peer-placeholder-shown:text-dimmed pointer-events-none absolute -top-2.5 left-0 px-1.5 text-xs font-medium transition-all peer-placeholder-shown:top-1.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-2.5 peer-focus:text-xs peer-focus:font-medium"
+              >
+                <span class="bg-default inline-flex px-1">邮箱</span>
+              </label>
+            </UInput>
+          </UFormField>
+          <UFormField v-if="!hasRegisterPin" name="password">
+            <UInput
+              class="w-full"
+              v-model="registerForm.password"
+              placeholder=""
+              :type="isPwd ? 'password' : 'text'"
+              :ui="{ base: 'peer' }"
+            >
+              <label
+                class="text-highlighted peer-focus:text-highlighted peer-placeholder-shown:text-dimmed pointer-events-none absolute -top-2.5 left-0 px-1.5 text-xs font-medium transition-all peer-placeholder-shown:top-1.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-2.5 peer-focus:text-xs peer-focus:font-medium"
+              >
+                <span class="bg-default inline-flex px-1">密码</span>
+              </label>
+              <template #trailing>
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  size="sm"
+                  :icon="isPwd ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                  :aria-label="isPwd ? 'Hide password' : 'Show password'"
+                  :aria-pressed="isPwd"
+                  aria-controls="password"
+                  @click="isPwd = !isPwd"
+                />
+              </template>
+            </UInput>
+          </UFormField>
+          <UButton
+            v-if="!hasRegisterPin"
+            @click="sendRegisterPin"
+            label="发送验证码"
+          />
+        </UForm>
+      </div>
+
+      <div v-if="isResetPassword">
+        <UForm
+          :schema="emailSchema"
+          :state="resetPasswordForm"
+          class="mt-4 space-y-4"
+        >
+          <UFormField name="email">
+            <UInput
+              class="w-full"
+              v-model="resetPasswordForm.email"
+              placeholder=""
+              :ui="{ base: 'peer' }"
+            >
+              <label
+                class="text-highlighted peer-focus:text-highlighted peer-placeholder-shown:text-dimmed pointer-events-none absolute -top-2.5 left-0 px-1.5 text-xs font-medium transition-all peer-placeholder-shown:top-1.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-2.5 peer-focus:text-xs peer-focus:font-medium"
+              >
+                <span class="bg-default inline-flex px-1">邮箱</span>
+              </label>
+            </UInput>
+          </UFormField>
+          <UButton
+            @click="onResetPassword"
+            :label="`${hasResetPasswordPin ? '已' : ''}发送链接`"
+          />
+        </UForm>
+      </div>
+
+      <div v-if="isLoginWithVC">
+        <UForm
+          :schema="emailSchema"
+          :state="loginWithVCForm"
+          class="mt-4 space-y-4"
+        >
+          <UPinInput
+            class="flex justify-center"
+            autofocus
+            v-if="hasLoginWithVCPin"
             :length="pinLength"
             v-model="loginWithVCPin"
           />
-        </div>
-      </q-step>
-
-      <template v-slot:navigation>
-        <q-stepper-navigation class="mt-4">
-          <q-btn
-            v-if="loginWithVCStep === 1"
-            @click="onLoginWithVCNext"
+          <UFormField v-else name="email">
+            <UInput
+              class="w-full"
+              v-model="loginWithVCForm.email"
+              placeholder=""
+              :ui="{ base: 'peer' }"
+            >
+              <label
+                class="text-highlighted peer-focus:text-highlighted peer-placeholder-shown:text-dimmed pointer-events-none absolute -top-2.5 left-0 px-1.5 text-xs font-medium transition-all peer-placeholder-shown:top-1.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-2.5 peer-focus:text-xs peer-focus:font-medium"
+              >
+                <span class="bg-default inline-flex px-1">邮箱</span>
+              </label>
+            </UInput>
+          </UFormField>
+          <UButton
+            v-if="!hasLoginWithVCPin"
+            @click="onLoginWithVC"
             label="发送验证码"
-            color="primary"
-            rounded
           />
-          <q-btn
-            :class="loginWithVCStep === 1 ? '!ml-4' : ''"
-            @click="onCancleLoginWithVC"
-            label="使用密码登录"
-            color="primary"
-            rounded
-          />
-        </q-stepper-navigation>
-      </template>
-    </q-stepper>
-
-    <q-stepper
-      v-if="isUpdatePassword"
-      class="bg-x-drawer w-full max-w-[var(--room-width)] !rounded-[12px]"
-      v-model="updatePasswordStep"
-    >
-      <q-step
-        :name="1"
-        title="重置密码"
-        active-icon="email"
-        icon="email"
-        :done="updatePasswordStep > 1"
-      >
-        <q-input
-          dense
-          placeholder="example@gmail.com"
-          outlined
-          type="email"
-          v-model="updatePasswordForm.email"
-          label="邮箱"
-        />
-      </q-step>
-
-      <template v-slot:navigation>
-        <q-stepper-navigation class="mt-4">
-          <q-btn
-            @click="onUpdatePasswordNext"
-            color="primary"
-            :label="sentResetPasswordURL ? '已发送验证码' : '发送验证码'"
-            rounded
-          />
-          <q-btn
-            class="!ml-4"
-            @click="onCancelUpadtePassword"
-            color="primary"
-            label="返回登录"
-            rounded
-          />
-        </q-stepper-navigation>
-      </template>
-    </q-stepper>
+        </UForm>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { watch, reactive, ref } from 'vue'
 
-import { useEncryptUserInfo, useNotify } from '@/hooks'
+import { useEncryptUserInfo } from '@/hooks'
 import { useRouter } from 'vue-router'
 import { useUserInfoStore } from '@/store'
 import { storeToRefs } from 'pinia'
@@ -259,19 +223,21 @@ import {
   sendResetPasswordURL,
   validatePin
 } from '@/apis/auth'
+import * as z from 'zod'
 
-const registerPin = ref([])
-const updatePasswordPin = ref([])
-const loginWithVCPin = ref([])
+const emailSchema = z.object({
+  email: z.string().email('邮箱格式不正确')
+})
+
+const loginSchema = z.object({
+  email: z.string().email('邮箱格式不正确'),
+  password: z.string().min(8, '密码长度至少为 8 位')
+})
+
+const toast = useToast()
 const pinLength = 4
-const registerStep = ref(1)
-const loginStep = ref(1)
-const loginWithVCStep = ref(1)
-const updatePasswordStep = ref(1)
-const registerStepperRef = ref(null)
-const loginStepperRef = ref(null)
-const loginWithVCStepperRef = ref(null)
-const updatePasswordStepperRef = ref(null)
+const registerPin = ref([])
+const loginWithVCPin = ref([])
 const loginForm = reactive({
   email: '',
   password: ''
@@ -284,66 +250,77 @@ const loginWithVCForm = reactive({
   email: '',
   code: ''
 })
-const updatePasswordForm = reactive({ email: '' })
+const resetPasswordForm = reactive({ email: '' })
 const isLogin = ref(true)
 const isRegister = ref(false)
 const router = useRouter()
 const { userInfo } = storeToRefs(useUserInfoStore())
-const isUpdatePassword = ref(false)
+const isResetPassword = ref(false)
 const isLoginWithVC = ref(false)
 const sentResetPasswordURL = ref(false)
 const isPwd = ref(true)
+const hasRegisterPin = ref(false)
+const hasResetPasswordPin = ref(false)
+const hasLoginWithVCPin = ref(false)
 
-const onLoginWithVCNext = async () => {
-  const _step = loginWithVCStep.value
-
-  if (_step === 1) {
-    const { email } = loginWithVCForm
-
-    if (!isValidEmail(email)) {
-      return useNotify('邮箱格式不正确', 'negative')
-    }
-
-    try {
-      const { data: existed } = await isExistedUser(email)
-
-      if (!existed) {
-        throw new Error('邮箱不存在')
-      }
-
-      const { data: has } = await hasPin(email, 'login')
-
-      if (has) {
-        useNotify('已经发送过验证码')
-      } else {
-        const { message } = await sendPin(email, 'login')
-        useNotify(message)
-      }
-
-      loginWithVCNext()
-    } catch (error) {
-      useNotify(error, 'negative')
-    }
-  }
-}
-
-const onUpdatePassword = () => {
-  isLogin.value = false
-  isUpdatePassword.value = true
-}
-
-const onCancelUpadtePassword = () => {
-  isUpdatePassword.value = false
-  updatePasswordStep.value = 1
+const backToLogin = () => {
+  isResetPassword.value = false
+  isLoginWithVC.value = false
+  isRegister.value = false
+  hasRegisterPin.value = false
+  hasLoginWithVCPin.value = false
   isLogin.value = true
 }
 
-const onUpdatePasswordNext = async () => {
-  const { email } = updatePasswordForm
-
-  if (!isValidEmail(email)) {
-    return useNotify('邮箱格式不正确', 'negative')
+const onLoginWithVC = async () => {
+  if (!emailSchema.safeParse(loginWithVCForm).success) {
+    return
   }
+
+  const { email } = loginWithVCForm
+
+  try {
+    const { data: existed } = await isExistedUser(email)
+
+    if (!existed) {
+      throw new Error('邮箱不存在')
+    }
+
+    const { data: has } = await hasPin(email, 'login')
+
+    if (has) {
+      toast.add({
+        title: '已经发送过验证码',
+        color: 'info'
+      })
+    } else {
+      const { message } = await sendPin(email, 'login')
+      toast.add({
+        title: message,
+        color: 'success'
+      })
+    }
+
+    hasLoginWithVCPin.value = true
+  } catch (error) {
+    toast.add({
+      title: error.message,
+      color: 'error'
+    })
+  }
+}
+
+const goResetPassword = () => {
+  isLogin.value = false
+  isResetPassword.value = true
+}
+
+const onResetPassword = async () => {
+  if (!emailSchema.safeParse(resetPasswordForm).success) {
+    return
+  }
+
+  const { email } = resetPasswordForm
 
   try {
     const { data: existed } = await isExistedUser(email)
@@ -356,96 +333,75 @@ const onUpdatePasswordNext = async () => {
 
     if (has) {
       sentResetPasswordURL.value = true
-      useNotify('已经发送过验证码')
+      toast.add({
+        title: '已经发送过验证码',
+        color: 'info'
+      })
     } else {
       const { message } = await sendResetPasswordURL(email)
       sentResetPasswordURL.value = true
-      useNotify(message)
+      toast.add({
+        title: message,
+        color: 'success'
+      })
     }
+    hasResetPasswordPin.value = true
   } catch (error) {
-    useNotify(error, 'negative')
+    toast.add({
+      title: error.message,
+      color: 'error'
+    })
   }
 }
 
-const isValidEmail = email =>
-  /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)
+const sendRegisterPin = async () => {
+  if (!loginSchema.safeParse(registerForm).success) {
+    return
+  }
 
-const isValidPassword = password => password.length >= 8
+  const { email } = registerForm
 
-const onRegisterNext = async () => {
-  const _step = registerStep.value
+  try {
+    // 先判断邮箱是否已经被注册
+    const { data: existed } = await isExistedUser(email)
 
-  if (_step === 1) {
-    const { email, password } = registerForm
-
-    if (!isValidEmail(email)) {
-      return useNotify('邮箱格式不正确', 'negative')
+    if (existed) {
+      throw new Error('邮箱已被注册')
     }
 
-    if (!isValidPassword(password)) {
-      return useNotify('密码要求长度至少为 8 位', 'negative')
+    // 如果邮箱没有被注册，再判断是不是给这个邮箱发送过验证码并且还没过期
+    const { data: has } = await hasPin(email, 'register')
+
+    // 验证码存在且未过期
+    if (has) {
+      // 直接进行到下一步让用户输入验证码
+      // TODO: 解决之前的密码已经保存在 redis 中，此次输入的密码是无用的
+      toast.add({ title: '已经发送过验证码', color: 'info' })
+    } else {
+      const encryptedUserInfo = await useEncryptUserInfo(registerForm)
+      const { message } = await register(encryptedUserInfo)
+      toast.add({ title: message, color: 'success' })
     }
 
-    try {
-      // 先判断邮箱是否已经被注册
-      const { data: existed } = await isExistedUser(email)
-
-      if (existed) {
-        throw new Error('邮箱已被注册')
-      }
-
-      // 如果邮箱没有被注册，再判断是不是给这个邮箱发送过验证码并且还没过期
-      const { data: has } = await hasPin(email, 'register')
-
-      // 验证码存在且未过期
-      if (has) {
-        // 直接进行到下一步让用户输入验证码
-        // TODO: 解决之前的密码已经保存在 redis 中，此次输入的密码是无用的
-        useNotify('已经发送过验证码')
-      } else {
-        const encryptedUserInfo = await useEncryptUserInfo(registerForm)
-        const { message } = await register(encryptedUserInfo)
-        useNotify(message)
-      }
-
-      registerNext()
-    } catch (error) {
-      useNotify(error.message, 'negative')
-    }
+    hasRegisterPin.value = true
+  } catch (error) {
+    toast.add({ title: error.message, color: 'error' })
   }
 }
 
-const onCancelRegister = () => {
-  isRegister.value = false
-  registerStep.value = 1
-  isLogin.value = true
-}
-
-const onRegister = () => {
+const goRegister = () => {
   isLogin.value = false
   isRegister.value = true
 }
 
-const onLoginWithVC = () => {
+const goLoginWithVC = () => {
   isLogin.value = false
   isLoginWithVC.value = true
 }
 
-const onCancleLoginWithVC = () => {
-  isLoginWithVC.value = false
-  loginWithVCStep.value = 1
-  isLogin.value = true
-}
-
 const onLogin = async () => {
-  const { email, password } = loginForm
-
-  if (!isValidEmail(email)) {
-    return useNotify('邮箱格式不正确', 'negative')
-  }
-
-  if (!isValidPassword(password)) {
-    return useNotify('密码要求长度至少为 8 位', 'negative')
+  if (!loginSchema.safeParse(loginForm).success) {
+    return
   }
 
   try {
@@ -458,17 +414,18 @@ const onLogin = async () => {
     localStorage.setItem('token', token)
     userInfo.value = _userInfo
     router.replace('/match')
-    useNotify('登录成功')
+    toast.add({
+      title: '登录成功',
+      color: 'success'
+    })
   } catch (error) {
-    useNotify(error, 'negative')
+    toast.add({
+      title: '登录失败',
+      description: error.message,
+      color: 'error'
+    })
   }
 }
-
-const loginWithVCNext = () => loginWithVCStepperRef.value.next()
-
-const registerNext = () => registerStepperRef.value.next()
-
-const updatePasswordNext = () => updatePasswordStepperRef.value.next()
 
 watch(registerPin, async v => {
   if (v.length === pinLength) {
@@ -479,22 +436,17 @@ watch(registerPin, async v => {
       localStorage.setItem('token', token)
       userInfo.value = _userInfo
       router.replace('/match')
-      useNotify('登录成功')
+      toast.add({
+        title: '登录成功',
+        color: 'success'
+      })
     } catch (error) {
-      useNotify(error, 'negative')
+      toast.add({
+        title: '注册失败',
+        description: error.message,
+        color: 'error'
+      })
       registerPin.value = []
-    }
-  }
-})
-
-watch(updatePasswordPin, async v => {
-  if (v.length === pinLength) {
-    try {
-      await validatePin('update-password', updatePasswordForm.email, v.join(''))
-      updatePasswordNext()
-    } catch (error) {
-      useNotify(error, 'negative')
-      updatePasswordPin.value = []
     }
   }
 })
@@ -508,17 +460,17 @@ watch(loginWithVCPin, async v => {
       localStorage.setItem('token', token)
       userInfo.value = _userInfo
       router.replace('/match')
-      useNotify('登录成功')
+      toast.add({
+        title: '登录成功',
+        color: 'success'
+      })
     } catch (error) {
-      useNotify(error, 'negative')
+      toast.add({
+        title: error.message,
+        color: 'error'
+      })
       loginWithVCPin.value = []
     }
   }
 })
 </script>
-
-<style>
-.q-stepper--horizontal .q-stepper__step-inner {
-  padding-bottom: 0;
-}
-</style>

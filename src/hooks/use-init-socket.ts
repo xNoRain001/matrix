@@ -1,5 +1,4 @@
 import { io } from 'socket.io-client'
-import useNotify from './use-notify'
 import type { Ref } from 'vue'
 
 const useInitSocket = (
@@ -10,7 +9,7 @@ const useInitSocket = (
   isReconnect: Ref<boolean>,
   roomId: string,
   isFull: Ref<boolean>,
-  exitRoom: Function
+  leaveAfterConnected: Function
 ) => {
   // @ts-ignore
   const socket = io.connect(import.meta.env.VITE_API_BASE_URL, {
@@ -18,13 +17,12 @@ const useInitSocket = (
   })
 
   const onFull = (/** roomId, data */) => {
-    useNotify('房间已经满员了')
     isFull.value = true
     socket.disconnect()
   }
 
   const onLeaved = () => {
-    exitRoom()
+    leaveAfterConnected()
   }
 
   // 不断开 socket 连接，30 s 内没人进入再返回主页
@@ -32,7 +30,7 @@ const useInitSocket = (
   // const onBye = () => {}
 
   const onConnectError = () => {
-    useNotify('连接服务器失败...', 'negative')
+    console.log('连接服务器失败...')
   }
 
   socket.on('connect', () => {
