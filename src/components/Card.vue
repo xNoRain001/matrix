@@ -1,31 +1,36 @@
 <template>
-  <div>
-    <div class="grid grid-cols-2 gap-4">
-      <div
-        v-for="({ icon, title, desc, matchType, to }, index) in list"
-        :key="index"
-      >
+  <div class="relative">
+    <div>
+      <div class="flex justify-end">
+        <USwitch v-model="isMatch" :label="`${isMatch ? '匹配' : '房间'}`" />
+      </div>
+      <div class="mt-4 grid grid-cols-2 gap-4">
         <div
-          @click="onClick(matchType, to)"
-          class="bg-elevated hover:bg-accented h-full cursor-pointer rounded-xl p-6"
+          v-for="({ icon, title, desc, matchType, to }, index) in list"
+          :key="index"
         >
           <div
-            class="bg-default flex h-12 w-12 items-center justify-center rounded-xl text-2xl"
+            @click="onClick(matchType, to)"
+            class="bg-elevated hover:bg-accented h-full cursor-pointer rounded-xl p-6"
           >
-            {{ icon }}
+            <div
+              class="bg-default flex h-12 w-12 items-center justify-center rounded-xl text-2xl"
+            >
+              {{ icon }}
+            </div>
+            <h2 class="mt-5 leading-6 font-bold">
+              {{ title }}
+            </h2>
+            <p class="mt-2 text-sm leading-6">
+              {{ desc }}
+            </p>
           </div>
-          <h2 class="mt-5 leading-6 font-bold">
-            {{ title }}
-          </h2>
-          <p class="mt-2 text-sm leading-6">
-            {{ desc }}
-          </p>
         </div>
       </div>
     </div>
 
     <UModal
-      v-if="isRoomMode"
+      v-if="!isMatch"
       v-model:open="isOpenRoomDrawer"
       fullscreen
       title="房间"
@@ -89,7 +94,7 @@ let timer2 = null
 const {
   meta: { tab }
 } = useRoute()
-const isRoomMode = tab === 'room'
+const isMatch = ref(tab !== 'room')
 const list = [
   {
     icon: '💬',
@@ -244,11 +249,11 @@ const onClick = async (_matchType, to) => {
   target = to
   matchType = _matchType
 
-  isRoomMode
-    ? (isOpenRoomDrawer.value = true)
-    : (isOpenMatchDrawer.value = true)
+  isMatch.value
+    ? (isOpenMatchDrawer.value = true)
+    : (isOpenRoomDrawer.value = true)
 
-  if (!isRoomMode) {
+  if (isMatch.value) {
     initSocket(matchType)
   }
 }

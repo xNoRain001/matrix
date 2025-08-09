@@ -1,7 +1,5 @@
 <template>
-  <div>
-    <Card v-show="showCards"></Card>
-  </div>
+  <Card v-show="showCards"></Card>
   <router-view v-if="!showCards"></router-view>
 </template>
 

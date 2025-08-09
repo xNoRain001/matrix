@@ -3,64 +3,56 @@
     <!-- header -->
     <div
       v-if="userInfo && !remoteRoomInfo.roomId"
-      class="flex h-16 justify-center border-b border-b-zinc-700"
+      class="bg-default fixed top-0 h-16 w-full border-b border-b-(--ui-border)"
     >
-      <div class="flex items-center justify-between px-4">
-        <UButton
-          icon="ic:baseline-menu"
-          variant="ghost"
-          :ui="{ leadingIcon: '' }"
-        ></UButton>
+      <div class="flex h-full items-center justify-between px-4">
+        <img
+          class="size-10"
+          style="filter: drop-shadow(rgba(0, 122, 204, 0.3) 0px 8px 24px)"
+          src="/images/logo.svg"
+        />
         <ThemePicker></ThemePicker>
       </div>
     </div>
 
-    <div class="">
-      <div class="flex justify-center">
-        <UNavigationMenu
-          v-if="userInfo && isDesktop && !remoteRoomInfo.roomId"
-          collapsed
-          orientation="vertical"
-          tooltip
-          class="h-full min-h-[calc(100vh-4rem)] border-r border-r-zinc-700 p-4"
-          :ui="{
-            list: '',
-            linkLeadingIcon: 'pr-0',
-            item: 'mt-4'
-          }"
-          :items="navs"
-        >
-          <template #list-leading>
-            <img
-              class="size-10"
-              style="filter: drop-shadow(rgba(0, 122, 204, 0.3) 0px 8px 24px)"
-              src="/images/logo.svg"
-            />
-          </template>
-        </UNavigationMenu>
-        <div
-          :class="isDesktop ? '' : 'h-[calc(100vh-4rem)]'"
-          class="shrink grow p-4"
-        >
-          <Suspense>
-            <RouterView />
-          </Suspense>
-        </div>
-      </div>
+    <!-- drawer -->
+    <UNavigationMenu
+      v-if="userInfo && isDesktop && !remoteRoomInfo.roomId"
+      collapsed
+      orientation="vertical"
+      tooltip
+      class="fixed top-16 h-full border-r border-r-(--ui-border) p-4"
+      :ui="{
+        item: 'mb-4'
+      }"
+      :items="navs"
+    ></UNavigationMenu>
+
+    <!-- page -->
+    <div
+      class="mt-16 p-4"
+      :class="
+        isDesktop
+          ? 'ml-18 min-h-[calc(100vh-4rem)] max-w-[calc(100vw-4.5rem)]'
+          : 'mb-16 min-h-[calc(100vh-8rem)]'
+      "
+    >
+      <Suspense>
+        <RouterView />
+      </Suspense>
     </div>
 
+    <!-- footer -->
     <div
       v-show="userInfo && !remoteRoomInfo.roomId && !isDesktop"
-      class="bg-x-drawer fixed bottom-0 w-full"
+      class="bg-default fixed bottom-0 h-16 w-full border-t border-t-(--ui-border)"
     >
       <UTabs
         v-model="tab"
         variant="link"
-        class="w-full"
         :ui="{
-          list: 'bg-x-card flex justify-evenly',
-          trigger: 'flex flex-col'
-          // leadingIcon: 'size-6'
+          list: 'flex justify-evenly  border-none',
+          trigger: 'flex flex-col text-xs'
         }"
         :content="false"
         :items="menus"

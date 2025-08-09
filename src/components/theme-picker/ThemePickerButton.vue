@@ -5,7 +5,7 @@
     variant="outline"
     :icon="icon"
     :label="label"
-    class="ring-default rounded-sm text-[11px] capitalize"
+    class="ring-default rounded-xl text-[11px] capitalize"
     :class="[selected ? 'bg-elevated' : 'hover:bg-elevated/50']"
   >
     <template v-if="chip || !!slots.leading" #leading>

@@ -48,13 +48,9 @@
 
   <div class="flex flex-col items-center">
     <div class="w-full max-w-[var(--room-width)]">
-      <div class="flex">
-        <div
-          class="bg-primary h-12 w-12 rounded-full text-center text-xl leading-12"
-        >
-          {{ userInfo.nickname?.[0] }}
-        </div>
-        <div class="ml-4 w-[calc(100%-4rem)]">
+      <div class="ml-6 flex items-center">
+        <UAvatar :text="userInfo.nickname?.[0]" size="3xl" />
+        <div class="ml-4 w-[calc(100%-5.5rem)]">
           <span class="text-xl font-bold">您好</span>
           <div class="overflow-hidden text-ellipsis whitespace-nowrap">
             {{ userInfo.nickname }}
