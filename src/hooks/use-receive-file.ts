@@ -24,7 +24,7 @@ const useReceiveFile = (
   receivedSize += byteLength
   // const time = Date.now() - lastReceiveTime
   // lastReceiveTime = Date.now()
-  receivedFile.progress = ((receivedSize / size) * 100).toFixed(2) + ' %'
+  receivedFile.progress = Number(((receivedSize / size) * 100).toFixed(2))
   // receivedFile.speed = `${(byteLength / 1024 / 1024 / (time / 1000)).toFixed(2)} MB/s`
 
   // 所有数据传输完成

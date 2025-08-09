@@ -11,178 +11,138 @@
       ></RoomHeader>
     </template>
     <template #body>
-      <div v-if="!leaved" class="flex h-full flex-col justify-center">
-        <!-- <q-uploader
-          @added="onAdded"
-          class="mt-4 !w-full bg-transparent"
-          multiple
+      <div
+        v-if="!leaved"
+        class="relative flex h-full flex-col items-center justify-center"
+      >
+        <UButton
+          class="absolute top-0 right-0"
+          label="查看接收的文件"
+          color="neutral"
+          variant="subtle"
+          trailing-icon="i-lucide-chevron-right"
+          @click="isOpenReceivedFilesDrawer = true"
+        />
+        <UDrawer
+          v-model:open="isOpenReceivedFilesDrawer"
+          :handle="false"
+          title=" "
+          description=" "
+          direction="right"
+          class="w-[30vw]"
         >
-          <template v-slot:header="scope">
-            <div
-              class="row no-wrap q-pa-sm q-gutter-xs bg-x-drawer items-center"
-            >
-              <q-btn
-                icon="clear_all"
-                @click="scope.removeQueuedFiles"
-                round
-                dense
-                :disable="inSending || !scope.queuedFiles.length"
-              >
-                <q-tooltip class="bg-x-drawer">清空所有文件</q-tooltip>
-              </q-btn>
-              <div class="col">
-                <div class="q-uploader__title">
-                  选择需要上传的文件（支持拖拽）
-                </div>
-              </div>
-              <q-btn
-                icon="add_box"
-                @click="scope.pickFiles"
-                round
-                dense
-                :disable="inSending"
-              >
-                <q-uploader-add-trigger v-if="!inSending" />
-                <q-tooltip class="bg-x-drawer">添加文件</q-tooltip>
-              </q-btn>
-              <q-btn
-                icon="play_arrow"
-                @click="onSendFiles(scope.queuedFiles)"
-                round
-                dense
-                :disable="inSending || !scope.queuedFiles.length || !online"
-              >
-                <q-tooltip class="bg-x-drawer">开始传送</q-tooltip>
-              </q-btn>
-            </div>
-          </template>
-
-          <template v-slot:list="scope">
-            <q-list separator>
-              <q-item v-for="file in scope.files" :key="file.__key">
-                <q-item-section>
-                  <q-item-label class="ellipsis">
-                    {{ file.name }}
-                  </q-item-label>
-                  <q-item-label caption
-                    >大小：{{ file.__sizeLabel }}</q-item-label
-                  >
-                  <q-item-label caption>
-                    状态:
-                    <q-badge
-                      :color="
-                        file.fileStatus.status === sent ? 'green' : 'blue'
-                      "
-                      >{{ file.fileStatus.status }}</q-badge
-                    >
-                  </q-item-label>
-                  <q-item-label
-                    v-if="file.fileStatus.status === sending"
-                    caption
-                  >
-                    进度:
-                    {{ file.fileStatus.formatedProgress }}
-                  </q-item-label>
-                  <q-item-label caption>
-                    用时: {{ file.fileStatus.time }}
-                  </q-item-label>
-                </q-item-section>
-
-                <q-item-section top side>
-                  <q-btn
-                    dense
-                    round
-                    icon="close"
-                    :disable="inSending"
-                    @click="scope.removeFile(file)"
-                  >
-                    <q-tooltip>移除文件</q-tooltip>
-                  </q-btn>
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </template>
-        </q-uploader> -->
-
-        <!-- <q-uploader draggable="false" class="mt-4 !w-full bg-transparent">
-          <template v-slot:header>
-            <div
-              class="row no-wrap q-pa-sm q-gutter-xs bg-x-drawer items-center"
-            >
-              <q-btn
-                icon="clear_all"
+          <template #header>
+            <div class="flex items-center">
+              <UButton
+                variant="ghost"
+                color="neutral"
+                icon="lucide:chevron-left"
+                class="cursor-pointer"
+                @click="isOpenReceivedFilesDrawer = false"
+              />
+              <div class="absolute left-1/2 -translate-x-1/2">接收文件</div>
+              <UButton
+                variant="ghost"
+                color="neutral"
+                icon="lucide:trash"
+                class="absolute right-4 cursor-pointer"
                 @click="onClearReceivedFiles"
-                round
-                dense
-                :disable="inReceving || !receivedFiles.length"
-              >
-                <q-tooltip class="bg-x-drawer">清空所有文件</q-tooltip>
-              </q-btn>
-              <div class="col">
-                <div class="q-uploader__title">接收到的文件</div>
-              </div>
-              <q-btn
-                icon="cloud_download"
-                @click="onDownloadAll"
-                round
-                dense
-                :disable="inReceving || !receivedFiles.length"
-              >
-                <q-tooltip class="bg-x-drawer">下载所有文件</q-tooltip>
-              </q-btn>
+              />
             </div>
           </template>
-
-          <template v-slot:list>
-            <q-list separator>
-              <q-item
+          <template #content></template>
+          <template #body>
+            <div class="flex flex-col gap-2">
+              <div
+                class="flex items-center justify-between gap-1.5 rounded-xl border border-(--ui-border) px-2.5 py-1.5"
                 v-for="(
-                  { name, formatSize, status, progress, blob, time }, index
+                  { name, formatSize, status, blob }, index
                 ) in receivedFiles"
                 :key="index"
               >
-                <q-item-section>
-                  <q-item-label class="full-width ellipsis">
+                <div class="grow">
+                  <div class="text-xs">
                     {{ name }}
-                  </q-item-label>
-                  <q-item-label caption>大小：{{ formatSize }}</q-item-label>
-                  <q-item-label caption>
-                    状态:
-                    <q-badge :color="status === received ? 'green' : 'blue'">{{
-                      status
-                    }}</q-badge>
-                  </q-item-label>
-                  <q-item-label v-if="status === receiving" caption>
-                    进度: {{ progress }}
-                  </q-item-label>
-                  <q-item-label caption> 用时: {{ time }} </q-item-label>
-                </q-item-section>
-
-                <q-item-section top side>
-                  <q-btn
-                    v-if="status === received"
-                    dense
-                    round
-                    icon="cloud_download"
-                    @click="exportFile(name, blob)"
+                  </div>
+                  <div class="text-muted text-xs">{{ formatSize }}</div>
+                  <UProgress
+                    :ui="{ status: 'justify-start' }"
+                    status
+                    v-model="receivedFiles[index].progress"
+                    :max="100"
                   />
-                </q-item-section>
-              </q-item>
-            </q-list>
+                </div>
+                <!-- <div>用时: {{ time }}</div> -->
+                <UButton
+                  v-if="status === received"
+                  icon="lucide:cloud-download"
+                  variant="ghost"
+                  color="neutral"
+                  @click="useExportFile(name, blob)"
+                />
+              </div>
+            </div>
           </template>
-        </q-uploader> -->
+        </UDrawer>
+        <UFileUpload
+          :disabled="inSending"
+          highlight
+          layout="list"
+          v-model="files"
+          dropzone
+          multiple
+          label="选择需要上传的文件（支持拖拽）"
+          description="快速、安全"
+          class="h-48 w-full max-w-96"
+          @update:model-value="useExtendFileStatus"
+          :ui="{ fileWrapper: 'w-full' }"
+        >
+          <template #file-size="{ file }">
+            <!-- <div>用时: {{ (file as extendedFile).fileStatus.time }}</div> -->
+            <UProgress
+              v-if="(file as extendedFile).fileStatus.status !== pending"
+              :ui="{ status: 'justify-start' }"
+              status
+              v-model="(file as extendedFile).fileStatus.progress"
+              :max="100"
+            />
+          </template>
+          <template #file-trailing="{ index }">
+            <UButton
+              :disabled="inSending"
+              icon="lucide:x"
+              variant="ghost"
+              color="neutral"
+              @click="onRemoveFile(index)"
+            ></UButton>
+          </template>
+          <template #files-bottom="{ removeFile, files }">
+            <div v-if="files.length">
+              <UButton
+                :disabled="inSending || !online"
+                @click="onSendFiles(files)"
+                label="开始传输"
+              />
+              <UButton
+                :disabled="inSending"
+                class="ml-2"
+                label="移除所有文件"
+                color="neutral"
+                @click="removeFile()"
+              />
+            </div>
+          </template>
+        </UFileUpload>
       </div>
     </template>
-    <template #footer>
-      <div class="flex w-full items-center justify-center">
-        <div v-if="leaved">
-          <div>{{ otherLeaved ? '对方' : '你' }}已离开房间...</div>
-          <UButton
-            class="mt-4"
-            @click="simpleLeave"
-            :label="isRoomMode ? '重新进入房间' : '重新匹配'"
-          ></UButton>
-        </div>
+    <template #footer v-if="leaved">
+      <div class="flex w-full flex-col items-center justify-center">
+        <div>{{ otherLeaved ? '对方' : '你' }}已离开房间...</div>
+        <UButton
+          class="mt-4"
+          @click="simpleLeave"
+          :label="isRoomMode ? '重新进入房间' : '重新匹配'"
+        ></UButton>
       </div>
     </template>
   </UModal>
@@ -204,19 +164,22 @@ import {
   useJoined,
   useBeforeUnmount,
   useMounted,
-  useLeave
+  useLeave,
+  useExportFile
 } from '@/hooks'
 // import { exportFile } from 'quasar'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { received, receiving, sending, sent } from '@/const'
+import { pending, received, receiving, sending, sent } from '@/const'
 
 import type { Socket } from 'socket.io-client'
-import type { receivedFiles } from '@/types'
+import type { extendedFile, extendedFiles, receivedFiles } from '@/types'
 import { storeToRefs } from 'pinia'
 import { useRoomStore, useUserInfoStore } from '@/store'
 import { updateLatestRoom, getLatestRoom, isExitRoom } from '@/apis/latest-room'
 
+const isOpenReceivedFilesDrawer = ref(false)
+const files = ref<extendedFiles>([])
 const oepnModal = ref(true)
 const makingOffer = ref(false)
 const polite = ref(true)
@@ -262,13 +225,16 @@ const leaved = ref(isExit)
 const otherLeaved = ref(isExit)
 const isFull = ref(false)
 
+const onRemoveFile = index => {
+  files.value.splice(index, 1)
+}
+
 const onClearReceivedFiles = () => {
   receivedFiles.value = []
 }
 
-const onDownloadAll = () => {}
-
-const onAdded = files => useExtendFileStatus(files)
+// TODO: 一键下载所有文件
+// const onDownloadAll = () => {}
 
 const onSendFiles = async files => {
   inSending.value = true
@@ -308,7 +274,7 @@ const onFileMetadata = async (roomId: string, data: any) => {
   const o = { ...data }
   o.status = receiving
   o.formatSize = (data.size / 1024 / 1024).toFixed(2) + 'MB'
-  o.progress = '0 %'
+  o.progress = 0
   o.time = '0 s'
   // o.speed = '0 MB/s'
   receivedFiles.value.push(o)

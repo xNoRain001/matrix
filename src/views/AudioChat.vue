@@ -12,135 +12,123 @@
     </template>
     <template #body>
       <div v-if="!leaved" class="flex h-full items-center justify-center">
-        <div class="relative w-full max-w-[var(--room-width)]">
-          <div class="flex-center flex h-full flex-col">
-            <div class="text-center">
-              {{ online ? '通话中...' : '等待对方接通...' }}
+        <div
+          class="relative flex h-full w-full max-w-[var(--room-width)] flex-col justify-center"
+        >
+          <div class="absolute top-0 right-6">
+            <UDropdownMenu
+              :disabled="!micOpen"
+              :items="_micOptions"
+              :ui="{
+                content: 'w-80'
+              }"
+            >
+              <UButton icon="lucide:mic" color="neutral" variant="ghost" />
+              <template #item="{ item: { label } }">
+                <div
+                  class="flex w-full justify-between"
+                  @click="updateMicLabel(label)"
+                >
+                  <div>{{ label }}</div>
+                  <UIcon
+                    v-if="micLabel === label"
+                    name="i-lucide-badge-check"
+                    class="text-primary size-5"
+                  />
+                </div>
+              </template>
+            </UDropdownMenu>
+            <UDropdownMenu
+              :disabled="!speakerOpen"
+              :items="_speakerOptions"
+              :ui="{
+                content: 'w-80'
+              }"
+            >
+              <UButton icon="lucide:volume-2" color="neutral" variant="ghost" />
+              <template #item="{ item: { label } }">
+                <div
+                  class="flex w-full justify-between"
+                  @click="updateSpeakerLabel(label)"
+                >
+                  <div>{{ label }}</div>
+                  <UIcon
+                    v-if="speakerLabel === label"
+                    name="i-lucide-badge-check"
+                    class="text-primary size-5"
+                  />
+                </div>
+              </template>
+            </UDropdownMenu>
+          </div>
+          <div class="text-center">
+            {{ online ? '通话中...' : '等待对方接通...' }}
+          </div>
+          <div
+            :class="
+              hasMic && hasSpeaker
+                ? 'grid-cols-1'
+                : hasMic || hasSpeaker
+                  ? 'grid-cols-2'
+                  : 'grid-cols-3'
+            "
+            class="mt-16 grid"
+          >
+            <div
+              v-if="!hasMic"
+              class="flex flex-col items-center justify-center"
+            >
+              <UButton
+                class="flex flex-col"
+                @click="updateMicStatus"
+                :icon="micOpen ? 'lucide:mic' : 'lucide:mic-off'"
+                variant="ghost"
+                :color="micOpen ? 'neutral' : 'info'"
+                :ui="{ label: 'mt-4', leadingIcon: 'size-10' }"
+              ></UButton>
+              <div class="mt-4 flex items-center">
+                <div class="text-sm">{{ micOpen ? '开启' : '关闭' }}</div>
+              </div>
+            </div>
+            <div class="flex flex-col items-center justify-center">
+              <UButton
+                class="flex flex-col"
+                icon="lucide:phone-off"
+                @click="onLeave"
+                variant="ghost"
+                color="error"
+                :ui="{ label: 'mt-4', leadingIcon: 'size-10' }"
+              ></UButton>
+              <div class="text-error mt-4 text-sm">取消</div>
             </div>
             <div
-              :class="
-                hasMic && hasSpeaker
-                  ? 'grid-cols-1'
-                  : hasMic || hasSpeaker
-                    ? 'grid-cols-2'
-                    : 'grid-cols-3'
-              "
-              class="mt-16 grid"
+              v-if="!hasSpeaker"
+              class="flex flex-col items-center justify-center"
             >
-              <div
-                v-if="!hasMic"
-                class="flex flex-col items-center justify-center"
-              >
-                <UButton
-                  class="flex flex-col"
-                  @click="updateMicStatus"
-                  :icon="micOpen ? 'lucide:mic' : 'lucide:mic-off'"
-                  variant="ghost"
-                  :color="micOpen ? 'neutral' : 'info'"
-                  :ui="{ label: 'mt-4' }"
-                ></UButton>
-                <div class="mt-4 flex items-center">
-                  <div class="mr-2 text-sm">
-                    麦克风已{{ micOpen ? '开' : '关' }}
-                  </div>
-                  <UDropdownMenu
-                    :disabled="!micOpen"
-                    :items="_micOptions"
-                    :ui="{
-                      content: 'w-80'
-                    }"
-                  >
-                    <UButton
-                      icon="lucide:chevron-down"
-                      color="neutral"
-                      variant="ghost"
-                    />
-                    <template #item="{ item: { label } }">
-                      <div
-                        class="flex w-full justify-between"
-                        @click="updateMicLabel(label)"
-                      >
-                        <div>{{ label }}</div>
-                        <UIcon
-                          v-if="micLabel === label"
-                          name="i-lucide-badge-check"
-                          class="text-primary size-5"
-                        />
-                      </div>
-                    </template>
-                  </UDropdownMenu>
-                </div>
-              </div>
-              <div class="flex flex-col items-center justify-center">
-                <UButton
-                  class="flex flex-col"
-                  icon="lucide:phone-off"
-                  @click="onLeave"
-                  variant="ghost"
-                  color="error"
-                  :ui="{ label: 'mt-4' }"
-                ></UButton>
-                <div class="text-error mt-4 text-center text-sm">取消</div>
-              </div>
-              <div
-                v-if="!hasSpeaker"
-                class="flex flex-col items-center justify-center"
-              >
-                <UButton
-                  class="flex flex-col"
-                  :icon="speakerOpen ? 'lucide:volume-2' : 'lucide:volume-off'"
-                  @click="updateSpeakerStatus"
-                  variant="ghost"
-                  :color="speakerOpen ? 'neutral' : 'info'"
-                  :ui="{ label: 'mt-4' }"
-                ></UButton>
-                <div class="mt-4 flex items-center">
-                  <div class="mr-2 text-sm">
-                    扬声器已{{ speakerOpen ? '开' : '关' }}
-                  </div>
-                  <UDropdownMenu
-                    :disabled="!speakerOpen"
-                    :items="_speakerOptions"
-                    :ui="{
-                      content: 'w-80'
-                    }"
-                  >
-                    <UButton
-                      icon="lucide:chevron-down"
-                      color="neutral"
-                      variant="ghost"
-                    />
-                    <template #item="{ item: { label } }">
-                      <div
-                        class="flex w-full justify-between"
-                        @click="updateSpeakerLabel(label)"
-                      >
-                        <div>{{ label }}</div>
-                        <UIcon
-                          v-if="speakerLabel === label"
-                          name="i-lucide-badge-check"
-                          class="text-primary size-5"
-                        />
-                      </div>
-                    </template>
-                  </UDropdownMenu>
-                </div>
+              <UButton
+                class="flex flex-col"
+                :icon="speakerOpen ? 'lucide:volume-2' : 'lucide:volume-off'"
+                @click="updateSpeakerStatus"
+                variant="ghost"
+                :color="speakerOpen ? 'neutral' : 'info'"
+                :ui="{ label: 'mt-4', leadingIcon: 'size-10' }"
+              ></UButton>
+              <div class="mt-4 text-sm">
+                {{ speakerOpen ? '开启' : '关闭' }}
               </div>
             </div>
           </div>
         </div>
       </div>
     </template>
-    <template #footer>
-      <div class="flex w-full items-center justify-center">
-        <div v-if="leaved">
-          <div>{{ otherLeaved ? '对方' : '你' }}已离开房间...</div>
-          <UButton
-            class="mt-4"
-            @click="simpleLeave"
-            :label="isRoomMode ? '重新进入房间' : '重新匹配'"
-          ></UButton>
-        </div>
+    <template #footer v-if="leaved">
+      <div class="flex w-full flex-col items-center justify-center">
+        <div>{{ otherLeaved ? '对方' : '你' }}已离开房间...</div>
+        <UButton
+          class="mt-4"
+          @click="simpleLeave"
+          :label="isRoomMode ? '重新进入房间' : '重新匹配'"
+        ></UButton>
       </div>
     </template>
   </UModal>

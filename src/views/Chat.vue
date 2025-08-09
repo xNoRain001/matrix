@@ -11,106 +11,131 @@
       ></RoomHeader>
     </template>
     <template #body>
-      <template
-        v-for="(
-          { type, timestamp, content, sent, stamp, showProgress }, index
-        ) in messageList"
-      >
-        <q-chat-message
-          v-if="type === 'label'"
-          :label="formatTimestamp(timestamp)"
-        ></q-chat-message>
-        <q-chat-message
-          v-if="type === 'image'"
-          :avatar="avatar"
-          :key="index"
-          :text="content"
-          :sent="sent"
-          :stamp="stamp"
-          bg-color="green"
-        >
-          <img :src="content[0]" />
-        </q-chat-message>
-        <q-chat-message
-          v-if="type === 'video'"
-          :avatar="avatar"
-          :key="index"
-          :text="content"
-          :sent="sent"
-          :stamp="stamp"
-          bg-color="green"
-        >
-          <video :src="content[0]" controls></video>
-        </q-chat-message>
-        <q-chat-message
-          v-if="type === 'audio'"
-          :avatar="avatar"
-          :key="index"
-          :text="content"
-          :sent="sent"
-          :stamp="stamp"
-          bg-color="green"
-        >
-          <audio :src="content[0]" controls></audio>
-        </q-chat-message>
-        <q-chat-message
-          v-if="type === 'file'"
-          :avatar="avatar"
-          :key="index"
-          :text="content"
-          :sent="sent"
-          :stamp="stamp"
-          bg-color="green"
-        >
-          <q-item>
-            <q-item-section>
-              <q-item-label class="full-width ellipsis">
-                {{ content[1] }}
-              </q-item-label>
-              <q-item-label caption
-                >大小：{{
-                  (content[2] / 1024 / 1024).toFixed(2)
-                }}
-                MB</q-item-label
-              >
-            </q-item-section>
-            <q-item-section top side>
-              <!-- 关闭进度条的行为在修改 status 为传送完成之后 -->
-              <q-btn
-                v-if="
-                  showProgress && sendFiles[0].fileStatus.status === sending
-                "
-                color="white"
-                dense
-                round
-                flat
-                :label="sendFiles[0].fileStatus.formatedProgress"
-              />
-              <q-btn
-                v-else
-                dense
-                round
-                flat
-                icon="cloud_download"
-                @click="onDownload(content[0], content[1])"
-              />
-            </q-item-section>
-          </q-item>
-        </q-chat-message>
-        <q-chat-message
-          v-if="type === 'message'"
-          :avatar="avatar"
-          :key="index"
-          :text="content"
-          :sent="sent"
-          :stamp="stamp"
-          bg-color="green"
-        />
-      </template>
+      <div class="flex w-full items-center justify-center">
+        <div class="relative w-full max-w-(--room-width)">
+          <div
+            class="mb-8"
+            v-for="(
+              { type, timestamp, content, sent, showProgress }, index
+            ) in messageList"
+            :key="index"
+          >
+            <div v-if="type === 'label'" class="text-center text-sm">
+              {{ formatTimestamp(timestamp) }}
+            </div>
+            <div v-else-if="type === 'message'">
+              <div v-if="sent" class="flex items-center justify-end gap-3">
+                <div class="bg-elevated/50 border-default border px-4 py-3">
+                  {{ content[0] }}
+                </div>
+                <UAvatar :text="userInfo.nickname[0] || ''" size="md" />
+              </div>
+              <div v-else class="flex items-center gap-3">
+                <UAvatar :text="otherInfo?.nickname[0] || ''" size="md" />
+                <div class="border-default border px-4 py-3">
+                  {{ content[0] }}
+                </div>
+              </div>
+            </div>
+            <div v-else-if="type === 'image'">
+              <div v-if="sent" class="flex items-center justify-end gap-3">
+                <div class="bg-elevated/50 border-default border px-4 py-3">
+                  <img :src="content[0]" />
+                </div>
+                <UAvatar :text="userInfo.nickname[0] || ''" size="md" />
+              </div>
+              <div v-else class="flex items-center gap-3">
+                <UAvatar :text="otherInfo?.nickname[0] || ''" size="md" />
+                <div class="border-default border px-4 py-3">
+                  <img :src="content[0]" />
+                </div>
+              </div>
+            </div>
+            <div v-else-if="type === 'video'">
+              <div v-if="sent" class="flex items-center justify-end gap-3">
+                <div class="bg-elevated/50 border-default border px-4 py-3">
+                  <video :src="content[0]" controls></video>
+                </div>
+                <UAvatar :text="userInfo.nickname[0] || ''" size="md" />
+              </div>
+              <div v-else class="flex items-center gap-3">
+                <UAvatar :text="otherInfo?.nickname[0] || ''" size="md" />
+                <div class="border-default border px-4 py-3">
+                  <video :src="content[0]" controls></video>
+                </div>
+              </div>
+            </div>
+            <div v-else-if="type === 'file'">
+              <div v-if="sent" class="flex items-center justify-end gap-3">
+                <div class="bg-elevated/50 border-default border px-4 py-3">
+                  <div class="flex items-center justify-between gap-1.5">
+                    <div class="grow">
+                      <div class="text-xs">
+                        {{ content[1] }}
+                      </div>
+                      <div class="text-muted text-xs">
+                        {{ (content[2] / 1024 / 1024).toFixed(2) }} MB
+                      </div>
+                      <UProgress
+                        v-if="
+                          showProgress &&
+                          sendFiles[0].fileStatus.status === sending
+                        "
+                        :ui="{ status: 'justify-start' }"
+                        status
+                        v-model="sendFiles[0].fileStatus.progress"
+                        :max="100"
+                      />
+                    </div>
+                    <UButton
+                      icon="lucide:cloud-download"
+                      variant="ghost"
+                      color="neutral"
+                      @click="onDownload(content[0], content[1])"
+                    />
+                  </div>
+                </div>
+                <UAvatar :text="userInfo.nickname[0] || ''" size="md" />
+              </div>
+              <div v-else class="flex items-center gap-3">
+                <UAvatar :text="otherInfo?.nickname[0] || ''" size="md" />
+                <div class="border-default border px-4 py-3">
+                  <div class="flex items-center justify-between gap-1.5">
+                    <div class="grow">
+                      <div class="text-xs">
+                        {{ content[1] }}
+                      </div>
+                      <div class="text-muted text-xs">
+                        {{ (content[2] / 1024 / 1024).toFixed(2) }} MB
+                      </div>
+                    </div>
+                    <UButton
+                      icon="lucide:cloud-download"
+                      variant="ghost"
+                      color="neutral"
+                      @click="onDownload(content[0], content[1])"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-else-if="type === 'audio'">
+              <audio :src="content[0]" controls></audio>
+            </div>
+          </div>
+          <div
+            v-if="msgStamp.value"
+            class="absolute bottom-2 text-xs"
+            :class="msgStamp.sent ? 'right-15' : 'left-15'"
+          >
+            {{ msgStamp.value }}
+          </div>
+        </div>
+      </div>
     </template>
     <template #footer>
       <div class="flex w-full items-center justify-center">
-        <div v-if="leaved">
+        <div v-if="leaved" class="flex flex-col items-center justify-center">
           <div>{{ otherLeaved ? '对方' : '你' }}已离开房间...</div>
           <UButton
             class="mt-4"
@@ -119,7 +144,7 @@
           ></UButton>
         </div>
         <div v-else class="flex w-full max-w-(--room-width) flex-col">
-          <div class="flex w-full">
+          <div class="flex">
             <UButton
               variant="ghost"
               color="neutral"
@@ -136,7 +161,7 @@
               variant="ghost"
               color="neutral"
               icon="lucide:circle-plus"
-              @click="expanded = true"
+              @click="expanded = !expanded"
             ></UButton>
           </div>
           <UCollapsible v-model:open="expanded">
@@ -237,23 +262,20 @@ import {
   useLeave,
   useExportFile
 } from '@/hooks'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { received, receiving, sending, sent } from '@/const'
 
 import type { Socket } from 'socket.io-client'
 import type { extendedFiles, fileTypes, receivedFiles } from '@/types'
-// import { exportFile } from 'quasar'
 import { useRoomStore, useUserInfoStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { updateLatestRoom, getLatestRoom, isExitRoom } from '@/apis/latest-room'
 
 let lastMsgTimer = null
-let lastMsgStampIndex = 0
 const oepnModal = ref(true)
 const makingOffer = ref(false)
 const polite = ref(true)
-let avatar = 'https://cdn.quasar.dev/img/avatar4.jpg'
 let pc: RTCPeerConnection | null = null
 let socket: Socket | null = null
 let dataChannel: RTCDataChannel | null = null
@@ -316,6 +338,7 @@ const receivedFiles: receivedFiles = ref([])
 const sendFiles = ref<extendedFiles>([])
 const receiveStartTime = ref(0)
 const isFull = ref(false)
+const msgStamp = reactive({ sent: false, value: '' })
 
 const onDownload = (url, filename) => {
   fetch(url)
@@ -400,7 +423,6 @@ type commonMessage = {
   type: 'message' | 'label' | fileTypes
   sent?: boolean
   timestamp: number
-  stamp?: string
 }
 
 type message = commonMessage & {
@@ -451,6 +473,7 @@ let lastMsgTimeStamp = t[t.length - 1]?.timestamp || 0
 const overFiveMins = timestamp => timestamp - lastMsgTimeStamp > fiveMins
 
 const addMessageLabelToDB = async (timestamp: number) => {
+  console.log(timestamp, lastMsgTimeStamp)
   if (overFiveMins(timestamp)) {
     await addMessageToDB({
       roomId: _remoteRoomInfo.roomId,
@@ -460,13 +483,6 @@ const addMessageLabelToDB = async (timestamp: number) => {
   }
 
   // 不在这里更新 lastMsgTimeStamp，因为此时视图中还没添加 message label
-}
-
-const removeLastMsgStamp = (stampMsg: message) => {
-  // 没有消息时，stampMsg 是 undefind
-  if (stampMsg?.stamp) {
-    stampMsg.stamp = undefined
-  }
 }
 
 const onSendMsg = async () => {
@@ -517,7 +533,6 @@ const addMessageLabelToView = (messageRecord: dbMessage) => {
 
 const addMessageToView = (messageRecord: dbMessage) => {
   const _messageList = messageList.value
-  const stampMsg = _messageList[lastMsgStampIndex]
   const { type } = messageRecord
 
   if (type !== 'message' && type !== 'label') {
@@ -527,7 +542,7 @@ const addMessageToView = (messageRecord: dbMessage) => {
   }
 
   _messageList.push(messageRecord as message)
-  removeLastMsgStamp(stampMsg)
+  msgStamp.value = ''
   useScrollToBottom()
 }
 
@@ -582,7 +597,7 @@ const onFileMetadata = async (roomId: string, data: any) => {
   const o = { ...data }
   o.status = receiving
   o.formatSize = (data.size / 1024 / 1024).toFixed(2) + 'MB'
-  o.progress = '0 %'
+  o.progress = 0
   o.time = '0 s'
   // o.speed = '0 MB/s'
   receivedFiles.value.push(o)
@@ -606,9 +621,9 @@ const updateLastMsgStamp = () => {
   const { length } = _messageList
 
   if (length) {
-    lastMsgStampIndex = length - 1
-    const lastMsg = _messageList[lastMsgStampIndex]
-    lastMsg.stamp = formatTimeAgo(lastMsg.timestamp)
+    const lastMsg = _messageList[length - 1]
+    msgStamp.sent = lastMsg.sent
+    msgStamp.value = formatTimeAgo(lastMsg.timestamp)
   }
 }
 

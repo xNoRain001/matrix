@@ -2,7 +2,7 @@
   <UApp :toaster="{ position: 'top-center' }">
     <!-- header -->
     <div
-      v-if="userInfo && !remoteRoomInfo.roomId && isDesktop"
+      v-if="userInfo && !remoteRoomInfo.roomId"
       class="flex h-16 justify-center border-b border-b-zinc-700"
     >
       <div class="flex items-center justify-between px-4">

@@ -71,8 +71,8 @@ const useSendFile = async (
 
   fileStatus.status = sentLabel
   // fileStatus.speed = ''
-  fileStatus.progress = 0
-  fileStatus.formatedProgress = '0 %'
+  // fileStatus.progress = 0
+  // fileStatus.formatedProgress = '0 %'
 
   offset = 0
   fileStatus.time = ((Date.now() - sendStartTime) / 1000).toFixed(2) + ' s'

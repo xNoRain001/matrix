@@ -81,7 +81,7 @@
       :handle="false"
       v-model:open="openProfileDrawer"
       direction="right"
-      :class="isDesktop ? 'w-[30vw]' : 'w-screen max-w-screen'"
+      :class="isDesktop ? 'w-[30vw]' : 'w-[80vw]'"
       title=" "
       description=" "
     >
@@ -128,7 +128,7 @@
       :handle="false"
       v-model:open="openUpdatePasswordDrawer"
       direction="right"
-      :class="isDesktop ? 'w-[30vw]' : 'w-screen max-w-screen'"
+      :class="isDesktop ? 'w-[30vw]' : 'w-[80vw]'"
       title=" "
       description=" "
     >

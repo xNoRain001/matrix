@@ -33,21 +33,7 @@
     >
       <template #body>
         <div class="flex h-full items-center justify-center">
-          <div class="flex flex-col items-end">
-            <UPinInput :length="pinLength" autofocus v-model="pin"></UPinInput>
-            <UButton
-              v-if="isRoomMode"
-              @click="router.replace(`/match/${matchType}`)"
-              icon="i-lucide-rocket"
-              color="primary"
-              variant="ghost"
-              label="去匹配"
-              :ui="{
-                base: 'mt-4 cursor-pointer'
-              }"
-            >
-            </UButton>
-          </div>
+          <UPinInput :length="pinLength" autofocus v-model="pin"></UPinInput>
         </div>
       </template>
     </UModal>
@@ -58,6 +44,7 @@
       fullscreen
       title="匹配"
       description=" "
+      v-on:after:leave="afterLeave"
     >
       <template #body>
         <div class="flex h-full items-center justify-center">
@@ -94,6 +81,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { io } from 'socket.io-client'
 import { getLatestRoom, isExitRoom } from '@/apis/latest-room'
 
+let socket = null
 let target = ''
 let matchType = ''
 let timer = null
@@ -159,10 +147,17 @@ const { remoteRoomInfo, firstRequestRemoteRoomInfo } =
 const toast = useToast()
 const pause = ref(false)
 const offline = ref(false)
+const leave = ref(false)
+
+// 关闭 modal 时需要断开 socket 连接，否则会造成自己匹配到自己
+const afterLeave = () => {
+  leave.value = true
+  socket && socket.disconnect()
+}
 
 const initSocket = matchType => {
   // @ts-ignore
-  const socket = io.connect(import.meta.env.VITE_API_BASE_URL, {
+  socket = io.connect(import.meta.env.VITE_API_BASE_URL, {
     reconnectionAttempts: 5
   })
 
@@ -170,11 +165,13 @@ const initSocket = matchType => {
   // 如果匹配中突然断网，需要很久才会触发这个回调，之后会去重试，重试时如果失败触发
   // connect_error 回调
   socket.on('disconnect', () => {
-    offline.value = true
-    toast.add({
-      title: '连接服务器失败...',
-      color: 'error'
-    })
+    if (!leave.value) {
+      offline.value = true
+      toast.add({
+        title: '连接服务器失败...',
+        color: 'error'
+      })
+    }
   })
   // 如果没网络的状态进入匹配，触发这个回调，之后的每次重试都会触发
   socket.on('connect_error', () => {
@@ -210,7 +207,6 @@ const initSocket = matchType => {
       _remoteRoomInfo.skipRequest = true
       router.replace({ path: target, query: { roomId: message } })
       // 不需要从匹配列表中移除，因为服务器在匹配成功时会自动将你从匹配列表中移除
-      // socket.emit('join', message)
     }
   })
   socket.emit('joinmatch', matchType)

@@ -10,6 +10,8 @@ import { useUpdateTheme } from './hooks'
 const app = createApp(App)
 const pinia = createPinia()
 
+localStorage.setItem('vueuse-color-scheme', 'dark')
+
 app
   .use(ui, {
     notifications: {

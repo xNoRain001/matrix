@@ -7,7 +7,7 @@ export type receivedFiles = Ref<
     type: string
     formatSize: string
     // speed: string
-    progress: string
+    progress: number
     status: '接收中...' | '接收完成...'
     blob: Blob
     time: string
