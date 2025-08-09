@@ -3,7 +3,7 @@
     <!-- header -->
     <div
       v-if="userInfo && !remoteRoomInfo.roomId"
-      class="bg-default fixed top-0 z-10 h-16 w-full border-b border-b-(--ui-border)"
+      class="bg-default fixed top-0 h-16 w-full border-b border-b-(--ui-border)"
     >
       <div class="flex h-full items-center justify-between px-4">
         <img

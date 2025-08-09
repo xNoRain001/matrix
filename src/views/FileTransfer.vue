@@ -17,73 +17,12 @@
       >
         <UButton
           class="absolute top-0 right-0"
-          label="查看接收的文件"
+          label="接收"
           color="neutral"
           variant="subtle"
-          trailing-icon="i-lucide-chevron-right"
+          trailing-icon="lucide:file-archive"
           @click="isOpenReceivedFilesDrawer = true"
         />
-        <UDrawer
-          v-model:open="isOpenReceivedFilesDrawer"
-          :handle="false"
-          title=" "
-          description=" "
-          direction="right"
-          class="w-[30vw]"
-        >
-          <template #header>
-            <div class="flex items-center">
-              <UButton
-                variant="ghost"
-                color="neutral"
-                icon="lucide:chevron-left"
-                class="cursor-pointer"
-                @click="isOpenReceivedFilesDrawer = false"
-              />
-              <div class="absolute left-1/2 -translate-x-1/2">接收文件</div>
-              <UButton
-                variant="ghost"
-                color="neutral"
-                icon="lucide:trash"
-                class="absolute right-4 cursor-pointer"
-                @click="onClearReceivedFiles"
-              />
-            </div>
-          </template>
-          <template #content></template>
-          <template #body>
-            <div class="flex flex-col gap-2">
-              <div
-                class="flex items-center justify-between gap-1.5 rounded-xl border border-(--ui-border) px-2.5 py-1.5"
-                v-for="(
-                  { name, formatSize, status, blob }, index
-                ) in receivedFiles"
-                :key="index"
-              >
-                <div class="grow">
-                  <div class="text-xs">
-                    {{ name }}
-                  </div>
-                  <div class="text-muted text-xs">{{ formatSize }}</div>
-                  <UProgress
-                    :ui="{ status: 'justify-start' }"
-                    status
-                    v-model="receivedFiles[index].progress"
-                    :max="100"
-                  />
-                </div>
-                <!-- <div>用时: {{ time }}</div> -->
-                <UButton
-                  v-if="status === received"
-                  icon="lucide:cloud-download"
-                  variant="ghost"
-                  color="neutral"
-                  @click="useExportFile(name, blob)"
-                />
-              </div>
-            </div>
-          </template>
-        </UDrawer>
         <UFileUpload
           :disabled="inSending"
           highlight
@@ -146,6 +85,66 @@
       </div>
     </template>
   </UModal>
+
+  <UDrawer
+    v-model:open="isOpenReceivedFilesDrawer"
+    :handle="false"
+    title=" "
+    description=" "
+    direction="right"
+    class="w-[30vw]"
+  >
+    <template #header>
+      <div class="flex items-center">
+        <UButton
+          variant="ghost"
+          color="neutral"
+          icon="lucide:chevron-left"
+          class="cursor-pointer"
+          @click="isOpenReceivedFilesDrawer = false"
+        />
+        <div class="absolute left-1/2 -translate-x-1/2">接收文件</div>
+        <UButton
+          variant="ghost"
+          color="neutral"
+          icon="lucide:trash"
+          class="absolute right-4 cursor-pointer"
+          @click="onClearReceivedFiles"
+        />
+      </div>
+    </template>
+    <template #content></template>
+    <template #body>
+      <div class="flex flex-col gap-2">
+        <div
+          class="flex items-center justify-between gap-1.5 rounded-xl border border-(--ui-border) px-2.5 py-1.5"
+          v-for="({ name, formatSize, status, blob }, index) in receivedFiles"
+          :key="index"
+        >
+          <div class="grow">
+            <div class="text-xs">
+              {{ name }}
+            </div>
+            <div class="text-muted text-xs">{{ formatSize }}</div>
+            <UProgress
+              :ui="{ status: 'justify-start' }"
+              status
+              v-model="receivedFiles[index].progress"
+              :max="100"
+            />
+          </div>
+          <!-- <div>用时: {{ time }}</div> -->
+          <UButton
+            v-if="status === received"
+            icon="lucide:cloud-download"
+            variant="ghost"
+            color="neutral"
+            @click="useExportFile(name, blob)"
+          />
+        </div>
+      </div>
+    </template>
+  </UDrawer>
 </template>
 
 <script lang="ts" setup>
@@ -192,22 +191,24 @@ const flag = ref(false)
 const inSending = ref(false)
 const inReceving = ref(false)
 const receivedFiles: receivedFiles = ref([])
-const { path, query } = useRoute()
+const {
+  path,
+  query: { roomId }
+} = useRoute()
 const router = useRouter()
 const isReconnect = ref(false)
 const online = ref(false)
 const { isMatch, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
-let hasRemoteRoomId = false
 let isExit = false
+
 const updateRoomInfo = async () => {
   const latestRoomInfo = (await getLatestRoom()).data
   // 如果 latestId 有值，说明自身还没离开房间
   const latestId = latestRoomInfo?.latestId
-  hasRemoteRoomId = Boolean(latestId)
 
-  if (hasRemoteRoomId) {
+  if (latestId) {
     remoteRoomInfo.value = latestRoomInfo
     isExit = (await isExitRoom(latestId)).data
     latestRoomInfo.inRoom = !isExit
@@ -215,7 +216,7 @@ const updateRoomInfo = async () => {
 }
 remoteRoomInfo.value.skipRequest ? null : await updateRoomInfo()
 let _remoteRoomInfo = remoteRoomInfo.value
-_remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
+_remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (roomId as string)
 const leaved = ref(isExit)
 const otherLeaved = ref(isExit)
 const isFull = ref(false)
@@ -312,14 +313,27 @@ const onDisconnect = () => useDisconnect(pc, leaved, isReconnect)
 const onRtc = (roomId: string, data: any) =>
   useInitRtc(pc, socket, roomId, data, makingOffer, polite, _userInfo)
 
-const simpleLeave = () => {
-  _remoteRoomInfo.roomId = _remoteRoomInfo.path = _remoteRoomInfo.latestId = ''
-  _remoteRoomInfo.inRoom = false
+const simpleLeave = async () => {
+  if (_remoteRoomInfo.latestId) {
+    await leaveAfterConnected()
+  } else {
+    _remoteRoomInfo.roomId =
+      _remoteRoomInfo.path =
+      _remoteRoomInfo.latestId =
+        ''
+    _remoteRoomInfo.inRoom = false
+  }
+
   router.replace('/hall')
 }
 
-const leaveAfterConnected = async () => {
+const closePCAndSocket = () => {
   useClosePC(pc)
+  socket && socket.disconnect()
+}
+
+const leaveAfterConnected = async () => {
+  closePCAndSocket()
   socket.disconnect()
   await updateLatestRoom()
   leaved.value = true
@@ -328,7 +342,14 @@ const leaveAfterConnected = async () => {
 }
 
 const onLeave = async close =>
-  useLeave(close, _remoteRoomInfo, socket, simpleLeave)
+  useLeave(
+    close,
+    _remoteRoomInfo,
+    socket,
+    online.value,
+    leaveAfterConnected,
+    simpleLeave
+  )
 
 const onBye = () => useBye(leaveAfterConnected, otherLeaved)
 
@@ -340,8 +361,7 @@ const initSocket = () => {
     onRtc,
     isReconnect,
     _remoteRoomInfo.roomId,
-    isFull,
-    leaveAfterConnected
+    isFull
   )
   socket.on('bye', onBye)
   socket.on('file-metadata', onFileMetadata)
@@ -353,7 +373,14 @@ const initSocket = () => {
 }
 
 onMounted(async () => {
-  useMounted(initSocket, router, hasRemoteRoomId, path, _remoteRoomInfo)
+  useMounted(
+    initSocket,
+    router,
+    path,
+    _remoteRoomInfo,
+    otherLeaved.value,
+    roomId as string
+  )
 })
 
 onBeforeUnmount(() => useBeforeUnmount(socket))

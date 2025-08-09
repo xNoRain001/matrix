@@ -11,56 +11,59 @@
       ></RoomHeader>
     </template>
     <template #body>
-      <div v-if="!leaved" class="flex h-full items-center justify-center">
+      <div
+        v-if="!leaved"
+        class="relative flex h-full items-center justify-center"
+      >
+        <div class="absolute top-0 right-0">
+          <UDropdownMenu
+            :disabled="!micOpen"
+            :items="_micOptions"
+            :ui="{
+              content: 'w-80'
+            }"
+          >
+            <UButton icon="lucide:mic" color="neutral" variant="ghost" />
+            <template #item="{ item: { label } }">
+              <div
+                class="flex w-full justify-between"
+                @click="updateMicLabel(label)"
+              >
+                <div>{{ label }}</div>
+                <UIcon
+                  v-if="micLabel === label"
+                  name="i-lucide-badge-check"
+                  class="text-primary size-5"
+                />
+              </div>
+            </template>
+          </UDropdownMenu>
+          <UDropdownMenu
+            :disabled="!speakerOpen"
+            :items="_speakerOptions"
+            :ui="{
+              content: 'w-80'
+            }"
+          >
+            <UButton icon="lucide:volume-2" color="neutral" variant="ghost" />
+            <template #item="{ item: { label } }">
+              <div
+                class="flex w-full justify-between"
+                @click="updateSpeakerLabel(label)"
+              >
+                <div>{{ label }}</div>
+                <UIcon
+                  v-if="speakerLabel === label"
+                  name="i-lucide-badge-check"
+                  class="text-primary size-5"
+                />
+              </div>
+            </template>
+          </UDropdownMenu>
+        </div>
         <div
-          class="relative flex h-full w-full max-w-(--room-width) flex-col justify-center"
+          class="flex h-full w-full max-w-(--room-width) flex-col justify-center"
         >
-          <div class="absolute top-0 right-6">
-            <UDropdownMenu
-              :disabled="!micOpen"
-              :items="_micOptions"
-              :ui="{
-                content: 'w-80'
-              }"
-            >
-              <UButton icon="lucide:mic" color="neutral" variant="ghost" />
-              <template #item="{ item: { label } }">
-                <div
-                  class="flex w-full justify-between"
-                  @click="updateMicLabel(label)"
-                >
-                  <div>{{ label }}</div>
-                  <UIcon
-                    v-if="micLabel === label"
-                    name="i-lucide-badge-check"
-                    class="text-primary size-5"
-                  />
-                </div>
-              </template>
-            </UDropdownMenu>
-            <UDropdownMenu
-              :disabled="!speakerOpen"
-              :items="_speakerOptions"
-              :ui="{
-                content: 'w-80'
-              }"
-            >
-              <UButton icon="lucide:volume-2" color="neutral" variant="ghost" />
-              <template #item="{ item: { label } }">
-                <div
-                  class="flex w-full justify-between"
-                  @click="updateSpeakerLabel(label)"
-                >
-                  <div>{{ label }}</div>
-                  <UIcon
-                    v-if="speakerLabel === label"
-                    name="i-lucide-badge-check"
-                    class="text-primary size-5"
-                  />
-                </div>
-              </template>
-            </UDropdownMenu>
-          </div>
           <div class="text-center">
             {{ online ? '通话中...' : '等待对方接通...' }}
           </div>
@@ -205,22 +208,23 @@ const _speakerOptions = speakerOptions.map(item => ({ label: item, icon: '' }))
 const volume = ref(1)
 const localAudioRef = ref(null)
 const remoteAudioRef = ref(null)
-const { path, query } = useRoute()
+const {
+  path,
+  query: { roomId }
+} = useRoute()
 const router = useRouter()
 const isReconnect = ref(false)
 const online = ref(false)
 const { isMatch, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
-let hasRemoteRoomId = false
 let isExit = false
 const updateRoomInfo = async () => {
   const latestRoomInfo = (await getLatestRoom()).data
   // 如果 latestId 有值，说明自身还没离开房间
   const latestId = latestRoomInfo?.latestId
-  hasRemoteRoomId = Boolean(latestId)
 
-  if (hasRemoteRoomId) {
+  if (latestId) {
     remoteRoomInfo.value = latestRoomInfo
     isExit = (await isExitRoom(latestId)).data
     latestRoomInfo.inRoom = !isExit
@@ -228,7 +232,7 @@ const updateRoomInfo = async () => {
 }
 remoteRoomInfo.value.skipRequest ? null : await updateRoomInfo()
 let _remoteRoomInfo = remoteRoomInfo.value
-_remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
+_remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (roomId as string)
 const leaved = ref(isExit)
 const otherLeaved = ref(isExit)
 const micOpen = ref(Boolean(audioInputLabelsLength))
@@ -306,23 +310,42 @@ const onTrack = ({ track, streams }) => {
   }
 }
 
-const simpleLeave = () => {
-  _remoteRoomInfo.roomId = _remoteRoomInfo.path = _remoteRoomInfo.latestId = ''
-  _remoteRoomInfo.inRoom = false
+const simpleLeave = async () => {
+  if (_remoteRoomInfo.latestId) {
+    await leaveAfterConnected()
+  } else {
+    _remoteRoomInfo.roomId =
+      _remoteRoomInfo.path =
+      _remoteRoomInfo.latestId =
+        ''
+    _remoteRoomInfo.inRoom = false
+  }
+
   router.replace('/hall')
 }
 
-const leaveAfterConnected = async () => {
+const closePCAndSocket = () => {
   useClosePC(pc)
-  socket.disconnect()
+  socket && socket.disconnect()
+}
+
+const leaveAfterConnected = async () => {
+  closePCAndSocket()
   await updateLatestRoom()
   leaved.value = true
-  otherInfo.value = null
   online.value = false
+  otherInfo.value = null
 }
 
 const onLeave = async close =>
-  useLeave(close, _remoteRoomInfo, socket, simpleLeave)
+  useLeave(
+    close,
+    _remoteRoomInfo,
+    socket,
+    online.value,
+    leaveAfterConnected,
+    simpleLeave
+  )
 
 const onBye = () => useBye(leaveAfterConnected, otherLeaved)
 
@@ -396,8 +419,7 @@ const initSocket = () => {
     onRtc,
     isReconnect,
     _remoteRoomInfo.roomId,
-    isFull,
-    leaveAfterConnected
+    isFull
   )
   socket.on('bye', onBye)
   socket.emit('join', _remoteRoomInfo.roomId)
@@ -406,7 +428,14 @@ const initSocket = () => {
 }
 
 onMounted(async () => {
-  useMounted(initSocket, router, hasRemoteRoomId, path, _remoteRoomInfo)
+  useMounted(
+    initSocket,
+    router,
+    path,
+    _remoteRoomInfo,
+    otherLeaved.value,
+    roomId as string
+  )
 })
 
 onBeforeUnmount(() => useBeforeUnmount(socket))

@@ -1,21 +1,27 @@
 import type { Socket } from 'socket.io-client'
 
-const useLeave = (
+const useLeave = async (
   close: Function,
   remoteRoomInfo,
   socket: Socket,
+  online: boolean,
+  leaveAfterConnected: Function,
   simpleLeave: Function
 ) => {
   close()
 
-  if (remoteRoomInfo.latestId) {
-    // latestId 如果存在，说明成功建立过连接，但是用户要离开
-    // 通知对方，我要离开（对方可能在线）
+  // 对方可能不在线
+  if (online) {
     socket.emit('leave', remoteRoomInfo.roomId)
-  } else {
-    // latestId 不存在，说明虽然在房间内，但是没有对方记录，用户要离开只需要切换路由
-    simpleLeave()
   }
+
+  // 如果服务器中存在房间信息，清空它
+  if (remoteRoomInfo.latestId) {
+    await leaveAfterConnected()
+  }
+
+  // 主动离开的一方直接回到大厅，不显示底部按钮
+  simpleLeave()
 }
 
 export default useLeave

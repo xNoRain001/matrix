@@ -1,6 +1,12 @@
 <template>
   <div v-show="showCards" class="relative">
-    <div class="flex justify-end">
+    <div class="flex items-center justify-end gap-4">
+      <UButton
+        label="筛选"
+        icon="i-lucide-rocket"
+        variant="ghost"
+        color="neutral"
+      ></UButton>
       <USwitch v-model="isMatch" :label="`${isMatch ? '匹配' : '房间'}`" />
     </div>
     <div class="mt-4 grid grid-cols-2 gap-4">
@@ -62,12 +68,18 @@
             label="重新匹配"
           ></UButton>
         </div>
+        <UButton
+          v-else-if="pause"
+          label="继续匹配"
+          @click="rematch"
+          variant="outline"
+        ></UButton>
         <div v-else class="flex flex-col items-center">
           <UIcon
             name="lucide:loader-pinwheel"
             class="size-5 animate-spin"
           ></UIcon>
-          <div class="mt-4" v-if="pause">暂未匹配到对方，10 秒后重试...</div>
+          <div class="mt-4" v-if="noMatch">暂未匹配到对方，10 秒后重试...</div>
           <div class="mt-4" v-else>正在匹配中...</div>
         </div>
       </div>
@@ -149,6 +161,7 @@ const { isMatch, remoteRoomInfo, firstRequestRemoteRoomInfo } =
   storeToRefs(useRoomStore())
 const toast = useToast()
 const pause = ref(false)
+const noMatch = ref(false)
 const offline = ref(false)
 const leave = ref(false)
 const route = useRoute()
@@ -157,6 +170,9 @@ const showCards = computed(() => route.path === '/hall')
 // 关闭 modal 时需要断开 socket 连接，否则会造成自己匹配到自己
 const afterLeave = () => {
   leave.value = true
+  pause.value = false
+  offline.value = false
+  noMatch.value = false
   socket && socket.disconnect()
 }
 
@@ -193,11 +209,11 @@ const initSocket = matchType => {
     if (type === 'fail') {
       // 设置一个延时，否则用户刚点击匹配就立马出现匹配失败
       timer2 = setTimeout(() => {
-        pause.value = true
+        noMatch.value = true
         clearTimeout(timer2)
       }, 2000)
       timer = setTimeout(() => {
-        pause.value = false
+        noMatch.value = false
         socket.emit('match', matchType)
         clearTimeout(timer)
       }, 10000)
@@ -210,6 +226,7 @@ const initSocket = matchType => {
       // 记录房间号
       // setLatestRoom(path, message)
       _remoteRoomInfo.skipRequest = true
+      pause.value = true
       router.replace({ path: target, query: { roomId: message } })
       // 不需要从匹配列表中移除，因为服务器在匹配成功时会自动将你从匹配列表中移除
     }
@@ -219,12 +236,11 @@ const initSocket = matchType => {
 }
 
 const rematch = () => {
-  pause.value = false
+  noMatch.value = false
   offline.value = false
+  pause.value = false
   initSocket(matchType)
 }
-
-// await updateLatestRoom('', '', '')
 
 const onClick = async (_matchType, to) => {
   // 不需要每次都请求房间信息，只在页面首次加载时请求，因为房间信息会随着操作而更新
@@ -240,7 +256,6 @@ const onClick = async (_matchType, to) => {
       const isExit = (await isExitRoom(latestId)).data
       const _remoteRoomInfo = remoteRoomInfo.value
       _remoteRoomInfo.inRoom = latestId && !isExit
-      console.log(_remoteRoomInfo)
       router.replace({
         path: _remoteRoomInfo.path,
         query: { roomId: _remoteRoomInfo.roomId }

@@ -283,23 +283,23 @@ let dataChannel: RTCDataChannel | null = null
 const flag = ref(false)
 const message = ref('')
 const expanded = ref(false)
-const { path, query } = useRoute()
+const {
+  path,
+  query: { roomId }
+} = useRoute()
 const router = useRouter()
 const isReconnect = ref(false)
 const online = ref(false)
 const { isMatch, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
-let hasRemoteRoomId = false
 let isExit = false
 const updateRoomInfo = async () => {
   const latestRoomInfo = (await getLatestRoom()).data
   // 如果 latestId 有值，说明自身还没离开房间
   const latestId = latestRoomInfo?.latestId
-  hasRemoteRoomId = Boolean(latestId)
-  console.log(latestRoomInfo)
 
-  if (hasRemoteRoomId) {
+  if (latestId) {
     remoteRoomInfo.value = latestRoomInfo
     isExit = (await isExitRoom(latestId)).data
     latestRoomInfo.inRoom = !isExit
@@ -307,7 +307,7 @@ const updateRoomInfo = async () => {
 }
 remoteRoomInfo.value.skipRequest ? null : await updateRoomInfo()
 let _remoteRoomInfo = remoteRoomInfo.value
-_remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (query.roomId as string)
+_remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (roomId as string)
 // 双方中任意一方离开时，值会修改为 true
 const leaved = ref(isExit)
 const otherLeaved = ref(isExit)
@@ -469,7 +469,6 @@ let lastMsgTimeStamp = t[t.length - 1]?.timestamp || 0
 const overFiveMins = timestamp => timestamp - lastMsgTimeStamp > fiveMins
 
 const addMessageLabelToDB = async (timestamp: number) => {
-  console.log(timestamp, lastMsgTimeStamp)
   if (overFiveMins(timestamp)) {
     await addMessageToDB({
       roomId: _remoteRoomInfo.roomId,
@@ -665,28 +664,56 @@ const onDisconnect = () => useDisconnect(pc, leaved, isReconnect)
 const onRtc = (roomId: string, data: any) =>
   useInitRtc(pc, socket, roomId, data, makingOffer, polite, _userInfo)
 
-const simpleLeave = () => {
-  _remoteRoomInfo.roomId = _remoteRoomInfo.path = _remoteRoomInfo.latestId = ''
-  _remoteRoomInfo.inRoom = false
+// 被动离开的一方会显示底部按钮，点击后
+const simpleLeave = async () => {
+  // 被动离开的一方会显示底部按钮，如果是刚进入房间时发现对方离开了，要清空远程房间信息
+  // 和本地聊天记录，如果是双方建立连接后，对方离开后，只需要修改路由即可，
+  // 清空远程房间信息和本地聊天记录和本地房间信息的操作在 onBye 中完成了
+  if (_remoteRoomInfo.latestId) {
+    await leaveAfterConnected()
+  } else {
+    _remoteRoomInfo.roomId =
+      _remoteRoomInfo.path =
+      _remoteRoomInfo.latestId =
+        ''
+    _remoteRoomInfo.inRoom = false
+  }
+
   router.replace('/hall')
 }
 
-// 双方已建立连接后，其中一方离开
-const leaveAfterConnected = async () => {
+const closePCAndSocket = () => {
+  // 如果访问时发现对方已经离开，不会进行 pc 和 socket 初始化
   useClosePC(pc)
-  socket.disconnect()
+  socket && socket.disconnect()
+}
+
+// 双方建立连接后，其中一方离开后，双方都会执行这个函数，主动离开的一方在 onLeave 中
+// 执行，被动离开的一方在 onBye 执行
+const leaveAfterConnected = async () => {
+  closePCAndSocket()
   // 清空房间信息
   await useClearMessages(_remoteRoomInfo.roomId)
   await updateLatestRoom()
   useScrollToBottom()
   leaved.value = true
-  otherInfo.value = null
   online.value = false
+  otherInfo.value = null
+  _remoteRoomInfo.roomId = _remoteRoomInfo.path = _remoteRoomInfo.latestId = ''
+  _remoteRoomInfo.inRoom = false
 }
 
-// 主动离开
+// 主动离开，一定是双方都没有离开时才可能被触发的函数
+// TODO: 处理连接建立后，其中一方断网，另一方离开，网络恢复后的逻辑
 const onLeave = async close => {
-  useLeave(close, _remoteRoomInfo, socket, simpleLeave)
+  useLeave(
+    close,
+    _remoteRoomInfo,
+    socket,
+    online.value,
+    leaveAfterConnected,
+    simpleLeave
+  )
 }
 
 const onBye = async () => useBye(leaveAfterConnected, otherLeaved)
@@ -699,8 +726,7 @@ const initSocket = () => {
     onRtc,
     isReconnect,
     _remoteRoomInfo.roomId,
-    isFull,
-    leaveAfterConnected
+    isFull
   )
   // 其他人离开房间
   socket.on('bye', onBye)
@@ -717,7 +743,14 @@ const onReceiveFileMetadata = () => (flag.value = true)
 const onSavedFile = () => (flag.value = true)
 
 onMounted(async () => {
-  useMounted(initSocket, router, hasRemoteRoomId, path, _remoteRoomInfo)
+  useMounted(
+    initSocket,
+    router,
+    path,
+    _remoteRoomInfo,
+    otherLeaved.value,
+    roomId as string
+  )
 })
 
 onBeforeUnmount(() => useBeforeUnmount(socket))
