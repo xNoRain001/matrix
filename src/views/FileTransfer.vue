@@ -141,7 +141,7 @@
         <UButton
           class="mt-4"
           @click="simpleLeave"
-          :label="isRoomMode ? '重新进入房间' : '重新匹配'"
+          :label="isMatch ? '重新匹配' : '重新进入房间'"
         ></UButton>
       </div>
     </template>
@@ -192,16 +192,11 @@ const flag = ref(false)
 const inSending = ref(false)
 const inReceving = ref(false)
 const receivedFiles: receivedFiles = ref([])
-const {
-  path,
-  query,
-  meta: { tab, parentPath }
-} = useRoute()
-const isRoomMode = tab === 'room'
+const { path, query } = useRoute()
 const router = useRouter()
 const isReconnect = ref(false)
 const online = ref(false)
-const { remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
+const { isMatch, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
 let hasRemoteRoomId = false
@@ -287,7 +282,7 @@ const onSavedFile = () => (flag.value = true)
 
 const initPC = () => {
   pc = useCreatePeerConnection(
-    isRoomMode ? '/room/file-transfer' : '/match/file-transfer',
+    '/hall/file-transfer',
     socket,
     _remoteRoomInfo,
     online,
@@ -320,7 +315,7 @@ const onRtc = (roomId: string, data: any) =>
 const simpleLeave = () => {
   _remoteRoomInfo.roomId = _remoteRoomInfo.path = _remoteRoomInfo.latestId = ''
   _remoteRoomInfo.inRoom = false
-  router.replace(parentPath)
+  router.replace('/hall')
 }
 
 const leaveAfterConnected = async () => {

@@ -9,12 +9,9 @@
 import { updateLatestRoom } from '@/apis/latest-room'
 import { useRoomStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const {
-  meta: { parentPath }
-} = useRoute()
 const { remoteRoomInfo } = storeToRefs(useRoomStore())
 const _remoteRoomInfo = remoteRoomInfo.value
 
@@ -23,6 +20,6 @@ const useLeaveFullRoom = async () => {
   _remoteRoomInfo.roomId = _remoteRoomInfo.path = _remoteRoomInfo.latestId = ''
   _remoteRoomInfo.inRoom = false
   await updateLatestRoom()
-  router.replace(parentPath)
+  router.replace('/hall')
 }
 </script>

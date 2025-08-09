@@ -1,48 +1,28 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
+import Hall from '@/views/Hall.vue'
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/match',
-      component: () => import('@/views/Match.vue'),
-      meta: { auth: true, tab: 'match' },
+      path: '/hall',
+      meta: { auth: true, tab: 'hall' },
+      component: Hall,
       children: [
         {
           path: 'chat',
-          meta: { requireRoomId: true, parentPath: '/match' },
+          meta: { requireRoomId: true },
           component: () => import('@/views/Chat.vue')
         },
         {
           path: 'audio-chat',
-          meta: { requireRoomId: true, parentPath: '/match' },
+          meta: { requireRoomId: true },
           component: () => import('@/views/AudioChat.vue')
         },
         {
           path: 'file-transfer',
-          meta: { requireRoomId: true, parentPath: '/match' },
-          component: () => import('@/views/FileTransfer.vue')
-        }
-      ]
-    },
-    {
-      path: '/room',
-      component: () => import('@/views/Room.vue'),
-      meta: { auth: true, tab: 'room' },
-      children: [
-        {
-          path: 'chat',
-          meta: { requireRoomId: true, parentPath: '/room' },
-          component: () => import('@/views/Chat.vue')
-        },
-        {
-          path: 'audio-chat',
-          meta: { requireRoomId: true, parentPath: '/room' },
-          component: () => import('@/views/AudioChat.vue')
-        },
-        {
-          path: 'file-transfer',
-          meta: { requireRoomId: true, parentPath: '/room' },
+          meta: { requireRoomId: true },
           component: () => import('@/views/FileTransfer.vue')
         }
       ]
@@ -72,7 +52,7 @@ const router = createRouter({
 
 router.beforeEach(({ path, query, meta }, _, next) => {
   const token = localStorage.getItem('token')
-  const { auth, requireRoomId, parentPath } = meta
+  const { auth, requireRoomId } = meta
 
   // 未登录状态访问需要 token 的页面，跳转到登录页面
   if (auth === true && !token) {
@@ -81,7 +61,7 @@ router.beforeEach(({ path, query, meta }, _, next) => {
 
   // 登录状态访问登录、重置密码等不需要 token 的页面，禁止访问
   if (auth === false && token) {
-    return next({ path: '/match' })
+    return next({ path: '/hall' })
   }
 
   if (path === '/') {
@@ -100,7 +80,7 @@ router.beforeEach(({ path, query, meta }, _, next) => {
   // 没有 roomId 时返回上级路由
   if (requireRoomId) {
     if (!query.roomId) {
-      return next({ path: parentPath as string })
+      return next({ path: '/hall' })
     }
   }
 

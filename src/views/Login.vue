@@ -1,5 +1,7 @@
 <template>
-  <div class="flex h-[calc(100vh-2rem)] w-full items-center justify-center">
+  <div
+    class="absolute top-0 right-0 bottom-0 left-0 flex items-center justify-center p-4"
+  >
     <div class="bg-elevated w-full max-w-[30rem] rounded-xl p-4">
       <div class="relative flex items-center justify-center">
         <UButton
@@ -208,7 +210,6 @@
 
 <script lang="ts" setup>
 import { watch, reactive, ref } from 'vue'
-
 import { useEncryptUserInfo } from '@/hooks'
 import { useRouter } from 'vue-router'
 import { useUserInfoStore } from '@/store'
@@ -413,7 +414,7 @@ const onLogin = async () => {
     } = await login(encryptedUserInfo)
     localStorage.setItem('token', token)
     userInfo.value = _userInfo
-    router.replace('/match')
+    router.replace('/hall')
     toast.add({
       title: '登录成功',
       color: 'success'
@@ -435,7 +436,7 @@ watch(registerPin, async v => {
       } = await validatePin('register', registerForm.email, v.join(''))
       localStorage.setItem('token', token)
       userInfo.value = _userInfo
-      router.replace('/match')
+      router.replace('/hall')
       toast.add({
         title: '登录成功',
         color: 'success'
@@ -459,7 +460,7 @@ watch(loginWithVCPin, async v => {
       } = await validatePin('login', loginWithVCForm.email, v.join(''))
       localStorage.setItem('token', token)
       userInfo.value = _userInfo
-      router.replace('/match')
+      router.replace('/hall')
       toast.add({
         title: '登录成功',
         color: 'success'

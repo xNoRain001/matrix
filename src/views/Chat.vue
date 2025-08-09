@@ -140,7 +140,7 @@
           <UButton
             class="mt-4"
             @click="simpleLeave"
-            :label="isRoomMode ? '重新进入房间' : '重新匹配'"
+            :label="isMatch ? '重新匹配' : '重新进入房间'"
           ></UButton>
         </div>
         <div v-else class="flex w-full max-w-(--room-width) flex-col">
@@ -283,16 +283,11 @@ let dataChannel: RTCDataChannel | null = null
 const flag = ref(false)
 const message = ref('')
 const expanded = ref(false)
-const {
-  path,
-  query,
-  meta: { tab, parentPath }
-} = useRoute()
-const isRoomMode = tab === 'room'
+const { path, query } = useRoute()
 const router = useRouter()
 const isReconnect = ref(false)
 const online = ref(false)
-const { remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
+const { isMatch, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
 let hasRemoteRoomId = false
@@ -302,6 +297,7 @@ const updateRoomInfo = async () => {
   // 如果 latestId 有值，说明自身还没离开房间
   const latestId = latestRoomInfo?.latestId
   hasRemoteRoomId = Boolean(latestId)
+  console.log(latestRoomInfo)
 
   if (hasRemoteRoomId) {
     remoteRoomInfo.value = latestRoomInfo
@@ -630,7 +626,7 @@ const updateLastMsgStamp = () => {
 // TODO: 和 file-transfer 合并
 const initPC = () => {
   pc = useCreatePeerConnection(
-    isRoomMode ? '/room/chat' : '/match/chat',
+    '/hall/chat',
     socket,
     _remoteRoomInfo,
     online,
@@ -672,7 +668,7 @@ const onRtc = (roomId: string, data: any) =>
 const simpleLeave = () => {
   _remoteRoomInfo.roomId = _remoteRoomInfo.path = _remoteRoomInfo.latestId = ''
   _remoteRoomInfo.inRoom = false
-  router.replace(parentPath)
+  router.replace('/hall')
 }
 
 // 双方已建立连接后，其中一方离开

@@ -1,22 +1,7 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
-.bg-x-card {
-  background-color: #202127 !important;
-}
-
-.bg-x-dark {
-  background-color: #010409 !important;
-}
-
-.bg-x-drawer {
-  background-color: #0d1117 !important;
-}
-
 :root {
-  /* header 高度为 50px，page 的 padding 为 2rem */
-  --content-height: calc(100vh - 50px - 2rem - 1px);
   --room-width: 650px;
+  --color-indigo-400 : oklch(67.3% .182 276.935)
 }
-
-/* filter: drop-shadow(rgba(0, 122, 204, 0.3) 0px 8px 24px); */

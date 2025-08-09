@@ -1,6 +1,6 @@
 import type { Socket } from 'socket.io-client'
 
-const useLeaveRoom = (
+const useLeave = (
   close: Function,
   remoteRoomInfo,
   socket: Socket,
@@ -18,4 +18,4 @@ const useLeaveRoom = (
   }
 }
 
-export default useLeaveRoom
+export default useLeave

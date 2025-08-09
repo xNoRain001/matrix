@@ -3,7 +3,7 @@
     <!-- header -->
     <div
       v-if="userInfo && !remoteRoomInfo.roomId"
-      class="bg-default fixed top-0 h-16 w-full border-b border-b-(--ui-border)"
+      class="bg-default fixed top-0 z-10 h-16 w-full border-b border-b-(--ui-border)"
     >
       <div class="flex h-full items-center justify-between px-4">
         <img
@@ -71,16 +71,10 @@ import { useRoute, useRouter } from 'vue-router'
 const isDesktop = useMediaQuery('(min-width: 768px)')
 const menus = [
   {
-    label: '匹配',
+    label: '大厅',
     icon: 'ic:baseline-auto-awesome',
-    to: '/match',
-    value: 'match'
-  },
-  {
-    label: '房间',
-    icon: 'ic:baseline-chair',
-    to: '/room',
-    value: 'room'
+    to: '/hall',
+    value: 'hall'
   },
   {
     label: '我的',

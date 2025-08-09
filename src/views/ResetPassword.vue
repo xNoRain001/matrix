@@ -1,5 +1,7 @@
 <template>
-  <div class="flex h-[calc(100vh-2rem)] w-full items-center justify-center">
+  <div
+    class="absolute top-0 right-0 bottom-0 left-0 flex items-center justify-center p-4"
+  >
     <div class="bg-elevated w-full max-w-[30rem] rounded-xl p-4">
       <div class="text-center font-bold">重置密码</div>
 

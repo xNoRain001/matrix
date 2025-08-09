@@ -13,7 +13,7 @@
     <template #body>
       <div v-if="!leaved" class="flex h-full items-center justify-center">
         <div
-          class="relative flex h-full w-full max-w-[var(--room-width)] flex-col justify-center"
+          class="relative flex h-full w-full max-w-(--room-width) flex-col justify-center"
         >
           <div class="absolute top-0 right-6">
             <UDropdownMenu
@@ -127,7 +127,7 @@
         <UButton
           class="mt-4"
           @click="simpleLeave"
-          :label="isRoomMode ? '重新进入房间' : '重新匹配'"
+          :label="isMatch ? '重新匹配' : '重新进入房间'"
         ></UButton>
       </div>
     </template>
@@ -205,16 +205,11 @@ const _speakerOptions = speakerOptions.map(item => ({ label: item, icon: '' }))
 const volume = ref(1)
 const localAudioRef = ref(null)
 const remoteAudioRef = ref(null)
-const {
-  path,
-  query,
-  meta: { tab, parentPath }
-} = useRoute()
-const isRoomMode = tab === 'room'
+const { path, query } = useRoute()
 const router = useRouter()
 const isReconnect = ref(false)
 const online = ref(false)
-const { remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
+const { isMatch, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
 let hasRemoteRoomId = false
@@ -252,7 +247,7 @@ const isFull = ref(false)
 
 const initPC = async () => {
   pc = useCreatePeerConnection(
-    isRoomMode ? '/room/audio-chat' : '/match/audio-chat',
+    '/hall/audio-chat',
     socket,
     _remoteRoomInfo,
     online,
@@ -314,7 +309,7 @@ const onTrack = ({ track, streams }) => {
 const simpleLeave = () => {
   _remoteRoomInfo.roomId = _remoteRoomInfo.path = _remoteRoomInfo.latestId = ''
   _remoteRoomInfo.inRoom = false
-  router.replace(parentPath)
+  router.replace('/hall')
 }
 
 const leaveAfterConnected = async () => {
