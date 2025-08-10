@@ -26,21 +26,24 @@
     ></UButton>
   </div>
 
+  <DefineLeaveRoomFooterTemplate>
+    <UButton
+      label="取消"
+      color="neutral"
+      variant="outline"
+      class="justify-center"
+      @click="isOpenLeaveRoomModal = false"
+    />
+    <UButton label="确认" @click="onLeave" class="justify-center" />
+  </DefineLeaveRoomFooterTemplate>
   <UModal
     v-if="isDesktop"
     v-model:open="isOpenLeaveRoomModal"
     title="离开房间"
     description=" "
   >
-    <template #footer="{ close }">
-      <UButton
-        label="取消"
-        color="neutral"
-        variant="outline"
-        class="justify-center"
-        @click="close"
-      />
-      <UButton label="确认" @click="onClick(close)" class="justify-center" />
+    <template #footer>
+      <ReuseLeaveRoomFooterTemplate></ReuseLeaveRoomFooterTemplate>
     </template>
   </UModal>
   <UDrawer
@@ -50,34 +53,30 @@
     description=" "
   >
     <template #footer>
-      <UButton
-        label="取消"
-        color="neutral"
-        variant="outline"
-        class="justify-center"
-        @click="isOpenLeaveRoomModal = false"
-      />
-      <UButton
-        label="确认"
-        @click="onClick(() => (isOpenLeaveRoomModal = false))"
-        class="justify-center"
-      />
+      <ReuseLeaveRoomFooterTemplate></ReuseLeaveRoomFooterTemplate>
     </template>
   </UDrawer>
 </template>
 
 <script lang="ts" setup>
 import { useRoomStore } from '@/store'
-import { useMediaQuery } from '@vueuse/core'
+import { createReusableTemplate, useMediaQuery } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 
-defineProps<{
+const { onClick } = defineProps<{
   online: boolean
   leaved: boolean
-  onClick: (close) => void
+  onClick: Function
 }>()
+const [DefineLeaveRoomFooterTemplate, ReuseLeaveRoomFooterTemplate] =
+  createReusableTemplate()
 const isDesktop = useMediaQuery('(min-width: 768px)')
 const isOpenLeaveRoomModal = ref(false)
 const { otherInfo, remoteRoomInfo } = storeToRefs(useRoomStore())
+
+const onLeave = () => {
+  isOpenLeaveRoomModal.value = true
+  onClick()
+}
 </script>

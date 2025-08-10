@@ -13,9 +13,7 @@
 
     <template #content>
       <fieldset>
-        <legend class="mb-2 text-[11px] leading-none font-semibold">
-          主题色
-        </legend>
+        <legend class="mb-2 text-xs leading-none font-semibold">主题色</legend>
 
         <div class="-mx-2 grid grid-cols-3 gap-1">
           <ThemePickerButton
@@ -42,9 +40,7 @@
       </fieldset>
 
       <fieldset>
-        <legend class="mb-2 text-[11px] leading-none font-semibold">
-          中性色
-        </legend>
+        <legend class="mb-2 text-xs leading-none font-semibold">中性色</legend>
 
         <div class="-mx-2 grid grid-cols-3 gap-1">
           <ThemePickerButton
@@ -59,9 +55,7 @@
       </fieldset>
 
       <fieldset>
-        <legend class="mb-2 text-[11px] leading-none font-semibold">
-          圆角
-        </legend>
+        <legend class="mb-2 text-xs leading-none font-semibold">圆角</legend>
 
         <div class="-mx-2 grid grid-cols-5 gap-1">
           <ThemePickerButton
@@ -76,9 +70,7 @@
       </fieldset>
 
       <fieldset>
-        <legend class="mb-2 text-[11px] leading-none font-semibold">
-          主题
-        </legend>
+        <legend class="mb-2 text-xs leading-none font-semibold">主题</legend>
 
         <div class="-mx-2 grid grid-cols-3 gap-1">
           <ThemePickerButton

@@ -1,57 +1,10 @@
 <template>
-  <DefineNicknameFormBodyTemplate>
-    <UFormField
-      :ui="{ help: 'text-right pr-4' }"
-      :help="`${userInfo.nickname.length} / 30`"
-    >
-      <UInput v-model="userInfo.nickname" class="w-full" maxlength="30">
-        <template v-if="userInfo.nickname" #trailing>
-          <UButton
-            color="neutral"
-            variant="link"
-            icon="i-lucide-circle-x"
-            aria-label="Clear input"
-            @click="userInfo.nickname = ''"
-          />
-        </template>
-      </UInput>
-    </UFormField>
-  </DefineNicknameFormBodyTemplate>
-  <DefineGenderFormBodyTemplate>
-    <USelect class="w-full" v-model="userInfo.gender" :items="genderOptions" />
-  </DefineGenderFormBodyTemplate>
-  <DefineBirthdayFormBodyTemplate>
-    <UInput
-      class="w-full"
-      v-model="userInfo.birthday"
-      v-maska="'####/##/##'"
-      placeholder="YYYY/MM/DD"
-      icon="i-lucide-calendar"
-    />
-  </DefineBirthdayFormBodyTemplate>
-  <DefineRegionFormBodyTemplate>
-    <div class="space-x-2">
-      <USelectMenu class="w-1/3" v-model="province" :items="provinceOptions" />
-      <USelectMenu class="w-1/3" v-model="city" :items="cityOptions" />
-    </div>
-  </DefineRegionFormBodyTemplate>
-  <DefineLogoutFooterTemplate>
-    <UButton
-      label="取消"
-      color="neutral"
-      variant="outline"
-      class="justify-center"
-      @click="openLogoutDrawer = false"
-    />
-    <UButton label="确认" class="justify-center" @click="onLogout" />
-  </DefineLogoutFooterTemplate>
-
   <div class="flex flex-col items-center">
     <div class="w-full max-w-(--room-width)">
       <div class="ml-6 flex items-center">
         <UAvatar :text="userInfo?.nickname?.[0]" size="3xl" />
         <div class="ml-4 w-[calc(100%-5.5rem)]">
-          <span class="text-xl font-bold">您好</span>
+          <span class="text-xl font-semibold">您好</span>
           <div class="overflow-hidden text-ellipsis whitespace-nowrap">
             {{ userInfo?.nickname }}
           </div>
@@ -237,6 +190,16 @@
       </template>
     </UDrawer>
 
+    <DefineLogoutFooterTemplate>
+      <UButton
+        label="取消"
+        color="neutral"
+        variant="outline"
+        class="justify-center"
+        @click="openLogoutDrawer = false"
+      />
+      <UButton label="确认" class="justify-center" @click="onLogout" />
+    </DefineLogoutFooterTemplate>
     <UModal
       v-if="isDesktop"
       v-model:open="openLogoutDrawer"
@@ -259,6 +222,24 @@
       </template>
     </UDrawer>
 
+    <DefineNicknameFormBodyTemplate>
+      <UFormField
+        :ui="{ help: 'text-right pr-4' }"
+        :help="`${userInfo.nickname.length} / 30`"
+      >
+        <UInput v-model="userInfo.nickname" class="w-full" maxlength="30">
+          <template v-if="userInfo.nickname" #trailing>
+            <UButton
+              color="neutral"
+              variant="link"
+              icon="i-lucide-circle-x"
+              aria-label="Clear input"
+              @click="userInfo.nickname = ''"
+            />
+          </template>
+        </UInput>
+      </UFormField>
+    </DefineNicknameFormBodyTemplate>
     <UModal
       v-if="isDesktop"
       v-model:open="openNicknameDrawer"
@@ -280,6 +261,13 @@
       </template>
     </UDrawer>
 
+    <DefineGenderFormBodyTemplate>
+      <USelect
+        class="w-full"
+        v-model="userInfo.gender"
+        :items="genderOptions"
+      />
+    </DefineGenderFormBodyTemplate>
     <UModal
       v-if="isDesktop"
       v-model:open="openGenderDrawer"
@@ -301,6 +289,15 @@
       </template>
     </UDrawer>
 
+    <DefineBirthdayFormBodyTemplate>
+      <UInput
+        class="w-full"
+        v-model="userInfo.birthday"
+        v-maska="'####/##/##'"
+        placeholder="YYYY/MM/DD"
+        icon="i-lucide-calendar"
+      />
+    </DefineBirthdayFormBodyTemplate>
     <UModal
       v-if="isDesktop"
       v-model:open="openBirthdayDrawer"
@@ -322,6 +319,16 @@
       </template>
     </UDrawer>
 
+    <DefineRegionFormBodyTemplate>
+      <div class="space-x-2">
+        <USelectMenu
+          class="w-1/3"
+          v-model="province"
+          :items="provinceOptions"
+        />
+        <USelectMenu class="w-1/3" v-model="city" :items="cityOptions" />
+      </div>
+    </DefineRegionFormBodyTemplate>
     <UModal
       v-if="isDesktop"
       v-model:open="openRegionDrawer"

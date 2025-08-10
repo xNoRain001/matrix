@@ -12,7 +12,7 @@
           color="neutral"
           icon="lucide:chevron-left"
         ></UButton>
-        <div class="text-center font-bold">
+        <div class="text-center font-semibold">
           {{
             isLogin
               ? '登录'

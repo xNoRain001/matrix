@@ -1,15 +1,12 @@
 import type { Socket } from 'socket.io-client'
 
 const useLeave = async (
-  close: Function,
   remoteRoomInfo,
   socket: Socket,
   online: boolean,
   leaveAfterConnected: Function,
   simpleLeave: Function
 ) => {
-  close()
-
   // 对方可能不在线
   if (online) {
     socket.emit('leave', remoteRoomInfo.roomId)

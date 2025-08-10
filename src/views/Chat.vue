@@ -840,9 +840,8 @@ const leaveAfterConnected = async () => {
 
 // 主动离开，一定是双方都没有离开时才可能被触发的函数
 // TODO: 处理连接建立后，其中一方断网，另一方离开，网络恢复后的逻辑
-const onLeave = async close => {
+const onLeave = async () => {
   useLeave(
-    close,
     _remoteRoomInfo,
     socket,
     online.value,

@@ -2,12 +2,18 @@
   <div v-show="showCards" class="relative">
     <div class="flex items-center justify-end gap-4">
       <UButton
+        @click="isOpenFilterDrawer = true"
         label="筛选"
-        icon="i-lucide-rocket"
-        variant="ghost"
+        icon="lucide:filter"
         color="neutral"
+        variant="ghost"
+        :ui="{ leadingIcon: 'text-primary', label: 'font-semibold' }"
       ></UButton>
-      <USwitch v-model="isMatch" :label="`${isMatch ? '匹配' : '房间'}`" />
+      <USwitch
+        v-model="isMatch"
+        :ui="{ label: 'font-semibold' }"
+        :label="`${isMatch ? '匹配' : '房间'}`"
+      />
     </div>
     <div class="mt-4 grid grid-cols-2 gap-4">
       <div
@@ -23,7 +29,7 @@
           >
             {{ icon }}
           </div>
-          <h2 class="mt-5 leading-6 font-bold">
+          <h2 class="mt-5 leading-6 font-semibold">
             {{ title }}
           </h2>
           <p class="mt-2 text-sm leading-6">
@@ -58,33 +64,74 @@
   >
     <template #body>
       <div class="flex h-full items-center justify-center">
-        <div v-if="offline" class="flex flex-col items-center">
-          <UIcon name="lucide:wifi-off" class="text-error size-5"></UIcon>
-          <div class="text-error mt-4">网络错误</div>
-          <UButton
-            @click="rematch"
-            variant="outline"
-            class="mt-4"
-            label="重新匹配"
-          ></UButton>
-        </div>
         <UButton
-          v-else-if="pause"
-          label="继续匹配"
+          v-if="offline"
+          icon="lucide:wifi-off"
           @click="rematch"
-          variant="outline"
+          color="error"
+          label="重新匹配"
         ></UButton>
-        <div v-else class="flex flex-col items-center">
+        <UButton v-else-if="pause" label="继续匹配" @click="rematch"></UButton>
+        <div v-else class="flex flex-col items-center text-sm">
           <UIcon
             name="lucide:loader-pinwheel"
             class="size-5 animate-spin"
           ></UIcon>
-          <div class="mt-4" v-if="noMatch">暂未匹配到对方，10 秒后重试...</div>
+          <div class="mt-4" v-if="noMatch">暂未匹配到对方，请耐心等待...</div>
           <div class="mt-4" v-else>正在匹配中...</div>
         </div>
       </div>
     </template>
   </UModal>
+
+  <DefineFilterBodyTemplate>
+    <div class="flex items-center">
+      <div class="font-semibold">性别：</div>
+      <UButtonGroup class="ml-2">
+        <UButton
+          @click="onSelectGender('male')"
+          :color="selectedGender === 'male' ? 'primary' : 'neutral'"
+          :variant="selectedGender === 'male' ? 'solid' : 'outline'"
+          label="男"
+          class="font-semibold"
+        />
+        <UButton
+          @click="onSelectGender('female')"
+          :color="selectedGender === 'female' ? 'primary' : 'neutral'"
+          :variant="selectedGender === 'female' ? 'solid' : 'outline'"
+          label="女"
+          class="font-semibold"
+        />
+        <UButton
+          @click="onSelectGender('other')"
+          :color="selectedGender === 'other' ? 'primary' : 'neutral'"
+          :variant="selectedGender === 'other' ? 'solid' : 'outline'"
+          label="不限"
+          class="font-semibold"
+        />
+      </UButtonGroup>
+    </div>
+  </DefineFilterBodyTemplate>
+  <UModal
+    v-if="isDesktop"
+    title="筛选"
+    description=" "
+    v-model:open="isOpenFilterDrawer"
+  >
+    <template #body>
+      <ReuseFilterBodyTemplate></ReuseFilterBodyTemplate>
+    </template>
+  </UModal>
+  <UDrawer
+    v-else
+    title="筛选"
+    description=" "
+    v-model:open="isOpenFilterDrawer"
+  >
+    <template #body>
+      <ReuseFilterBodyTemplate></ReuseFilterBodyTemplate>
+    </template>
+  </UDrawer>
 
   <router-view v-if="!showCards"></router-view>
 </template>
@@ -99,12 +146,15 @@ import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { io } from 'socket.io-client'
 import { getLatestRoom, isExitRoom } from '@/apis/latest-room'
+import { createReusableTemplate, useMediaQuery } from '@vueuse/core'
 
 let socket = null
 let target = ''
 let matchType = ''
 let timer = null
-let timer2 = null
+const [DefineFilterBodyTemplate, ReuseFilterBodyTemplate] =
+  createReusableTemplate()
+const isDesktop = useMediaQuery('(min-width: 768px)')
 const list = [
   {
     icon: '💬',
@@ -156,6 +206,7 @@ const pin = ref([])
 const pinLength = 4
 const isOpenRoomDrawer = ref(false)
 const isOpenMatchDrawer = ref(false)
+const isOpenFilterDrawer = ref(false)
 const router = useRouter()
 const { isMatch, remoteRoomInfo, firstRequestRemoteRoomInfo } =
   storeToRefs(useRoomStore())
@@ -166,6 +217,11 @@ const offline = ref(false)
 const leave = ref(false)
 const route = useRoute()
 const showCards = computed(() => route.path === '/hall')
+const selectedGender = ref('male')
+
+const onSelectGender = gender => {
+  selectedGender.value = gender
+}
 
 // 关闭 modal 时需要断开 socket 连接，否则会造成自己匹配到自己
 const afterLeave = () => {
@@ -186,7 +242,9 @@ const initSocket = matchType => {
   // 如果匹配中突然断网，需要很久才会触发这个回调，之后会去重试，重试时如果失败触发
   // connect_error 回调
   socket.on('disconnect', () => {
-    if (!leave.value) {
+    // 匹配成功时会跳转路由，关闭 modal，断开 socket 连接，只通过 !leave.value 判断
+    // 连接服务器失败会造成匹配成功时出现连接服务器失败提示
+    if (!leave.value && !pause.value) {
       offline.value = true
       toast.add({
         title: '连接服务器失败...',
@@ -207,23 +265,22 @@ const initSocket = matchType => {
     const { type, message } = data
 
     if (type === 'fail') {
-      // 设置一个延时，否则用户刚点击匹配就立马出现匹配失败
-      timer2 = setTimeout(() => {
-        noMatch.value = true
-        clearTimeout(timer2)
-      }, 2000)
+      noMatch.value = true
+
+      // 不需要重新发送匹配，因为仍在匹配列表中
       timer = setTimeout(() => {
         noMatch.value = false
-        socket.emit('match', matchType)
         clearTimeout(timer)
-      }, 10000)
+      }, 2000)
     } else if (type === 'suc') {
-      // 可能出现匹配失败，等待再次匹配的过程中被别人给匹配到了
+      // 可能出现未匹配到对方，等待再次匹配的过程中被别人给匹配到了
       clearTimeout(timer)
       const _remoteRoomInfo = remoteRoomInfo.value
       _remoteRoomInfo.roomId = message
       _remoteRoomInfo.skipRequest = true
       pause.value = true
+      // 手动断开连接，虽然服务器中已经标记该 socket 已匹配并从匹配列表中移除了
+      socket.disconnect()
       router.replace({ path: target, query: { roomId: message } })
       // 不需要从匹配列表中移除，因为服务器在匹配成功时会自动将你从匹配列表中移除
     }
