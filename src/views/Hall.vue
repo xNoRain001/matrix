@@ -274,7 +274,6 @@ const onClick = async (_matchType, to) => {
 
 watch(pin, v => {
   if (v.length === pinLength) {
-    console.log(target)
     const roomId = `${matchType}-${v.join('')}`
     const _remoteRoomInfo = remoteRoomInfo.value
     _remoteRoomInfo.roomId = roomId

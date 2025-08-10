@@ -4,7 +4,7 @@
       <UChip inset :color="online ? 'primary' : 'error'">
         <UAvatar :text="otherInfo?.nickname[0] || ''" size="md" />
       </UChip>
-      <div class="ml-2">
+      <div class="ml-2 text-sm">
         {{
           remoteRoomInfo.latestId
             ? remoteRoomInfo.inRoom

@@ -11,7 +11,6 @@ const useMounted = (
 ) => {
   const { roomId, path, latestId } = remoteRoomInfo
 
-  console.log(latestId)
   // 直接访问带 roomId 的链接
   if (!latestId) {
     // 统一在这里更新 path，因为需要处理用户手动输入 url 的情况，匹配到用户

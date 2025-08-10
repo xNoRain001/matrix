@@ -7,69 +7,129 @@
       <Header :online="online" :leaved="leaved" :on-click="onLeave"></Header>
     </template>
     <template #body>
-      <div class="flex w-full items-center justify-center">
+      <div
+        ref="messageListRef"
+        class="-mt-4 flex w-full items-center justify-center pb-4"
+      >
         <div class="relative w-full max-w-(--room-width)">
           <div
-            class="mb-8"
             v-for="(
-              { type, timestamp, content, sent, showProgress }, index
+              { separator, type, timestamp, content, sent, showProgress }, index
             ) in messageList"
             :key="index"
           >
-            <div v-if="type === 'label'" class="text-center text-sm">
+            <div v-if="type === 'label'" class="mt-4 text-center text-sm">
               {{ formatTimestamp(timestamp) }}
             </div>
             <div v-else-if="type === 'message'">
-              <div v-if="sent" class="flex items-center justify-end gap-3">
-                <div class="bg-elevated/50 border-default border px-4 py-3">
+              <div
+                :class="separator ? 'mt-4' : 'mt-1'"
+                v-if="sent"
+                class="flex items-center justify-end gap-3"
+              >
+                <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
                   {{ content[0] }}
                 </div>
-                <UAvatar :text="userInfo.nickname[0] || ''" size="md" />
+                <UAvatar
+                  v-if="separator"
+                  :text="userInfo.nickname[0] || ''"
+                  size="md"
+                />
+                <div v-else class="h-8 w-8"></div>
               </div>
-              <div v-else class="flex items-center gap-3">
-                <UAvatar :text="otherInfo?.nickname[0] || ''" size="md" />
-                <div class="border-default border px-4 py-3">
+              <div
+                v-else
+                :class="separator ? 'mt-4' : 'mt-1'"
+                class="flex items-center gap-3"
+              >
+                <UAvatar
+                  v-if="separator"
+                  :text="otherInfo?.nickname[0] || ''"
+                  size="md"
+                />
+                <div v-else class="w-8"></div>
+                <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
                   {{ content[0] }}
                 </div>
               </div>
             </div>
             <div v-else-if="type === 'image'">
-              <div v-if="sent" class="flex items-center justify-end gap-3">
-                <div class="bg-elevated/50 border-default border px-4 py-3">
+              <div
+                :class="separator ? 'mt-4' : 'mt-1'"
+                v-if="sent"
+                class="flex items-center justify-end gap-3"
+              >
+                <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
                   <img :src="content[0]" />
                 </div>
-                <UAvatar :text="userInfo.nickname[0] || ''" size="md" />
+                <UAvatar
+                  v-if="separator"
+                  :text="userInfo.nickname[0] || ''"
+                  size="md"
+                />
+                <div v-else class="h-8 w-8"></div>
               </div>
-              <div v-else class="flex items-center gap-3">
-                <UAvatar :text="otherInfo?.nickname[0] || ''" size="md" />
-                <div class="border-default border px-4 py-3">
+              <div
+                v-else
+                :class="separator ? 'mt-4' : 'mt-1'"
+                class="flex items-center gap-3"
+              >
+                <UAvatar
+                  v-if="separator"
+                  :text="otherInfo?.nickname[0] || ''"
+                  size="md"
+                />
+                <div v-else class="w-8"></div>
+                <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
                   <img :src="content[0]" />
                 </div>
               </div>
             </div>
             <div v-else-if="type === 'video'">
-              <div v-if="sent" class="flex items-center justify-end gap-3">
-                <div class="bg-elevated/50 border-default border px-4 py-3">
+              <div
+                :class="separator ? 'mt-4' : 'mt-1'"
+                v-if="sent"
+                class="flex items-center justify-end gap-3"
+              >
+                <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
                   <video :src="content[0]" controls></video>
                 </div>
-                <UAvatar :text="userInfo.nickname[0] || ''" size="md" />
+                <UAvatar
+                  v-if="separator"
+                  :text="userInfo.nickname[0] || ''"
+                  size="md"
+                />
+                <div v-else class="h-8 w-8"></div>
               </div>
-              <div v-else class="flex items-center gap-3">
-                <UAvatar :text="otherInfo?.nickname[0] || ''" size="md" />
-                <div class="border-default border px-4 py-3">
+              <div
+                v-else
+                :class="separator ? 'mt-4' : 'mt-1'"
+                class="flex items-center gap-3"
+              >
+                <UAvatar
+                  v-if="separator"
+                  :text="otherInfo?.nickname[0] || ''"
+                  size="md"
+                />
+                <div v-else class="w-8"></div>
+                <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
                   <video :src="content[0]" controls></video>
                 </div>
               </div>
             </div>
             <div v-else-if="type === 'file'">
-              <div v-if="sent" class="flex items-center justify-end gap-3">
-                <div class="bg-elevated/50 border-default border px-4 py-3">
+              <div
+                :class="separator ? 'mt-4' : 'mt-1'"
+                v-if="sent"
+                class="flex items-center justify-end gap-3"
+              >
+                <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
                   <div class="flex items-center justify-between gap-1.5">
                     <div class="grow">
-                      <div class="text-xs">
+                      <div>
                         {{ content[1] }}
                       </div>
-                      <div class="text-muted text-xs">
+                      <div class="text-muted text-sm">
                         {{ (content[2] / 1024 / 1024).toFixed(2) }} MB
                       </div>
                       <UProgress
@@ -91,19 +151,43 @@
                     />
                   </div>
                 </div>
-                <UAvatar :text="userInfo.nickname[0] || ''" size="md" />
+                <UAvatar
+                  v-if="separator"
+                  :text="userInfo.nickname[0] || ''"
+                  size="md"
+                />
+                <div v-else class="h-8 w-8"></div>
               </div>
-              <div v-else class="flex items-center gap-3">
-                <UAvatar :text="otherInfo?.nickname[0] || ''" size="md" />
-                <div class="border-default border px-4 py-3">
+              <div
+                v-else
+                :class="separator ? 'mt-4' : 'mt-1'"
+                class="flex items-center gap-3"
+              >
+                <UAvatar
+                  v-if="separator"
+                  :text="otherInfo?.nickname[0] || ''"
+                  size="md"
+                />
+                <div v-else class="w-8"></div>
+                <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
                   <div class="flex items-center justify-between gap-1.5">
                     <div class="grow">
-                      <div class="text-xs">
+                      <div>
                         {{ content[1] }}
                       </div>
-                      <div class="text-muted text-xs">
+                      <div class="text-muted text-sm">
                         {{ (content[2] / 1024 / 1024).toFixed(2) }} MB
                       </div>
+                      <UProgress
+                        v-if="
+                          showProgress &&
+                          sendFiles[0].fileStatus.status === sending
+                        "
+                        :ui="{ status: 'justify-start' }"
+                        status
+                        v-model="sendFiles[0].fileStatus.progress"
+                        :max="100"
+                      />
                     </div>
                     <UButton
                       icon="lucide:cloud-download"
@@ -116,13 +200,42 @@
               </div>
             </div>
             <div v-else-if="type === 'audio'">
-              <audio :src="content[0]" controls></audio>
+              <div
+                :class="separator ? 'mt-4' : 'mt-1'"
+                v-if="sent"
+                class="flex items-center justify-end gap-3"
+              >
+                <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
+                  <audio :src="content[0]" controls></audio>
+                </div>
+                <UAvatar
+                  v-if="separator"
+                  :text="userInfo.nickname[0] || ''"
+                  size="md"
+                />
+                <div v-else class="h-8 w-8"></div>
+              </div>
+              <div
+                v-else
+                :class="separator ? 'mt-4' : 'mt-1'"
+                class="flex items-center gap-3"
+              >
+                <UAvatar
+                  v-if="separator"
+                  :text="otherInfo?.nickname[0] || ''"
+                  size="md"
+                />
+                <div v-else class="w-8"></div>
+                <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
+                  <audio :src="content[0]" controls></audio>
+                </div>
+              </div>
             </div>
           </div>
           <div
             v-if="msgStamp.value"
-            class="absolute bottom-2 text-xs"
-            :class="msgStamp.sent ? 'right-15' : 'left-15'"
+            class="absolute -bottom-5 text-xs"
+            :class="msgStamp.sent ? 'right-11' : 'left-11'"
           >
             {{ msgStamp.value }}
           </div>
@@ -140,7 +253,7 @@
           ></UButton>
         </div>
         <div v-else class="flex w-full max-w-(--room-width) flex-col">
-          <div class="flex">
+          <div class="flex gap-2">
             <UButton
               variant="ghost"
               color="neutral"
@@ -156,45 +269,50 @@
             <UButton
               variant="ghost"
               color="neutral"
-              icon="lucide:circle-plus"
+              icon="lucide:smile"
+            ></UButton>
+            <UButton
+              variant="ghost"
+              color="neutral"
+              :icon="expanded ? 'lucide:circle-x' : 'lucide:circle-plus'"
               @click="expanded = !expanded"
             ></UButton>
           </div>
           <UCollapsible v-model:open="expanded">
             <template #content>
-              <div class="mt-4 grid grid-cols-4 gap-y-4">
-                <UButton
-                  color="neutral"
-                  variant="ghost"
-                  icon="lucide:file-image"
-                  @click="onOpenFileSelector(photoInputRef)"
-                  label="照片"
-                  class="flex flex-col"
-                ></UButton>
-                <UButton
-                  color="neutral"
-                  variant="ghost"
-                  icon="lucide:file-video"
-                  @click="onOpenFileSelector(videoInputRef)"
-                  label="视频"
-                  class="flex flex-col"
-                ></UButton>
-                <UButton
-                  color="neutral"
-                  variant="ghost"
-                  icon="lucide:file"
-                  @click="onOpenFileSelector(fileInputRef)"
-                  label="文件"
-                  class="flex flex-col"
-                ></UButton>
-                <UButton
-                  color="neutral"
-                  variant="ghost"
-                  icon="lucide:file-music"
-                  @click="onOpenFileSelector(musicInputRef)"
-                  label="音乐"
-                  class="flex flex-col"
-                ></UButton>
+              <div class="mt-4 grid grid-cols-4 gap-y-4 p-4">
+                <div class="flex flex-col items-center">
+                  <UButton
+                    color="neutral"
+                    icon="lucide:file-image"
+                    @click="onOpenFileSelector(photoInputRef)"
+                  ></UButton>
+                  <div class="mt-2 text-xs">照片</div>
+                </div>
+                <div class="flex flex-col items-center">
+                  <UButton
+                    color="neutral"
+                    icon="lucide:file-video"
+                    @click="onOpenFileSelector(videoInputRef)"
+                  ></UButton>
+                  <div class="mt-2 text-xs">视频</div>
+                </div>
+                <div class="flex flex-col items-center">
+                  <UButton
+                    color="neutral"
+                    icon="lucide:file"
+                    @click="onOpenFileSelector(fileInputRef)"
+                  ></UButton>
+                  <div class="mt-2 text-xs">文件</div>
+                </div>
+                <div class="flex flex-col items-center">
+                  <UButton
+                    color="neutral"
+                    icon="lucide:file-music"
+                    @click="onOpenFileSelector(musicInputRef)"
+                  ></UButton>
+                  <div class="mt-2 text-xs">音乐</div>
+                </div>
               </div>
             </template>
           </UCollapsible>
@@ -269,6 +387,7 @@ import { storeToRefs } from 'pinia'
 import { updateLatestRoom, getLatestRoom, isExitRoom } from '@/apis/latest-room'
 
 let lastMsgTimer = null
+const messageListRef = ref('messageListRef')
 const oepnModal = ref(true)
 const makingOffer = ref(false)
 const polite = ref(true)
@@ -415,6 +534,7 @@ type commonMessage = {
   type: 'message' | 'label' | fileTypes
   sent?: boolean
   timestamp: number
+  separator?: boolean
 }
 
 type message = commonMessage & {
@@ -453,6 +573,7 @@ const getMessages = async () => {
       content[0] = URL.createObjectURL(content[0])
     }
   })
+
   return data
 }
 
@@ -465,13 +586,17 @@ let lastMsgTimeStamp = t[t.length - 1]?.timestamp || 0
 const overFiveMins = timestamp => timestamp - lastMsgTimeStamp > fiveMins
 
 const addMessageLabelToDB = async (timestamp: number) => {
-  if (overFiveMins(timestamp)) {
+  const hasLabel = overFiveMins(timestamp)
+
+  if (hasLabel) {
     await addMessageToDB({
       roomId: _remoteRoomInfo.roomId,
       type: 'label',
       timestamp
     })
   }
+
+  return hasLabel
 
   // 不在这里更新 lastMsgTimeStamp，因为此时视图中还没添加 message label
 }
@@ -534,11 +659,24 @@ const addMessageToView = (messageRecord: dbMessage) => {
 
   _messageList.push(messageRecord as message)
   msgStamp.value = ''
-  useScrollToBottom()
+  useScrollToBottom(messageListRef)
 }
 
 const addMessagesToDB = async (messageRecord: dbMessage) => {
-  await addMessageLabelToDB(messageRecord.timestamp)
+  const hasLabel = await addMessageLabelToDB(messageRecord.timestamp)
+
+  if (hasLabel) {
+    // 有标签的情况下，说明存在时间间隔，就算发送消息的是同一人也需要添加分隔器
+    messageRecord.separator = true
+  } else {
+    const _messageList = messageList.value
+
+    // 不是连续的消息，这条消息添加分隔器（添加 margin-top 样式）
+    if (messageRecord.sent !== _messageList[_messageList.length - 1]?.sent) {
+      messageRecord.separator = true
+    }
+  }
+
   await addMessageToDB({ roomId: _remoteRoomInfo.roomId, ...messageRecord })
 }
 
@@ -577,6 +715,7 @@ const onReceiveMsg = ({ channel }: { channel: RTCDataChannel }) => {
         timestamp
       }
     }
+
     // 本地记录中会将 blob 转为 url，因为必须先保存记录进数据库
     await addMessagesToDB(messageRecord)
     addMessagesToView(messageRecord)
@@ -636,7 +775,7 @@ const initPC = () => {
 const onJoined = (_, __, _polite) => {
   clearInterval(lastMsgTimer)
   useJoined(socket, polite, _remoteRoomInfo.roomId, initPC, _polite)
-  useScrollToBottom()
+  useScrollToBottom(messageListRef)
   updateLastMsgStamp()
   lastMsgTimer = setInterval(() => {
     updateLastMsgStamp()
@@ -691,7 +830,7 @@ const leaveAfterConnected = async () => {
   // 清空房间信息
   await useClearMessages(_remoteRoomInfo.roomId)
   await updateLatestRoom()
-  useScrollToBottom()
+  useScrollToBottom(messageListRef)
   leaved.value = true
   online.value = false
   otherInfo.value = null
