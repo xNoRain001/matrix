@@ -20,7 +20,7 @@ const useMounted = async (
     if (latestId) {
       remoteRoomInfo.value = latestRoomInfo
       const isExit = (await isExitRoom(latestId)).data
-      latestRoomInfo.inRoom = !isExit
+      remoteRoomInfo.value.inRoom = !isExit
       leaved.value = isExit
       otherLeaved.value = isExit
     }

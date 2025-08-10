@@ -2,7 +2,7 @@
   <UApp :toaster="{ position: 'top-center' }">
     <!-- header -->
     <div
-      v-if="userInfo && !remoteRoomInfo.roomId"
+      v-if="userInfo"
       class="bg-default fixed top-0 h-16 w-full border-b border-b-(--ui-border)"
     >
       <div class="flex h-full items-center justify-between px-4">
@@ -17,7 +17,7 @@
 
     <!-- drawer -->
     <UNavigationMenu
-      v-if="userInfo && isDesktop && !remoteRoomInfo.roomId"
+      v-if="userInfo && isDesktop"
       collapsed
       orientation="vertical"
       tooltip
@@ -44,7 +44,7 @@
 
     <!-- footer -->
     <div
-      v-show="userInfo && !remoteRoomInfo.roomId && !isDesktop"
+      v-show="userInfo && !isDesktop"
       class="bg-default fixed bottom-0 h-16 w-full border-t border-t-(--ui-border)"
     >
       <UTabs
@@ -64,7 +64,7 @@
 
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia'
-import { useRoomStore, useUserInfoStore } from './store'
+import { useUserInfoStore } from './store'
 import { useMediaQuery } from '@vueuse/core'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -85,7 +85,6 @@ const menus = [
   }
 ]
 const navs = [menus]
-const { remoteRoomInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const route = useRoute()
 const router = useRouter()

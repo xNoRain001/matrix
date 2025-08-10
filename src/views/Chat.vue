@@ -562,9 +562,7 @@ const getMessages = async () => {
   return data
 }
 
-const messageList = ref<message[]>(
-  remoteRoomInfo.value.roomId ? [...(await getMessages())] : []
-)
+const messageList = ref<message[]>([])
 const t = messageList.value
 let lastMsgTimeStamp = t[t.length - 1]?.timestamp || 0
 
@@ -801,7 +799,7 @@ const simpleLeave = async () => {
       _remoteRoomInfo.path =
       _remoteRoomInfo.latestId =
         ''
-    _remoteRoomInfo.inRoom = false
+    _remoteRoomInfo.showExitRoomTip = _remoteRoomInfo.inRoom = false
   }
 
   router.replace('/hall')
@@ -819,6 +817,7 @@ const leaveAfterConnected = async () => {
   const _remoteRoomInfo = remoteRoomInfo.value
   closePCAndSocket()
   // 清空房间信息
+  console.log('clear message')
   await useClearMessages(_remoteRoomInfo.roomId)
   await updateLatestRoom()
   useScrollToBottom(messageListRef)
@@ -841,7 +840,10 @@ const onLeave = async () => {
   )
 }
 
-const onBye = async () => useBye(leaveAfterConnected, otherLeaved)
+const onBye = async () => {
+  remoteRoomInfo.value.showExitRoomTip = true
+  useBye(leaveAfterConnected, otherLeaved)
+}
 
 const initSocket = () => {
   const { roomId } = remoteRoomInfo.value
@@ -869,7 +871,7 @@ const onReceiveFileMetadata = () => (flag.value = true)
 const onSavedFile = () => (flag.value = true)
 
 onMounted(async () => {
-  useMounted(
+  await useMounted(
     initSocket,
     router,
     path,
@@ -878,6 +880,7 @@ onMounted(async () => {
     leaved,
     otherLeaved
   )
+  messageList.value = [...(await getMessages())]
 })
 
 onBeforeUnmount(() => useBeforeUnmount(socket))

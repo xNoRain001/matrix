@@ -59,7 +59,7 @@
               <div class="mr-2 text-(--ui-text-dimmed)">
                 {{
                   key === 'gender'
-                    ? transformGender(userInfoForm[key])
+                    ? useTransformGender(userInfoForm[key])
                     : userInfoForm[key]
                 }}
               </div>
@@ -359,7 +359,7 @@
 
 <script lang="ts" setup>
 import { updatePassword, updateProfile } from '@/apis/user'
-import { useEncryptUserInfo, useLogout } from '@/hooks'
+import { useEncryptUserInfo, useLogout, useTransformGender } from '@/hooks'
 import { useUserInfoStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { reactive, ref, watch } from 'vue'
@@ -940,9 +940,6 @@ const genderOptions = [
   }
 ]
 const toast = useToast()
-
-const transformGender = v =>
-  v === 'other' ? '未知' : v === 'male' ? '男' : '女'
 
 watch(province, v => {
   cityOptions.value = provinceCityMap[v]
