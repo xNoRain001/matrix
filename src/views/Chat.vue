@@ -384,7 +384,7 @@ import type { Socket } from 'socket.io-client'
 import type { extendedFiles, fileTypes, receivedFiles } from '@/types'
 import { useRoomStore, useUserInfoStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { updateLatestRoom, getLatestRoom, isExitRoom } from '@/apis/latest-room'
+import { updateLatestRoom } from '@/apis/latest-room'
 
 let lastMsgTimer = null
 const messageListRef = ref('messageListRef')
@@ -408,24 +408,9 @@ const online = ref(false)
 const { isMatch, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
-let isExit = false
-const updateRoomInfo = async () => {
-  const latestRoomInfo = (await getLatestRoom()).data
-  // 如果 latestId 有值，说明自身还没离开房间
-  const { latestId } = latestRoomInfo
-
-  if (latestId) {
-    remoteRoomInfo.value = latestRoomInfo
-    isExit = (await isExitRoom(latestId)).data
-    latestRoomInfo.inRoom = !isExit
-  }
-}
-remoteRoomInfo.value.skipRequest ? null : await updateRoomInfo()
-let _remoteRoomInfo = remoteRoomInfo.value
-_remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (roomId as string)
 // 双方中任意一方离开时，值会修改为 true
-const leaved = ref(isExit)
-const otherLeaved = ref(isExit)
+const leaved = ref(false)
+const otherLeaved = ref(false)
 const db = await useGetDB()
 const minute = 60 * 1000
 const fiveMins = 5 * minute
@@ -483,7 +468,7 @@ const sendFile = async (files: extendedFiles, type: fileTypes) => {
       pc,
       socket,
       dataChannel,
-      _remoteRoomInfo.roomId,
+      remoteRoomInfo.value.roomId,
       file as any,
       flag,
       sending,
@@ -561,7 +546,7 @@ const getMessages = async () => {
   const data = await db.getAllFromIndex(
     'messages',
     'roomId',
-    _remoteRoomInfo.roomId
+    remoteRoomInfo.value.roomId
   )
   data.forEach(({ type, content }) => {
     if (
@@ -578,7 +563,7 @@ const getMessages = async () => {
 }
 
 const messageList = ref<message[]>(
-  _remoteRoomInfo.roomId ? [...(await getMessages())] : []
+  remoteRoomInfo.value.roomId ? [...(await getMessages())] : []
 )
 const t = messageList.value
 let lastMsgTimeStamp = t[t.length - 1]?.timestamp || 0
@@ -590,7 +575,7 @@ const addMessageLabelToDB = async (timestamp: number) => {
 
   if (hasLabel) {
     await addMessageToDB({
-      roomId: _remoteRoomInfo.roomId,
+      roomId: remoteRoomInfo.value.roomId,
       type: 'label',
       timestamp
     })
@@ -638,7 +623,7 @@ const addMessageLabelToView = (messageRecord: dbMessage) => {
 
   if (overFiveMins(timestamp)) {
     messageList.value.push({
-      roomId: _remoteRoomInfo.roomId,
+      roomId: remoteRoomInfo.value.roomId,
       type: 'label',
       timestamp
     })
@@ -677,7 +662,10 @@ const addMessagesToDB = async (messageRecord: dbMessage) => {
     }
   }
 
-  await addMessageToDB({ roomId: _remoteRoomInfo.roomId, ...messageRecord })
+  await addMessageToDB({
+    roomId: remoteRoomInfo.value.roomId,
+    ...messageRecord
+  })
 }
 
 const onReceiveMsg = ({ channel }: { channel: RTCDataChannel }) => {
@@ -691,7 +679,7 @@ const onReceiveMsg = ({ channel }: { channel: RTCDataChannel }) => {
         inReceving,
         receivedFiles,
         received,
-        _remoteRoomInfo.roomId,
+        remoteRoomInfo.value.roomId,
         receiveStartTime
       )
 
@@ -762,7 +750,7 @@ const initPC = () => {
   pc = useCreatePeerConnection(
     '/hall/chat',
     socket,
-    _remoteRoomInfo,
+    remoteRoomInfo.value,
     online,
     () => {}
   )
@@ -774,7 +762,7 @@ const initPC = () => {
 // 当自己加入房间时触发
 const onJoined = (_, __, _polite) => {
   clearInterval(lastMsgTimer)
-  useJoined(socket, polite, _remoteRoomInfo.roomId, initPC, _polite)
+  useJoined(socket, polite, remoteRoomInfo.value.roomId, initPC, _polite)
   useScrollToBottom(messageListRef)
   updateLastMsgStamp()
   lastMsgTimer = setInterval(() => {
@@ -787,7 +775,7 @@ const onOtherJoin = () =>
   useOtherJoin(
     pc,
     socket,
-    _remoteRoomInfo.roomId,
+    remoteRoomInfo.value.roomId,
     polite,
     makingOffer,
     initPC,
@@ -804,6 +792,8 @@ const simpleLeave = async () => {
   // 被动离开的一方会显示底部按钮，如果是刚进入房间时发现对方离开了，要清空远程房间信息
   // 和本地聊天记录，如果是双方建立连接后，对方离开后，只需要修改路由即可，
   // 清空远程房间信息和本地聊天记录和本地房间信息的操作在 onBye 中完成了
+  const _remoteRoomInfo = remoteRoomInfo.value
+
   if (_remoteRoomInfo.latestId) {
     await leaveAfterConnected()
   } else {
@@ -826,6 +816,7 @@ const closePCAndSocket = () => {
 // 双方建立连接后，其中一方离开后，双方都会执行这个函数，主动离开的一方在 onLeave 中
 // 执行，被动离开的一方在 onBye 执行
 const leaveAfterConnected = async () => {
+  const _remoteRoomInfo = remoteRoomInfo.value
   closePCAndSocket()
   // 清空房间信息
   await useClearMessages(_remoteRoomInfo.roomId)
@@ -842,7 +833,7 @@ const leaveAfterConnected = async () => {
 // TODO: 处理连接建立后，其中一方断网，另一方离开，网络恢复后的逻辑
 const onLeave = async () => {
   useLeave(
-    _remoteRoomInfo,
+    remoteRoomInfo.value,
     socket,
     online.value,
     leaveAfterConnected,
@@ -853,13 +844,14 @@ const onLeave = async () => {
 const onBye = async () => useBye(leaveAfterConnected, otherLeaved)
 
 const initSocket = () => {
+  const { roomId } = remoteRoomInfo.value
   socket = useInitSocket(
     onJoined,
     onOtherJoin,
     onDisconnect,
     onRtc,
     isReconnect,
-    _remoteRoomInfo.roomId,
+    roomId,
     isFull
   )
   // 其他人离开房间
@@ -867,7 +859,7 @@ const initSocket = () => {
   socket.on('file-metadata', onFileMetadata)
   socket.on('receive-file-metadata', onReceiveFileMetadata)
   socket.on('saved-file', onSavedFile)
-  socket.emit('join', _remoteRoomInfo.roomId)
+  socket.emit('join', roomId)
 
   return socket
 }
@@ -881,9 +873,10 @@ onMounted(async () => {
     initSocket,
     router,
     path,
-    _remoteRoomInfo,
-    otherLeaved.value,
-    roomId as string
+    remoteRoomInfo,
+    roomId as string,
+    leaved,
+    otherLeaved
   )
 })
 

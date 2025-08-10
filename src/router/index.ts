@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
+// 全局导航栏组件，应该直接静态导入避免加载延迟
 import Hall from '@/views/Hall.vue'
+import Profile from '@/views/Profile.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -30,7 +32,7 @@ const router = createRouter({
     {
       path: '/profile',
       meta: { auth: true, tab: 'profile' },
-      component: () => import('@/views/Profile.vue')
+      component: Profile
     },
     {
       path: '/login',

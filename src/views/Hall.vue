@@ -297,32 +297,33 @@ const rematch = () => {
 }
 
 const onClick = async (_matchType, to) => {
-  // 不需要每次都请求房间信息，只在页面首次加载时请求，因为房间信息会随着操作而更新
-  if (firstRequestRemoteRoomInfo.value) {
-    const latestRoomInfo = (await getLatestRoom()).data
-    firstRequestRemoteRoomInfo.value = false
-    // 如果 latestId 有值，说明自身还没离开房间
-    const { latestId } = latestRoomInfo
-
-    if (latestId) {
-      remoteRoomInfo.value = latestRoomInfo
-      // 判断对方是否离开房间
-      const isExit = (await isExitRoom(latestId)).data
-      const _remoteRoomInfo = remoteRoomInfo.value
-      _remoteRoomInfo.inRoom = latestId && !isExit
-      router.replace({
-        path: _remoteRoomInfo.path,
-        query: { roomId: _remoteRoomInfo.roomId }
-      })
-      return
-    }
-  }
-
   target = to
   matchType = _matchType
 
   if (isMatch.value) {
     isOpenMatchDrawer.value = true
+
+    // 不需要每次都请求房间信息，只在页面首次加载时请求，因为房间信息会随着操作而更新
+    if (firstRequestRemoteRoomInfo.value) {
+      const latestRoomInfo = (await getLatestRoom()).data
+      firstRequestRemoteRoomInfo.value = false
+      // 如果 latestId 有值，说明自身还没离开房间
+      const { latestId } = latestRoomInfo
+
+      if (latestId) {
+        remoteRoomInfo.value = latestRoomInfo
+        // 判断对方是否离开房间
+        const isExit = (await isExitRoom(latestId)).data
+        const _remoteRoomInfo = remoteRoomInfo.value
+        _remoteRoomInfo.inRoom = latestId && !isExit
+        router.replace({
+          path: _remoteRoomInfo.path,
+          query: { roomId: _remoteRoomInfo.roomId }
+        })
+        return
+      }
+    }
+
     initSocket(matchType)
   } else {
     isOpenRoomDrawer.value = true

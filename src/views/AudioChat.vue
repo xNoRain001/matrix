@@ -169,7 +169,7 @@ import {
 
 import { storeToRefs } from 'pinia'
 import { useRoomStore, useUserInfoStore } from '@/store'
-import { updateLatestRoom, getLatestRoom, isExitRoom } from '@/apis/latest-room'
+import { updateLatestRoom } from '@/apis/latest-room'
 
 const oepnModal = ref(true)
 const makingOffer = ref(false)
@@ -216,22 +216,8 @@ const online = ref(false)
 const { isMatch, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
-let isExit = false
-const updateRoomInfo = async () => {
-  const latestRoomInfo = (await getLatestRoom()).data
-  const { latestId } = latestRoomInfo
-
-  if (latestId) {
-    remoteRoomInfo.value = latestRoomInfo
-    isExit = (await isExitRoom(latestId)).data
-    latestRoomInfo.inRoom = !isExit
-  }
-}
-remoteRoomInfo.value.skipRequest ? null : await updateRoomInfo()
-let _remoteRoomInfo = remoteRoomInfo.value
-_remoteRoomInfo.roomId = _remoteRoomInfo.roomId || (roomId as string)
-const leaved = ref(isExit)
-const otherLeaved = ref(isExit)
+const leaved = ref(false)
+const otherLeaved = ref(false)
 const micOpen = ref(Boolean(audioInputLabelsLength))
 const speakerOpen = ref(Boolean(audioOutputLabelsLength))
 const hasMic = ref(!audioInputLabelsLength)
@@ -250,7 +236,7 @@ const initPC = async () => {
   pc = useCreatePeerConnection(
     '/hall/audio-chat',
     socket,
-    _remoteRoomInfo,
+    remoteRoomInfo.value,
     online,
     onTrack
   )
@@ -259,13 +245,13 @@ const initPC = async () => {
 }
 
 const onJoined = async (_, __, _polite) =>
-  useJoined(socket, polite, _remoteRoomInfo.roomId, initPC, _polite)
+  useJoined(socket, polite, remoteRoomInfo.value.roomId, initPC, _polite)
 
 const onOtherJoin = () =>
   useOtherJoin(
     pc,
     socket,
-    _remoteRoomInfo.roomId,
+    remoteRoomInfo.value.roomId,
     polite,
     makingOffer,
     initPC,
@@ -308,6 +294,8 @@ const onTrack = ({ track, streams }) => {
 }
 
 const simpleLeave = async () => {
+  const _remoteRoomInfo = remoteRoomInfo.value
+
   if (_remoteRoomInfo.latestId) {
     await leaveAfterConnected()
   } else {
@@ -332,13 +320,14 @@ const leaveAfterConnected = async () => {
   leaved.value = true
   online.value = false
   otherInfo.value = null
+  const _remoteRoomInfo = remoteRoomInfo.value
   _remoteRoomInfo.roomId = _remoteRoomInfo.path = _remoteRoomInfo.latestId = ''
   _remoteRoomInfo.inRoom = false
 }
 
 const onLeave = async () =>
   useLeave(
-    _remoteRoomInfo,
+    remoteRoomInfo.value,
     socket,
     online.value,
     leaveAfterConnected,
@@ -410,17 +399,18 @@ const initLocalMediaStream = async () => {
 }
 
 const initSocket = () => {
+  const { roomId } = remoteRoomInfo.value
   socket = useInitSocket(
     onJoined,
     onOtherJoin,
     onDisconnect,
     onRtc,
     isReconnect,
-    _remoteRoomInfo.roomId,
+    roomId,
     isFull
   )
   socket.on('bye', onBye)
-  socket.emit('join', _remoteRoomInfo.roomId)
+  socket.emit('join', roomId)
 
   return socket
 }
@@ -430,9 +420,10 @@ onMounted(async () => {
     initSocket,
     router,
     path,
-    _remoteRoomInfo,
-    otherLeaved.value,
-    roomId as string
+    remoteRoomInfo,
+    roomId as string,
+    leaved,
+    otherLeaved
   )
 })
 
