@@ -265,10 +265,6 @@
       title="修改昵称"
       description=" "
     >
-      <!-- <template #header>
-        <ReuseNicknameFormHeaderTemplate></ReuseNicknameFormHeaderTemplate>
-      </template> -->
-      <!-- <template #content></template> -->
       <template #body>
         <ReuseNicknameFormBodyTemplate></ReuseNicknameFormBodyTemplate>
       </template>
@@ -279,10 +275,6 @@
       title="修改昵称"
       description=" "
     >
-      <!-- <template #header>
-        <ReuseNicknameFormHeaderTemplate></ReuseNicknameFormHeaderTemplate>
-      </template>
-      <template #content></template> -->
       <template #body>
         <ReuseNicknameFormBodyTemplate></ReuseNicknameFormBodyTemplate>
       </template>
@@ -294,10 +286,6 @@
       title="修改性别"
       description=" "
     >
-      <!-- <template #header>
-        <ReuseGenderFormHeaderTemplate></ReuseGenderFormHeaderTemplate>
-      </template>
-      <template #content></template> -->
       <template #body>
         <ReuseGenderFormBodyTemplate></ReuseGenderFormBodyTemplate>
       </template>
@@ -308,10 +296,6 @@
       title="修改性别"
       description=" "
     >
-      <!-- <template #header>
-        <ReuseGenderFormHeaderTemplate></ReuseGenderFormHeaderTemplate>
-      </template>
-      <template #content></template> -->
       <template #body>
         <ReuseGenderFormBodyTemplate></ReuseGenderFormBodyTemplate>
       </template>

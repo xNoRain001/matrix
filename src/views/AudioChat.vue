@@ -4,11 +4,7 @@
   <UModal v-else v-model:open="oepnModal" fullscreen title=" " description=" ">
     <template #content></template>
     <template #header>
-      <RoomHeader
-        :online="online"
-        :leaved="leaved"
-        :on-click="onLeave"
-      ></RoomHeader>
+      <Header :online="online" :leaved="leaved" :on-click="onLeave"></Header>
     </template>
     <template #body>
       <div
@@ -17,6 +13,7 @@
       >
         <div class="absolute top-0 right-0">
           <UDropdownMenu
+            v-if="_micOptions.length"
             :disabled="!micOpen"
             :items="_micOptions"
             :ui="{
@@ -39,6 +36,7 @@
             </template>
           </UDropdownMenu>
           <UDropdownMenu
+            v-if="_speakerOptions.length"
             :disabled="!speakerOpen"
             :items="_speakerOptions"
             :ui="{
@@ -221,8 +219,7 @@ const _userInfo = userInfo.value
 let isExit = false
 const updateRoomInfo = async () => {
   const latestRoomInfo = (await getLatestRoom()).data
-  // 如果 latestId 有值，说明自身还没离开房间
-  const latestId = latestRoomInfo?.latestId
+  const { latestId } = latestRoomInfo
 
   if (latestId) {
     remoteRoomInfo.value = latestRoomInfo
@@ -335,6 +332,8 @@ const leaveAfterConnected = async () => {
   leaved.value = true
   online.value = false
   otherInfo.value = null
+  _remoteRoomInfo.roomId = _remoteRoomInfo.path = _remoteRoomInfo.latestId = ''
+  _remoteRoomInfo.inRoom = false
 }
 
 const onLeave = async close =>

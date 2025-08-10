@@ -13,8 +13,8 @@
           :class="`bg-(--color-light) dark:bg-(--color-dark)`"
           class="inline-block size-2 rounded-full"
           :style="{
-            '--color-light': `var(--color-${chip}-500)`,
-            '--color-dark': `var(--color-${chip}-400)`
+            '--color-light': colors[chip]?.[500],
+            '--color-dark': colors[chip]?.[400]
           }"
         ></span>
       </slot>
@@ -23,13 +23,14 @@
 </template>
 
 <script setup lang="ts">
+import colors from 'tailwindcss/colors'
+
 defineProps<{
   label: string
   icon?: string
   chip?: string
   selected?: boolean
 }>()
-
 const slots = defineSlots<{
   leading: () => any
 }>()

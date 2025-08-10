@@ -26,7 +26,12 @@
     ></UButton>
   </div>
 
-  <UModal v-model:open="isOpenLeaveRoomModal" title="离开房间" description=" ">
+  <UModal
+    v-if="isDesktop"
+    v-model:open="isOpenLeaveRoomModal"
+    title="离开房间"
+    description=" "
+  >
     <template #footer="{ close }">
       <UButton
         label="取消"
@@ -38,10 +43,32 @@
       <UButton label="确认" @click="onClick(close)" class="justify-center" />
     </template>
   </UModal>
+  <UDrawer
+    v-else
+    v-model:open="isOpenLeaveRoomModal"
+    title="离开房间"
+    description=" "
+  >
+    <template #footer>
+      <UButton
+        label="取消"
+        color="neutral"
+        variant="outline"
+        class="justify-center"
+        @click="isOpenLeaveRoomModal = false"
+      />
+      <UButton
+        label="确认"
+        @click="onClick(() => (isOpenLeaveRoomModal = false))"
+        class="justify-center"
+      />
+    </template>
+  </UDrawer>
 </template>
 
 <script lang="ts" setup>
 import { useRoomStore } from '@/store'
+import { useMediaQuery } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 
@@ -50,6 +77,7 @@ defineProps<{
   leaved: boolean
   onClick: (close) => void
 }>()
+const isDesktop = useMediaQuery('(min-width: 768px)')
 const isOpenLeaveRoomModal = ref(false)
 const { otherInfo, remoteRoomInfo } = storeToRefs(useRoomStore())
 </script>

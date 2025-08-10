@@ -11,8 +11,11 @@ const useMounted = (
 ) => {
   const { roomId, path, latestId } = remoteRoomInfo
 
+  console.log(latestId)
   // 直接访问带 roomId 的链接
   if (!latestId) {
+    // 统一在这里更新 path，因为需要处理用户手动输入 url 的情况，匹配到用户
+    // 或 pin 加入房间时不更新 path，因为会进入到这里
     remoteRoomInfo.path = currentPath
   } else {
     // 如果获取到了远程房间，更新路由

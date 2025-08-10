@@ -51,7 +51,7 @@
             v-for="color in neutralColors"
             :key="color"
             :label="color"
-            :chip="color === 'neutral' ? 'old-neutral' : color"
+            :chip="color"
             :selected="neutral === color"
             @click="neutral = color"
           />

@@ -222,9 +222,6 @@ const initSocket = matchType => {
       clearTimeout(timer)
       const _remoteRoomInfo = remoteRoomInfo.value
       _remoteRoomInfo.roomId = message
-      // _remoteRoomInfo.path = target
-      // 记录房间号
-      // setLatestRoom(path, message)
       _remoteRoomInfo.skipRequest = true
       pause.value = true
       router.replace({ path: target, query: { roomId: message } })
@@ -277,10 +274,10 @@ const onClick = async (_matchType, to) => {
 
 watch(pin, v => {
   if (v.length === pinLength) {
+    console.log(target)
     const roomId = `${matchType}-${v.join('')}`
     const _remoteRoomInfo = remoteRoomInfo.value
     _remoteRoomInfo.roomId = roomId
-    // _remoteRoomInfo.path = target
     _remoteRoomInfo.skipRequest = true
     pin.value = []
     router.replace({ path: target, query: { roomId } })

@@ -1,6 +1,7 @@
 <template>
   <div class="absolute top-1/2 left-1/2 -translate-1/2">
     <div>房间已满员...</div>
+    <!-- 移动端会发生点击穿透从而关闭 modal -->
     <UButton class="mt-4" @click="useLeaveFullRoom" label="退出房间"></UButton>
   </div>
 </template>

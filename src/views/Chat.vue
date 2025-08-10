@@ -4,11 +4,7 @@
   <UModal v-else v-model:open="oepnModal" fullscreen title=" " description=" ">
     <template #content></template>
     <template #header>
-      <RoomHeader
-        :online="online"
-        :leaved="leaved"
-        :on-click="onLeave"
-      ></RoomHeader>
+      <Header :online="online" :leaved="leaved" :on-click="onLeave"></Header>
     </template>
     <template #body>
       <div class="flex w-full items-center justify-center">
@@ -297,7 +293,7 @@ let isExit = false
 const updateRoomInfo = async () => {
   const latestRoomInfo = (await getLatestRoom()).data
   // 如果 latestId 有值，说明自身还没离开房间
-  const latestId = latestRoomInfo?.latestId
+  const { latestId } = latestRoomInfo
 
   if (latestId) {
     remoteRoomInfo.value = latestRoomInfo

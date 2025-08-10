@@ -52,6 +52,7 @@
         variant="link"
         :ui="{
           list: 'flex justify-evenly  border-none',
+          indicator: 'hidden',
           trigger: 'flex flex-col text-xs'
         }"
         :content="false"
