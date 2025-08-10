@@ -41,7 +41,7 @@
             color="neutral"
             icon="lucide:chevron-left"
             class="cursor-pointer"
-            @click="onBackFromProfile"
+            @click="openProfileDrawer = false"
           />
           <div class="absolute left-1/2 -translate-x-1/2">个人资料</div>
         </div>
@@ -59,8 +59,8 @@
               <div class="mr-2 text-(--ui-text-dimmed)">
                 {{
                   key === 'gender'
-                    ? transformGender(userInfo[key])
-                    : userInfo[key]
+                    ? transformGender(userInfoForm[key])
+                    : userInfoForm[key]
                 }}
               </div>
               <UIcon
@@ -69,6 +69,11 @@
               />
             </div>
           </div>
+          <UButton
+            label="修改资料"
+            class="mt-4"
+            @click="onUpdateProfile"
+          ></UButton>
         </div>
       </template>
     </UDrawer>
@@ -225,16 +230,16 @@
     <DefineNicknameFormBodyTemplate>
       <UFormField
         :ui="{ help: 'text-right pr-4' }"
-        :help="`${userInfo.nickname.length} / 30`"
+        :help="`${userInfoForm.nickname.length} / 30`"
       >
-        <UInput v-model="userInfo.nickname" class="w-full" maxlength="30">
-          <template v-if="userInfo.nickname" #trailing>
+        <UInput v-model="userInfoForm.nickname" class="w-full" maxlength="30">
+          <template v-if="userInfoForm.nickname" #trailing>
             <UButton
               color="neutral"
               variant="link"
               icon="i-lucide-circle-x"
               aria-label="Clear input"
-              @click="userInfo.nickname = ''"
+              @click="userInfoForm.nickname = ''"
             />
           </template>
         </UInput>
@@ -264,7 +269,7 @@
     <DefineGenderFormBodyTemplate>
       <USelect
         class="w-full"
-        v-model="userInfo.gender"
+        v-model="userInfoForm.gender"
         :items="genderOptions"
       />
     </DefineGenderFormBodyTemplate>
@@ -292,7 +297,7 @@
     <DefineBirthdayFormBodyTemplate>
       <UInput
         class="w-full"
-        v-model="userInfo.birthday"
+        v-model="userInfoForm.birthday"
         v-maska="'####/##/##'"
         placeholder="YYYY/MM/DD"
         icon="i-lucide-calendar"
@@ -440,8 +445,7 @@ const profileItems = [
   }
 ]
 const { userInfo } = storeToRefs(useUserInfoStore())
-const _userInfo = userInfo.value
-let oldUserInfo = JSON.parse(JSON.stringify(_userInfo))
+const userInfoForm = ref({ ...userInfo.value })
 const router = useRouter()
 const passwordForm = reactive({
   oldPassword: '',
@@ -449,7 +453,7 @@ const passwordForm = reactive({
   confirmPassword: ''
 })
 const isPwd = ref(true)
-const { region } = _userInfo
+const { region } = userInfo.value
 const [_province, _city] = region === '未知' ? ['', ''] : region.split(' - ')
 const province = ref(_province)
 const city = ref(_city)
@@ -944,13 +948,13 @@ watch(province, v => {
   cityOptions.value = provinceCityMap[v]
   // 切换省份时清空市区
   city.value = null // 赋值为 '' 会引起样式问题
-  _userInfo.region = v
+  userInfoForm.value.region = v
 })
 
 watch(city, v => {
   // 切换省份时清空市区，此时值是空字符串
   if (v) {
-    _userInfo.region = `${province.value} - ${v}`
+    userInfoForm.value.region = `${province.value} - ${v}`
   }
 })
 
@@ -977,36 +981,53 @@ const onUpdatePassword = async () => {
   }
 }
 
-const onBackFromProfile = async () => {
-  openProfileDrawer.value = false
-  const keys = Object.keys(oldUserInfo)
+const onUpdateProfile = async () => {
+  const _userInfoForm = userInfoForm.value
+  const { nickname, gender, birthday, region } = _userInfoForm
+  const {
+    nickname: _nickname,
+    gender: _gender,
+    birthday: _birthday,
+    region: _region
+  } = userInfo.value
 
-  for (let i = 0, l = keys.length; i < l; i++) {
-    const key = keys[i]
+  if (
+    nickname === _nickname &&
+    gender === _gender &&
+    birthday === _birthday &&
+    region === _region
+  ) {
+    toast.add({
+      title: '修改资料成功',
+      color: 'success',
+      icon: 'lucide:smile'
+    })
+    openProfileDrawer.value = false
+    return
+  }
 
-    if (oldUserInfo[key] !== _userInfo[key]) {
-      const s = JSON.stringify(_userInfo)
-      const data = JSON.parse(s)
-      delete data.id
-      delete data.tokenVersion
-      try {
-        const {
-          data: { token }
-        } = await updateProfile(data)
-        localStorage.setItem('token', token)
-        oldUserInfo = JSON.parse(s)
-        toast.add({
-          title: '修改资料成功',
-          color: 'success'
-        })
-      } catch (error) {
-        toast.add({
-          title: error.message,
-          color: 'error'
-        })
-      }
-      break
-    }
+  const __userInfoForm = JSON.parse(JSON.stringify(_userInfoForm))
+  delete __userInfoForm.id
+  delete __userInfoForm.tokenVersion
+
+  try {
+    const {
+      data: { token, userInfo: _userInfo }
+    } = await updateProfile(__userInfoForm)
+    localStorage.setItem('token', token)
+    userInfo.value = _userInfo
+    toast.add({
+      title: '修改资料成功',
+      color: 'success',
+      icon: 'lucide:smile'
+    })
+    openProfileDrawer.value = false
+  } catch (error) {
+    toast.add({
+      title: error.message,
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
   }
 }
 
