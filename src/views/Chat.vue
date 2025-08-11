@@ -143,12 +143,16 @@
                         :max="100"
                       />
                     </div>
-                    <UButton
-                      icon="lucide:cloud-download"
-                      variant="ghost"
-                      color="neutral"
-                      @click="onDownload(content[0], content[1])"
-                    />
+                    <!-- 
+                      在线传输时，传输完成显示成功按钮，重新加载页面时，
+                      由于 showProgress 为 false，会直接显示成功按钮 
+                    -->
+                    <div v-if="!showProgress" class="p-1.5">
+                      <UIcon
+                        name="lucide:circle-check-big"
+                        class="text-primary size-5"
+                      ></UIcon>
+                    </div>
                   </div>
                 </div>
                 <UAvatar
@@ -192,7 +196,6 @@
                     <UButton
                       icon="lucide:cloud-download"
                       variant="ghost"
-                      color="neutral"
                       @click="onDownload(content[0], content[1])"
                     />
                   </div>
@@ -453,7 +456,7 @@ const sendFile = async (files: extendedFiles, type: fileTypes) => {
     const timestamp = Date.now()
     const messageRecord: dbMessage = {
       type,
-      content: [file, name, size, fileType],
+      content: [type === 'file' ? null : file, name, size, fileType],
       sent: true,
       timestamp
     }
@@ -535,6 +538,7 @@ type dbMessage = commonMessage & {
     | [string]
     | [File, string, number, string] // File 文件名 大小 文件类型
     | [Blob, string, number, string] // Blob 文件名 大小 文件类型
+    | [null, string, number, string] // 发送方不保存发送的文件到本地数据库中
 }
 
 // 添加聊天记录
@@ -548,11 +552,11 @@ const getMessages = async () => {
     'roomId',
     remoteRoomInfo.value.roomId
   )
-  data.forEach(({ type, content }) => {
+  data.forEach(({ type, content, sent }) => {
     if (
       type === 'image' ||
       type === 'video' ||
-      type === 'file' ||
+      (type === 'file' && !sent) ||
       type === 'audio'
     ) {
       content[0] = URL.createObjectURL(content[0])
@@ -563,10 +567,9 @@ const getMessages = async () => {
 }
 
 const messageList = ref<message[]>([])
-const t = messageList.value
-let lastMsgTimeStamp = t[t.length - 1]?.timestamp || 0
+const lastMsgTimeStamp = ref(0)
 
-const overFiveMins = timestamp => timestamp - lastMsgTimeStamp > fiveMins
+const overFiveMins = timestamp => timestamp - lastMsgTimeStamp.value > fiveMins
 
 const addMessageLabelToDB = async (timestamp: number) => {
   const hasLabel = overFiveMins(timestamp)
@@ -627,14 +630,16 @@ const addMessageLabelToView = (messageRecord: dbMessage) => {
     })
   }
 
-  lastMsgTimeStamp = timestamp
+  lastMsgTimeStamp.value = timestamp
 }
 
 const addMessageToView = (messageRecord: dbMessage) => {
   const _messageList = messageList.value
-  const { type } = messageRecord
+  const { content } = messageRecord
 
-  if (type !== 'message' && type !== 'label') {
+  // content.length > 1 说明不是 message 或 label
+  // content[0] !== null 说明是接收方
+  if (content.length > 1 && content[0] !== null) {
     messageRecord.content[0] = URL.createObjectURL(
       messageRecord.content[0] as Blob
     )
@@ -879,8 +884,13 @@ onMounted(async () => {
     leaved,
     otherLeaved
   )
-  messageList.value = [...(await getMessages())]
+  const messages = await getMessages()
+  messageList.value = [...messages]
+  lastMsgTimeStamp.value = messages[messages.length - 1]?.timestamp || 0
 })
 
-onBeforeUnmount(() => useBeforeUnmount(socket))
+onBeforeUnmount(() => {
+  clearInterval(lastMsgTimer)
+  useBeforeUnmount(socket)
+})
 </script>
