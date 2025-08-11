@@ -817,7 +817,6 @@ const leaveAfterConnected = async () => {
   const _remoteRoomInfo = remoteRoomInfo.value
   closePCAndSocket()
   // 清空房间信息
-  console.log('clear message')
   await useClearMessages(_remoteRoomInfo.roomId)
   await updateLatestRoom()
   useScrollToBottom(messageListRef)

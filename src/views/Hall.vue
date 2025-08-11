@@ -2,6 +2,7 @@
   <div v-show="showCards" class="relative">
     <div class="flex items-center justify-end gap-4">
       <UButton
+        :disabled="!isMatch"
         @click="isOpenFilterDrawer = true"
         label="筛选"
         icon="lucide:filter"
@@ -90,27 +91,89 @@
       <UButtonGroup class="ml-2">
         <UButton
           @click="onSelectGender('male')"
-          :color="selectedGender === 'male' ? 'primary' : 'neutral'"
-          :variant="selectedGender === 'male' ? 'solid' : 'outline'"
+          :color="isMale ? 'primary' : 'neutral'"
+          :variant="isMale ? 'solid' : 'outline'"
           label="男"
           class="font-semibold"
         />
         <UButton
           @click="onSelectGender('female')"
-          :color="selectedGender === 'female' ? 'primary' : 'neutral'"
-          :variant="selectedGender === 'female' ? 'solid' : 'outline'"
+          :color="isFemale ? 'primary' : 'neutral'"
+          :variant="isFemale ? 'solid' : 'outline'"
           label="女"
           class="font-semibold"
         />
         <UButton
           @click="onSelectGender('other')"
-          :color="selectedGender === 'other' ? 'primary' : 'neutral'"
-          :variant="selectedGender === 'other' ? 'solid' : 'outline'"
+          :color="isUndefGener ? 'primary' : 'neutral'"
+          :variant="isUndefGener ? 'solid' : 'outline'"
           label="不限"
           class="font-semibold"
         />
       </UButtonGroup>
     </div>
+    <div class="mt-4 flex items-center">
+      <div class="font-semibold">年龄：</div>
+      <UButtonGroup class="ml-2">
+        <UButton
+          @click="onSelectAge(18, 24)"
+          :color="is18to24 ? 'primary' : 'neutral'"
+          :variant="is18to24 ? 'solid' : 'outline'"
+          label="18-24"
+          class="font-semibold"
+        />
+        <UButton
+          @click="onSelectAge(24, 30)"
+          :color="is24to30 ? 'primary' : 'neutral'"
+          :variant="is24to30 ? 'solid' : 'outline'"
+          label="24-30"
+          class="font-semibold"
+        />
+        <UButton
+          @click="onSelectAge(30)"
+          :color="is30Plus ? 'primary' : 'neutral'"
+          :variant="is30Plus ? 'solid' : 'outline'"
+          label="30+"
+          class="font-semibold"
+        />
+        <UButton
+          @click="onSelectAge(Number.MAX_SAFE_INTEGER)"
+          :color="isUndefAge ? 'primary' : 'neutral'"
+          :variant="isUndefAge ? 'solid' : 'outline'"
+          label="不限"
+          class="font-semibold"
+        />
+      </UButtonGroup>
+    </div>
+    <div class="mt-4 flex items-center">
+      <div class="font-semibold">地区：</div>
+      <div class="ml-2 space-x-2">
+        <USelectMenu
+          :color="province ? 'primary' : 'neutral'"
+          :variant="province ? 'subtle' : 'outline'"
+          class="w-20"
+          v-model="province"
+          :items="provinceOptions"
+        />
+        <USelectMenu
+          :color="city ? 'primary' : 'neutral'"
+          :variant="city ? 'subtle' : 'outline'"
+          class="w-20"
+          v-model="city"
+          :items="cityOptions"
+        />
+      </div>
+      <UButtonGroup class="ml-2">
+        <UButton
+          @click="onSelectRegion"
+          :color="isUndefRegion ? 'primary' : 'neutral'"
+          :variant="isUndefRegion ? 'solid' : 'outline'"
+          label="不限"
+          class="font-semibold"
+        />
+      </UButtonGroup>
+    </div>
+    <UButton @click="onUpdateFilter" class="mt-4" label="确定修改"></UButton>
   </DefineFilterBodyTemplate>
   <UModal
     v-if="isDesktop"
@@ -137,7 +200,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { computed, reactive } from 'vue'
 import { useRoute } from 'vue-router'
 import { useScrollToTop } from '@/hooks'
 import { useRoomStore } from '@/store'
@@ -147,6 +210,7 @@ import { useRouter } from 'vue-router'
 import { io } from 'socket.io-client'
 import { getLatestRoom, isExitRoom } from '@/apis/latest-room'
 import { createReusableTemplate, useMediaQuery } from '@vueuse/core'
+import { provinceCityMap } from '@/const'
 
 let socket = null
 let target = ''
@@ -217,7 +281,60 @@ const offline = ref(false)
 const leave = ref(false)
 const route = useRoute()
 const showCards = computed(() => route.path === '/hall')
-const selectedGender = ref('male')
+const selectedGender = ref('other')
+const selectedAge = reactive({
+  min: Number.MAX_SAFE_INTEGER,
+  max: Number.MAX_SAFE_INTEGER
+})
+const isMale = computed(() => selectedGender.value === 'male')
+const isFemale = computed(() => selectedGender.value === 'female')
+const isUndefGener = computed(() => selectedGender.value === 'other')
+const is18to24 = computed(
+  () => selectedAge.min === 18 && selectedAge.max === 24
+)
+const is24to30 = computed(
+  () => selectedAge.min === 24 && selectedAge.max === 30
+)
+const is30Plus = computed(() => selectedAge.min === 30)
+const isUndefAge = computed(() => selectedAge.min === Number.MAX_SAFE_INTEGER)
+const selectedRegion = ref('')
+const isUndefRegion = computed(() => selectedRegion.value === '')
+const province = ref('')
+const city = ref('')
+const sourceProvinceOptions = Object.keys(provinceCityMap)
+const provinceOptions = ref(sourceProvinceOptions)
+const cityOptions = ref(provinceCityMap[province.value] || [])
+
+const onUpdateFilter = () => {
+  try {
+    isOpenFilterDrawer.value = false
+    toast.add({
+      title: '修改成功',
+      color: 'success',
+      icon: 'lucide:smile'
+    })
+  } catch (error) {
+    toast.add({
+      title: error.message,
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+  }
+}
+
+const onSelectRegion = () => {
+  selectedRegion.value = ''
+  province.value = null
+  city.value = null
+}
+
+const onSelectAge = (min: number, max?: number) => {
+  selectedAge.min = min
+
+  if (max) {
+    selectedAge.max = max
+  }
+}
 
 const onSelectGender = gender => {
   selectedGender.value = gender
@@ -342,6 +459,20 @@ watch(pin, v => {
     _remoteRoomInfo.skipRequest = true
     pin.value = []
     router.replace({ path: target, query: { roomId } })
+  }
+})
+
+watch(province, v => {
+  cityOptions.value = provinceCityMap[v]
+  // 切换省份时清空市区
+  city.value = null // 赋值为 '' 会引起样式问题
+  selectedRegion.value = v
+})
+
+watch(city, v => {
+  // 切换省份时清空市区，此时值是空字符串
+  if (v) {
+    selectedRegion.value = `${province.value} - ${v}`
   }
 })
 
