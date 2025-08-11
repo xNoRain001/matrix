@@ -19,7 +19,6 @@ export const resetPassword = async (token, encryptedUserInfo) =>
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`
-      // 'Content-Type': 'application/x-www-form-urlencoded'
     },
     data: { encryptedUserInfo }
   })

@@ -452,12 +452,15 @@ const onClick = async (_matchType, to) => {
 }
 
 watch(pin, v => {
-  if (v.length === pinLength) {
-    const roomId = `${matchType}-${v.join('')}`
+  const s = v.join('')
+
+  if (s.length === pinLength) {
+    const roomId = `${matchType}-${s}`
     const _remoteRoomInfo = remoteRoomInfo.value
     _remoteRoomInfo.roomId = roomId
     _remoteRoomInfo.skipRequest = true
-    pin.value = []
+    // TODO: 修复返回时最后一位数字依然存在
+    pin.value.length = 0
     router.replace({ path: target, query: { roomId } })
   }
 })

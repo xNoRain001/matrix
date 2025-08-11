@@ -14,7 +14,14 @@ const pcConfig: RTCConfiguration = {
     { urls: 'stun:stun1.l.google.com:19302' },
     { urls: 'stun:stun2.l.google.com:19302' },
     { urls: 'stun:stun3.l.google.com:19302' },
-    { urls: 'stun:stun4.l.google.com:19302' }
+    { urls: 'stun:stun4.l.google.com:19302' },
+
+    // 新增的TURN服务器配置
+    {
+      urls: 'turn:23.97.62.148:3478',
+      username: 'your_username',
+      credential: 'your_password'
+    }
   ],
   iceTransportPolicy: 'all', // 可选: 'all' | 'relay'
   bundlePolicy: 'max-bundle', // 可选: 'balanced' | 'max-compat' | 'max-bundle'

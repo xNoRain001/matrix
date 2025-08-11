@@ -68,11 +68,9 @@
               </template>
             </UInput>
           </UFormField>
-          <div class="flex justify-between text-sm">
-            <div @click="goResetPassword" class="cursor-pointer underline">
-              忘记密码
-            </div>
+          <div class="text-primary flex justify-between text-sm">
             <div @click="goLoginWithVC" class="cursor-pointer">验证码登录</div>
+            <div @click="goResetPassword" class="cursor-pointer">忘记密码</div>
           </div>
           <div class="space-x-2">
             <UButton @click="onLogin" label="登录" />
@@ -83,18 +81,11 @@
 
       <div v-if="isRegister">
         <UForm
-          :schema="loginSchema"
+          :schema="registerSchema"
           :state="registerForm"
           class="mt-4 space-y-4"
         >
-          <UPinInput
-            class="flex justify-center"
-            autofocus
-            v-if="hasRegisterPin"
-            :length="pinLength"
-            v-model="registerPin"
-          />
-          <UFormField v-if="!hasRegisterPin" name="email">
+          <UFormField name="email">
             <UInput
               class="w-full"
               v-model="registerForm.email"
@@ -108,7 +99,7 @@
               </label>
             </UInput>
           </UFormField>
-          <UFormField v-if="!hasRegisterPin" name="password">
+          <UFormField name="password">
             <UInput
               class="w-full"
               v-model="registerForm.password"
@@ -135,11 +126,45 @@
               </template>
             </UInput>
           </UFormField>
-          <UButton
-            v-if="!hasRegisterPin"
-            @click="sendRegisterPin"
-            label="发送验证码"
+          <UFormField name="confirmPassword">
+            <UInput
+              class="w-full"
+              v-model="registerForm.confirmPassword"
+              placeholder=""
+              :type="isPwd ? 'password' : 'text'"
+              :ui="{ base: 'peer' }"
+            >
+              <label
+                class="text-highlighted peer-focus:text-highlighted peer-placeholder-shown:text-dimmed pointer-events-none absolute -top-2.5 left-0 px-1.5 text-xs font-medium transition-all peer-placeholder-shown:top-1.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-2.5 peer-focus:text-xs peer-focus:font-medium"
+              >
+                <span class="bg-default inline-flex px-1">确认密码</span>
+              </label>
+              <template #trailing>
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  size="sm"
+                  :icon="isPwd ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                  :aria-label="isPwd ? 'Hide password' : 'Show password'"
+                  :aria-pressed="isPwd"
+                  aria-controls="password"
+                  @click="isPwd = !isPwd"
+                />
+              </template>
+            </UInput>
+          </UFormField>
+          <UPinInput
+            autofocus
+            v-if="hasRegisterPin"
+            :length="pinLength"
+            v-model="registerPin"
           />
+          <div>
+            <UButton
+              @click="sendRegisterPin"
+              :label="`发送验证码${registerReamingTime ? `（${registerReamingTime} s）` : ''}`"
+            />
+          </div>
         </UForm>
       </div>
 
@@ -163,10 +188,7 @@
               </label>
             </UInput>
           </UFormField>
-          <UButton
-            @click="onResetPassword"
-            :label="`${hasResetPasswordPin ? '已' : ''}发送链接`"
-          />
+          <UButton @click="onResetPassword" label="发送链接" />
         </UForm>
       </div>
 
@@ -176,14 +198,7 @@
           :state="loginWithVCForm"
           class="mt-4 space-y-4"
         >
-          <UPinInput
-            class="flex justify-center"
-            autofocus
-            v-if="hasLoginWithVCPin"
-            :length="pinLength"
-            v-model="loginWithVCPin"
-          />
-          <UFormField v-else name="email">
+          <UFormField name="email">
             <UInput
               class="w-full"
               v-model="loginWithVCForm.email"
@@ -197,11 +212,18 @@
               </label>
             </UInput>
           </UFormField>
-          <UButton
-            v-if="!hasLoginWithVCPin"
-            @click="onLoginWithVC"
-            label="发送验证码"
+          <UPinInput
+            autofocus
+            v-if="hasLoginWithVCPin"
+            :length="pinLength"
+            v-model="loginWithVCPin"
           />
+          <div>
+            <UButton
+              @click="sendLoginPin"
+              :label="`发送验证码${loginWithPinReamingTime ? `（${loginWithPinReamingTime} s）` : ''}`"
+            />
+          </div>
         </UForm>
       </div>
     </div>
@@ -219,10 +241,10 @@ import {
   hasResetPasswordURL,
   isExistedUser,
   login,
+  loginWithPin,
   register,
   sendPin,
-  sendResetPasswordURL,
-  validatePin
+  sendResetPasswordURL
 } from '@/apis/auth'
 import * as z from 'zod'
 
@@ -235,6 +257,18 @@ const loginSchema = z.object({
   password: z.string().min(8, '密码长度至少为 8 位')
 })
 
+const registerSchema = z.object({
+  email: z.string().email('邮箱格式不正确'),
+  password: z.string().min(8, '密码长度至少为 8 位'),
+  confirmPassword: z
+    .string()
+    .refine(v => v === registerForm.password, '两次密码不一致')
+})
+
+let loginWithPinTimer = null
+let registerTimer = null
+const loginWithPinReamingTime = ref(0)
+const registerReamingTime = ref(0)
 const toast = useToast()
 const pinLength = 4
 const registerPin = ref([])
@@ -245,11 +279,11 @@ const loginForm = reactive({
 })
 const registerForm = reactive({
   email: '',
-  password: ''
+  password: '',
+  confirmPassword: ''
 })
 const loginWithVCForm = reactive({
-  email: '',
-  code: ''
+  email: ''
 })
 const resetPasswordForm = reactive({ email: '' })
 const isLogin = ref(true)
@@ -258,10 +292,8 @@ const router = useRouter()
 const { userInfo } = storeToRefs(useUserInfoStore())
 const isResetPassword = ref(false)
 const isLoginWithVC = ref(false)
-const sentResetPasswordURL = ref(false)
 const isPwd = ref(true)
 const hasRegisterPin = ref(false)
-const hasResetPasswordPin = ref(false)
 const hasLoginWithVCPin = ref(false)
 
 const backToLogin = () => {
@@ -273,8 +305,11 @@ const backToLogin = () => {
   isLogin.value = true
 }
 
-const onLoginWithVC = async () => {
-  if (!emailSchema.safeParse(loginWithVCForm).success) {
+const sendLoginPin = async () => {
+  if (
+    loginWithPinReamingTime.value ||
+    !emailSchema.safeParse(loginWithVCForm).success
+  ) {
     return
   }
 
@@ -287,19 +322,27 @@ const onLoginWithVC = async () => {
       throw new Error('邮箱不存在')
     }
 
-    const { data: has } = await hasPin(email, 'login')
+    const time = (await hasPin(email, 'login')).data
 
-    if (has) {
+    if (time > 0) {
       toast.add({
         title: '已经发送过验证码',
         color: 'info'
       })
+      loginWithPinReamingTime.value = time
+      loginWithPinTimer = setInterval(() => {
+        loginWithPinReamingTime.value = loginWithPinReamingTime.value - 1
+      }, 1000)
     } else {
       const { message } = await sendPin(email, 'login')
       toast.add({
         title: message,
         color: 'success'
       })
+      loginWithPinReamingTime.value = 300
+      loginWithPinTimer = setInterval(() => {
+        loginWithPinReamingTime.value = loginWithPinReamingTime.value - 1
+      }, 1000)
     }
 
     hasLoginWithVCPin.value = true
@@ -333,20 +376,19 @@ const onResetPassword = async () => {
     const { data: has } = await hasResetPasswordURL(email)
 
     if (has) {
-      sentResetPasswordURL.value = true
       toast.add({
         title: '已经发送过验证码',
         color: 'info'
       })
     } else {
       const { message } = await sendResetPasswordURL(email)
-      sentResetPasswordURL.value = true
       toast.add({
         title: message,
         color: 'success'
       })
     }
-    hasResetPasswordPin.value = true
+
+    backToLogin()
   } catch (error) {
     toast.add({
       title: error.message,
@@ -356,7 +398,10 @@ const onResetPassword = async () => {
 }
 
 const sendRegisterPin = async () => {
-  if (!loginSchema.safeParse(registerForm).success) {
+  if (
+    registerReamingTime.value ||
+    !registerSchema.safeParse(registerForm).success
+  ) {
     return
   }
 
@@ -371,17 +416,23 @@ const sendRegisterPin = async () => {
     }
 
     // 如果邮箱没有被注册，再判断是不是给这个邮箱发送过验证码并且还没过期
-    const { data: has } = await hasPin(email, 'register')
+    const time = (await hasPin(email, 'register')).data
 
     // 验证码存在且未过期
-    if (has) {
-      // 直接进行到下一步让用户输入验证码
-      // TODO: 解决之前的密码已经保存在 redis 中，此次输入的密码是无用的
+    if (time > 0) {
       toast.add({ title: '已经发送过验证码', color: 'info' })
+      registerReamingTime.value = time
+      // 直接进行到下一步让用户输入验证码
+      registerTimer = setInterval(() => {
+        registerReamingTime.value = registerReamingTime.value - 1
+      }, 1000)
     } else {
-      const encryptedUserInfo = await useEncryptUserInfo(registerForm)
-      const { message } = await register(encryptedUserInfo)
+      const { message } = await sendPin(email, 'register')
       toast.add({ title: message, color: 'success' })
+      registerReamingTime.value = 300
+      registerTimer = setInterval(() => {
+        registerReamingTime.value = registerReamingTime.value - 1
+      }, 1000)
     }
 
     hasRegisterPin.value = true
@@ -429,11 +480,28 @@ const onLogin = async () => {
 }
 
 watch(registerPin, async v => {
-  if (v.length === pinLength) {
+  const s = v.join('')
+
+  if (s.length === pinLength) {
+    if (!registerSchema.safeParse(registerForm).success) {
+      registerPin.value.length = 0
+      return toast.add({
+        title: '注册表单格式不正确',
+        color: 'error'
+      })
+    }
+
+    const { email, password } = registerForm
+
     try {
+      const encryptedUserInfo = await useEncryptUserInfo({
+        email,
+        password,
+        code: s
+      })
       const {
         data: { token, userInfo: _userInfo }
-      } = await validatePin('register', registerForm.email, v.join(''))
+      } = await register(encryptedUserInfo)
       localStorage.setItem('token', token)
       userInfo.value = _userInfo
       router.replace('/hall')
@@ -447,17 +515,27 @@ watch(registerPin, async v => {
         description: error.message,
         color: 'error'
       })
-      registerPin.value = []
+      registerPin.value.length = 0
     }
   }
 })
 
 watch(loginWithVCPin, async v => {
-  if (v.length === pinLength) {
+  const s = v.join('')
+
+  if (s.length === pinLength) {
+    if (!emailSchema.safeParse(loginWithVCForm).success) {
+      loginWithVCPin.value.length = 0
+      return toast.add({
+        title: '登录表单格式不正确',
+        color: 'error'
+      })
+    }
+
     try {
       const {
         data: { token, userInfo: _userInfo }
-      } = await validatePin('login', loginWithVCForm.email, v.join(''))
+      } = await loginWithPin(loginWithVCForm.email, s)
       localStorage.setItem('token', token)
       userInfo.value = _userInfo
       router.replace('/hall')
@@ -470,7 +548,7 @@ watch(loginWithVCPin, async v => {
         title: error.message,
         color: 'error'
       })
-      loginWithVCPin.value = []
+      loginWithVCPin.value.length = 0
     }
   }
 })

@@ -4,3 +4,12 @@
 :root {
   --room-width: 650px;
 }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 3s linear infinite;
+}
