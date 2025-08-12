@@ -265,7 +265,9 @@ const registerSchema = z.object({
     .refine(v => v === registerForm.password, '两次密码不一致')
 })
 
+// @ts-ignore
 let loginWithPinTimer = null
+// @ts-ignore
 let registerTimer = null
 const loginWithPinReamingTime = ref(0)
 const registerReamingTime = ref(0)

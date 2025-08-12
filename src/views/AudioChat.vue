@@ -29,7 +29,7 @@
                 <div>{{ label }}</div>
                 <UIcon
                   v-if="micLabel === label"
-                  name="i-lucide-badge-check"
+                  name="lucide:circle-check-big"
                   class="text-primary size-5"
                 />
               </div>
@@ -52,7 +52,7 @@
                 <div>{{ label }}</div>
                 <UIcon
                   v-if="speakerLabel === label"
-                  name="i-lucide-badge-check"
+                  name="lucide:circle-check-big"
                   class="text-primary size-5"
                 />
               </div>
