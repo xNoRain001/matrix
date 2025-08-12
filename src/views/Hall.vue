@@ -429,9 +429,10 @@ const onClick = async (_matchType, to) => {
   if (firstRequestRemoteRoomInfo.value) {
     const latestRoomInfo = (await getLatestRoom()).data
     firstRequestRemoteRoomInfo.value = false
-    // 如果 latestId 有值，说明自身还没离开房间
-    const { latestId } = latestRoomInfo
+    // 如果之前从没参与过匹配， latestRoomInfo 值为 null，
+    const latestId = latestRoomInfo?.latestId
 
+    // 如果 latestId 有值，说明自身还没离开房间
     if (latestId) {
       remoteRoomInfo.value = latestRoomInfo
       // 判断对方是否离开房间
