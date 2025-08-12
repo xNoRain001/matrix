@@ -379,7 +379,7 @@ const onResetPassword = async () => {
 
     if (has) {
       toast.add({
-        title: '已经发送过验证码',
+        title: '已经发送过链接',
         color: 'info'
       })
     } else {
