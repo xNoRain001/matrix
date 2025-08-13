@@ -123,13 +123,8 @@
       </div>
     </template>
     <template #footer v-if="leaved">
-      <div class="flex w-full flex-col items-center justify-center">
-        <div>{{ otherLeaved ? '对方' : '你' }}已离开房间...</div>
-        <UButton
-          class="mt-4"
-          @click="simpleLeave"
-          :label="isMatch ? '重新匹配' : '重新进入房间'"
-        ></UButton>
+      <div class="flex w-full justify-center">
+        <Leave :is-match="isMatch" :simple-leave="simpleLeave"></Leave>
       </div>
     </template>
   </UModal>
@@ -217,7 +212,6 @@ const { isMatch, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
 const leaved = ref(false)
-const otherLeaved = ref(false)
 const micOpen = ref(Boolean(audioInputLabelsLength))
 const speakerOpen = ref(Boolean(audioOutputLabelsLength))
 const hasMic = ref(!audioInputLabelsLength)
@@ -303,7 +297,7 @@ const simpleLeave = async () => {
       _remoteRoomInfo.path =
       _remoteRoomInfo.latestId =
         ''
-    _remoteRoomInfo.inRoom = false
+    _remoteRoomInfo.showExitRoomTip = _remoteRoomInfo.inRoom = false
   }
 
   router.replace('/hall')
@@ -334,7 +328,10 @@ const onLeave = async () =>
     simpleLeave
   )
 
-const onBye = () => useBye(leaveAfterConnected, otherLeaved)
+const onBye = () => {
+  remoteRoomInfo.value.showExitRoomTip = true
+  useBye(leaveAfterConnected)
+}
 
 const updateSpeakerLabel = (label: string) => (speakerLabel.value = label)
 
@@ -416,15 +413,7 @@ const initSocket = () => {
 }
 
 onMounted(async () => {
-  useMounted(
-    initSocket,
-    router,
-    path,
-    remoteRoomInfo,
-    roomId as string,
-    leaved,
-    otherLeaved
-  )
+  useMounted(initSocket, router, path, remoteRoomInfo, roomId as string, leaved)
 })
 
 onBeforeUnmount(() => useBeforeUnmount(socket))

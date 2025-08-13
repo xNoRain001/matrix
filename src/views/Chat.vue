@@ -246,29 +246,79 @@
       </div>
     </template>
     <template #footer>
-      <div class="flex w-full items-center justify-center">
-        <div v-if="leaved" class="flex flex-col items-center justify-center">
-          <div>{{ otherLeaved ? '对方' : '你' }}已离开房间...</div>
-          <UButton
-            class="mt-4"
-            @click="simpleLeave"
-            :label="isMatch ? '重新匹配' : '重新进入房间'"
-          ></UButton>
-        </div>
+      <div class="flex w-full justify-center">
+        <Leave
+          v-if="leaved"
+          :is-match="isMatch"
+          :simple-leave="simpleLeave"
+        ></Leave>
         <div v-else class="flex w-full max-w-(--room-width) flex-col">
-          <div class="flex gap-2">
+          <div v-if="isDesktop">
+            <div class="space-x-2">
+              <UTooltip text="表情">
+                <UButton variant="ghost" icon="lucide:smile"></UButton>
+              </UTooltip>
+              <UTooltip text="图片">
+                <UButton
+                  variant="ghost"
+                  icon="lucide:file-image"
+                  @click="onOpenFileSelector(photoInputRef)"
+                ></UButton>
+              </UTooltip>
+              <UTooltip text="视频">
+                <UButton
+                  variant="ghost"
+                  icon="lucide:file-video"
+                  @click="onOpenFileSelector(videoInputRef)"
+                ></UButton>
+              </UTooltip>
+              <UTooltip text="文件">
+                <UButton
+                  variant="ghost"
+                  icon="lucide:file"
+                  @click="onOpenFileSelector(fileInputRef)"
+                ></UButton>
+              </UTooltip>
+              <UTooltip text="音乐">
+                <UButton
+                  variant="ghost"
+                  icon="lucide:file-music"
+                  @click="onOpenFileSelector(musicInputRef)"
+                ></UButton>
+              </UTooltip>
+            </div>
+            <UTextarea
+              @keydown.enter="onKeydown"
+              enterkeyhint="send"
+              class="mt-4 w-full"
+              v-model="message"
+              :rows="3"
+              :maxrows="3"
+              autoresize
+            />
+            <div class="mt-4 flex justify-end">
+              <UButton
+                @click="onSendMsg"
+                label="发送（Ctrl + Enter）"
+              ></UButton>
+            </div>
+          </div>
+          <div v-else class="flex items-end gap-2">
             <UButton
               variant="ghost"
               color="neutral"
               icon="lucide:mic"
             ></UButton>
-            <UInput
-              class="grow"
-              @keydown.enter="onSendMsg"
-              v-model="message"
+            <UTextarea
               :disabled="!online"
-            >
-            </UInput>
+              @keydown.enter="onSendMsg"
+              enterkeyhint="send"
+              class="grow"
+              v-model="message"
+              :rows="1"
+              :maxrows="9"
+              autoresize
+            />
             <UButton
               variant="ghost"
               color="neutral"
@@ -388,8 +438,10 @@ import type { extendedFiles, fileTypes, receivedFiles } from '@/types'
 import { useRoomStore, useUserInfoStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { updateLatestRoom } from '@/apis/latest-room'
+import { useMediaQuery } from '@vueuse/core'
 
 let lastMsgTimer = null
+const isDesktop = useMediaQuery('(min-width: 768px)')
 const messageListRef = ref('messageListRef')
 const oepnModal = ref(true)
 const makingOffer = ref(false)
@@ -413,7 +465,6 @@ const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
 // 双方中任意一方离开时，值会修改为 true
 const leaved = ref(false)
-const otherLeaved = ref(false)
 const db = await useGetDB()
 const minute = 60 * 1000
 const fiveMins = 5 * minute
@@ -585,6 +636,15 @@ const addMessageLabelToDB = async (timestamp: number) => {
   return hasLabel
 
   // 不在这里更新 lastMsgTimeStamp，因为此时视图中还没添加 message label
+}
+
+const onKeydown = (e: KeyboardEvent) => {
+  const { ctrlKey, metaKey } = e
+
+  // Ctrl + Enter 或 Command + Enter
+  if (ctrlKey || metaKey) {
+    onSendMsg()
+  }
 }
 
 const onSendMsg = async () => {
@@ -846,7 +906,7 @@ const onLeave = async () => {
 
 const onBye = async () => {
   remoteRoomInfo.value.showExitRoomTip = true
-  useBye(leaveAfterConnected, otherLeaved)
+  useBye(leaveAfterConnected)
 }
 
 const initSocket = () => {
@@ -881,8 +941,7 @@ onMounted(async () => {
     path,
     remoteRoomInfo,
     roomId as string,
-    leaved,
-    otherLeaved
+    leaved
   )
   const messages = await getMessages()
   messageList.value = [...messages]

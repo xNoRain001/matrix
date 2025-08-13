@@ -9,8 +9,7 @@ const useMounted = async (
   currentPath: string,
   remoteRoomInfo: Ref<remoteRoomInfo>,
   queryRoomId: string,
-  leaved: Ref<boolean>,
-  otherLeaved: Ref<boolean>
+  leaved: Ref<boolean>
 ) => {
   if (!remoteRoomInfo.value.skipRequest) {
     const latestRoomInfo = (await getLatestRoom()).data
@@ -22,7 +21,6 @@ const useMounted = async (
       const isExit = (await isExitRoom(latestId)).data
       remoteRoomInfo.value.inRoom = !isExit
       leaved.value = isExit
-      otherLeaved.value = isExit
     }
   }
 

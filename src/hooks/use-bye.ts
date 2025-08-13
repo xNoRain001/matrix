@@ -1,11 +1,5 @@
-import type { Ref } from 'vue'
-
-const useBye = async (
-  leaveAfterConnected: Function,
-  otherLeaved: Ref<boolean>
-) => {
+const useBye = async (leaveAfterConnected: Function) => {
   await leaveAfterConnected()
-  otherLeaved.value = true
 }
 
 export default useBye
