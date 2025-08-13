@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 // 全局导航栏组件，应该直接静态导入避免加载延迟
 import Hall from '@/views/Hall.vue'
-import Profile from '@/views/Profile.vue'
+import Profile from '@/views/Profile/Index.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -32,7 +32,21 @@ const router = createRouter({
     {
       path: '/profile',
       meta: { auth: true, tab: 'profile' },
-      component: Profile
+      component: Profile,
+      children: [
+        {
+          path: 'user-info',
+          component: () => import('@/views/Profile/UserInfo.vue')
+        },
+        {
+          path: 'update-password',
+          component: () => import('@/views/Profile/UpdatePassword.vue')
+        },
+        {
+          path: 'logout',
+          component: () => import('@/views/Profile/Logout.vue')
+        }
+      ]
     },
     {
       path: '/login',
@@ -80,10 +94,8 @@ router.beforeEach(({ path, query, meta }, _, next) => {
   }
 
   // 没有 roomId 时返回上级路由
-  if (requireRoomId) {
-    if (!query.roomId) {
-      return next({ path: '/hall' })
-    }
+  if (requireRoomId && !query.roomId) {
+    return next({ path: '/hall' })
   }
 
   next()

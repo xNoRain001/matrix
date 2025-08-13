@@ -36,8 +36,10 @@ import useScrollToTop from './use-scroll-to-top'
 import useUpdateTheme from './use-update-theme'
 import useExportFile from './use-export-file'
 import useTransformGender from './use-transform-gender'
+import useBackToProfile from './use-back-to-profile'
 
 export {
+  useBackToProfile,
   useTransformGender,
   useExportFile,
   useUpdateTheme,

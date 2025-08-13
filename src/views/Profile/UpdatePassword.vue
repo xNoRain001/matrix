@@ -1,0 +1,172 @@
+<template>
+  <UDrawer
+    :handle="false"
+    v-model:open="openUpdatePasswordDrawer"
+    @animation-end="open => useBackToProfile(open, router)"
+    direction="right"
+    :class="isDesktop ? 'w-[30vw]' : 'w-[80vw]'"
+    title=" "
+    description=" "
+  >
+    <template #header>
+      <div class="flex items-center">
+        <UButton
+          variant="ghost"
+          color="neutral"
+          icon="lucide:chevron-left"
+          class="cursor-pointer"
+          @click="openUpdatePasswordDrawer = false"
+        />
+        <div class="absolute left-1/2 -translate-x-1/2">修改密码</div>
+      </div>
+    </template>
+    <template #content></template>
+    <template #body>
+      <div class="bg-elevated rounded-xl p-4">
+        <UForm
+          :schema="schema"
+          :state="passwordForm"
+          class="space-y-4"
+          @submit="onUpdatePassword"
+        >
+          <UFormField name="oldPassword">
+            <UInput
+              class="w-full"
+              v-model="passwordForm.oldPassword"
+              placeholder=""
+              :type="isPwd ? 'password' : 'text'"
+              :ui="{ base: 'peer' }"
+            >
+              <label
+                class="text-highlighted peer-focus:text-highlighted peer-placeholder-shown:text-dimmed pointer-events-none absolute -top-2.5 left-0 px-1.5 text-xs font-medium transition-all peer-placeholder-shown:top-1.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-2.5 peer-focus:text-xs peer-focus:font-medium"
+              >
+                <span class="bg-default inline-flex px-1">旧密码</span>
+              </label>
+              <template #trailing>
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  size="sm"
+                  :icon="isPwd ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                  :aria-label="isPwd ? 'Hide password' : 'Show password'"
+                  :aria-pressed="isPwd"
+                  aria-controls="password"
+                  @click="isPwd = !isPwd"
+                />
+              </template>
+            </UInput>
+          </UFormField>
+          <UFormField name="password">
+            <UInput
+              class="w-full"
+              v-model="passwordForm.password"
+              placeholder=""
+              :type="isPwd ? 'password' : 'text'"
+              :ui="{ base: ' peer' }"
+            >
+              <label
+                class="text-highlighted peer-focus:text-highlighted peer-placeholder-shown:text-dimmed pointer-events-none absolute -top-2.5 left-0 px-1.5 text-xs font-medium transition-all peer-placeholder-shown:top-1.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-2.5 peer-focus:text-xs peer-focus:font-medium"
+              >
+                <span class="bg-default inline-flex px-1">新密码</span>
+              </label>
+              <template #trailing>
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  size="sm"
+                  :icon="isPwd ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                  :aria-label="isPwd ? 'Hide password' : 'Show password'"
+                  :aria-pressed="isPwd"
+                  aria-controls="password"
+                  @click="isPwd = !isPwd"
+                />
+              </template>
+            </UInput>
+          </UFormField>
+          <UFormField name="confirmPassword">
+            <UInput
+              class="w-full"
+              v-model="passwordForm.confirmPassword"
+              placeholder=""
+              :type="isPwd ? 'password' : 'text'"
+              :ui="{ base: 'peer' }"
+            >
+              <!-- class="text-highlighted peer-focus:text-highlighted peer-placeholder-shown:text-dimmed pointer-events-none absolute -top-1.5 left-0 px-1.5 text-xs font-medium transition-all peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-1.5 peer-focus:text-xs peer-focus:font-medium" -->
+              <label
+                class="text-highlighted peer-focus:text-highlighted peer-placeholder-shown:text-dimmed pointer-events-none absolute -top-2.5 left-0 px-1.5 text-xs font-medium transition-all peer-placeholder-shown:top-1.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-2.5 peer-focus:text-xs peer-focus:font-medium"
+              >
+                <span class="bg-default inline-flex px-1">确认新密码</span>
+              </label>
+              <template #trailing>
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  size="sm"
+                  :icon="isPwd ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                  :aria-label="isPwd ? 'Hide password' : 'Show password'"
+                  :aria-pressed="isPwd"
+                  aria-controls="password"
+                  @click="isPwd = !isPwd"
+                />
+              </template>
+            </UInput>
+          </UFormField>
+          <UButton type="submit">修改密码</UButton>
+        </UForm>
+      </div>
+    </template>
+  </UDrawer>
+</template>
+
+<script lang="ts" setup>
+import { updatePassword } from '@/apis/user'
+import { useBackToProfile, useEncryptUserInfo, useLogout } from '@/hooks'
+import { useMediaQuery } from '@vueuse/core'
+import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import * as z from 'zod'
+
+const isDesktop = useMediaQuery('(min-width: 768px)')
+const openUpdatePasswordDrawer = ref(true)
+const schema = z.object({
+  oldPassword: z.string().min(8, '密码长度至少为 8 位'),
+  password: z.string().min(8, '密码长度至少为 8 位'),
+  confirmPassword: z
+    .string()
+    .refine(
+      () => passwordForm.password === passwordForm.confirmPassword,
+      '新密码不一致'
+    )
+})
+const passwordForm = reactive({
+  oldPassword: '',
+  password: '',
+  confirmPassword: ''
+})
+const isPwd = ref(true)
+const toast = useToast()
+const router = useRouter()
+
+const onUpdatePassword = async () => {
+  const { oldPassword, password } = passwordForm
+
+  try {
+    const encryptedUserInfo = await useEncryptUserInfo({
+      oldPassword,
+      password
+    })
+    const { message } = await updatePassword(encryptedUserInfo)
+    toast.add({
+      title: message,
+      color: 'success'
+    })
+    useLogout()
+    router.replace('/login')
+  } catch (error) {
+    toast.add({
+      title: error.essage,
+      color: 'error'
+    })
+  }
+}
+</script>
