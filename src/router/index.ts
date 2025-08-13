@@ -5,7 +5,7 @@ import Hall from '@/views/Hall.vue'
 import Profile from '@/views/Profile.vue'
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes: [
     {
       path: '/hall',
