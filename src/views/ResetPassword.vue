@@ -64,7 +64,11 @@
             </template>
           </UInput>
         </UFormField>
-        <UButton @click="onResetPassword" label="重置密码"></UButton>
+        <UButton
+          loading-auto
+          @click="onResetPassword"
+          label="重置密码"
+        ></UButton>
       </UForm>
     </div>
   </div>

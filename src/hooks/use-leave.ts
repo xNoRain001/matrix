@@ -18,7 +18,7 @@ const useLeave = async (
   }
 
   // 主动离开的一方直接回到大厅，不显示底部按钮
-  simpleLeave()
+  await simpleLeave()
 }
 
 export default useLeave

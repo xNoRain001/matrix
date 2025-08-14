@@ -175,7 +175,12 @@
         />
       </UButtonGroup>
     </div>
-    <UButton @click="onUpdateFilter" class="mt-4" label="确定修改"></UButton>
+    <UButton
+      loading-auto
+      @click="onUpdateFilter"
+      class="mt-4"
+      label="确定修改"
+    ></UButton>
   </DefineFilterBodyTemplate>
   <UModal
     v-if="isDesktop"
@@ -307,7 +312,7 @@ const sourceProvinceOptions = Object.keys(provinceCityMap)
 const provinceOptions = ref(sourceProvinceOptions)
 const cityOptions = ref(provinceCityMap[province.value] || [])
 
-const onUpdateFilter = () => {
+const onUpdateFilter = async () => {
   try {
     isOpenFilterDrawer.value = false
     toast.add({

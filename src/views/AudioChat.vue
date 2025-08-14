@@ -328,7 +328,7 @@ const leaveAfterConnected = async () => {
 }
 
 const onLeave = async () =>
-  useLeave(
+  await useLeave(
     remoteRoomInfo.value,
     socket,
     online.value,

@@ -111,7 +111,7 @@
               </template>
             </UInput>
           </UFormField>
-          <UButton type="submit">修改密码</UButton>
+          <UButton loading-auto type="submit">修改密码</UButton>
         </UForm>
       </div>
     </template>
@@ -164,7 +164,7 @@ const onUpdatePassword = async () => {
     router.replace('/login')
   } catch (error) {
     toast.add({
-      title: error.essage,
+      title: error.message,
       color: 'error'
     })
   }

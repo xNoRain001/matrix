@@ -48,6 +48,7 @@
           label="修改资料"
           class="mt-4"
           @click="onUpdateProfile"
+          loading-auto
         ></UButton>
       </div>
     </template>

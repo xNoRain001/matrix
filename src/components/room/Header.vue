@@ -48,7 +48,12 @@
       class="justify-center"
       @click="isOpenLeaveRoomModal = false"
     />
-    <UButton label="确认" @click="onLeave" class="justify-center" />
+    <UButton
+      loading-auto
+      label="确认"
+      @click="onLeave"
+      class="justify-center"
+    />
   </DefineLeaveRoomFooterTemplate>
   <UModal
     v-if="isDesktop"
@@ -106,8 +111,8 @@ const computeAge = v => {
   return year - _year - (full ? 0 : 1)
 }
 
-const onLeave = () => {
+const onLeave = async () => {
+  await onClick()
   isOpenLeaveRoomModal.value = true
-  onClick()
 }
 </script>

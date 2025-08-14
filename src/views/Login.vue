@@ -72,7 +72,7 @@
             <div @click="goLoginWithVC" class="cursor-pointer">验证码登录</div>
             <div @click="goResetPassword" class="cursor-pointer">忘记密码</div>
           </div>
-          <UButton @click="onLogin" label="登录" />
+          <UButton loading-auto @click="onLogin" label="登录" />
         </UForm>
       </div>
 
@@ -158,6 +158,7 @@
           />
           <div>
             <UButton
+              loading-auto
               @click="sendRegisterPin"
               :label="`发送验证码${registerReamingTime ? `（${registerReamingTime} s）` : ''}`"
             />
@@ -185,7 +186,7 @@
               </label>
             </UInput>
           </UFormField>
-          <UButton @click="onResetPassword" label="发送链接" />
+          <UButton loading-auto @click="onResetPassword" label="发送链接" />
         </UForm>
       </div>
 
@@ -217,6 +218,7 @@
           />
           <div>
             <UButton
+              loading-auto
               @click="sendLoginPin"
               :label="`发送验证码${loginWithPinReamingTime ? `（${loginWithPinReamingTime} s）` : ''}`"
             />
@@ -318,6 +320,7 @@ const backToLogin = () => {
 }
 
 const sendLoginPin = async () => {
+  console.log('@')
   if (
     loginWithPinReamingTime.value ||
     !emailSchema.safeParse(loginWithVCForm).success

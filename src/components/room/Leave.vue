@@ -1,6 +1,7 @@
 <template>
   <div class="flex items-center justify-center">
     <UButton
+      loading-auto
       class="w-full"
       @click="simpleLeave"
       :label="isMatch ? '重新匹配' : '重新进入房间'"
