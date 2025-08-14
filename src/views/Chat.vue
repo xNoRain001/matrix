@@ -1,16 +1,28 @@
 <template>
   <Full v-if="isFull"></Full>
 
-  <UModal v-else v-model:open="oepnModal" fullscreen title=" " description=" ">
+  <UModal
+    v-else
+    v-model:open="oepnModal"
+    fullscreen
+    title=" "
+    description=" "
+    :dismissible="false"
+    class="overflow-y-scroll"
+    :ui="{
+      // 背景色保持一致，防止修改 top 时看到主页的 header
+      overlay: 'bg-default',
+      body: 'overflow-y-visible',
+      header: 'sticky top-0 w-full z-10 bg-default',
+      footer: 'sticky bottom-0 w-full z-10 bg-default'
+    }"
+  >
     <template #content></template>
     <template #header>
       <Header :online="online" :leaved="leaved" :on-click="onLeave"></Header>
     </template>
     <template #body>
-      <div
-        ref="messageListRef"
-        class="-mt-4 flex w-full items-center justify-center pb-4"
-      >
+      <div class="-mt-4 flex w-full items-center justify-center pb-4">
         <div class="relative w-full max-w-(--room-width)">
           <div
             v-for="(
@@ -27,7 +39,9 @@
                 v-if="sent"
                 class="flex items-center justify-end gap-3"
               >
-                <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
+                <div
+                  class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2 whitespace-pre-line"
+                >
                   {{ content[0] }}
                 </div>
                 <UAvatar
@@ -246,7 +260,7 @@
       </div>
     </template>
     <template #footer>
-      <div class="flex w-full justify-center">
+      <div ref="footerRef" class="flex w-full justify-center">
         <Leave
           v-if="leaved"
           :is-match="isMatch"
@@ -298,6 +312,7 @@
             />
             <div class="mt-4 flex justify-end">
               <UButton
+                :disabled="!online"
                 @click="onSendMsg"
                 label="发送（Ctrl + Enter）"
               ></UButton>
@@ -312,6 +327,7 @@
             <UTextarea
               :disabled="!online"
               @keydown.enter="onSendMsg"
+              @focus="onFocus"
               enterkeyhint="send"
               class="grow"
               v-model="message"
@@ -328,7 +344,7 @@
               variant="ghost"
               color="neutral"
               :icon="expanded ? 'lucide:circle-x' : 'lucide:circle-plus'"
-              @click="expanded = !expanded"
+              @click="onExpand"
             ></UButton>
           </div>
           <UCollapsible v-model:open="expanded">
@@ -429,7 +445,7 @@ import {
   useLeave,
   useExportFile
 } from '@/hooks'
-import { onBeforeUnmount, onMounted, ref, reactive } from 'vue'
+import { onBeforeUnmount, onMounted, ref, reactive, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { received, receiving, sending, sent } from '@/const'
 
@@ -442,7 +458,6 @@ import { useMediaQuery } from '@vueuse/core'
 
 let lastMsgTimer = null
 const isDesktop = useMediaQuery('(min-width: 768px)')
-const messageListRef = ref('messageListRef')
 const oepnModal = ref(true)
 const makingOffer = ref(false)
 const polite = ref(true)
@@ -489,6 +504,35 @@ const sendFiles = ref<extendedFiles>([])
 const receiveStartTime = ref(0)
 const isFull = ref(false)
 const msgStamp = reactive({ sent: false, value: '' })
+// 直接往 modal 上添加 ref 属性无效，因此给 footer 加 ref，通过向上查找得到 modal
+const footerRef = ref(null)
+const modalRef = computed(() => footerRef.value?.parentNode?.parentNode)
+const toast = useToast()
+
+const onExpand = () => {
+  expanded.value = !expanded.value
+}
+
+const resizeHandler = () => {
+  // 安卓：在呼出键盘后，不会将获取焦点的输入框滚动到视图内，直接修改视图高度为原来的
+  // 视图高度 - 键盘高度，原先的视图只是高度变小了，头部依然能够显示，如果内容高度
+  // 大于视口宽度，出现滚动条
+  // iOS: 在呼出键盘后，会将获取焦点的输入框滚动到视图内，视图高度不会改变，而是由
+  // 原本的视图和底部键盘组成，原本的视图溢出的高度最大值为键盘的高度（滚动区域的
+  // 最大距离为键盘高度），由输入框的位置决定，这就导致头部可能无法显示在当前视图中，
+  // 另外，iOS 键盘显示时，页面的头部和底部都会多出一块衬底区域
+
+  // visualViewport.offsetTop 表示视觉视口相对于布局视口的偏移，标签栏在底部时
+  // 这个值可能不准
+  // TODO: 找到解决办法
+  modalRef.value.style.top = `${visualViewport.offsetTop}px`
+}
+
+const onFocus = () => {
+  expanded.value = false
+  // 输入框获取焦点时，聊天列表滚动到底部
+  useScrollToBottom(modalRef)
+}
 
 const onDownload = (url, filename) => {
   fetch(url)
@@ -707,7 +751,7 @@ const addMessageToView = (messageRecord: dbMessage) => {
 
   _messageList.push(messageRecord as message)
   msgStamp.value = ''
-  useScrollToBottom(messageListRef)
+  useScrollToBottom(modalRef)
 }
 
 const addMessagesToDB = async (messageRecord: dbMessage) => {
@@ -826,7 +870,7 @@ const initPC = () => {
 const onJoined = (_, __, _polite) => {
   clearInterval(lastMsgTimer)
   useJoined(socket, polite, remoteRoomInfo.value.roomId, initPC, _polite)
-  useScrollToBottom(messageListRef)
+  useScrollToBottom(modalRef)
   updateLastMsgStamp()
   lastMsgTimer = setInterval(() => {
     updateLastMsgStamp()
@@ -884,7 +928,7 @@ const leaveAfterConnected = async () => {
   // 清空房间信息
   await useClearMessages(_remoteRoomInfo.roomId)
   await updateLatestRoom()
-  useScrollToBottom(messageListRef)
+  useScrollToBottom(modalRef)
   leaved.value = true
   online.value = false
   otherInfo.value = null
@@ -941,15 +985,21 @@ onMounted(async () => {
     path,
     remoteRoomInfo,
     roomId as string,
-    leaved
+    leaved,
+    toast
   )
   const messages = await getMessages()
   messageList.value = [...messages]
   lastMsgTimeStamp.value = messages[messages.length - 1]?.timestamp || 0
+  // 软键盘打开和关闭时触发
+  visualViewport.addEventListener('resize', resizeHandler)
+  visualViewport.addEventListener('scroll', resizeHandler)
 })
 
 onBeforeUnmount(() => {
   clearInterval(lastMsgTimer)
   useBeforeUnmount(socket)
+  visualViewport.removeEventListener('resize', resizeHandler)
+  visualViewport.removeEventListener('scroll', resizeHandler)
 })
 </script>

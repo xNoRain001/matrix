@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build && vitepress build docs && node ./scripts/move-files.cjs",
+    "build": "vue-tsc -b && vite build",
+    "build-with-vitepress": "vue-tsc -b && vite build && vitepress build docs && node ./scripts/move-files.cjs",
     "preview": "vite preview",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
@@ -34,6 +35,7 @@
     "@types/node": "^22.15.23",
     "@vitejs/plugin-vue": "^5.2.2",
     "@vue/tsconfig": "^0.7.0",
+    "eruda": "^3.4.3",
     "eslint": "^9.27.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.4.1",

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="absolute top-0 right-0 bottom-0 left-0 flex items-center justify-center p-4"
+    class="absolute top-0 right-0 bottom-0 left-0 flex flex-col items-center justify-center p-4"
   >
     <div class="bg-elevated w-full max-w-[30rem] rounded-xl p-4">
       <div class="relative flex items-center justify-center">
@@ -72,10 +72,7 @@
             <div @click="goLoginWithVC" class="cursor-pointer">验证码登录</div>
             <div @click="goResetPassword" class="cursor-pointer">忘记密码</div>
           </div>
-          <div class="space-x-2">
-            <UButton @click="onLogin" label="登录" />
-            <UButton @click="goRegister" label="注册" />
-          </div>
+          <UButton @click="onLogin" label="登录" />
         </UForm>
       </div>
 
@@ -225,6 +222,19 @@
             />
           </div>
         </UForm>
+      </div>
+    </div>
+
+    <div
+      v-if="isLogin"
+      class="mt-4 flex w-full max-w-[30rem] flex-col items-center gap-y-4 p-4"
+    >
+      <USeparator label="or" />
+      <div class="text-sm">
+        <span>没有账号？</span
+        ><span class="text-primary cursor-pointer" @click="goRegister"
+          >创建一个账号</span
+        >
       </div>
     </div>
   </div>

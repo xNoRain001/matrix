@@ -1,8 +1,9 @@
 const useScrollToBottom = elm => {
-  const parent = elm.value.parentNode
+  elm = elm.value
+
   const timer = setTimeout(() => {
-    parent.scrollTo({
-      top: parent.scrollHeight,
+    elm.scrollTo({
+      top: elm.scrollHeight,
       behavior: 'smooth'
     })
     clearTimeout(timer)

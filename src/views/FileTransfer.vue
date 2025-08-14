@@ -1,7 +1,14 @@
 <template>
   <Full v-if="isFull"></Full>
 
-  <UModal v-else v-model:open="oepnModal" fullscreen title=" " description=" ">
+  <UModal
+    v-else
+    v-model:open="oepnModal"
+    :overlay="false"
+    fullscreen
+    title=" "
+    description=" "
+  >
     <template #content></template>
     <template #header>
       <Header :online="online" :leaved="leaved" :on-click="onLeave"></Header>
@@ -196,6 +203,7 @@ const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
 const leaved = ref(false)
 const isFull = ref(false)
+const toast = useToast()
 
 const onRemoveFile = index => {
   files.value.splice(index, 1)
@@ -357,7 +365,15 @@ const initSocket = () => {
 }
 
 onMounted(async () => {
-  useMounted(initSocket, router, path, remoteRoomInfo, roomId as string, leaved)
+  useMounted(
+    initSocket,
+    router,
+    path,
+    remoteRoomInfo,
+    roomId as string,
+    leaved,
+    toast
+  )
 })
 
 onBeforeUnmount(() => useBeforeUnmount(socket))

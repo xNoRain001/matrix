@@ -44,6 +44,7 @@
   <UModal
     v-if="!isMatch"
     v-model:open="isOpenRoomDrawer"
+    :overlay="false"
     fullscreen
     title="房间"
     description=" "
@@ -58,6 +59,7 @@
   <UModal
     v-else
     v-model:open="isOpenMatchDrawer"
+    :overlay="false"
     fullscreen
     title="匹配"
     description=" "
@@ -427,22 +429,35 @@ const onClick = async (_matchType, to) => {
 
   // 不需要每次都请求房间信息，只在页面首次加载时请求，因为房间信息会随着操作而更新
   if (firstRequestRemoteRoomInfo.value) {
-    const latestRoomInfo = (await getLatestRoom()).data
-    firstRequestRemoteRoomInfo.value = false
-    // 如果之前从没参与过匹配， latestRoomInfo 值为 null，
-    const latestId = latestRoomInfo?.latestId
+    try {
+      const latestRoomInfo = (await getLatestRoom()).data
+      // 如果之前从没参与过匹配， latestRoomInfo 值为 null，
+      const latestId = latestRoomInfo?.latestId
 
-    // 如果 latestId 有值，说明自身还没离开房间
-    if (latestId) {
-      remoteRoomInfo.value = latestRoomInfo
-      // 判断对方是否离开房间
-      const isExit = (await isExitRoom(latestId)).data
-      const _remoteRoomInfo = remoteRoomInfo.value
-      _remoteRoomInfo.inRoom = latestId && !isExit
-      router.replace({
-        path: _remoteRoomInfo.path,
-        query: { roomId: _remoteRoomInfo.roomId }
-      })
+      // 如果 latestId 有值，说明自身还没离开房间
+      if (latestId) {
+        remoteRoomInfo.value = latestRoomInfo
+        // 判断对方是否离开房间
+        const isExit = (await isExitRoom(latestId)).data
+        const _remoteRoomInfo = remoteRoomInfo.value
+        _remoteRoomInfo.inRoom = latestId && !isExit
+        firstRequestRemoteRoomInfo.value = false
+        return router.replace({
+          path: _remoteRoomInfo.path,
+          query: { roomId: _remoteRoomInfo.roomId }
+        })
+      }
+
+      firstRequestRemoteRoomInfo.value = false
+    } catch (error) {
+      toast.add({ title: error.message, color: 'error' })
+
+      if (_isMatch) {
+        isOpenMatchDrawer.value = false
+      } else {
+        isOpenRoomDrawer.value = false
+      }
+
       return
     }
   }

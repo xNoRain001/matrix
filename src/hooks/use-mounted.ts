@@ -9,18 +9,28 @@ const useMounted = async (
   currentPath: string,
   remoteRoomInfo: Ref<remoteRoomInfo>,
   queryRoomId: string,
-  leaved: Ref<boolean>
+  leaved: Ref<boolean>,
+  toast: any
 ) => {
   if (!remoteRoomInfo.value.skipRequest) {
-    const latestRoomInfo = (await getLatestRoom()).data
-    // 如果 latestId 有值，说明自身还没离开房间
-    const { latestId } = latestRoomInfo
+    try {
+      const latestRoomInfo = (await getLatestRoom()).data
+      // 如果 latestId 有值，说明自身还没离开房间
+      const { latestId } = latestRoomInfo
 
-    if (latestId) {
-      remoteRoomInfo.value = latestRoomInfo
-      const isExit = (await isExitRoom(latestId)).data
-      remoteRoomInfo.value.inRoom = !isExit
-      leaved.value = isExit
+      if (latestId) {
+        remoteRoomInfo.value = latestRoomInfo
+        const isExit = (await isExitRoom(latestId)).data
+        remoteRoomInfo.value.inRoom = !isExit
+        leaved.value = isExit
+      }
+    } catch (error) {
+      toast.add({
+        title: error.message,
+        color: 'error'
+      })
+
+      return router.replace('/hall')
     }
   }
 
