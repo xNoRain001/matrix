@@ -196,7 +196,6 @@ const {
   query: { roomId }
 } = useRoute()
 const router = useRouter()
-const isReconnect = ref(false)
 const online = ref(false)
 const { isMatch, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
@@ -204,6 +203,8 @@ const _userInfo = userInfo.value
 const leaved = ref(false)
 const isFull = ref(false)
 const toast = useToast()
+const showOfflineModal = ref(false)
+const loading = ref(false)
 
 const onRemoveFile = index => {
   files.value.splice(index, 1)
@@ -292,7 +293,7 @@ const onOtherJoin = () =>
     _userInfo
   )
 
-const onDisconnect = () => useDisconnect(pc, leaved, isReconnect)
+const onDisconnect = () => useDisconnect(pc)
 
 const onRtc = (roomId: string, data: any) =>
   useInitRtc(pc, socket, roomId, data, makingOffer, polite, _userInfo)
@@ -336,7 +337,8 @@ const onLeave = async () =>
     socket,
     online.value,
     leaveAfterConnected,
-    simpleLeave
+    simpleLeave,
+    toast
   )
 
 const onBye = () => {
@@ -351,29 +353,33 @@ const initSocket = () => {
     onOtherJoin,
     onDisconnect,
     onRtc,
-    isReconnect,
     roomId,
-    isFull
+    isFull,
+    showOfflineModal,
+    loading,
+    toast
   )
   socket.on('bye', onBye)
   socket.on('file-metadata', onFileMetadata)
   socket.on('receive-file-metadata', onReceiveFileMetadata)
   socket.on('saved-file', onSavedFile)
-  socket.emit('join', roomId)
 
   return socket
 }
 
 onMounted(async () => {
-  useMounted(
-    initSocket,
-    router,
-    path,
-    remoteRoomInfo,
-    roomId as string,
-    leaved,
-    toast
-  )
+  try {
+    await useMounted(router, path, remoteRoomInfo, roomId as string, leaved)
+  } catch (error) {
+    toast.add({
+      title: error.message,
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+    return router.replace('/hall')
+  }
+
+  initSocket()
 })
 
 onBeforeUnmount(() => useBeforeUnmount(socket))

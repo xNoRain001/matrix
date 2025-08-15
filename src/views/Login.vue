@@ -320,7 +320,6 @@ const backToLogin = () => {
 }
 
 const sendLoginPin = async () => {
-  console.log('@')
   if (
     loginWithPinReamingTime.value ||
     !emailSchema.safeParse(loginWithVCForm).success

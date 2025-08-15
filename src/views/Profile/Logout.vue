@@ -3,7 +3,6 @@
     <UButton
       label="取消"
       color="neutral"
-      variant="outline"
       class="justify-center"
       @click="openLogoutDrawer = false"
     />

@@ -213,7 +213,6 @@ const {
   query: { roomId }
 } = useRoute()
 const router = useRouter()
-const isReconnect = ref(false)
 const online = ref(false)
 const { isMatch, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
@@ -233,6 +232,8 @@ const constraints = {
 }
 const isFull = ref(false)
 const toast = useToast()
+const showOfflineModal = ref(false)
+const loading = ref(false)
 
 const initPC = async () => {
   pc = useCreatePeerConnection(
@@ -260,7 +261,7 @@ const onOtherJoin = () =>
     _userInfo
   )
 
-// const onDisconnect = () => useDisconnect(pc, leaved, isReconnect)
+// const onDisconnect = () => useDisconnect(pc)
 
 const onDisconnect = () => {
   // 满员的情况下，不会触发 joined，此时 pc 为 null
@@ -269,10 +270,6 @@ const onDisconnect = () => {
   // 关闭本地媒体
   if (localMediaStream) {
     useCloseMediaStreamTracks(localMediaStream)
-  }
-
-  if (!leaved.value) {
-    isReconnect.value = true
   }
 }
 
@@ -333,7 +330,8 @@ const onLeave = async () =>
     socket,
     online.value,
     leaveAfterConnected,
-    simpleLeave
+    simpleLeave,
+    toast
   )
 
 const onBye = () => {
@@ -410,26 +408,30 @@ const initSocket = () => {
     onOtherJoin,
     onDisconnect,
     onRtc,
-    isReconnect,
     roomId,
-    isFull
+    isFull,
+    showOfflineModal,
+    loading,
+    toast
   )
   socket.on('bye', onBye)
-  socket.emit('join', roomId)
 
   return socket
 }
 
 onMounted(async () => {
-  useMounted(
-    initSocket,
-    router,
-    path,
-    remoteRoomInfo,
-    roomId as string,
-    leaved,
-    toast
-  )
+  try {
+    await useMounted(router, path, remoteRoomInfo, roomId as string, leaved)
+  } catch (error) {
+    toast.add({
+      title: error.message,
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+    return router.replace('/hall')
+  }
+
+  initSocket()
 })
 
 onBeforeUnmount(() => useBeforeUnmount(socket))

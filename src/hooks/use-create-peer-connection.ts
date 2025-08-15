@@ -52,13 +52,13 @@ const useCreatePeerConnection = (
     const { iceConnectionState } = pc
 
     if (iceConnectionState === 'failed') {
-      console.log('failed...')
+      console.log('rtc failed...')
       // pc.restartIce()
     } else if (iceConnectionState === 'disconnected') {
-      console.log('disconnected...')
+      console.log('rc disconnected...')
       online.value = false
     } else if (iceConnectionState === 'connected') {
-      console.log('connected...')
+      console.log('rct connected...')
       online.value = true
       const latestId = useRoomStore().otherInfo.id
       remoteRoomInfo.inRoom = true

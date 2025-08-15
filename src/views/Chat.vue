@@ -40,7 +40,7 @@
                 class="flex items-center justify-end gap-3"
               >
                 <div
-                  class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2 whitespace-pre-line"
+                  class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2 break-words whitespace-pre-wrap"
                 >
                   {{ content[0] }}
                 </div>
@@ -62,7 +62,9 @@
                   size="md"
                 />
                 <div v-else class="w-8"></div>
-                <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
+                <div
+                  class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2 break-words whitespace-pre-wrap"
+                >
                   {{ content[0] }}
                 </div>
               </div>
@@ -390,6 +392,24 @@
     </template>
   </UModal>
 
+  <UModal
+    :dismissible="false"
+    v-model:open="showOfflineModal"
+    title="网络错误"
+    description=" "
+    :ui="{ close: 'hidden' }"
+  >
+    <template #body>
+      <UButton
+        color="error"
+        label="重新连接"
+        :loading="loading"
+        loading-icon="i-lucide-loader"
+        @click="onReconnect"
+      ></UButton>
+    </template>
+  </UModal>
+
   <input
     ref="photoInputRef"
     @change="onPhotoInputChange"
@@ -473,7 +493,6 @@ const {
   query: { roomId }
 } = useRoute()
 const router = useRouter()
-const isReconnect = ref(false)
 const online = ref(false)
 const { isMatch, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
@@ -508,6 +527,14 @@ const msgStamp = reactive({ sent: false, value: '' })
 const footerRef = ref(null)
 const modalRef = computed(() => footerRef.value?.parentNode?.parentNode)
 const toast = useToast()
+const isIOS = /iPhone/i.test(navigator.userAgent)
+const showOfflineModal = ref(false)
+const loading = ref(false)
+
+const onReconnect = () => {
+  loading.value = true
+  initSocket()
+}
 
 const onExpand = () => {
   expanded.value = !expanded.value
@@ -695,6 +722,11 @@ const onSendMsg = async () => {
   const _message = message.value
 
   if (!_message) {
+    return
+  }
+
+  if (_message.length > 2000) {
+    toast.add({ title: '支持的最大消息长度为 2000 字符', color: 'error' })
     return
   }
 
@@ -889,7 +921,7 @@ const onOtherJoin = () =>
     _userInfo
   )
 
-const onDisconnect = () => useDisconnect(pc, leaved, isReconnect)
+const onDisconnect = () => useDisconnect(pc)
 
 const onRtc = (roomId: string, data: any) =>
   useInitRtc(pc, socket, roomId, data, makingOffer, polite, _userInfo)
@@ -944,7 +976,8 @@ const onLeave = async () => {
     socket,
     online.value,
     leaveAfterConnected,
-    simpleLeave
+    simpleLeave,
+    toast
   )
 }
 
@@ -960,16 +993,17 @@ const initSocket = () => {
     onOtherJoin,
     onDisconnect,
     onRtc,
-    isReconnect,
     roomId,
-    isFull
+    isFull,
+    showOfflineModal,
+    loading,
+    toast
   )
   // 其他人离开房间
   socket.on('bye', onBye)
   socket.on('file-metadata', onFileMetadata)
   socket.on('receive-file-metadata', onReceiveFileMetadata)
   socket.on('saved-file', onSavedFile)
-  socket.emit('join', roomId)
 
   return socket
 }
@@ -979,27 +1013,47 @@ const onReceiveFileMetadata = () => (flag.value = true)
 const onSavedFile = () => (flag.value = true)
 
 onMounted(async () => {
-  await useMounted(
-    initSocket,
-    router,
-    path,
-    remoteRoomInfo,
-    roomId as string,
-    leaved,
-    toast
-  )
-  const messages = await getMessages()
-  messageList.value = [...messages]
-  lastMsgTimeStamp.value = messages[messages.length - 1]?.timestamp || 0
-  // 软键盘打开和关闭时触发
-  visualViewport.addEventListener('resize', resizeHandler)
-  visualViewport.addEventListener('scroll', resizeHandler)
+  // 如果获取接口数据失败，返回大厅
+  try {
+    await useMounted(router, path, remoteRoomInfo, roomId as string, leaved)
+  } catch (error) {
+    toast.add({
+      title: error.message,
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+    return router.replace('/hall')
+  }
+
+  // 如果 socket 初始化连接失败（能获取到接口数据，却无法连接 socket，
+  // 这是很小概率的事），由重试机制处理
+  initSocket()
+
+  // 如果处理消息失败，给空消息
+  try {
+    const messages = await getMessages()
+    messageList.value = [...messages]
+    lastMsgTimeStamp.value = messages[messages.length - 1]?.timestamp || 0
+  } catch {
+    messageList.value = []
+    lastMsgTimeStamp.value = 0
+  }
+
+  // 处理 iOS 软键盘问题
+  if (isIOS) {
+    // 软键盘打开和关闭时触发
+    visualViewport.addEventListener('resize', resizeHandler)
+    visualViewport.addEventListener('scroll', resizeHandler)
+  }
 })
 
 onBeforeUnmount(() => {
   clearInterval(lastMsgTimer)
   useBeforeUnmount(socket)
-  visualViewport.removeEventListener('resize', resizeHandler)
-  visualViewport.removeEventListener('scroll', resizeHandler)
+
+  if (isIOS) {
+    visualViewport.removeEventListener('resize', resizeHandler)
+    visualViewport.removeEventListener('scroll', resizeHandler)
+  }
 })
 </script>

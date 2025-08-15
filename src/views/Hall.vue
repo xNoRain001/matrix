@@ -51,7 +51,12 @@
   >
     <template #body>
       <div class="flex h-full items-center justify-center">
-        <UPinInput :length="pinLength" autofocus v-model="pin"></UPinInput>
+        <UPinInput
+          :disabled="firstRequestRemoteRoomInfo"
+          :length="pinLength"
+          autofocus
+          v-model="pin"
+        ></UPinInput>
       </div>
     </template>
   </UModal>
@@ -69,9 +74,9 @@
       <div class="flex h-full items-center justify-center">
         <UButton
           v-if="offline"
-          icon="lucide:wifi-off"
           @click="rematch"
           color="error"
+          icon="lucide:wifi-off"
           label="重新匹配"
         ></UButton>
         <UButton v-else-if="pause" label="继续匹配" @click="rematch"></UButton>
@@ -86,6 +91,8 @@
       </div>
     </template>
   </UModal>
+  <!-- 需要提前获取到 icon，否则断网时，icon 加载不出来 -->
+  <UIcon hidden name="lucide:wifi-off"></UIcon>
 
   <DefineFilterBodyTemplate>
     <div class="flex items-center">
@@ -359,15 +366,15 @@ const afterLeave = () => {
 const initSocket = matchType => {
   // @ts-ignore
   socket = io.connect(import.meta.env.VITE_API_BASE_URL, {
-    reconnectionAttempts: 5
+    reconnection: false
   })
 
-  socket.on('connect', () => {})
-  // 如果匹配中突然断网，需要很久才会触发这个回调，之后会去重试，重试时如果失败触发
-  // connect_error 回调
+  // socket.on('connect', () => {})
+  // 如果匹配中突然断网，需要很久才会触发 disconnect 回调，之后会去重试，重试时如果
+  // 失败触发 connect_error 回调
   socket.on('disconnect', () => {
-    // 匹配成功时会跳转路由，关闭 modal，断开 socket 连接，只通过 !leave.value 判断
-    // 连接服务器失败会造成匹配成功时出现连接服务器失败提示
+    // 匹配成功时会跳转路由，关闭 modal，断开 socket 连接
+    // 只写 !leave.value 会出现匹配成功时出现连接服务器失败提示
     if (!leave.value && !pause.value) {
       offline.value = true
       toast.add({
@@ -375,14 +382,6 @@ const initSocket = matchType => {
         color: 'error'
       })
     }
-  })
-  // 如果没网络的状态进入匹配，触发这个回调，之后的每次重试都会触发
-  socket.on('connect_error', () => {
-    offline.value = true
-    toast.add({
-      title: '连接服务器失败...',
-      color: 'error'
-    })
   })
 
   socket.on('matched', data => {
@@ -462,7 +461,6 @@ const onClick = async (_matchType, to) => {
       } else {
         isOpenRoomDrawer.value = false
       }
-
       return
     }
   }

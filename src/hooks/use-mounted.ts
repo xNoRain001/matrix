@@ -4,33 +4,22 @@ import { getLatestRoom, isExitRoom } from '@/apis/latest-room'
 import type { Ref } from 'vue'
 
 const useMounted = async (
-  initSocket: Function,
   router: Router,
   currentPath: string,
   remoteRoomInfo: Ref<remoteRoomInfo>,
   queryRoomId: string,
-  leaved: Ref<boolean>,
-  toast: any
+  leaved: Ref<boolean>
 ) => {
   if (!remoteRoomInfo.value.skipRequest) {
-    try {
-      const latestRoomInfo = (await getLatestRoom()).data
-      // 如果 latestId 有值，说明自身还没离开房间
-      const { latestId } = latestRoomInfo
+    const latestRoomInfo = (await getLatestRoom()).data
+    // 如果 latestId 有值，说明自身还没离开房间
+    const { latestId } = latestRoomInfo
 
-      if (latestId) {
-        remoteRoomInfo.value = latestRoomInfo
-        const isExit = (await isExitRoom(latestId)).data
-        remoteRoomInfo.value.inRoom = !isExit
-        leaved.value = isExit
-      }
-    } catch (error) {
-      toast.add({
-        title: error.message,
-        color: 'error'
-      })
-
-      return router.replace('/hall')
+    if (latestId) {
+      remoteRoomInfo.value = latestRoomInfo
+      const isExit = (await isExitRoom(latestId)).data
+      remoteRoomInfo.value.inRoom = !isExit
+      leaved.value = isExit
     }
   }
 
@@ -42,7 +31,7 @@ const useMounted = async (
     if (path === currentPath) {
       if (queryRoomId !== roomId) {
         // 由于路径没有发生变化，组件不会被销毁
-        router.replace({ query: { roomId } })
+        router.replace({ path, query: { roomId } })
       }
 
       // 如果对方已经离开了，不进行初始化
@@ -68,8 +57,6 @@ const useMounted = async (
     _remoteRoomInfo.roomId = queryRoomId
     _remoteRoomInfo.path = currentPath
   }
-
-  initSocket()
 }
 
 export default useMounted
