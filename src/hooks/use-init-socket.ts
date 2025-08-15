@@ -17,7 +17,7 @@ const useInitSocket = (
   toast
 ) => {
   // @ts-ignore
-  const socket = io.connect(import.meta.env.VITE_API_BASE_URL, {
+  const socket = io.connect(import.meta.env.VITE_SOCKET_BASE_URL, {
     reconnectionAttempts: maxReconnectionAttempts
   })
 
@@ -62,6 +62,7 @@ const useInitSocket = (
       // 如果成功连接后断开，重连时 reconnectionAttempts 的最大值为
       // maxReconnectionAttempts
 
+      console.log('@')
       // 当模态框未打开时，重试次数满了就打开模态框
       showOfflineModal.value = true
       // 同时需要重置尝试次数

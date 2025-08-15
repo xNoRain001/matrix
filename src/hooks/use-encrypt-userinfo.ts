@@ -11,6 +11,7 @@ const importPublicKey = async () => {
     .replace(/\s+/g, '')
   const binaryDer = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0))
 
+  // 只支持 https 或 localhost
   return crypto.subtle.importKey(
     'spki',
     binaryDer,
