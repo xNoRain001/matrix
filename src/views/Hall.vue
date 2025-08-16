@@ -400,7 +400,6 @@ const initSocket = matchType => {
       clearTimeout(timer)
       const _remoteRoomInfo = remoteRoomInfo.value
       _remoteRoomInfo.roomId = message
-      _remoteRoomInfo.skipRequest = true
       pause.value = true
       // 手动断开连接，虽然服务器中已经标记该 socket 已匹配并从匹配列表中移除了
       socket.disconnect()
@@ -477,7 +476,6 @@ watch(pin, v => {
     const roomId = `${matchType}-${s}`
     const _remoteRoomInfo = remoteRoomInfo.value
     _remoteRoomInfo.roomId = roomId
-    _remoteRoomInfo.skipRequest = true
     // TODO: 修复返回时最后一位数字依然存在
     pin.value.length = 0
     router.replace({ path: target, query: { roomId } })

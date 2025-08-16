@@ -61,6 +61,5 @@ export type remoteRoomInfo = {
   roomId: string
   latestId: string
   inRoom: boolean
-  skipRequest: boolean
   showExitRoomTip: boolean
 }

@@ -463,7 +463,10 @@ import {
   useBeforeUnmount,
   useBye,
   useLeave,
-  useExportFile
+  useExportFile,
+  useRefreshRoomInfo,
+  useVisibilityChange,
+  useNoop
 } from '@/hooks'
 import { onBeforeUnmount, onMounted, ref, reactive, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -477,6 +480,7 @@ import { updateLatestRoom } from '@/apis/latest-room'
 import { useMediaQuery } from '@vueuse/core'
 
 let lastMsgTimer = null
+let cancelVisibilityChangeHandler = useNoop
 const isDesktop = useMediaQuery('(min-width: 768px)')
 const oepnModal = ref(true)
 const makingOffer = ref(false)
@@ -494,7 +498,13 @@ const {
 } = useRoute()
 const router = useRouter()
 const online = ref(false)
-const { isMatch, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
+const {
+  isMatch,
+  remoteRoomInfo,
+  otherInfo,
+  firstRequestRemoteRoomInfo,
+  getOnlineWhenReconnection
+} = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
 // 双方中任意一方离开时，值会修改为 true
@@ -986,17 +996,22 @@ const onBye = async () => {
   useBye(leaveAfterConnected)
 }
 
+const onIsOnline = v => {
+  online.value = v
+}
+
 const initSocket = () => {
-  const { roomId } = remoteRoomInfo.value
   socket = useInitSocket(
     onJoined,
     onOtherJoin,
     onDisconnect,
     onRtc,
-    roomId,
+    onBye,
+    remoteRoomInfo,
     isFull,
     showOfflineModal,
     loading,
+    getOnlineWhenReconnection,
     toast
   )
   // 其他人离开房间
@@ -1004,6 +1019,7 @@ const initSocket = () => {
   socket.on('file-metadata', onFileMetadata)
   socket.on('receive-file-metadata', onReceiveFileMetadata)
   socket.on('saved-file', onSavedFile)
+  socket.on('is-online', onIsOnline)
 
   return socket
 }
@@ -1012,22 +1028,34 @@ const onReceiveFileMetadata = () => (flag.value = true)
 
 const onSavedFile = () => (flag.value = true)
 
+// 处理 iOS 软键盘问题
+const addVisualViewportListeners = () => {
+  if (isIOS) {
+    // 软键盘打开和关闭时触发
+    visualViewport.addEventListener('resize', resizeHandler)
+    visualViewport.addEventListener('scroll', resizeHandler)
+  }
+}
+
+const removeVisualViewportListeners = () => {
+  if (isIOS) {
+    visualViewport.removeEventListener('resize', resizeHandler)
+    visualViewport.removeEventListener('scroll', resizeHandler)
+  }
+}
+
 onMounted(async () => {
   // 如果获取接口数据失败，返回大厅
-  try {
-    await useMounted(router, path, remoteRoomInfo, roomId as string, leaved)
-  } catch (error) {
-    toast.add({
-      title: error.message,
-      color: 'error',
-      icon: 'lucide:annoyed'
-    })
-    return router.replace('/hall')
-  }
-
-  // 如果 socket 初始化连接失败（能获取到接口数据，却无法连接 socket，
-  // 这是很小概率的事），由重试机制处理
-  initSocket()
+  await useMounted(
+    router,
+    path,
+    remoteRoomInfo,
+    roomId as string,
+    leaved,
+    firstRequestRemoteRoomInfo,
+    initSocket,
+    toast
+  )
 
   // 如果处理消息失败，给空消息
   try {
@@ -1039,21 +1067,23 @@ onMounted(async () => {
     lastMsgTimeStamp.value = 0
   }
 
-  // 处理 iOS 软键盘问题
-  if (isIOS) {
-    // 软键盘打开和关闭时触发
-    visualViewport.addEventListener('resize', resizeHandler)
-    visualViewport.addEventListener('scroll', resizeHandler)
-  }
+  addVisualViewportListeners()
+  cancelVisibilityChangeHandler = useVisibilityChange(
+    socket,
+    showOfflineModal,
+    leaved,
+    remoteRoomInfo,
+    useRefreshRoomInfo,
+    onBye,
+    getOnlineWhenReconnection,
+    router
+  )
 })
 
 onBeforeUnmount(() => {
   clearInterval(lastMsgTimer)
   useBeforeUnmount(socket)
-
-  if (isIOS) {
-    visualViewport.removeEventListener('resize', resizeHandler)
-    visualViewport.removeEventListener('scroll', resizeHandler)
-  }
+  removeVisualViewportListeners()
+  cancelVisibilityChangeHandler()
 })
 </script>

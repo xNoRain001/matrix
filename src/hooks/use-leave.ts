@@ -9,7 +9,8 @@ const useLeave = async (
   toast
 ) => {
   try {
-    // 对方可能不在线
+    // 对方可能不在线，如果对方切换到后台一段时间，虽然这里显示的是在线，但是你离开
+    // 时对方是收不到通知的
     if (online) {
       socket.emit('leave', remoteRoomInfo.roomId)
     }

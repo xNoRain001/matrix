@@ -1,5 +1,7 @@
 import { io } from 'socket.io-client'
 import type { Ref } from 'vue'
+import useRefreshRoomInfo from './use-refresh-room-info'
+import type { remoteRoomInfo } from '@/types'
 
 let firstConnectionSuccess = false
 let reconnectionAttempts = 0
@@ -10,12 +12,15 @@ const useInitSocket = (
   onOtherJoin: Function,
   onDisconnect: Function,
   onRtc: Function,
-  roomId: string,
+  onBye: Function,
+  remoteRoomInfo: Ref<remoteRoomInfo>,
   isFull: Ref<boolean>,
   showOfflineModal: Ref<boolean>,
   loading: Ref<boolean>,
+  getOnlineWhenReconnection: Ref<boolean>,
   toast
 ) => {
+  const { roomId } = remoteRoomInfo.value
   // @ts-ignore
   const socket = io.connect(import.meta.env.VITE_SOCKET_BASE_URL, {
     reconnectionAttempts: maxReconnectionAttempts
@@ -62,7 +67,6 @@ const useInitSocket = (
       // 如果成功连接后断开，重连时 reconnectionAttempts 的最大值为
       // maxReconnectionAttempts
 
-      console.log('@')
       // 当模态框未打开时，重试次数满了就打开模态框
       showOfflineModal.value = true
       // 同时需要重置尝试次数
@@ -72,6 +76,9 @@ const useInitSocket = (
   }
 
   socket.on('connect', () => {
+    // 第一时间发送 join，方便之后获取在线状态
+    socket.emit('join', roomId)
+
     if (!firstConnectionSuccess) {
       firstConnectionSuccess = true
     }
@@ -83,9 +90,17 @@ const useInitSocket = (
       loading.value = false
       showOfflineModal.value = false
       toast.add({ title: '重连成功', color: 'success', icon: 'lucide:smile' })
+      // 重新获取房间信息
+      useRefreshRoomInfo(
+        socket,
+        remoteRoomInfo,
+        onBye,
+        getOnlineWhenReconnection
+      )
+    } else if (getOnlineWhenReconnection.value) {
+      socket.emit('is-online', roomId)
+      getOnlineWhenReconnection.value = false
     }
-
-    socket.emit('join', roomId)
   })
 
   // 自己成功加入房间

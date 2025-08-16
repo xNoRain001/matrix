@@ -51,19 +51,23 @@ const useCreatePeerConnection = (
   pc.oniceconnectionstatechange = () => {
     const { iceConnectionState } = pc
 
+    // 手机切换到其他页面，有可能会触发 failed
+    // 如果没有关闭网页，只是切换到其他网页，连接会保持
     if (iceConnectionState === 'failed') {
       console.log('rtc failed...')
-      // pc.restartIce()
+      // 需要移动端刷新页面
+      pc.restartIce()
     } else if (iceConnectionState === 'disconnected') {
-      console.log('rc disconnected...')
+      // 离开了，但是不提示，会触发这里
+      console.log('rtc disconnected...')
       online.value = false
     } else if (iceConnectionState === 'connected') {
       console.log('rct connected...')
       online.value = true
-      const latestId = useRoomStore().otherInfo.id
       remoteRoomInfo.inRoom = true
 
       if (!remoteRoomInfo.latestId) {
+        const latestId = useRoomStore().otherInfo.id
         remoteRoomInfo.latestId = latestId
         updateLatestRoom(path, roomId, latestId)
       }

@@ -166,7 +166,10 @@ import {
   useJoined,
   useBeforeUnmount,
   useMounted,
-  useLeave
+  useLeave,
+  useRefreshRoomInfo,
+  useVisibilityChange,
+  useNoop
 } from '@/hooks'
 
 import { storeToRefs } from 'pinia'
@@ -176,6 +179,7 @@ import { updateLatestRoom } from '@/apis/latest-room'
 const oepnModal = ref(true)
 const makingOffer = ref(false)
 const polite = ref(true)
+let cancelVisibilityChangeHandler = useNoop
 let localMediaStream: MediaStream | null = null
 let pc: RTCPeerConnection | null = null
 let socket: Socket | null = null
@@ -214,7 +218,13 @@ const {
 } = useRoute()
 const router = useRouter()
 const online = ref(false)
-const { isMatch, remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
+const {
+  isMatch,
+  remoteRoomInfo,
+  otherInfo,
+  firstRequestRemoteRoomInfo,
+  getOnlineWhenReconnection
+} = storeToRefs(useRoomStore())
 const { userInfo } = storeToRefs(useUserInfoStore())
 const _userInfo = userInfo.value
 const leaved = ref(false)
@@ -402,16 +412,17 @@ const initLocalMediaStream = async () => {
 }
 
 const initSocket = () => {
-  const { roomId } = remoteRoomInfo.value
   socket = useInitSocket(
     onJoined,
     onOtherJoin,
     onDisconnect,
     onRtc,
-    roomId,
+    onBye,
+    remoteRoomInfo,
     isFull,
     showOfflineModal,
     loading,
+    getOnlineWhenReconnection,
     toast
   )
   socket.on('bye', onBye)
@@ -420,21 +431,32 @@ const initSocket = () => {
 }
 
 onMounted(async () => {
-  try {
-    await useMounted(router, path, remoteRoomInfo, roomId as string, leaved)
-  } catch (error) {
-    toast.add({
-      title: error.message,
-      color: 'error',
-      icon: 'lucide:annoyed'
-    })
-    return router.replace('/hall')
-  }
-
-  initSocket()
+  await useMounted(
+    router,
+    path,
+    remoteRoomInfo,
+    roomId as string,
+    leaved,
+    firstRequestRemoteRoomInfo,
+    initSocket,
+    toast
+  )
+  cancelVisibilityChangeHandler = useVisibilityChange(
+    socket,
+    showOfflineModal,
+    leaved,
+    remoteRoomInfo,
+    useRefreshRoomInfo,
+    onBye,
+    getOnlineWhenReconnection,
+    router
+  )
 })
 
-onBeforeUnmount(() => useBeforeUnmount(socket))
+onBeforeUnmount(() => {
+  useBeforeUnmount(socket)
+  cancelVisibilityChangeHandler()
+})
 
 watch(volume, v => (remoteAudioRef.value.volume = v))
 
