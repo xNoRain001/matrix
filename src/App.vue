@@ -7,11 +7,20 @@
     >
       <div class="flex h-full items-center justify-between px-4">
         <img
-          class="size-10"
+          class="size-8"
           style="filter: drop-shadow(rgba(0, 122, 204, 0.3) 0px 8px 24px)"
           src="/images/logo.svg"
         />
-        <ThemePicker></ThemePicker>
+        <div class="flex gap-2">
+          <ThemePicker></ThemePicker>
+          <UButton
+            @click="startViewTransition"
+            :icon="store === 'dark' ? 'lucide:moon' : 'lucide:sun'"
+            variant="ghost"
+            color="neutral"
+            :ui="{ leadingIcon: 'text-primary' }"
+          ></UButton>
+        </div>
       </div>
     </div>
 
@@ -117,10 +126,12 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia'
 import { useUserInfoStore } from './store'
-import { useMediaQuery } from '@vueuse/core'
+import { useColorMode, useMediaQuery } from '@vueuse/core'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+const { store } = useColorMode()
+const nextTheme = computed(() => (store.value === 'dark' ? 'light' : 'dark'))
 const isDesktop = useMediaQuery('(min-width: 768px)')
 const menus = [
   {
@@ -148,4 +159,54 @@ const tab = computed({
     router.push(`/${tab}`)
   }
 })
+
+const switchTheme = () => (store.value = nextTheme.value)
+
+const startViewTransition = (event: MouseEvent) => {
+  if (!document.startViewTransition) {
+    switchTheme()
+    return
+  }
+
+  const x = event.clientX
+  const y = event.clientY
+  const endRadius = Math.hypot(
+    Math.max(x, window.innerWidth - x),
+    Math.max(y, window.innerHeight - y)
+  )
+  const transition = document.startViewTransition(() => {
+    switchTheme()
+  })
+  transition.ready.then(() => {
+    const duration = 600
+    document.documentElement.animate(
+      {
+        clipPath: [
+          `circle(0px at ${x}px ${y}px)`,
+          `circle(${endRadius}px at ${x}px ${y}px)`
+        ]
+      },
+      {
+        duration: duration,
+        easing: 'cubic-bezier(.76,.32,.29,.99)',
+        pseudoElement: '::view-transition-new(root)'
+      }
+    )
+  })
+}
 </script>
+
+<style>
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+</style>

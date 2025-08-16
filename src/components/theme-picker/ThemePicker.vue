@@ -69,7 +69,7 @@
         </div>
       </fieldset>
 
-      <fieldset>
+      <!-- <fieldset>
         <legend class="mb-2 text-xs leading-none font-semibold">主题</legend>
 
         <div class="-mx-2 grid grid-cols-3 gap-1">
@@ -81,7 +81,7 @@
             @click="store = m.value"
           />
         </div>
-      </fieldset>
+      </fieldset> -->
     </template>
   </UPopover>
 </template>
@@ -89,13 +89,13 @@
 <script setup lang="ts">
 import colors from 'tailwindcss/colors'
 import { omit } from '@nuxt/ui/utils'
-import { useColorMode } from '@vueuse/core'
+// import { useColorMode } from '@vueuse/core'
 import { computed, reactive } from 'vue'
 import { appConfig as _appConfig } from '@/const'
 import { useUpdateTheme } from '@/hooks'
 
 const appConfig = reactive(_appConfig)
-const { store } = useColorMode()
+// const { store } = useColorMode()
 const neutralColors = ['slate', 'gray', 'zinc', 'neutral', 'stone']
 const neutral = computed({
   get() {
@@ -138,15 +138,15 @@ const radius = computed({
     localStorage.setItem('nuxt-ui-radius', String(v))
   }
 })
-const modes: {
-  label: 'light' | 'dark' | 'system'
-  value: 'light' | 'dark' | 'auto'
-  icon: string
-}[] = [
-  { label: 'light', value: 'light', icon: 'i-lucide:sun' },
-  { label: 'dark', value: 'dark', icon: 'i-lucide:moon' },
-  { label: 'system', value: 'auto', icon: 'i-lucide:monitor' }
-]
+// const modes: {
+//   label: 'light' | 'dark' | 'system'
+//   value: 'light' | 'dark' | 'auto'
+//   icon: string
+// }[] = [
+//   { label: 'light', value: 'light', icon: 'i-lucide:sun' },
+//   { label: 'dark', value: 'dark', icon: 'i-lucide:moon' },
+//   { label: 'system', value: 'auto', icon: 'i-lucide:monitor' }
+// ]
 
 const setBlackAsPrimary = (v: boolean) => {
   useUpdateTheme('blackAsPrimary', v)

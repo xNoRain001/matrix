@@ -58,11 +58,6 @@ const router = createRouter({
       meta: { auth: false },
       component: () => import('@/views/ResetPassword.vue')
     },
-    {
-      path: '/t',
-      meta: { auth: true },
-      component: () => import('@/views/T.vue')
-    },
     // 404 路由
     {
       path: '/:pathMatch(.*)*',
