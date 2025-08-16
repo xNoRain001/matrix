@@ -19,7 +19,7 @@
         >
           <div class="flex items-center">
             <UIcon :name="icon" class="size-5" />
-            <div class="ml-2 text-sm">{{ label }}</div>
+            <div class="ml-2 text-sm font-semibold">{{ label }}</div>
           </div>
           <UIcon name="lucide:chevron-right" class="size-5" />
         </div>

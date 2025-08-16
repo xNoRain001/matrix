@@ -30,8 +30,10 @@
           class="hover:bg-accented flex h-12 cursor-pointer items-center justify-between rounded-xl px-2"
         >
           <div>{{ label }}</div>
-          <div class="flex items-center">
-            <div class="mr-2 text-(--ui-text-dimmed)">
+          <div class="flex items-center justify-end">
+            <div
+              class="mr-2 w-30 overflow-hidden text-right text-ellipsis whitespace-nowrap text-(--ui-text-dimmed)"
+            >
               {{
                 key === 'gender'
                   ? useTransformGender(userInfoForm[key])

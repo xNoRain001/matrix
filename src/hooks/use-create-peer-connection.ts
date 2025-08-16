@@ -15,12 +15,12 @@ const pcConfig: RTCConfiguration = {
     { urls: 'stun:stun2.l.google.com:19302' },
     { urls: 'stun:stun3.l.google.com:19302' },
     { urls: 'stun:stun4.l.google.com:19302' },
-
-    // 新增的TURN服务器配置
+    { urls: 'stun:106.53.49.148:3478' },
+    // TURN 服务器配置
     {
-      urls: 'turn:23.97.62.148:3478',
-      username: 'your_username',
-      credential: 'your_password'
+      urls: 'turn:106.53.49.148:3478',
+      username: 'test',
+      credential: 'test123'
     }
   ],
   iceTransportPolicy: 'all', // 可选: 'all' | 'relay'
@@ -41,6 +41,12 @@ const useCreatePeerConnection = (
   let pc = new RTCPeerConnection(pcConfig)
   // 当收到 Candidate 后
   pc.onicecandidate = ({ candidate }) => {
+    if (candidate?.candidate?.includes('typ srflx')) {
+      console.log('经过 stun 服务器')
+    } else if (candidate?.candidate?.includes('typ relay')) {
+      console.log('经过 turn 服务器')
+    }
+
     // 将 Candidate 发送给对端
     socket.emit('rtc', roomId, { candidate })
   }
@@ -55,10 +61,10 @@ const useCreatePeerConnection = (
     // 如果没有关闭网页，只是切换到其他网页，连接会保持
     if (iceConnectionState === 'failed') {
       console.log('rtc failed...')
-      // 需要移动端刷新页面
+      // 重连一直失败，最终状态转为 failed，调用 restartIce 手动重启
       pc.restartIce()
     } else if (iceConnectionState === 'disconnected') {
-      // 离开了，但是不提示，会触发这里
+      // 自动尝试重连
       console.log('rtc disconnected...')
       online.value = false
     } else if (iceConnectionState === 'connected') {

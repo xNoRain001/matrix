@@ -33,7 +33,9 @@ const useReceiveFile = (
     receivedFile.time =
       ((timestamp - receiveStartTime.value) / 1000).toFixed(2) + ' s'
     // 深拷贝，否则下载时会被回收
-    const blob = new Blob([...receivedBuffer])
+    // { type: 'video/mp4' } 用于兼容 safari，safari 中 video 的链接如果是 blob，
+    // 必须是 MP4 格式
+    const blob = new Blob([...receivedBuffer], { type: 'video/mp4' })
     receivedFile.blob = blob
     receivedFile.status = receivedLabel
     receivedBuffer.length = 0

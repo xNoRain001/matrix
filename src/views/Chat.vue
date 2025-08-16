@@ -328,7 +328,7 @@
             ></UButton>
             <UTextarea
               :disabled="!online"
-              @keydown.enter="onSendMsg"
+              @keydown.enter.prevent="onSendMsg"
               @focus="onFocus"
               enterkeyhint="send"
               class="grow"

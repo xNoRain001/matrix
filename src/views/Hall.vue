@@ -445,6 +445,10 @@ const onClick = async (_matchType, to) => {
         const _remoteRoomInfo = remoteRoomInfo.value
         _remoteRoomInfo.inRoom = latestId && !isExit
         firstRequestRemoteRoomInfo.value = false
+        // 需要更新 pause，否则进入房间后，退出房间时回到匹配页面，会显示正在匹配中，
+        // 实际上根本没进行匹配，通过开启 pause 让用户点击按钮进行匹配
+        pause.value = true
+
         return router.replace({
           path: _remoteRoomInfo.path,
           query: { roomId: _remoteRoomInfo.roomId }

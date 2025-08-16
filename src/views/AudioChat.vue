@@ -16,11 +16,12 @@
     <template #body>
       <div
         v-if="!leaved"
+        ref="bodyRef"
         class="relative flex h-full items-center justify-center"
       >
         <div class="absolute top-0 right-0">
           <UDropdownMenu
-            v-if="_micOptions.length"
+            v-if="audioInputLabelsLength"
             :disabled="!micOpen"
             :items="_micOptions"
             :ui="{
@@ -43,7 +44,7 @@
             </template>
           </UDropdownMenu>
           <UDropdownMenu
-            v-if="_speakerOptions.length"
+            v-if="audioOutputLabelsLength"
             :disabled="!speakerOpen"
             :items="_speakerOptions"
             :ui="{
@@ -102,7 +103,7 @@
               <UButton
                 class="flex flex-col"
                 icon="lucide:phone-off"
-                @click="onLeave"
+                @click="onCancel"
                 variant="ghost"
                 color="error"
                 :ui="{ label: 'mt-4', leadingIcon: 'size-10' }"
@@ -142,7 +143,15 @@
 
 <script lang="ts" setup>
 import { useRoute, useRouter } from 'vue-router'
-import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  useTemplateRef,
+  watch
+} from 'vue'
 
 import type { Socket } from 'socket.io-client'
 
@@ -153,9 +162,7 @@ import {
   useCloseMediaStreamTracks,
   useClosePC,
   useCreatePeerConnection,
-  useGetAudioInput,
   useGetAudioInputs,
-  useGetAudioOutput,
   useGetAudioOutputs,
   useGetUserMedia,
   useInitRtc,
@@ -194,16 +201,14 @@ const audioOutputLabels = audioOutputs.map(
 const audioInputLabelsLength = audioInputLabels.length
 const audioOutputLabelsLength = audioOutputLabels.length
 const micLabel = ref(
-  audioInputLabelsLength ? (await useGetAudioInput()).label : '未发现麦克风设备'
+  audioInputLabelsLength ? audioInputLabels[0] : '未发现麦克风设备'
 )
 const micOptions = [
   ...(audioInputLabelsLength ? audioInputLabels : ['未发现麦克风设备'])
 ]
 const _micOptions = micOptions.map(item => ({ label: item, icon: '' }))
 const speakerLabel = ref(
-  audioOutputLabelsLength
-    ? (await useGetAudioOutput()).label
-    : '未发现扬声器设备'
+  audioOutputLabelsLength ? audioOutputLabels[0] : '未发现扬声器设备'
 )
 const speakerOptions = reactive([
   ...(audioOutputLabelsLength ? audioOutputLabels : ['未发现扬声器设备'])
@@ -244,6 +249,13 @@ const isFull = ref(false)
 const toast = useToast()
 const showOfflineModal = ref(false)
 const loading = ref(false)
+const bodyRef = useTemplateRef('bodyRef')
+const closeBtn = computed(
+  // @ts-ignore
+  () => bodyRef.value.parentNode.previousSibling.children[0].children[1]
+)
+
+const onCancel = () => closeBtn.value.click()
 
 const initPC = async () => {
   pc = useCreatePeerConnection(
@@ -398,6 +410,7 @@ const initLocalMediaStream = async () => {
     // 在没初始化之前用户可能点击关闭麦克风，初始化完成时需要更新媒体流状态
     // 也可能是第二次创建 pc，需要重新绑定媒体流到 pc，此时的新本地流中
     // 的麦克风和扬声器的状态需要和旧的本地流状态统一
+    // TODO: 麦克风和扬声器状态保存到本地，刷新页面后能够恢复到之前的状态
     keepMirStatus()
     keepSpeakerStatus()
     // 绑定本地流
