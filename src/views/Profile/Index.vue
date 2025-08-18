@@ -1,15 +1,42 @@
 <template>
-  <UDashboardPanel v-if="isDesktop" id="settings" :ui="{ body: 'lg:py-12' }">
+  <UDashboardPanel id="settings" :ui="{ body: 'lg:py-12' }">
     <template #header>
-      <UDashboardNavbar title="Settings">
+      <UDashboardNavbar title="我的">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
       </UDashboardNavbar>
 
-      <UDashboardToolbar>
+      <UDashboardToolbar v-if="isDesktop">
         <UNavigationMenu :items="links" highlight class="-mx-1 flex-1" />
       </UDashboardToolbar>
+      <!-- 移动端卡片 -->
+      <div v-else class="flex w-full flex-col p-4">
+        <div class="mb-4 flex items-center">
+          <UAvatar :text="userInfo?.nickname?.[0]" class="size-14" />
+          <div class="ml-4 w-[calc(100%-4rem)]">
+            <span class="text-xl font-semibold">您好</span>
+            <div class="overflow-hidden text-ellipsis whitespace-nowrap">
+              {{ userInfo?.nickname }}
+            </div>
+          </div>
+        </div>
+
+        <UPageCard v-for="items in cards" variant="subtle" class="mb-4">
+          <div
+            v-for="{ to, label, icon, onSelect } in items"
+            @click="onSelect ? onSelect() : router.replace(to)"
+            class="flex items-center justify-between"
+          >
+            <div class="flex items-center gap-2">
+              <UIcon :name="icon" class="size-5" />
+              <div>{{ label }}</div>
+            </div>
+            <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
+          </div>
+        </UPageCard>
+        <RouterView></RouterView>
+      </div>
     </template>
 
     <template #body>
@@ -20,34 +47,6 @@
       </div>
     </template>
   </UDashboardPanel>
-
-  <!-- 移动端卡片 -->
-  <div v-else class="flex w-full flex-col p-4">
-    <div class="my-14 flex items-center">
-      <UAvatar :text="userInfo?.nickname?.[0]" class="size-14" />
-      <div class="ml-4 w-[calc(100%-4rem)]">
-        <span class="text-xl font-semibold">您好</span>
-        <div class="overflow-hidden text-ellipsis whitespace-nowrap">
-          {{ userInfo?.nickname }}
-        </div>
-      </div>
-    </div>
-
-    <UPageCard v-for="items in cards" variant="subtle" class="mb-4">
-      <div
-        v-for="{ to, label, icon, onSelect } in items"
-        @click="onSelect ? onSelect() : router.replace(to)"
-        class="flex items-center justify-between"
-      >
-        <div class="flex items-center gap-2">
-          <UIcon :name="icon" class="size-5" />
-          <div>{{ label }}</div>
-        </div>
-        <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
-      </div>
-    </UPageCard>
-    <RouterView></RouterView>
-  </div>
 </template>
 
 <script lang="ts" setup>
