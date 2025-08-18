@@ -16,7 +16,7 @@
         <legend class="mb-2 text-xs leading-none font-semibold">主题色</legend>
 
         <div class="-mx-2 grid grid-cols-3 gap-1">
-          <ThemePickerButton
+          <IndexThemePickerButton
             label="Black"
             :selected="appConfig.theme.blackAsPrimary"
             @click="setBlackAsPrimary(true)"
@@ -26,9 +26,9 @@
                 class="inline-block h-2 w-2 rounded-full bg-black dark:bg-white"
               ></span>
             </template>
-          </ThemePickerButton>
+          </IndexThemePickerButton>
 
-          <ThemePickerButton
+          <IndexThemePickerButton
             v-for="color in primaryColors"
             :key="color"
             :label="color"
@@ -43,7 +43,7 @@
         <legend class="mb-2 text-xs leading-none font-semibold">中性色</legend>
 
         <div class="-mx-2 grid grid-cols-3 gap-1">
-          <ThemePickerButton
+          <IndexThemePickerButton
             v-for="color in neutralColors"
             :key="color"
             :label="color"
@@ -58,7 +58,7 @@
         <legend class="mb-2 text-xs leading-none font-semibold">圆角</legend>
 
         <div class="-mx-2 grid grid-cols-5 gap-1">
-          <ThemePickerButton
+          <IndexThemePickerButton
             v-for="r in radiuses"
             :key="r"
             :label="String(r)"
@@ -73,7 +73,7 @@
         <legend class="mb-2 text-xs leading-none font-semibold">主题</legend>
 
         <div class="-mx-2 grid grid-cols-3 gap-1">
-          <ThemePickerButton
+          <IndexThemePickerButton
             v-for="m in modes"
             :key="m.label"
             v-bind="m"
@@ -87,55 +87,40 @@
 </template>
 
 <script setup lang="ts">
-import colors from 'tailwindcss/colors'
-import { omit } from '@nuxt/ui/utils'
 // import { useColorMode } from '@vueuse/core'
 import { computed, reactive } from 'vue'
-import { appConfig as _appConfig } from '@/const'
+import {
+  appConfig as _appConfig,
+  neutralColors,
+  primaryColors,
+  radiuses
+} from '@/const'
 import { useUpdateTheme } from '@/hooks'
 
 const appConfig = reactive(_appConfig)
 // const { store } = useColorMode()
-const neutralColors = ['slate', 'gray', 'zinc', 'neutral', 'stone']
 const neutral = computed({
   get() {
     return appConfig.ui.colors.neutral
   },
   set(v) {
-    useUpdateTheme('neutral', v)
-    appConfig.ui.colors.neutral = v
-    localStorage.setItem('nuxt-ui-neutral', v)
+    useUpdateTheme('neutral', appConfig, v)
   }
 })
-const colorsToOmit = [
-  'inherit',
-  'current',
-  'transparent',
-  'black',
-  'white',
-  ...neutralColors
-]
-const primaryColors = Object.keys(omit(colors, colorsToOmit as any))
 const primary = computed({
   get() {
     return appConfig.ui.colors.primary
   },
   set(v) {
-    useUpdateTheme('primary', v)
-    appConfig.ui.colors.primary = v
-    localStorage.setItem('nuxt-ui-primary', v)
-    setBlackAsPrimary(false)
+    useUpdateTheme('primary', appConfig, v)
   }
 })
-const radiuses = [0, 0.125, 0.25, 0.375, 0.5]
 const radius = computed({
   get() {
     return appConfig.theme.radius
   },
   set(v) {
-    useUpdateTheme('radius', v)
-    appConfig.theme.radius = v
-    localStorage.setItem('nuxt-ui-radius', String(v))
+    useUpdateTheme('radius', appConfig, v)
   }
 })
 // const modes: {
@@ -148,9 +133,6 @@ const radius = computed({
 //   { label: 'system', value: 'auto', icon: 'i-lucide:monitor' }
 // ]
 
-const setBlackAsPrimary = (v: boolean) => {
-  useUpdateTheme('blackAsPrimary', v)
-  appConfig.theme.blackAsPrimary = v
-  localStorage.setItem('nuxt-ui-black-as-primary', String(v))
-}
+const setBlackAsPrimary = (v: boolean) =>
+  useUpdateTheme('blackAsPrimary', appConfig, v)
 </script>

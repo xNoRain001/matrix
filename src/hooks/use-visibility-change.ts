@@ -42,7 +42,7 @@ const useVisibilityChange = (
         // 如果获取房间信息失败，说明断网，重试达到上限后触发模态框,模态框中连接成功
         // 会重新获取房间信息，但有可能重试没达到上限时就恢复了网络，目前的处理是
         // 返回大厅
-        router.replace('/hall')
+        router.replace('/')
       }
     } else if (visibilityState === 'hidden') {
       // 当前页面不可见触发

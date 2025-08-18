@@ -13,8 +13,8 @@
           :class="`bg-(--color-light) dark:bg-(--color-dark)`"
           class="inline-block size-2 rounded-full"
           :style="{
-            '--color-light': colors[chip]?.[500],
-            '--color-dark': colors[chip]?.[400]
+            '--color-light': colors[chip][500],
+            '--color-dark': colors[chip][400]
           }"
         ></span>
       </slot>

@@ -1,6 +1,6 @@
 <template>
-  <ProfileUserInfo v-if="isDesktop"></ProfileUserInfo>
-  <MProfileUserInfo v-else></MProfileUserInfo>
+  <ProfileNotifications v-if="isDesktop"></ProfileNotifications>
+  <MProfileNotifications v-else></MProfileNotifications>
 </template>
 
 <script setup lang="ts">

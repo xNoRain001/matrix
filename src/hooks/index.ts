@@ -39,8 +39,10 @@ import useTransformGender from './use-transform-gender'
 import useBackToProfile from './use-back-to-profile'
 import useRefreshRoomInfo from './use-refresh-room-info'
 import useVisibilityChange from './use-visibility-change'
+import { useDashboard } from './use-dashboard'
 
 export {
+  useDashboard,
   useVisibilityChange,
   useRefreshRoomInfo,
   useBackToProfile,

@@ -5,6 +5,6 @@
     <div class="text-primary font-semibold">404</div>
     <div class="mt-2 text-5xl font-bold text-white">页面未找到</div>
     <div class="text-muted mt-4 text-lg">抱歉，您访问的页面不存在。</div>
-    <UButton to="/hall" label="回到主页" class="mt-8"></UButton>
+    <UButton to="/" label="回到主页" class="mt-8"></UButton>
   </div>
 </template>

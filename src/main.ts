@@ -5,31 +5,15 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import { appConfig } from './const'
-import { useUpdateTheme } from './hooks'
+import { initTheme } from './hooks/use-update-theme'
 
 const app = createApp(App)
 const pinia = createPinia()
 
+// 默认 dark 模式
 !localStorage.getItem('vueuse-color-scheme') &&
   localStorage.setItem('vueuse-color-scheme', 'dark')
 
-app
-  .use(ui, {
-    notifications: {
-      position: 'top-center'
-    }
-  })
-  .use(router)
-  .use(pinia)
-  .mount('#app')
+app.use(ui).use(router).use(pinia).mount('#app')
 
-const {
-  ui: {
-    colors: { neutral, primary }
-  },
-  theme: { radius, blackAsPrimary }
-} = appConfig
-useUpdateTheme('blackAsPrimary', blackAsPrimary)
-useUpdateTheme('radius', radius)
-useUpdateTheme('primary', primary)
-useUpdateTheme('neutral', neutral)
+initTheme(appConfig)

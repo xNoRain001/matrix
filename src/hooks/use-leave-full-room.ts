@@ -7,7 +7,7 @@ const useLeaveFullRoom = async (
   remoteRoomInfo.roomId = remoteRoomInfo.path = remoteRoomInfo.latestId = ''
   remoteRoomInfo.inRoom = false
   await updateLatestRoom()
-  router.replace('/hall')
+  router.replace('/')
 }
 
 export default useLeaveFullRoom

@@ -479,7 +479,7 @@ const onLogin = async () => {
     } = await login(encryptedUserInfo)
     localStorage.setItem('token', token)
     userInfo.value = _userInfo
-    router.replace('/hall')
+    router.replace('/')
     toast.add({
       title: '登录成功',
       color: 'success'
@@ -518,7 +518,7 @@ watch(registerPin, async v => {
       } = await register(encryptedUserInfo)
       localStorage.setItem('token', token)
       userInfo.value = _userInfo
-      router.replace('/hall')
+      router.replace('/')
       toast.add({
         title: '登录成功',
         color: 'success'
@@ -552,7 +552,7 @@ watch(loginWithVCPin, async v => {
       } = await loginWithPin(loginWithVCForm.email, s)
       localStorage.setItem('token', token)
       userInfo.value = _userInfo
-      router.replace('/hall')
+      router.replace('/')
       toast.add({
         title: '登录成功',
         color: 'success'

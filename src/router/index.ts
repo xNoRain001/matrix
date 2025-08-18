@@ -1,16 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-// 全局导航栏组件，应该直接静态导入避免加载延迟
-import Hall from '@/views/Hall.vue'
-import Profile from '@/views/Profile/Index.vue'
-
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: '/hall',
-      meta: { auth: true, tab: 'hall' },
-      component: Hall,
+      path: '/',
+      meta: { auth: true },
+      component: () => import('@/views/Index.vue'),
       children: [
         {
           path: 'chat',
@@ -31,9 +27,13 @@ const router = createRouter({
     },
     {
       path: '/profile',
-      meta: { auth: true, tab: 'profile' },
-      component: Profile,
+      meta: { auth: true },
+      component: () => import('@/views/Profile/Index.vue'),
       children: [
+        // {
+        //   path: '',
+        //   component: () => import('@/views/Profile/UserInfo.vue')
+        // },
         {
           path: 'user-info',
           component: () => import('@/views/Profile/UserInfo.vue')
@@ -43,8 +43,8 @@ const router = createRouter({
           component: () => import('@/views/Profile/UpdatePassword.vue')
         },
         {
-          path: 'logout',
-          component: () => import('@/views/Profile/Logout.vue')
+          path: 'notifications',
+          component: () => import('@/views/Profile/Notifications.vue')
         }
       ]
     },
@@ -66,7 +66,7 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach(({ path, query, meta }, _, next) => {
+router.beforeEach(({ query, meta }, _, next) => {
   const token = localStorage.getItem('token')
   const { auth, requireRoomId } = meta
 
@@ -77,25 +77,12 @@ router.beforeEach(({ path, query, meta }, _, next) => {
 
   // 登录状态访问登录、重置密码等不需要 token 的页面，禁止访问
   if (auth === false && token) {
-    return next({ path: '/hall' })
-  }
-
-  if (path === '/') {
-    const { redirectTo, token: queryToken } = query
-
-    if (redirectTo && queryToken) {
-      // 重定向到指定页面
-      return next({ path: `/${redirectTo}`, query: { token: queryToken } })
-    } else {
-      // vitepress 页面
-      location.href = '/docs.html'
-      return next(false)
-    }
+    return next({ path: '/' })
   }
 
   // 没有 roomId 时返回上级路由
   if (requireRoomId && !query.roomId) {
-    return next({ path: '/hall' })
+    return next({ path: '/' })
   }
 
   next()

@@ -2,14 +2,14 @@ import { resolve } from 'path'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
-import ui from '@nuxt/ui/vite'
+import uiPro from '@nuxt/ui-pro/vite'
 import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
-    ui(),
+    uiPro(),
     tailwindcss(),
     visualizer({
       open: false, // 自动打开分析页面
@@ -22,8 +22,5 @@ export default defineConfig({
     alias: {
       '@': resolve(__dirname, 'src')
     }
-  },
-  server: {
-    allowedHosts: ['633efb2a24a7.ngrok-free.app']
   }
 })

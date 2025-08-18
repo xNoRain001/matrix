@@ -1,45 +1,43 @@
 <template>
-  <div v-show="showCards" class="relative">
-    <div class="flex items-center justify-end gap-4">
-      <UButton
-        :disabled="!isMatch"
-        @click="isOpenFilterDrawer = true"
-        label="筛选"
-        icon="lucide:filter"
-        color="neutral"
-        variant="ghost"
-        :ui="{ leadingIcon: 'text-primary', label: 'font-semibold' }"
-      ></UButton>
-      <USwitch
-        v-model="isMatch"
-        :ui="{ label: 'font-semibold' }"
-        :label="`${isMatch ? '匹配' : '房间'}`"
-      />
-    </div>
-    <div class="mt-4 grid grid-cols-2 gap-4">
-      <div
+  <!-- PC 端中 sm:p-6 会覆盖 pb-20，不需要额外处理 -->
+  <UDashboardPanel id="home" :ui="{ body: 'pb-20' }">
+    <template #header>
+      <IndexHeader></IndexHeader>
+    </template>
+
+    <template #body>
+      <div class="flex items-center gap-4">
+        <UButton
+          :disabled="!isMatch"
+          @click="isOpenFilterDrawer = true"
+          icon="lucide:filter"
+          color="neutral"
+          variant="ghost"
+          :ui="{ leadingIcon: 'text-primary', label: 'font-semibold' }"
+        ></UButton>
+        <USwitch
+          v-model="isMatch"
+          :ui="{ label: 'font-semibold' }"
+          label="匹配"
+        />
+      </div>
+      <!-- class="from-primary/10 to-default bg-gradient-to-tl from-5%" -->
+      <UPageCard
         v-for="({ icon, title, desc, matchType, to }, index) in list"
         :key="index"
+        @click="onClick(matchType, to)"
+        :title="title"
+        :description="desc"
+        :icon="icon"
+        orientation="horizontal"
+        variant="subtle"
+        class="cursor-pointer"
       >
-        <div
-          @click="onClick(matchType, to)"
-          class="bg-elevated hover:bg-accented h-full cursor-pointer rounded-xl p-6"
-        >
-          <div
-            class="bg-default flex h-12 w-12 items-center justify-center rounded-xl text-2xl"
-          >
-            {{ icon }}
-          </div>
-          <h2 class="mt-5 leading-6 font-semibold">
-            {{ title }}
-          </h2>
-          <p class="mt-2 text-sm leading-6">
-            {{ desc }}
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
+        <!-- <img src="/images/tailwindcss-v4.svg" alt="Tailwind CSS" class="w-full" /> -->
+      </UPageCard>
+      <router-view v-if="!showCards"></router-view>
+    </template>
+  </UDashboardPanel>
 
   <UModal
     v-if="!isMatch"
@@ -156,23 +154,21 @@
     </div>
     <div class="mt-4 flex items-center">
       <div class="font-semibold">地区：</div>
-      <div class="ml-2 space-x-2">
+      <div class="ml-2 flex gap-2">
         <USelectMenu
           :color="province ? 'primary' : 'neutral'"
           :variant="province ? 'subtle' : 'outline'"
-          class="w-20"
+          class="w-20 sm:w-30"
           v-model="province"
           :items="provinceOptions"
         />
         <USelectMenu
           :color="city ? 'primary' : 'neutral'"
           :variant="city ? 'subtle' : 'outline'"
-          class="w-20"
+          class="w-20 sm:w-30"
           v-model="city"
           :items="cityOptions"
         />
-      </div>
-      <UButtonGroup class="ml-2">
         <UButton
           @click="onSelectRegion"
           :color="isUndefRegion ? 'primary' : 'neutral'"
@@ -180,7 +176,7 @@
           label="不限"
           class="font-semibold"
         />
-      </UButtonGroup>
+      </div>
     </div>
     <UButton
       loading-auto
@@ -209,8 +205,6 @@
       <ReuseFilterBodyTemplate></ReuseFilterBodyTemplate>
     </template>
   </UDrawer>
-
-  <router-view v-if="!showCards"></router-view>
 </template>
 
 <script lang="ts" setup>
@@ -235,49 +229,49 @@ const [DefineFilterBodyTemplate, ReuseFilterBodyTemplate] =
 const isDesktop = useMediaQuery('(min-width: 768px)')
 const list = [
   {
-    icon: '💬',
+    icon: 'lucide:message-circle',
     title: '即时聊天',
     desc: '端到端加密，不留痕迹的安全对话',
     matchType: 'chat',
-    to: `/hall/chat`
+    to: `/chat`
   },
   {
-    icon: '🎙️',
+    icon: 'lucide:phone',
     title: '语音聊天',
     desc: '高清音质，实时畅聊无延迟',
     matchType: 'audio-chat',
-    to: `/hall/audio-chat`
+    to: `/audio-chat`
   },
   {
-    icon: '📁',
+    icon: 'lucide:file',
     title: '文件传输',
     desc: '文件高速传输，极速分享体验',
     matchType: 'file-transfer',
-    to: `/hall/file-transfer`
+    to: `/file-transfer`
   },
   {
-    icon: '🎥',
+    icon: 'lucide:video',
     title: '视频聊天',
     desc: '开发中...',
-    to: `/hall`
+    to: `/`
   },
   {
-    icon: '🖥️',
+    icon: 'lucide:monitor',
     title: '屏幕共享',
     desc: '开发中...',
-    to: `/hall`
+    to: `/`
   },
   {
-    icon: '🎨',
+    icon: 'lucide:pencil',
     title: '多人绘画',
     desc: '开发中...',
-    to: `/hall`
+    to: `/`
   },
   {
-    icon: '🗳️',
+    icon: 'lucide:videotape',
     title: '实时投票',
     desc: '开发中...',
-    to: `/hall`
+    to: `/`
   }
 ]
 const pin = ref([])
@@ -294,7 +288,7 @@ const noMatch = ref(false)
 const offline = ref(false)
 const leave = ref(false)
 const route = useRoute()
-const showCards = computed(() => route.path === '/hall')
+const showCards = computed(() => route.path === '/')
 const selectedGender = ref('other')
 const selectedAge = reactive({
   min: Number.MAX_SAFE_INTEGER,
@@ -311,10 +305,10 @@ const is24to30 = computed(
 )
 const is30Plus = computed(() => selectedAge.min === 30)
 const isUndefAge = computed(() => selectedAge.min === Number.MAX_SAFE_INTEGER)
-const selectedRegion = ref('')
-const isUndefRegion = computed(() => selectedRegion.value === '')
-const province = ref('')
-const city = ref('')
+const selectedRegion = ref(null)
+const isUndefRegion = computed(() => selectedRegion.value === null)
+const province = ref(null)
+const city = ref(null)
 const sourceProvinceOptions = Object.keys(provinceCityMap)
 const provinceOptions = ref(sourceProvinceOptions)
 const cityOptions = ref(provinceCityMap[province.value] || [])
@@ -337,7 +331,7 @@ const onUpdateFilter = async () => {
 }
 
 const onSelectRegion = () => {
-  selectedRegion.value = ''
+  // selectedRegion.value = ''
   province.value = null
   city.value = null
 }
@@ -429,6 +423,8 @@ const onClick = async (_matchType, to) => {
   } else {
     isOpenRoomDrawer.value = true
   }
+
+  firstRequestRemoteRoomInfo.value = false
 
   // 不需要每次都请求房间信息，只在页面首次加载时请求，因为房间信息会随着操作而更新
   if (firstRequestRemoteRoomInfo.value) {

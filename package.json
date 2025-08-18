@@ -14,7 +14,7 @@
     "deploy": "wrangler pages deploy dist --project-name chat --branch=main --commit-dirty=true"
   },
   "dependencies": {
-    "@nuxt/ui": "^3.3.0",
+    "@nuxt/ui-pro": "^3.3.2",
     "@tailwindcss/vite": "^4.1.7",
     "@vueuse/components": "^13.6.0",
     "@vueuse/core": "^13.6.0",

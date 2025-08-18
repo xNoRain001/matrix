@@ -1,5 +1,5 @@
 <template>
-  <Full v-if="isFull"></Full>
+  <RoomFull v-if="isFull"></RoomFull>
 
   <UModal
     v-else
@@ -11,7 +11,11 @@
   >
     <template #content></template>
     <template #header>
-      <Header :online="online" :leaved="leaved" :on-click="onLeave"></Header>
+      <RoomHeader
+        :online="online"
+        :leaved="leaved"
+        :on-click="onLeave"
+      ></RoomHeader>
     </template>
     <template #body>
       <div
@@ -132,7 +136,7 @@
     </template>
     <template #footer v-if="leaved">
       <div class="flex w-full justify-center">
-        <Leave :is-match="isMatch" :simple-leave="simpleLeave"></Leave>
+        <RoomLeave :is-match="isMatch" :simple-leave="simpleLeave"></RoomLeave>
       </div>
     </template>
   </UModal>
@@ -259,7 +263,7 @@ const onCancel = () => closeBtn.value.click()
 
 const initPC = async () => {
   pc = useCreatePeerConnection(
-    '/hall/audio-chat',
+    '/audio-chat',
     socket,
     remoteRoomInfo.value,
     online,
@@ -327,7 +331,7 @@ const simpleLeave = async () => {
     _remoteRoomInfo.showExitRoomTip = _remoteRoomInfo.inRoom = false
   }
 
-  router.replace('/hall')
+  router.replace('/')
 }
 
 const closePCAndSocket = () => {

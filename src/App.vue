@@ -1,199 +1,176 @@
 <template>
-  <UApp :toaster="{ position: 'top-center' }">
-    <!-- header -->
-    <div
-      v-if="userInfo"
-      class="bg-default sticky top-0 h-16 w-full border-b border-b-(--ui-border)"
-    >
-      <div class="flex h-full items-center justify-between px-4">
-        <img
-          class="size-8"
-          style="filter: drop-shadow(rgba(0, 122, 204, 0.3) 0px 8px 24px)"
-          src="/images/logo.svg"
-        />
-        <div class="flex gap-2">
-          <ThemePicker></ThemePicker>
-          <UButton
-            @click="startViewTransition"
-            :icon="store === 'dark' ? 'lucide:moon' : 'lucide:sun'"
-            variant="ghost"
-            color="neutral"
-            :ui="{ leadingIcon: 'text-primary' }"
-          ></UButton>
-        </div>
-      </div>
-    </div>
+  <Suspense>
+    <UApp :toaster="{ position: 'top-center' }">
+      <UDashboardGroup unit="rem" storage="local">
+        <UDashboardSidebar
+          id="default"
+          collapsible
+          resizable
+          class="bg-elevated/25"
+          :ui="{ footer: 'lg:border-t lg:border-default' }"
+        >
+          <template #header>
+            <img
+              class="size-8"
+              style="filter: drop-shadow(rgba(0, 122, 204, 0.3) 0px 8px 24px)"
+              src="/images/logo.svg"
+            />
+          </template>
 
-    <!-- drawer -->
-    <UNavigationMenu
-      v-if="userInfo && isDesktop"
-      collapsed
-      orientation="vertical"
-      tooltip
-      class="fixed top-16 h-full border-r border-r-(--ui-border) p-4"
-      :ui="{
-        item: 'mb-4'
-      }"
-      :items="navs"
-    >
-    </UNavigationMenu>
+          <template #default="{ collapsed }">
+            <UDashboardSearchButton
+              :collapsed="collapsed"
+              class="ring-default bg-transparent"
+            />
 
-    <!-- page -->
-    <div
-      class="p-4"
-      :class="
-        isDesktop
-          ? 'ml-18 min-h-[calc(100vh-4rem)] max-w-[calc(100vw-4.5rem)]'
-          : 'mb-16 min-h-[calc(100vh-8rem)]'
-      "
-    >
-      <Suspense>
+            <UNavigationMenu
+              :collapsed="collapsed"
+              :items="navs[0]"
+              orientation="vertical"
+              tooltip
+              popover
+            />
+
+            <UNavigationMenu
+              :collapsed="collapsed"
+              :items="navs[1]"
+              orientation="vertical"
+              tooltip
+              class="mt-auto"
+            />
+          </template>
+
+          <template #footer="{ collapsed }">
+            <IndexUserMenu :collapsed="collapsed" />
+          </template>
+        </UDashboardSidebar>
+
+        <UDashboardSearch :groups="groups" />
+
         <RouterView />
-      </Suspense>
-    </div>
 
-    <!-- footer -->
-    <div
-      v-show="userInfo && !isDesktop"
-      class="bg-default fixed bottom-0 h-16 w-full border-t border-t-(--ui-border)"
-    >
-      <UTabs
-        v-model="tab"
-        variant="link"
-        :ui="{
-          list: 'flex justify-evenly  border-none',
-          indicator: 'hidden',
-          trigger: 'flex flex-col text-xs'
-        }"
-        :content="false"
-        :items="menus"
-      />
-    </div>
+        <IndexNotificationsSlideover />
+      </UDashboardGroup>
+    </UApp>
+  </Suspense>
 
-    <div
-      v-if="userInfo && isDesktop"
-      class="bg-accented fixed bottom-4 left-4 flex items-center gap-2 rounded-xl p-4"
-    >
-      <div
-        @click="router.replace('/profile/user-info')"
-        class="hover:bg-elevated flex gap-2 rounded-full"
-      >
-        <UChip inset color="primary">
-          <UAvatar
-            class="bg-default"
-            :text="userInfo.nickname[0] || ''"
-            size="md"
-          />
-        </UChip>
-        <div class="w-40">
-          <div
-            class="overflow-hidden text-sm font-semibold text-ellipsis whitespace-nowrap"
-          >
-            {{ userInfo.nickname }}
-          </div>
-          <div class="text-muted text-xs">在线</div>
-        </div>
-      </div>
-      <UTooltip text="静音">
-        <UButton
-          icon="lucide:mic"
-          color="neutral"
-          variant="ghost"
-          :ui="{ leadingIcon: 'text-primary' }"
-        ></UButton>
-      </UTooltip>
-      <UTooltip text="耳机静音">
-        <UButton
-          icon="lucide:volume-2"
-          color="neutral"
-          variant="ghost"
-          :ui="{ leadingIcon: 'text-primary' }"
-        ></UButton>
-      </UTooltip>
-      <UTooltip text="用户设置">
-        <UButton
-          @click="router.push('/profile')"
-          icon="lucide:settings"
-          color="neutral"
-          variant="ghost"
-          :ui="{ leadingIcon: 'text-primary' }"
-        ></UButton>
-      </UTooltip>
-    </div>
-  </UApp>
+  <!-- 移动端底部导航栏 -->
+  <div
+    v-if="userInfo && !isDesktop"
+    class="bg-default fixed bottom-0 h-16 w-full border-t border-t-(--ui-border)"
+  >
+    <UTabs
+      v-model="activeTab"
+      variant="link"
+      :ui="{
+        list: 'flex justify-evenly  border-none',
+        indicator: 'hidden',
+        trigger: 'flex flex-col text-xs'
+      }"
+      :content="false"
+      :items="mobileNavs"
+    />
+  </div>
 </template>
 
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia'
 import { useUserInfoStore } from './store'
-import { useColorMode, useMediaQuery } from '@vueuse/core'
+import { useMediaQuery } from '@vueuse/core'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import type { NavigationMenuItem } from '@nuxt/ui'
+import ModalLogout from './components/modal/ModalLogout.vue'
+import DrawerLogout from './components/drawer/DrawerLogout.vue'
 
-const { store } = useColorMode()
-const nextTheme = computed(() => (store.value === 'dark' ? 'light' : 'dark'))
+const overlay = useOverlay()
+const logoutModal = overlay.create(ModalLogout)
+const logoutDrawer = overlay.create(DrawerLogout)
 const isDesktop = useMediaQuery('(min-width: 768px)')
-const menus = [
+const mobileNavs = [
   {
     label: '大厅',
     icon: 'ic:baseline-auto-awesome',
-    to: '/hall',
-    value: 'hall'
+    to: '/',
+    value: '/' // tab 的值，默认值为索引
   },
   {
     label: '我的',
     icon: 'ic:baseline-face',
     to: '/profile',
-    value: 'profile'
+    value: '/profile'
   }
 ]
-const navs = [menus]
+const navs = [
+  [
+    {
+      label: '大厅',
+      icon: 'ic:baseline-auto-awesome',
+      to: '/'
+      // badge: 4,
+    },
+    {
+      label: '我的',
+      icon: 'ic:baseline-face',
+      to: '/profile/user-info',
+      defaultOpen: true,
+      type: 'trigger',
+      children: [
+        {
+          label: '修改资料',
+          to: '/profile/user-info',
+          exact: true
+        },
+        {
+          label: '修改密码',
+          to: '/profile/update-password'
+        },
+        {
+          label: '通知',
+          to: '/profile/notifications'
+        },
+        {
+          label: '登出',
+          onSelect: () => {
+            isDesktop.value ? logoutModal.open() : logoutDrawer.open()
+          }
+        }
+      ]
+    }
+  ],
+  [
+    {
+      label: '反馈',
+      icon: 'i-lucide-message-circle',
+      to: '',
+      target: '_blank'
+    },
+    {
+      label: '帮助和支持',
+      icon: 'i-lucide-info',
+      to: '',
+      target: '_blank'
+    }
+  ]
+] satisfies NavigationMenuItem[][]
+const groups = computed(() => [
+  {
+    id: 'links',
+    label: '访问',
+    items: navs.flat()
+  }
+])
 const { userInfo } = storeToRefs(useUserInfoStore())
 const route = useRoute()
 const router = useRouter()
-const tab = computed({
+const activeTab = computed({
   get() {
-    return route.meta.tab as string
+    return route.path
   },
   set(tab) {
-    router.push(`/${tab}`)
+    router.push(tab)
   }
 })
-
-const switchTheme = () => (store.value = nextTheme.value)
-
-const startViewTransition = (event: MouseEvent) => {
-  if (!document.startViewTransition) {
-    switchTheme()
-    return
-  }
-
-  const x = event.clientX
-  const y = event.clientY
-  const endRadius = Math.hypot(
-    Math.max(x, window.innerWidth - x),
-    Math.max(y, window.innerHeight - y)
-  )
-  const transition = document.startViewTransition(() => {
-    switchTheme()
-  })
-  transition.ready.then(() => {
-    const duration = 600
-    document.documentElement.animate(
-      {
-        clipPath: [
-          `circle(0px at ${x}px ${y}px)`,
-          `circle(${endRadius}px at ${x}px ${y}px)`
-        ]
-      },
-      {
-        duration: duration,
-        easing: 'cubic-bezier(.76,.32,.29,.99)',
-        pseudoElement: '::view-transition-new(root)'
-      }
-    )
-  })
-}
 </script>
 
 <style>

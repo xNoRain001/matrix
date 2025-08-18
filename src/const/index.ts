@@ -17,6 +17,27 @@ export const appConfig = {
     }
   }
 }
+export const primaryColors = [
+  'red',
+  'orange',
+  'amber',
+  'yellow',
+  'lime',
+  'green',
+  'emerald',
+  'teal',
+  'cyan',
+  'sky',
+  'blue',
+  'indigo',
+  'violet',
+  'purple',
+  'fuchsia',
+  'pink',
+  'rose'
+]
+export const neutralColors = ['slate', 'gray', 'zinc', 'neutral', 'stone']
+export const radiuses = [0, 0.125, 0.25, 0.375, 0.5]
 export const provinceCityMap = {
   // 直辖市
   北京市: [

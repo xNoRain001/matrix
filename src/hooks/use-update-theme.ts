@@ -46,30 +46,59 @@ const updateColors = (type: 'primary' | 'neutral', color: string) => {
   style.textContent = textContent
 }
 
+const setBlackAsPrimary = v =>
+  (document.getElementById('nuxt-ui-black-as-primary').textContent = v
+    ? ':root { --ui-primary: black; } .dark { --ui-primary: white; }'
+    : ':root {}')
+
+const setRadius = v =>
+  (document.getElementById('nuxt-ui-radius').textContent =
+    `:root { --ui-radius: ${v}rem; }`)
+
 const strategies = {
-  blackAsPrimary(v) {
-    document.getElementById('nuxt-ui-black-as-primary').textContent = v
-      ? ':root { --ui-primary: black; } .dark { --ui-primary: white; }'
-      : ':root {}'
+  blackAsPrimary(appConfig, v) {
+    setBlackAsPrimary(v)
+    appConfig.theme.blackAsPrimary = v
+    localStorage.setItem('nuxt-ui-black-as-primary', String(v))
   },
 
-  primary(v) {
+  primary(appConfig, v) {
     updateColors('primary', v)
+    appConfig.ui.colors.primary = v
+    localStorage.setItem('nuxt-ui-primary', v)
+    this.blackAsPrimary(appConfig, false)
   },
 
-  neutral(v) {
+  neutral(appConfig, v) {
     updateColors('neutral', v)
+    appConfig.ui.colors.neutral = v
+    localStorage.setItem('nuxt-ui-neutral', v)
   },
 
-  radius(v) {
-    document.getElementById('nuxt-ui-radius').textContent =
-      `:root { --ui-radius: ${v}rem; }`
+  radius(appConfig, v) {
+    setRadius(v)
+    appConfig.theme.radius = v
+    localStorage.setItem('nuxt-ui-radius', String(v))
   }
 }
 
 const useUpdateTheme = (
   type: 'blackAsPrimary' | 'primary' | 'neutral' | 'radius',
+  appConfig,
   v: any
-) => strategies[type](v)
+) => strategies[type](appConfig, v)
+
+export const initTheme = appConfig => {
+  const {
+    ui: {
+      colors: { neutral, primary }
+    },
+    theme: { radius, blackAsPrimary }
+  } = appConfig
+  setBlackAsPrimary(blackAsPrimary)
+  setRadius(radius)
+  updateColors('primary', primary)
+  updateColors('neutral', neutral)
+}
 
 export default useUpdateTheme

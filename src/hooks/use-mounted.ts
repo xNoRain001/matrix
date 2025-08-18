@@ -13,8 +13,8 @@ const useMounted = async (
   initSocket: Function,
   toast
 ) => {
-  try {
-    if (firstRequestRemoteRoomInfo) {
+  if (firstRequestRemoteRoomInfo.value) {
+    try {
       const latestRoomInfo = (await getLatestRoom()).data
       // 如果 latestId 有值，说明自身还没离开房间
       const { latestId } = latestRoomInfo
@@ -25,14 +25,14 @@ const useMounted = async (
         remoteRoomInfo.value.inRoom = !isExit
         leaved.value = isExit
       }
+    } catch (error) {
+      toast.add({
+        title: error.message,
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
+      return router.replace('/')
     }
-  } catch (error) {
-    toast.add({
-      title: error.message,
-      color: 'error',
-      icon: 'lucide:annoyed'
-    })
-    return router.replace('/hall')
   }
 
   const _remoteRoomInfo = remoteRoomInfo.value
@@ -56,8 +56,8 @@ const useMounted = async (
         path,
         query: { roomId }
       })
-      // 跳过请求，比如存储的是 /hall/chat?roomId=chat-1111，
-      // 访问 /hall/audio-chat?roomId=chat-1111，在 audio chat 组件中一定会
+      // 跳过请求，比如存储的是 /chat?roomId=chat-1111，
+      // 访问 /audio-chat?roomId=chat-1111，在 audio chat 组件中一定会
       // 发请求更新房间信息，当加载新的组件时已经有房间信息了，就可以不用发请求
       firstRequestRemoteRoomInfo.value = true
       return

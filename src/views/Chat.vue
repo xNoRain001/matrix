@@ -1,5 +1,5 @@
 <template>
-  <Full v-if="isFull"></Full>
+  <RoomFull v-if="isFull"></RoomFull>
 
   <UModal
     v-else
@@ -8,7 +8,7 @@
     title=" "
     description=" "
     :dismissible="false"
-    class="overflow-y-scroll"
+    class="overflow-y-auto"
     :ui="{
       // 背景色保持一致，防止修改 top 时看到主页的 header
       overlay: 'bg-default',
@@ -19,10 +19,14 @@
   >
     <template #content></template>
     <template #header>
-      <Header :online="online" :leaved="leaved" :on-click="onLeave"></Header>
+      <RoomHeader
+        :online="online"
+        :leaved="leaved"
+        :on-click="onLeave"
+      ></RoomHeader>
     </template>
     <template #body>
-      <div class="-mt-4 flex w-full items-center justify-center pb-4">
+      <div class="-mt-4 flex justify-center pb-4">
         <div class="relative w-full max-w-(--room-width)">
           <div
             v-for="(
@@ -263,130 +267,151 @@
     </template>
     <template #footer>
       <div ref="footerRef" class="flex w-full justify-center">
-        <Leave
+        <RoomLeave
           v-if="leaved"
           :is-match="isMatch"
           :simple-leave="simpleLeave"
-        ></Leave>
-        <div v-else class="flex w-full max-w-(--room-width) flex-col">
-          <div v-if="isDesktop">
-            <div class="space-x-2">
-              <UTooltip text="表情">
-                <UButton variant="ghost" icon="lucide:smile"></UButton>
-              </UTooltip>
-              <UTooltip text="图片">
-                <UButton
-                  variant="ghost"
-                  icon="lucide:file-image"
-                  @click="onOpenFileSelector(photoInputRef)"
-                ></UButton>
-              </UTooltip>
-              <UTooltip text="视频">
-                <UButton
-                  variant="ghost"
-                  icon="lucide:file-video"
-                  @click="onOpenFileSelector(videoInputRef)"
-                ></UButton>
-              </UTooltip>
-              <UTooltip text="文件">
-                <UButton
-                  variant="ghost"
-                  icon="lucide:file"
-                  @click="onOpenFileSelector(fileInputRef)"
-                ></UButton>
-              </UTooltip>
-              <UTooltip text="音乐">
-                <UButton
-                  variant="ghost"
-                  icon="lucide:file-music"
-                  @click="onOpenFileSelector(musicInputRef)"
-                ></UButton>
-              </UTooltip>
-            </div>
+        ></RoomLeave>
+        <div v-else class="w-full max-w-(--room-width)">
+          <UPageCard
+            v-if="isDesktop"
+            variant="subtle"
+            :ui="{ container: '!p-4' }"
+          >
             <UTextarea
-              @keydown.enter="onKeydown"
+              :disabled="!online"
+              placeholder="Ctrl + Enter 换行"
+              @keydown.enter.prevent="onKeydown"
               enterkeyhint="send"
-              class="mt-4 w-full"
+              class="relative w-full"
               v-model="message"
               :rows="3"
               :maxrows="3"
               autoresize
-            />
-            <div class="mt-4 flex justify-end">
-              <UButton
-                :disabled="!online"
-                @click="onSendMsg"
-                label="发送（Ctrl + Enter）"
-              ></UButton>
-            </div>
-          </div>
-          <div v-else class="flex items-end gap-2">
-            <UButton
-              variant="ghost"
-              color="neutral"
-              icon="lucide:mic"
-            ></UButton>
-            <UTextarea
-              :disabled="!online"
-              @keydown.enter.prevent="onSendMsg"
-              @focus="onFocus"
-              enterkeyhint="send"
-              class="grow"
-              v-model="message"
-              :rows="1"
-              :maxrows="9"
-              autoresize
-            />
-            <UButton
-              variant="ghost"
-              color="neutral"
-              icon="lucide:smile"
-            ></UButton>
-            <UButton
-              variant="ghost"
-              color="neutral"
-              :icon="expanded ? 'lucide:circle-x' : 'lucide:circle-plus'"
-              @click="onExpand"
-            ></UButton>
-          </div>
-          <UCollapsible v-model:open="expanded">
-            <template #content>
-              <div class="mt-4 grid grid-cols-4 gap-y-4 p-4">
-                <div class="flex flex-col items-center">
+              variant="none"
+              :ui="{ base: 'p-0' }"
+            >
+            </UTextarea>
+
+            <div class="flex justify-between">
+              <div class="space-x-3">
+                <UTooltip text="表情">
                   <UButton
-                    color="neutral"
+                    :disabled="!online"
+                    variant="ghost"
+                    icon="lucide:smile"
+                  ></UButton>
+                </UTooltip>
+                <UTooltip text="图片">
+                  <UButton
+                    :disabled="!online"
+                    variant="ghost"
                     icon="lucide:file-image"
                     @click="onOpenFileSelector(photoInputRef)"
                   ></UButton>
-                  <div class="mt-2 text-xs">照片</div>
-                </div>
-                <div class="flex flex-col items-center">
+                </UTooltip>
+                <UTooltip text="视频">
                   <UButton
-                    color="neutral"
+                    :disabled="!online"
+                    variant="ghost"
                     icon="lucide:file-video"
                     @click="onOpenFileSelector(videoInputRef)"
                   ></UButton>
-                  <div class="mt-2 text-xs">视频</div>
-                </div>
-                <div class="flex flex-col items-center">
+                </UTooltip>
+                <UTooltip text="文件">
                   <UButton
-                    color="neutral"
+                    :disabled="!online"
+                    variant="ghost"
                     icon="lucide:file"
                     @click="onOpenFileSelector(fileInputRef)"
                   ></UButton>
-                  <div class="mt-2 text-xs">文件</div>
-                </div>
-                <div class="flex flex-col items-center">
+                </UTooltip>
+                <UTooltip text="音乐">
                   <UButton
-                    color="neutral"
+                    :disabled="!online"
+                    variant="ghost"
                     icon="lucide:file-music"
                     @click="onOpenFileSelector(musicInputRef)"
                   ></UButton>
-                  <div class="mt-2 text-xs">音乐</div>
-                </div>
+                </UTooltip>
               </div>
-            </template>
-          </UCollapsible>
+              <UButton
+                :disabled="!online"
+                @click="onSendMsg"
+                icon="lucide:send"
+                label="发送"
+              ></UButton>
+            </div>
+          </UPageCard>
+          <div v-else>
+            <div class="flex items-end gap-2">
+              <UButton
+                variant="ghost"
+                color="neutral"
+                icon="lucide:mic"
+              ></UButton>
+              <UTextarea
+                :disabled="!online"
+                @keydown.enter.prevent="onSendMsg"
+                @focus="onFocus"
+                enterkeyhint="send"
+                class="grow"
+                v-model="message"
+                :rows="1"
+                :maxrows="9"
+                autoresize
+              />
+              <UButton
+                variant="ghost"
+                color="neutral"
+                icon="lucide:smile"
+              ></UButton>
+              <UButton
+                variant="ghost"
+                color="neutral"
+                :icon="expanded ? 'lucide:circle-x' : 'lucide:circle-plus'"
+                @click="onExpand"
+              ></UButton>
+            </div>
+            <UCollapsible v-model:open="expanded">
+              <template #content>
+                <div class="mt-4 grid grid-cols-4 gap-y-4 p-4">
+                  <div class="flex flex-col items-center">
+                    <UButton
+                      color="neutral"
+                      icon="lucide:file-image"
+                      @click="onOpenFileSelector(photoInputRef)"
+                    ></UButton>
+                    <div class="mt-2 text-xs">照片</div>
+                  </div>
+                  <div class="flex flex-col items-center">
+                    <UButton
+                      color="neutral"
+                      icon="lucide:file-video"
+                      @click="onOpenFileSelector(videoInputRef)"
+                    ></UButton>
+                    <div class="mt-2 text-xs">视频</div>
+                  </div>
+                  <div class="flex flex-col items-center">
+                    <UButton
+                      color="neutral"
+                      icon="lucide:file"
+                      @click="onOpenFileSelector(fileInputRef)"
+                    ></UButton>
+                    <div class="mt-2 text-xs">文件</div>
+                  </div>
+                  <div class="flex flex-col items-center">
+                    <UButton
+                      color="neutral"
+                      icon="lucide:file-music"
+                      @click="onOpenFileSelector(musicInputRef)"
+                    ></UButton>
+                    <div class="mt-2 text-xs">音乐</div>
+                  </div>
+                </div>
+              </template>
+            </UCollapsible>
+          </div>
         </div>
       </div>
     </template>
@@ -719,11 +744,19 @@ const addMessageLabelToDB = async (timestamp: number) => {
   // 不在这里更新 lastMsgTimeStamp，因为此时视图中还没添加 message label
 }
 
-const onKeydown = (e: KeyboardEvent) => {
-  const { ctrlKey, metaKey } = e
+const onKeydown = e => {
+  const { ctrlKey, metaKey, target } = e
 
   // Ctrl + Enter 或 Command + Enter
   if (ctrlKey || metaKey) {
+    const index = target.selectionStart // 获取光标位置
+    const { value } = target
+    // 插入换行符
+    message.value = value.slice(0, index) + '\n' + value.slice(index)
+    const newIndex = index + 1
+    // 更新光标位置
+    setTimeout(() => target.setSelectionRange(newIndex, newIndex))
+  } else {
     onSendMsg()
   }
 }
@@ -748,16 +781,21 @@ const onSendMsg = async () => {
     sent: true,
     timestamp
   }
-  dataChannel.send(
-    JSON.stringify({
-      type,
-      timestamp,
-      message: _message
-    })
-  )
-  await addMessagesToDB(messageRecord)
-  addMessagesToView(messageRecord)
-  message.value = ''
+  try {
+    dataChannel.send(
+      JSON.stringify({
+        type,
+        timestamp,
+        message: _message
+      })
+    )
+    // 如果发送失败，后面的代码不会被执行
+    await addMessagesToDB(messageRecord)
+    addMessagesToView(messageRecord)
+    message.value = ''
+  } catch (error) {
+    toast.add({ title: '发送失败', color: 'error' })
+  }
 }
 
 const addMessagesToView = (messageRecord: dbMessage) => {
@@ -897,7 +935,7 @@ const updateLastMsgStamp = () => {
 // TODO: 和 file-transfer 合并
 const initPC = () => {
   pc = useCreatePeerConnection(
-    '/hall/chat',
+    '/chat',
     socket,
     remoteRoomInfo.value,
     online,
@@ -953,7 +991,7 @@ const simpleLeave = async () => {
     _remoteRoomInfo.showExitRoomTip = _remoteRoomInfo.inRoom = false
   }
 
-  router.replace('/hall')
+  router.replace('/')
 }
 
 const closePCAndSocket = () => {
