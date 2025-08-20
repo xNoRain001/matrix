@@ -63,3 +63,27 @@ export type remoteRoomInfo = {
   inRoom: boolean
   showExitRoomTip: boolean
 }
+
+type commonMessage = {
+  roomId?: string
+  type: 'message' | 'label' | fileTypes
+  sent?: boolean
+  timestamp: number
+  separator?: boolean
+}
+
+export type message = commonMessage & {
+  showProgress?: boolean // 控制是否显示发送文件时的进度
+  content?:
+    | [string]
+    | [string, string, number, string] // url 文件名 大小 文件类型
+    | [string, string, number, string] // url 文件名 大小 文件类型
+}
+
+export type dbMessage = commonMessage & {
+  content?:
+    | [string]
+    | [File, string, number, string] // File 文件名 大小 文件类型
+    | [Blob, string, number, string] // Blob 文件名 大小 文件类型
+    | [null, string, number, string] // 发送方不保存发送的文件到本地数据库中
+}

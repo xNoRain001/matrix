@@ -15,44 +15,50 @@
           variant="ghost"
           color="neutral"
           icon="lucide:chevron-left"
-          class="cursor-pointer"
           @click="openProfileDrawer = false"
         />
-        <div class="absolute left-1/2 -translate-x-1/2">个人资料</div>
+        <h2
+          class="text-highlighted absolute left-1/2 -translate-x-1/2 font-semibold"
+        >
+          个人资料
+        </h2>
       </div>
     </template>
     <template #content></template>
     <template #body>
-      <div class="bg-elevated rounded-xl p-4">
-        <div
-          v-for="{ label, click, key } in profileItems"
-          @click="click"
-          class="hover:bg-accented flex h-12 cursor-pointer items-center justify-between rounded-xl px-2"
-        >
-          <div>{{ label }}</div>
-          <div class="flex items-center justify-end">
-            <div
-              class="mr-2 w-30 overflow-hidden text-right text-ellipsis whitespace-nowrap text-(--ui-text-dimmed)"
-            >
-              {{
-                key === 'gender'
-                  ? useTransformGender(userInfoForm[key])
-                  : userInfoForm[key]
-              }}
+      <UPageCard variant="subtle" :ui="{ body: 'w-full' }">
+        <template #body>
+          <div
+            v-for="{ label, click, key } in profileItems"
+            @click="click"
+            class="flex h-12 items-center justify-between"
+          >
+            <div>{{ label }}</div>
+            <div class="flex items-center gap-2">
+              <div
+                class="w-30 overflow-hidden text-right text-ellipsis whitespace-nowrap text-(--ui-text-dimmed)"
+              >
+                {{
+                  key === 'gender'
+                    ? useTransformGender(userInfoForm[key])
+                    : userInfoForm[key]
+                }}
+              </div>
+              <UIcon
+                name="lucide:chevron-right"
+                class="size-5 text-(--ui-text-dimmed)"
+              />
             </div>
-            <UIcon
-              name="lucide:chevron-right"
-              class="size-5 text-(--ui-text-dimmed)"
-            />
           </div>
-        </div>
-        <UButton
-          label="修改资料"
-          class="mt-4"
-          @click="onUpdateProfile"
-          loading-auto
-        ></UButton>
-      </div>
+        </template>
+        <template #footer>
+          <UButton
+            label="修改资料"
+            @click="onUpdateProfile"
+            loading-auto
+          ></UButton>
+        </template>
+      </UPageCard>
     </template>
   </UDrawer>
 

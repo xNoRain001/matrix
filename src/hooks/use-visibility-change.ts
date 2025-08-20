@@ -34,7 +34,7 @@ const useVisibilityChange = (
       try {
         useRefreshRoomInfo(
           socket,
-          remoteRoomInfo,
+          remoteRoomInfo.value.roomId,
           onBye,
           getOnlineWhenReconnection
         )

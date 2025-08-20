@@ -65,12 +65,13 @@
 
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia'
-import { useUserInfoStore } from './store'
+import { useSelectedUserStore, useUserInfoStore } from './store'
 import { useMediaQuery } from '@vueuse/core'
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import ModalLogout from './components/modal/ModalLogout.vue'
 import DrawerLogout from './components/drawer/DrawerLogout.vue'
+import { io } from 'socket.io-client'
 
 const overlay = useOverlay()
 const logoutModal = overlay.create(ModalLogout)
@@ -87,7 +88,7 @@ const navs = [
     {
       label: '消息',
       icon: 'lucide:message-circle',
-      to: '/inbox'
+      to: '/message'
     },
     {
       label: '我的',
@@ -141,6 +142,31 @@ const groups = computed(() => [
   }
 ])
 const { userInfo } = storeToRefs(useUserInfoStore())
+const { globalSocket } = storeToRefs(useSelectedUserStore())
+
+watch(
+  () => userInfo.value.id,
+  v => {
+    if (globalSocket.value) {
+      globalSocket.value.disconnect()
+      globalSocket.value = null
+    }
+
+    const socket = io(import.meta.env.VITE_SOCKET_BASE_URL, {
+      // reconnectionAttempts: maxReconnectionAttempts,
+      auth: {
+        userId: v
+      }
+    })
+
+    socket.on('connect', () => {
+      // 向每个好友通知我上线了
+    })
+
+    globalSocket.value = socket
+  },
+  { immediate: true }
+)
 </script>
 
 <style>

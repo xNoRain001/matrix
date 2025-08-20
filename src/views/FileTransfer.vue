@@ -147,55 +147,53 @@
       </div>
     </template>
   </UDrawer>
+
+  <ModalOffline
+    :loading="loading"
+    v-model="showOfflineModal"
+    @click="onReconnect"
+  ></ModalOffline>
 </template>
 
 <script lang="ts" setup>
 import {
-  useBye,
   useClosePC,
-  useCreatePeerConnection,
-  useDisconnect,
   useExtendFileStatus,
-  useInitDataChannel,
-  useInitRtc,
-  useInitSocket,
-  useOtherJoin,
   useReceiveFile,
   useSendFile,
-  useJoined,
   useBeforeUnmount,
-  useMounted,
   useLeave,
   useExportFile,
   useNoop,
   useRefreshRoomInfo,
-  useVisibilityChange
+  useVisibilityChange,
+  useExtendRoom,
+  useExtendFile,
+  useFixRoomInfo
 } from '@/hooks'
 // import { exportFile } from 'quasar'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { pending, received, receiving, sending, sent } from '@/const'
-
-import type { Socket } from 'socket.io-client'
+import { pending, received, sending, sent } from '@/const'
 import type { extendedFile, extendedFiles, receivedFiles } from '@/types'
 import { storeToRefs } from 'pinia'
-import { useRoomStore, useUserInfoStore } from '@/store'
+import { useRoomStore } from '@/store'
 import { updateLatestRoom } from '@/apis/latest-room'
 import { useMediaQuery } from '@vueuse/core'
+import useInitPC, { sharedVars } from '@/hooks/use-init-pc'
 
 const isDesktop = useMediaQuery('(min-width: 768px)')
 const isOpenReceivedFilesDrawer = ref(false)
 const files = ref<extendedFiles>([])
 const oepnModal = ref(true)
-const makingOffer = ref(false)
-const polite = ref(true)
 let cancelVisibilityChangeHandler = useNoop
-let pc: RTCPeerConnection | null = null
-let socket: Socket | null = null
-let dataChannel: RTCDataChannel | null = null
 const receiveStartTime = ref(0)
 // 对方是否收到了文件元信息的标识
-const flag = ref(false)
+const { online, pc, socket, dataChannel, showOfflineModal, loading } =
+  sharedVars()
+const isFull = ref(false)
+const leaved = ref(false)
+const flag = ref(false) // 是否完成保存文件的标识
 const inSending = ref(false)
 const inReceving = ref(false)
 const receivedFiles: receivedFiles = ref([])
@@ -204,7 +202,6 @@ const {
   query: { roomId }
 } = useRoute()
 const router = useRouter()
-const online = ref(false)
 const {
   isMatch,
   remoteRoomInfo,
@@ -212,13 +209,12 @@ const {
   firstRequestRemoteRoomInfo,
   getOnlineWhenReconnection
 } = storeToRefs(useRoomStore())
-const { userInfo } = storeToRefs(useUserInfoStore())
-const _userInfo = userInfo.value
-const leaved = ref(false)
-const isFull = ref(false)
 const toast = useToast()
-const showOfflineModal = ref(false)
-const loading = ref(false)
+
+const onReconnect = () => {
+  loading.value = true
+  initPC()
+}
 
 const onRemoveFile = index => {
   files.value.splice(index, 1)
@@ -236,9 +232,9 @@ const onSendFiles = async files => {
 
   for (let i = 0, l = files.length; i < l; i++) {
     await useSendFile(
-      pc,
-      socket,
-      dataChannel,
+      pc.value,
+      socket.value,
+      dataChannel.value,
       remoteRoomInfo.value.roomId,
       files[i],
       flag,
@@ -253,7 +249,7 @@ const onSendFiles = async files => {
 const onReceiveFile = ({ channel }: { channel: RTCDataChannel }) => {
   channel.onmessage = ({ data }: { data: ArrayBuffer }) => {
     useReceiveFile(
-      socket,
+      socket.value,
       data,
       inReceving,
       receivedFiles,
@@ -264,53 +260,15 @@ const onReceiveFile = ({ channel }: { channel: RTCDataChannel }) => {
   }
 }
 
-const onFileMetadata = async (roomId: string, data: any) => {
-  receiveStartTime.value = Date.now()
-  const o = { ...data }
-  o.status = receiving
-  o.formatSize = (data.size / 1024 / 1024).toFixed(2) + 'MB'
-  o.progress = 0
-  o.time = '0 s'
-  // o.speed = '0 MB/s'
-  receivedFiles.value.push(o)
-  socket.emit('receive-file-metadata', roomId, null)
-}
-
-const onReceiveFileMetadata = () => (flag.value = true)
-
-const onSavedFile = () => (flag.value = true)
-
 const initPC = () => {
-  pc = useCreatePeerConnection(
-    '/file-transfer',
-    socket,
-    remoteRoomInfo.value,
-    online,
-    () => {}
-  )
-  pc.ondatachannel = onReceiveFile
-  dataChannel = useInitDataChannel(pc)
-  return pc
+  useInitPC({
+    path: '/file-transfer',
+    onDataChannel: onReceiveFile,
+    onBye
+  })
+  useExtendRoom(socket, online, isFull)
+  useExtendFile(socket, remoteRoomInfo, flag, receiveStartTime, receivedFiles)
 }
-
-const onJoined = async (_, __, _polite) =>
-  useJoined(socket, polite, remoteRoomInfo.value.roomId, initPC, _polite)
-
-const onOtherJoin = () =>
-  useOtherJoin(
-    pc,
-    socket,
-    remoteRoomInfo.value.roomId,
-    polite,
-    makingOffer,
-    initPC,
-    _userInfo
-  )
-
-const onDisconnect = () => useDisconnect(pc)
-
-const onRtc = (roomId: string, data: any) =>
-  useInitRtc(pc, socket, roomId, data, makingOffer, polite, _userInfo)
 
 const simpleLeave = async () => {
   const _remoteRoomInfo = remoteRoomInfo.value
@@ -329,18 +287,18 @@ const simpleLeave = async () => {
 }
 
 const closePCAndSocket = () => {
-  useClosePC(pc)
-  socket && socket.disconnect()
+  useClosePC(pc.value)
+  const _socket = socket.value
+  _socket && _socket.disconnect()
 }
 
 const leaveAfterConnected = async () => {
+  const _remoteRoomInfo = remoteRoomInfo.value
   closePCAndSocket()
-  socket.disconnect()
   await updateLatestRoom()
   leaved.value = true
-  otherInfo.value = null
   online.value = false
-  const _remoteRoomInfo = remoteRoomInfo.value
+  otherInfo.value = null
   _remoteRoomInfo.roomId = _remoteRoomInfo.path = _remoteRoomInfo.latestId = ''
   _remoteRoomInfo.inRoom = false
 }
@@ -348,7 +306,7 @@ const leaveAfterConnected = async () => {
 const onLeave = async () =>
   await useLeave(
     remoteRoomInfo.value,
-    socket,
+    socket.value,
     online.value,
     leaveAfterConnected,
     simpleLeave,
@@ -357,42 +315,20 @@ const onLeave = async () =>
 
 const onBye = () => {
   remoteRoomInfo.value.showExitRoomTip = true
-  useBye(leaveAfterConnected)
-}
-
-const initSocket = () => {
-  socket = useInitSocket(
-    onJoined,
-    onOtherJoin,
-    onDisconnect,
-    onRtc,
-    onBye,
-    remoteRoomInfo,
-    isFull,
-    showOfflineModal,
-    loading,
-    getOnlineWhenReconnection,
-    toast
-  )
-  socket.on('bye', onBye)
-  socket.on('file-metadata', onFileMetadata)
-  socket.on('receive-file-metadata', onReceiveFileMetadata)
-  socket.on('saved-file', onSavedFile)
-
-  return socket
+  leaveAfterConnected()
 }
 
 onMounted(async () => {
-  await useMounted(
+  await useFixRoomInfo(
     router,
     path,
     remoteRoomInfo,
     roomId as string,
     leaved,
     firstRequestRemoteRoomInfo,
-    initSocket,
     toast
   )
+  initPC()
   cancelVisibilityChangeHandler = useVisibilityChange(
     socket,
     showOfflineModal,
@@ -406,7 +342,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  useBeforeUnmount(socket)
+  useBeforeUnmount(socket.value)
   cancelVisibilityChangeHandler()
 })
 </script>

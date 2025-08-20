@@ -22,11 +22,16 @@
           </div>
         </div>
 
-        <UPageCard v-for="items in cards" variant="subtle" class="mb-4">
+        <UPageCard
+          v-for="items in cards"
+          variant="subtle"
+          class="mb-4"
+          :ui="{ container: 'gap-y-0' }"
+        >
           <div
             v-for="{ to, label, icon, onSelect } in items"
             @click="onSelect ? onSelect() : router.replace(to)"
-            class="flex items-center justify-between"
+            class="flex h-12 items-center justify-between"
           >
             <div class="flex items-center gap-2">
               <UIcon :name="icon" class="size-5" />

@@ -3,14 +3,13 @@ import type { remoteRoomInfo } from '@/types'
 import { getLatestRoom, isExitRoom } from '@/apis/latest-room'
 import type { Ref } from 'vue'
 
-const useMounted = async (
+const useFixRoomInfo = async (
   router: Router,
   currentPath: string,
   remoteRoomInfo: Ref<remoteRoomInfo>,
   queryRoomId: string,
   leaved: Ref<boolean>,
   firstRequestRemoteRoomInfo: Ref<boolean>,
-  initSocket: Function,
   toast
 ) => {
   if (firstRequestRemoteRoomInfo.value) {
@@ -69,10 +68,6 @@ const useMounted = async (
     _remoteRoomInfo.roomId = queryRoomId
     _remoteRoomInfo.path = currentPath
   }
-
-  // 如果 socket 初始化连接失败（能获取到接口数据，却无法连接 socket，
-  // 这是很小概率的事），由重试机制处理
-  initSocket()
 }
 
-export default useMounted
+export default useFixRoomInfo

@@ -1,8 +1,4 @@
 import useNoop from './use-noop'
-import useCreatePeerConnection from './use-create-peer-connection'
-import useInitRtc from './use-init-rtc'
-import useInitSocket from './use-init-socket'
-import useInitDataChannel from './use-init-data-channel'
 import useGetUserMedia from './use-get-user-media'
 import useAddMediaStreamToPC from './use-add-media-stream-to-pc'
 import useGetMediaStreamTracks from './use-get-media-stream-tracks'
@@ -23,13 +19,9 @@ import useReceiveFile from './use-receive-file'
 import useExtendFileStatus from './use-extend-file-status'
 import useLeaveFullRoom from './use-leave-full-room'
 import useScrollToBottom from './use-scroll-to-bottom'
-import useDisconnect from './use-disconnect'
-import useOtherJoin from './use-other-join'
-import useBye from './use-bye'
 import useLeave from './use-leave'
-import useJoined from './use-joined'
 import useBeforeUnmount from './use-before-unmount'
-import useMounted from './use-mounted'
+import useFixRoomInfo from './use-fix-room-info'
 import useEncryptUserInfo from './use-encrypt-userinfo'
 import useLogout from './use-logout'
 import useScrollToTop from './use-scroll-to-top'
@@ -40,8 +32,14 @@ import useBackToProfile from './use-back-to-profile'
 import useRefreshRoomInfo from './use-refresh-room-info'
 import useVisibilityChange from './use-visibility-change'
 import { useDashboard } from './use-dashboard'
+import useGetMessages from './use-get-messages'
+import useExtendRoom from './use-extend-room'
+import useExtendFile from './use-extend-file'
 
 export {
+  useExtendRoom,
+  useExtendFile,
+  useGetMessages,
   useDashboard,
   useVisibilityChange,
   useRefreshRoomInfo,
@@ -52,13 +50,9 @@ export {
   useScrollToTop,
   useLogout,
   useEncryptUserInfo,
-  useMounted,
+  useFixRoomInfo,
   useBeforeUnmount,
-  useJoined,
   useLeave,
-  useBye,
-  useOtherJoin,
-  useDisconnect,
   useScrollToBottom,
   useLeaveFullRoom,
   useExtendFileStatus,
@@ -79,9 +73,5 @@ export {
   useGetMediaStreamTracks,
   useAddMediaStreamToPC,
   useGetUserMedia,
-  useInitDataChannel,
-  useInitSocket,
-  useInitRtc,
-  useCreatePeerConnection,
   useNoop
 }

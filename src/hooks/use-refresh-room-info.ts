@@ -2,7 +2,7 @@ import { getLatestRoom, isExitRoom } from '@/apis/latest-room'
 
 const useRefreshRoomInfo = async (
   socket,
-  remoteRoomInfo,
+  roomId,
   onBye,
   getOnlineWhenReconnection
 ) => {
@@ -16,13 +16,15 @@ const useRefreshRoomInfo = async (
       // 对方离开了，内部更新 leaved 和 remoteRoomInfo
       onBye()
     } else {
+      const _socket = socket.value
+
       // 对方没离开，需要看他是否还在线
-      if (socket.connected) {
+      if (_socket.connected) {
         // 如果离开时间不长或者模态框中完成重连，那么 socket 会处于连接中，
         // 如果离开时间不长后再回来，有可能执行完后这行代码后 socket 就断开连接了，
         // 然后会进行 socket 重连，因此回调中获取不到在线结果，但是 rtc 也会断开，
         // rtc 断开回调中会更新在线结果
-        socket.emit('is-online', remoteRoomInfo.value.roomId)
+        _socket.emit('is-online', roomId)
       } else {
         // 如果离开时间很长，当你回来时，如果对方依然在线，会自动进行 rtc 重连，
         // 连接成功后会更新对方的在线状态，但是 socket 连接一定会断开，然后进行重连，

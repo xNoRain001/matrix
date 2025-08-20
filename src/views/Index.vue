@@ -358,8 +358,7 @@ const afterLeave = () => {
 }
 
 const initSocket = matchType => {
-  // @ts-ignore
-  socket = io.connect(import.meta.env.VITE_SOCKET_BASE_URL, {
+  socket = io(import.meta.env.VITE_SOCKET_BASE_URL, {
     reconnection: false
   })
 

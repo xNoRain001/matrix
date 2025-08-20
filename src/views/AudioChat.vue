@@ -141,6 +141,12 @@
     </template>
   </UModal>
 
+  <ModalOffline
+    :loading="loading"
+    v-model="showOfflineModal"
+    @click="onReconnect"
+  ></ModalOffline>
+
   <audio hidden ref="localAudioRef" muted></audio>
   <audio hidden ref="remoteAudioRef" autoplay></audio>
 </template>
@@ -156,44 +162,35 @@ import {
   useTemplateRef,
   watch
 } from 'vue'
-
-import type { Socket } from 'socket.io-client'
-
 import {
   useAddMediaStreamToPC,
   useBindMediaStream,
-  useBye,
   useCloseMediaStreamTracks,
   useClosePC,
-  useCreatePeerConnection,
   useGetAudioInputs,
   useGetAudioOutputs,
   useGetUserMedia,
-  useInitRtc,
-  useInitSocket,
-  useOtherJoin,
   usePauseMediaStreamTracks,
   useResumeMediaStreamTracks,
-  useJoined,
   useBeforeUnmount,
-  useMounted,
   useLeave,
   useRefreshRoomInfo,
   useVisibilityChange,
-  useNoop
+  useNoop,
+  useFixRoomInfo,
+  useExtendRoom
 } from '@/hooks'
-
 import { storeToRefs } from 'pinia'
-import { useRoomStore, useUserInfoStore } from '@/store'
+import { useRoomStore } from '@/store'
 import { updateLatestRoom } from '@/apis/latest-room'
+import useInitPC, { sharedVars } from '@/hooks/use-init-pc'
 
-const oepnModal = ref(true)
-const makingOffer = ref(false)
-const polite = ref(true)
 let cancelVisibilityChangeHandler = useNoop
 let localMediaStream: MediaStream | null = null
-let pc: RTCPeerConnection | null = null
-let socket: Socket | null = null
+const oepnModal = ref(true)
+const { online, pc, socket, showOfflineModal, loading } = sharedVars()
+const isFull = ref(false)
+const leaved = ref(false)
 const audioInputs = await useGetAudioInputs()
 const audioInputLabels = audioInputs.map(
   (item, index) => item.label || `麦克风设备 ${index}`
@@ -226,7 +223,6 @@ const {
   query: { roomId }
 } = useRoute()
 const router = useRouter()
-const online = ref(false)
 const {
   isMatch,
   remoteRoomInfo,
@@ -234,9 +230,6 @@ const {
   firstRequestRemoteRoomInfo,
   getOnlineWhenReconnection
 } = storeToRefs(useRoomStore())
-const { userInfo } = storeToRefs(useUserInfoStore())
-const _userInfo = userInfo.value
-const leaved = ref(false)
 const micOpen = ref(Boolean(audioInputLabelsLength))
 const speakerOpen = ref(Boolean(audioOutputLabelsLength))
 const hasMic = ref(!audioInputLabelsLength)
@@ -249,58 +242,37 @@ const constraints = {
     autoGainControl: true // 自动增益
   }
 }
-const isFull = ref(false)
 const toast = useToast()
-const showOfflineModal = ref(false)
-const loading = ref(false)
 const bodyRef = useTemplateRef('bodyRef')
 const closeBtn = computed(
   // @ts-ignore
   () => bodyRef.value.parentNode.previousSibling.children[0].children[1]
 )
 
-const onCancel = () => closeBtn.value.click()
-
-const initPC = async () => {
-  pc = useCreatePeerConnection(
-    '/audio-chat',
-    socket,
-    remoteRoomInfo.value,
-    online,
-    onTrack
-  )
-  await initLocalMediaStream()
-  return pc
+const onReconnect = () => {
+  loading.value = true
+  initPC()
 }
 
-const onJoined = async (_, __, _polite) =>
-  useJoined(socket, polite, remoteRoomInfo.value.roomId, initPC, _polite)
+const onCancel = () => closeBtn.value.click()
 
-const onOtherJoin = () =>
-  useOtherJoin(
-    pc,
-    socket,
-    remoteRoomInfo.value.roomId,
-    polite,
-    makingOffer,
-    initPC,
-    _userInfo
-  )
-
-// const onDisconnect = () => useDisconnect(pc)
-
-const onDisconnect = () => {
-  // 满员的情况下，不会触发 joined，此时 pc 为 null
-  useClosePC(pc)
-
+const extraDisconnectAction = () => {
   // 关闭本地媒体
   if (localMediaStream) {
     useCloseMediaStreamTracks(localMediaStream)
   }
 }
 
-const onRtc = (roomId: string, data: any) =>
-  useInitRtc(pc, socket, roomId, data, makingOffer, polite, _userInfo)
+const initPC = async () => {
+  useInitPC({
+    path: '/audio-chat',
+    onBye,
+    onTrack,
+    extraDisconnectAction,
+    initLocalMediaStream
+  })
+  useExtendRoom(socket, online, isFull)
+}
 
 const onTrack = ({ track, streams }) => {
   const remoteAudio = remoteAudioRef.value
@@ -335,8 +307,9 @@ const simpleLeave = async () => {
 }
 
 const closePCAndSocket = () => {
-  useClosePC(pc)
-  socket && socket.disconnect()
+  useClosePC(pc.value)
+  const _socket = socket.value
+  _socket && _socket.disconnect()
 }
 
 const leaveAfterConnected = async () => {
@@ -353,7 +326,7 @@ const leaveAfterConnected = async () => {
 const onLeave = async () =>
   await useLeave(
     remoteRoomInfo.value,
-    socket,
+    socket.value,
     online.value,
     leaveAfterConnected,
     simpleLeave,
@@ -362,7 +335,7 @@ const onLeave = async () =>
 
 const onBye = () => {
   remoteRoomInfo.value.showExitRoomTip = true
-  useBye(leaveAfterConnected)
+  leaveAfterConnected()
 }
 
 const updateSpeakerLabel = (label: string) => (speakerLabel.value = label)
@@ -419,7 +392,7 @@ const initLocalMediaStream = async () => {
     keepSpeakerStatus()
     // 绑定本地流
     useBindMediaStream(localAudioRef.value, localMediaStream)
-    useAddMediaStreamToPC(pc, localMediaStream)
+    useAddMediaStreamToPC(pc.value, localMediaStream)
   } catch (err) {
     console.error(err)
     console.log('未获取到用户设备')
@@ -428,36 +401,17 @@ const initLocalMediaStream = async () => {
   }
 }
 
-const initSocket = () => {
-  socket = useInitSocket(
-    onJoined,
-    onOtherJoin,
-    onDisconnect,
-    onRtc,
-    onBye,
-    remoteRoomInfo,
-    isFull,
-    showOfflineModal,
-    loading,
-    getOnlineWhenReconnection,
-    toast
-  )
-  socket.on('bye', onBye)
-
-  return socket
-}
-
 onMounted(async () => {
-  await useMounted(
+  await useFixRoomInfo(
     router,
     path,
     remoteRoomInfo,
     roomId as string,
     leaved,
     firstRequestRemoteRoomInfo,
-    initSocket,
     toast
   )
+  initPC()
   cancelVisibilityChangeHandler = useVisibilityChange(
     socket,
     showOfflineModal,
@@ -471,7 +425,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  useBeforeUnmount(socket)
+  useBeforeUnmount(socket.value)
   cancelVisibilityChangeHandler()
 })
 

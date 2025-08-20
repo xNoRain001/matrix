@@ -22,7 +22,7 @@
     </template>
     <template #content></template>
     <template #body>
-      <div class="bg-elevated rounded-xl p-4">
+      <UPageCard variant="subtle">
         <UForm
           :schema="schema"
           :state="passwordForm"
@@ -113,7 +113,7 @@
           </UFormField>
           <UButton loading-auto type="submit">修改密码</UButton>
         </UForm>
-      </div>
+      </UPageCard>
     </template>
   </UDrawer>
 </template>

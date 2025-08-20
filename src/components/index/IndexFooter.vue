@@ -30,8 +30,8 @@ const mobileNavs = [
   {
     label: '消息',
     icon: 'lucide:message-circle',
-    to: '/inbox',
-    value: '/inbox'
+    to: '/message',
+    value: '/message'
   },
   {
     label: '我的',
