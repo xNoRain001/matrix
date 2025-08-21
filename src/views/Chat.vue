@@ -11,22 +11,15 @@
     class="overflow-y-auto"
     :ui="{
       // 背景色保持一致，防止修改 top 时看到主页的 header
-      overlay: 'bg-default',
-      body: 'overflow-y-visible',
-      header: 'sticky top-0 w-full z-10 bg-default',
-      footer: 'sticky bottom-0 w-full z-10 bg-default'
+      overlay: 'bg-default'
     }"
   >
     <template #content></template>
     <template #header>
-      <RoomHeader
-        :online="online"
-        :leaved="leaved"
-        :on-click="onLeave"
-      ></RoomHeader>
+      <RoomHeader :leaved="leaved" :on-click="onLeave"></RoomHeader>
     </template>
     <template #body>
-      <div class="-mt-4 flex justify-center pb-4">
+      <div ref="bodyChildRef" class="-mt-4 flex justify-center pb-4">
         <div class="relative w-full max-w-(--room-width)">
           <MessageBody
             :message-list="messageList"
@@ -45,7 +38,7 @@
         <div v-else class="w-full max-w-(--room-width)">
           <MessageFooter
             ref="childRef"
-            :modal-ref="modalRef"
+            :body-ref="bodyRef"
             v-model:message-list="messageList"
             v-model:leaved="leaved"
             v-model:msg-stamp="msgStamp"
@@ -75,8 +68,8 @@ const isFull = ref(false)
 const toast = useToast()
 const messageList = ref<message[]>([])
 const msgStamp = ref({ sent: false, value: '' })
-const footerRef = ref(null)
-const modalRef = computed(() => footerRef.value?.parentNode?.parentNode)
+const bodyChildRef = ref(null)
+const bodyRef = computed(() => bodyChildRef.value?.parentNode)
 
 // 被动离开的一方会显示底部按钮，点击后
 const simpleLeave = async () => {

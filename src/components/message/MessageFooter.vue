@@ -164,6 +164,11 @@
     v-model="showOfflineModal"
     @click="onReconnect"
   ></ModalOffline>
+
+  <ModalCandidate
+    v-model="isContactModalOpen"
+    :socket="socket"
+  ></ModalCandidate>
 </template>
 
 <script lang="ts" setup>
@@ -182,7 +187,7 @@ import {
   useExtendFileStatus,
   useSendFile
 } from '@/hooks'
-import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch, type Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type {
   fileTypes,
@@ -203,11 +208,12 @@ import { useMediaQuery } from '@vueuse/core'
 const messageList = defineModel('message-list') as Ref<message[]>
 const leaved = defineModel('leaved') as Ref<boolean>
 const msgStamp = defineModel('msg-stamp') as any
-const { modalRef } = defineProps<{ modalRef: HTMLElement }>()
+const props = defineProps<{ tmpRoomId?: string; bodyRef?: HTMLElement }>()
 
 let db = null
 let lastMsgTimer = null
 let cancelVisibilityChangeHandler = useNoop
+const isContactModalOpen = ref(false)
 const isDesktop = useMediaQuery('(min-width: 768px)')
 // 对方是否收到了文件元信息的标识
 const message = ref('')
@@ -245,7 +251,7 @@ const sendFiles = ref<extendedFiles>([])
 
 const onReconnect = () => {
   loading.value = true
-  initPC()
+  initPC(props.tmpRoomId)
 }
 
 const onExpand = () => {
@@ -264,13 +270,13 @@ const resizeHandler = () => {
   // visualViewport.offsetTop 表示视觉视口相对于布局视口的偏移，标签栏在底部时
   // 这个值可能不准
   // TODO: 找到解决办法
-  modalRef.style.top = `${visualViewport.offsetTop}px`
+  props.bodyRef.style.top = `${visualViewport.offsetTop}px`
 }
 
 const onFocus = () => {
   expanded.value = false
   // 输入框获取焦点时，聊天列表滚动到底部
-  useScrollToBottom(modalRef)
+  useScrollToBottom(props.bodyRef)
 }
 
 const onOpenFileSelector = target => target.click()
@@ -291,7 +297,7 @@ const sendFile = async (files: extendedFiles, type: fileTypes) => {
     // 直接保存 File，取出时再转化成 Blob URL
     useAddMessageRecord(
       db,
-      modalRef,
+      props.bodyRef,
       messageRecord,
       messageList,
       msgStamp,
@@ -396,7 +402,7 @@ const onSendMsg = async () => {
 
     useAddMessageRecord(
       db,
-      modalRef,
+      props.bodyRef,
       messageRecord,
       messageList,
       msgStamp,
@@ -424,7 +430,7 @@ const leaveAfterConnected = async () => {
   // 清空房间信息
   await useClearMessages(_remoteRoomInfo.roomId)
   await updateLatestRoom()
-  useScrollToBottom(modalRef)
+  useScrollToBottom(props.bodyRef)
   leaved.value = true
   online.value = false
   otherInfo.value = null
@@ -492,7 +498,7 @@ const onReceiveMsg = ({ channel }: { channel: RTCDataChannel }) => {
 
     useAddMessageRecord(
       db,
-      modalRef,
+      props.bodyRef,
       messageRecord,
       messageList,
       msgStamp,
@@ -502,13 +508,14 @@ const onReceiveMsg = ({ channel }: { channel: RTCDataChannel }) => {
   }
 }
 
-const initPC = () => {
+const initPC = tmpRoomId => {
   useInitPC({
+    tmpRoomId: tmpRoomId,
     path: '/chat',
     onDataChannel: onReceiveMsg,
     onBye
   })
-  useExtendRoom(socket, online, isFull)
+  useExtendRoom(socket, online, isFull, isContactModalOpen, toast)
   useExtendFile(socket, remoteRoomInfo, flag, receiveStartTime, receivedFiles)
 }
 
@@ -536,6 +543,8 @@ const formatTimeAgo = timestamp => {
 }
 
 onMounted(async () => {
+  const { tmpRoomId } = props
+  // if (!tmpRoomId) {
   // 如果获取接口数据失败，返回大厅
   await useFixRoomInfo(
     router,
@@ -546,11 +555,18 @@ onMounted(async () => {
     firstRequestRemoteRoomInfo,
     toast
   )
+  // }
 
   // 如果 socket 初始化连接失败（能获取到接口数据，却无法连接 socket，
   // 这是很小概率的事），由重试机制处理
-  initPC()
-  db = await useGetMessages(messageList, lastMsgTimeStamp, remoteRoomInfo)
+  initPC(tmpRoomId)
+  db = await useGetMessages(
+    messageList,
+    lastMsgTimeStamp,
+    // props.tmpRoomId || remoteRoomInfo.value.roomId
+    remoteRoomInfo.value.roomId
+  )
+  useScrollToBottom(props.bodyRef)
   addVisualViewportListeners()
   cancelVisibilityChangeHandler = useVisibilityChange(
     socket,
@@ -574,6 +590,18 @@ onBeforeUnmount(() => {
   removeVisualViewportListeners()
   cancelVisibilityChangeHandler()
 })
+
+if (props.tmpRoomId) {
+  watch(
+    () => props.tmpRoomId,
+    async v => {
+      useClosePC(pc.value)
+      // 离开之前的房间
+      initPC(v)
+      await useGetMessages(messageList, lastMsgTimeStamp, props.tmpRoomId)
+    }
+  )
+}
 
 defineExpose({
   leaveAfterConnected

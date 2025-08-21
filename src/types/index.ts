@@ -87,3 +87,15 @@ export type dbMessage = commonMessage & {
     | [Blob, string, number, string] // Blob 文件名 大小 文件类型
     | [null, string, number, string] // 发送方不保存发送的文件到本地数据库中
 }
+
+export type user = {
+  id: string
+  profile: {
+    avatar: string
+    nickname: string
+  }
+  remark: string
+  status: 'normal' | 'blocked' | 'deleted'
+}
+
+export type users = user[]

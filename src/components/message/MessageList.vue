@@ -21,14 +21,14 @@
         @click="selectedUser = user"
       >
         <UChip inset color="error" :text="5" size="3xl">
-          <UAvatar :text="user.nickname[0]"></UAvatar>
+          <UAvatar :text="user.profile.nickname[0]"></UAvatar>
         </UChip>
 
         <div class="w-[calc(100%-4rem)]">
           <!-- :class="[user.unread && 'font-semibold']" -->
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
-              {{ user.nickname }}
+              {{ user.profile.nickname }}
 
               <UChip :color="Math.random() > 0.5 ? 'primary' : 'error'" />
             </div>
@@ -37,7 +37,7 @@
             <!-- <span>{{ isToday(new Date(user.date)) ? format(new Date(user.date), 'HH:mm') : format(new Date(user.date), 'dd MMM') }}</span> -->
           </div>
           <p class="truncate">
-            {{ user.latestMsg }}
+            <!-- {{ user.latestMsg }} -->
           </p>
         </div>
       </div>
@@ -46,16 +46,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import type { user, users } from '@/types'
+import { ref, watch, type Ref } from 'vue'
 // import { format, isToday } from 'date-fns'
 
 const props = defineProps<{
-  users: any
+  users: users
 }>()
 
 const usersRefs = ref<Element[]>([])
 
-const selectedUser = defineModel() as any
+const selectedUser = defineModel() as Ref<user>
 
 watch(selectedUser, () => {
   if (!selectedUser.value) {

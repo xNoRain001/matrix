@@ -11,11 +11,7 @@
   >
     <template #content></template>
     <template #header>
-      <RoomHeader
-        :online="online"
-        :leaved="leaved"
-        :on-click="onLeave"
-      ></RoomHeader>
+      <RoomHeader :leaved="leaved" :on-click="onLeave"></RoomHeader>
     </template>
     <template #body>
       <div
@@ -153,6 +149,11 @@
     v-model="showOfflineModal"
     @click="onReconnect"
   ></ModalOffline>
+
+  <ModalCandidate
+    v-model="isContactModalOpen"
+    :socket="socket"
+  ></ModalCandidate>
 </template>
 
 <script lang="ts" setup>
@@ -182,6 +183,7 @@ import { updateLatestRoom } from '@/apis/latest-room'
 import { useMediaQuery } from '@vueuse/core'
 import useInitPC, { sharedVars } from '@/hooks/use-init-pc'
 
+const isContactModalOpen = ref(false)
 const isDesktop = useMediaQuery('(min-width: 768px)')
 const isOpenReceivedFilesDrawer = ref(false)
 const files = ref<extendedFiles>([])
@@ -266,7 +268,7 @@ const initPC = () => {
     onDataChannel: onReceiveFile,
     onBye
   })
-  useExtendRoom(socket, online, isFull)
+  useExtendRoom(socket, online, isFull, isContactModalOpen, toast)
   useExtendFile(socket, remoteRoomInfo, flag, receiveStartTime, receivedFiles)
 }
 

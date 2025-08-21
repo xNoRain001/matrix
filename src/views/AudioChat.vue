@@ -11,11 +11,7 @@
   >
     <template #content></template>
     <template #header>
-      <RoomHeader
-        :online="online"
-        :leaved="leaved"
-        :on-click="onLeave"
-      ></RoomHeader>
+      <RoomHeader :leaved="leaved" :on-click="onLeave"></RoomHeader>
     </template>
     <template #body>
       <div
@@ -147,6 +143,11 @@
     @click="onReconnect"
   ></ModalOffline>
 
+  <ModalCandidate
+    v-model="isContactModalOpen"
+    :socket="socket"
+  ></ModalCandidate>
+
   <audio hidden ref="localAudioRef" muted></audio>
   <audio hidden ref="remoteAudioRef" autoplay></audio>
 </template>
@@ -187,6 +188,7 @@ import useInitPC, { sharedVars } from '@/hooks/use-init-pc'
 
 let cancelVisibilityChangeHandler = useNoop
 let localMediaStream: MediaStream | null = null
+const isContactModalOpen = ref(false)
 const oepnModal = ref(true)
 const { online, pc, socket, showOfflineModal, loading } = sharedVars()
 const isFull = ref(false)
@@ -271,7 +273,7 @@ const initPC = async () => {
     extraDisconnectAction,
     initLocalMediaStream
   })
-  useExtendRoom(socket, online, isFull)
+  useExtendRoom(socket, online, isFull, isContactModalOpen, toast)
 }
 
 const onTrack = ({ track, streams }) => {

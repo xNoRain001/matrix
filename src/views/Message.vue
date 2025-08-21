@@ -27,22 +27,31 @@
     <MessageList v-model="selectUser" :users="filteredUsers" />
   </UDashboardPanel>
 
-  <MessageView v-if="selectUser" v-model="selectUser"></MessageView>
-  <div v-else class="hidden flex-1 items-center justify-center lg:flex">
+  <MessageView
+    v-if="isDesktop && selectUser"
+    v-model="selectUser"
+    :tmpRoomId="tmpRoomId"
+  ></MessageView>
+  <div
+    v-if="isDesktop && !selectUser"
+    class="hidden flex-1 items-center justify-center lg:flex"
+  >
     <UIcon name="lucide:message-circle-more" class="text-dimmed size-32" />
   </div>
 
-  <MMessageView v-if="!isDesktop && selectUser"></MMessageView>
+  <MMessageView v-if="!isDesktop" v-model="selectUser"></MMessageView>
 </template>
 
 <script setup lang="ts">
 // @ts-nocheck
+import { getCandidates, getContacts } from '@/apis/contact'
 import MessageView from '@/components/message/MessageView.vue'
 import MMessageView from '@/components/message/MMessageView.vue'
 import { useSelectedUserStore } from '@/store'
+import type { users } from '@/types'
 import { useMediaQuery } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const isDesktop = useMediaQuery('(min-width: 768px)')
 const tabItems = [
@@ -56,32 +65,33 @@ const tabItems = [
   }
 ]
 const activeTab = ref('all')
-const users = ref([
-  {
-    id: 1,
-    nickname: 'Alex Smith',
-    latestMsg: 'Lorem ipsum dolor sit amet consectetur adipisicing'
-  },
-  {
-    id: 2,
-    nickname: 'Jordan Brown',
-    unread: true,
-    latestMsg:
-      'Unde, libero sit sed voluptas aperiam tempora quos delectus corrupti'
-  },
-  {
-    id: 3,
-    nickname: 'Taylor Green',
-    unread: true,
-    latestMsg:
-      'deserunt, nesciunt illum ipsam quibusdam itaque quo praesentium eaque cumque'
-  },
-  {
-    id: 4,
-    nickname: 'Morgan White',
-    latestMsg: 'dolor sit amet consectetur adipisicing'
-  }
-])
+// const users = ref([
+//   {
+//     id: 1,
+//     nickname: 'Alex Smith',
+//     latestMsg: 'Lorem ipsum dolor sit amet consectetur adipisicing'
+//   },
+//   {
+//     id: 2,
+//     nickname: 'Jordan Brown',
+//     unread: true,
+//     latestMsg:
+//       'Unde, libero sit sed voluptas aperiam tempora quos delectus corrupti'
+//   },
+//   {
+//     id: 3,
+//     nickname: 'Taylor Green',
+//     unread: true,
+//     latestMsg:
+//       'deserunt, nesciunt illum ipsam quibusdam itaque quo praesentium eaque cumque'
+//   },
+//   {
+//     id: 4,
+//     nickname: 'Morgan White',
+//     latestMsg: 'dolor sit amet consectetur adipisicing'
+//   }
+// ])
+const users = ref<users>([])
 const filteredUsers = computed(() => {
   if (activeTab.value === 'unread') {
     return users.value.filter(user => user.unread)
@@ -101,13 +111,23 @@ const isMessagePanelOpen = computed({
   }
 })
 const { globalSocket } = storeToRefs(useSelectedUserStore())
+const tmpRoomId = ref(0)
 
 // 切换消息类型时，如果当前访问的消息类型不符合该类型，取消选中该消息
-watch(filteredUsers, () => {
+watch(filteredUsers, v => {
   if (!filteredUsers.value.find(user => user.id === selectUser.value?.id)) {
     selectUser.value = null
   }
 })
 
-watch(selectUser, v => {})
+watch(selectUser, v => {
+  if (v) {
+    tmpRoomId.value = Math.random() + ''
+  }
+})
+
+onMounted(async () => {
+  const { data } = await getContacts()
+  users.value = data || []
+})
 </script>

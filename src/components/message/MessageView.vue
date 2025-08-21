@@ -1,17 +1,18 @@
 <template>
-  <UDashboardPanel id="message-2" class="">
+  <UDashboardPanel id="message-2">
     <MessageHeader
       @close="selectUser = null"
       :user="selectUser"
     ></MessageHeader>
-    <div class="relative -mt-4 overflow-y-scroll p-4">
+    <div ref="bodyRef" class="relative grow overflow-y-scroll p-4">
       <MessageBody
         :message-list="messageList"
         :msg-stamp="msgStamp"
       ></MessageBody>
     </div>
     <MessageFooter
-      :modal-ref="modalRef"
+      :body-ref="bodyRef"
+      :tmpRoomId="tmpRoomId"
       v-model:message-list="messageList"
       v-model:leaved="leaved"
       v-model:msg-stamp="msgStamp"
@@ -20,13 +21,14 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import type { message } from '@/types'
+
+defineProps<{ tmpRoomId: string }>()
 
 const selectUser = defineModel()
 const leaved = ref(false)
 const messageList = ref<message[]>([])
 const msgStamp = ref({ sent: false, value: '' })
-const footerRef = ref(null)
-const modalRef = computed(() => footerRef.value?.parentNode?.parentNode)
+const bodyRef = ref(null)
 </script>

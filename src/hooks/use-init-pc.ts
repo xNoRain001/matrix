@@ -76,12 +76,11 @@ const initDataChannel = onDataChannel => {
 }
 
 const createPeerConnection = (
-  tmpRoomId: string,
+  roomId: string,
   path: string,
   onTrack: (e: RTCTrackEvent) => any
 ) => {
   const _remoteRoomInfo = remoteRoomInfo.value
-  const { roomId } = _remoteRoomInfo
   // 创建PeerConnection 对象
   const _pc = (pc.value = new RTCPeerConnection(pcConfig))
   // 当收到 Candidate 后
@@ -93,7 +92,7 @@ const createPeerConnection = (
     }
 
     // 将 Candidate 发送给对端
-    socket.value.emit('rtc', tmpRoomId || roomId, { candidate })
+    socket.value.emit('rtc', roomId, { candidate })
   }
 
   // 当 PeerConnection 对象收到远端音视频流时，会触发 ontrack 事件
@@ -118,7 +117,7 @@ const createPeerConnection = (
       console.log('rct connected...')
       online.value = true
 
-      if (tmpRoomId) {
+      if (roomId !== remoteRoomInfo.value.roomId) {
         return
       }
 
@@ -146,13 +145,13 @@ const createPeerConnection = (
 }
 
 const initPC = (
-  tmpRoomId: string,
+  roomId: string,
   path,
   onDataChannel,
   onTrack,
   initLocalMediaStream
 ) => {
-  createPeerConnection(tmpRoomId, path, onTrack)
+  createPeerConnection(roomId, path, onTrack)
 
   if (onDataChannel) {
     initDataChannel(onDataChannel)
@@ -161,11 +160,11 @@ const initPC = (
   }
 }
 
-const startRTC = async () => {
+const startRTC = async roomId => {
   const _pc = pc.value
   const offer = await _pc.createOffer()
   await _pc.setLocalDescription(offer)
-  socket.value.emit('rtc', remoteRoomInfo.value.roomId, {
+  socket.value.emit('rtc', roomId, {
     description: offer,
     otherInfo: userInfo.value
   })
@@ -178,10 +177,9 @@ const closePC = () => {
   }
 }
 
-const onConnect = onBye => {
+const onConnect = (roomId, onBye) => {
   // 第一时间发送 join，方便之后获取在线状态
   const _socket = socket.value
-  const { roomId } = remoteRoomInfo.value
   _socket.emit('join', roomId)
 
   if (!firstConnectionSuccess) {
@@ -205,7 +203,7 @@ const onConnect = onBye => {
 
 const onJoined = async (
   _polite: boolean,
-  tmpRoomId: string,
+  roomId: string,
   path,
   onDataChannel,
   onTrack,
@@ -215,14 +213,14 @@ const onJoined = async (
 
   // 如果你是后面加入的，在这里初始化 pc
   if (!polite) {
-    initPC(tmpRoomId, path, onDataChannel, onTrack, initLocalMediaStream)
+    initPC(roomId, path, onDataChannel, onTrack, initLocalMediaStream)
     // 初始化完成后通知对方发起连接
-    socket.value.emit('otherjoin', remoteRoomInfo.value.roomId)
+    socket.value.emit('otherjoin', roomId)
   }
 }
 
 const onOtherJoin = async (
-  tmpRoomId: string,
+  roomId: string,
   path,
   onDataChannel,
   onTrack,
@@ -230,11 +228,11 @@ const onOtherJoin = async (
 ) => {
   polite = true
   closePC()
-  initPC(tmpRoomId, path, onDataChannel, onTrack, initLocalMediaStream)
+  initPC(roomId, path, onDataChannel, onTrack, initLocalMediaStream)
 
   try {
     makingOffer = true
-    await startRTC()
+    await startRTC(roomId)
   } catch (err) {
     console.error(err)
   } finally {
@@ -250,13 +248,16 @@ const onDisconnect = () => {
 }
 
 const onRtc: (
-  _: string,
+  roomId: string,
   data: {
     description?: RTCSessionDescriptionInit
     candidate?: RTCIceCandidate
     otherInfo?: userInfo
   }
-) => void = async (_, { description, candidate, otherInfo: _otherInfo }) => {
+) => void = async (
+  roomId,
+  { description, candidate, otherInfo: _otherInfo }
+) => {
   const _pc = pc.value
 
   if (description) {
@@ -277,7 +278,7 @@ const onRtc: (
 
       if (type === 'offer') {
         await _pc.setLocalDescription()
-        socket.value.emit('rtc', remoteRoomInfo.value.roomId, {
+        socket.value.emit('rtc', roomId, {
           description: _pc.localDescription,
           otherInfo: userInfo.value
         })
@@ -360,22 +361,16 @@ const useInitPC = async ({
   const _socket = (socket.value = io(import.meta.env.VITE_SOCKET_BASE_URL, {
     reconnectionAttempts: maxReconnectionAttempts
   }))
+  const roomId = tmpRoomId || remoteRoomInfo.value.roomId
 
-  _socket.on('connect', () => onConnect(onBye))
+  _socket.on('connect', () => onConnect(roomId, onBye))
   // 自己成功加入房间
   _socket.on('joined', (_, __, polite) =>
-    onJoined(
-      polite,
-      tmpRoomId,
-      path,
-      onDataChannel,
-      onTrack,
-      initLocalMediaStream
-    )
+    onJoined(polite, roomId, path, onDataChannel, onTrack, initLocalMediaStream)
   )
   // 其他人加入房间
   _socket.on('otherjoin', () =>
-    onOtherJoin(tmpRoomId, path, onDataChannel, onTrack, initLocalMediaStream)
+    onOtherJoin(roomId, path, onDataChannel, onTrack, initLocalMediaStream)
   )
   // 自己离开房间
   // _socket.on('leaved', onLeaved)
@@ -386,7 +381,7 @@ const useInitPC = async ({
     onDisconnect()
     extraDisconnectAction && extraDisconnectAction()
   })
-  _socket.on('rtc', onRtc)
+  _socket.on('rtc', (_, data) => onRtc(roomId, data))
   // 其他人离开房间
   _socket.on('bye', onBye)
 }
