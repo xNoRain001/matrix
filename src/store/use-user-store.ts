@@ -1,9 +1,9 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-
+import type { Socket } from 'socket.io-client'
 import type { userInfo } from '@/types'
 
-const useUserInfoStore = defineStore('userInfoStore', () => {
+const useUserStore = defineStore('userStore', () => {
   let userInfo = null
 
   try {
@@ -23,12 +23,15 @@ const useUserInfoStore = defineStore('userInfoStore', () => {
       )
     ).data
   } catch {
-    userInfo = null
     // 没有 token 或者 token 被篡改
     localStorage.removeItem('token')
   }
 
-  return { userInfo: ref<userInfo>(userInfo) }
+  return {
+    globalSocket: ref<Socket | null>(null),
+    globalPC: ref<RTCPeerConnection | null>(null),
+    userInfo: ref<userInfo | null>(userInfo)
+  }
 })
 
-export default useUserInfoStore
+export default useUserStore

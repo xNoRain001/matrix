@@ -246,7 +246,7 @@
 import { watch, reactive, ref } from 'vue'
 import { useEncryptUserInfo } from '@/hooks'
 import { useRouter } from 'vue-router'
-import { useUserInfoStore } from '@/store'
+import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import {
   hasPin,
@@ -303,7 +303,7 @@ const resetPasswordForm = reactive({ email: '' })
 const isLogin = ref(true)
 const isRegister = ref(false)
 const router = useRouter()
-const { userInfo } = storeToRefs(useUserInfoStore())
+const { userInfo } = storeToRefs(useUserStore())
 const isResetPassword = ref(false)
 const isLoginWithVC = ref(false)
 const isPwd = ref(true)

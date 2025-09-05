@@ -124,7 +124,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useUserInfoStore } from '@/store'
+import { useUserStore } from '@/store'
 import { watch } from 'vue'
 import { provinceCityMap } from '@/const'
 import { updateProfile } from '@/apis/user'
@@ -132,7 +132,7 @@ import { vMaska } from 'maska/vue'
 
 const toast = useToast()
 // const fileRef = ref<HTMLInputElement>()
-const { userInfo } = storeToRefs(useUserInfoStore())
+const { userInfo } = storeToRefs(useUserStore())
 const userInfoForm = ref({ ...userInfo.value })
 const { region } = userInfo.value
 const [_province, _city] =

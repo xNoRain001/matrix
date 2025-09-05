@@ -23,8 +23,9 @@
 </template>
 
 <script lang="ts" setup>
+// @ts-nocheck
 import { agreeCandidate, refuseCandidate } from '@/apis/contact'
-import { useRoomStore } from '@/store'
+import { useMatchStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
 
@@ -32,14 +33,14 @@ const isContactModalOpen = defineModel() as Ref<boolean>
 const props = defineProps<{
   socket
 }>()
-const { remoteRoomInfo, otherInfo } = storeToRefs(useRoomStore())
+const { remoteRoomInfo, otherInfo } = storeToRefs(useMatchStore())
 const toast = useToast()
 
 const onRefuseCandidate = async () => {
   try {
     await refuseCandidate(otherInfo.value.id)
     isContactModalOpen.value = false
-    props.socket.emit('refuse-add-contact', remoteRoomInfo.value.roomId)
+    props.socket.emit('refuse-contact', remoteRoomInfo.value.roomId)
   } catch (error) {
     toast.add({ title: error.message, color: 'error' })
   } finally {
@@ -51,7 +52,7 @@ const onAgreeCandidate = async () => {
   try {
     await agreeCandidate(otherInfo.value.id)
     toast.add({ title: '添加好友成功', color: 'success' })
-    props.socket.emit('agree-add-contact', remoteRoomInfo.value.roomId)
+    props.socket.emit('agree-contact', remoteRoomInfo.value.roomId)
   } catch (error) {
     toast.add({ title: error.message, color: 'error' })
   } finally {

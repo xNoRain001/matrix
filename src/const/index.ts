@@ -3,6 +3,9 @@ export const sending = '传送中...'
 export const sent = '传送完成...'
 export const receiving = '接收中...'
 export const received = '接收完成...'
+export const voiceChatInviteToastPendingTime = 15000 // 发起方持续 15 s
+export const voiceChatInviteToastExpireTime = 13000 // 接收方持续 13 s
+
 const radius = localStorage.getItem('nuxt-ui-radius')
 export const appConfig = {
   theme: {

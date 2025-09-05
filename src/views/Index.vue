@@ -8,24 +8,18 @@
     <template #body>
       <div class="flex items-center gap-4">
         <UButton
-          :disabled="!isMatch"
           @click="isOpenFilterDrawer = true"
           icon="lucide:filter"
           color="neutral"
           variant="ghost"
           :ui="{ leadingIcon: 'text-primary', label: 'font-semibold' }"
         ></UButton>
-        <USwitch
-          v-model="isMatch"
-          :ui="{ label: 'font-semibold' }"
-          label="匹配"
-        />
       </div>
       <!-- class="from-primary/10 to-default bg-gradient-to-tl from-5%" -->
       <UPageCard
         v-for="({ icon, title, desc, matchType, to }, index) in list"
         :key="index"
-        @click="onClick(matchType, to)"
+        @click="onMatch(matchType, to)"
         :title="title"
         :description="desc"
         :icon="icon"
@@ -40,28 +34,7 @@
   </UDashboardPanel>
 
   <UModal
-    v-if="!isMatch"
-    v-model:open="isOpenRoomDrawer"
-    :overlay="false"
-    fullscreen
-    title="房间"
-    description=" "
-  >
-    <template #body>
-      <div class="flex h-full items-center justify-center">
-        <UPinInput
-          :disabled="firstRequestRemoteRoomInfo"
-          :length="pinLength"
-          autofocus
-          v-model="pin"
-        ></UPinInput>
-      </div>
-    </template>
-  </UModal>
-
-  <UModal
-    v-else
-    v-model:open="isOpenMatchDrawer"
+    v-model:open="matching"
     :overlay="false"
     fullscreen
     title="匹配"
@@ -77,7 +50,6 @@
           icon="lucide:wifi-off"
           label="重新匹配"
         ></UButton>
-        <UButton v-else-if="pause" label="继续匹配" @click="rematch"></UButton>
         <div v-else class="flex flex-col items-center text-sm">
           <UIcon
             name="lucide:loader-pinwheel"
@@ -208,22 +180,15 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, reactive } from 'vue'
+import { computed, reactive, ref, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useScrollToTop } from '@/hooks'
-import { useRoomStore } from '@/store'
+import { useMatchStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { ref, watch, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { io } from 'socket.io-client'
-import { getLatestRoom, isExitRoom } from '@/apis/latest-room'
 import { createReusableTemplate, useMediaQuery } from '@vueuse/core'
 import { provinceCityMap } from '@/const'
 
-let socket = null
-let target = ''
 let matchType = ''
-let timer = null
 const [DefineFilterBodyTemplate, ReuseFilterBodyTemplate] =
   createReusableTemplate()
 const isDesktop = useMediaQuery('(min-width: 768px)')
@@ -233,60 +198,26 @@ const list = [
     title: '即时聊天',
     desc: '端到端加密，不留痕迹的安全对话',
     matchType: 'chat',
-    to: `/chat`
+    to: '/chat'
   },
   {
     icon: 'lucide:phone',
     title: '语音聊天',
     desc: '高清音质，实时畅聊无延迟',
-    matchType: 'audio-chat',
-    to: `/audio-chat`
-  },
-  {
-    icon: 'lucide:file',
-    title: '文件传输',
-    desc: '文件高速传输，极速分享体验',
-    matchType: 'file-transfer',
-    to: `/file-transfer`
+    matchType: 'voice-chat',
+    to: '/voice-chat'
   },
   {
     icon: 'lucide:video',
     title: '视频聊天',
     desc: '开发中...',
-    to: `/`
-  },
-  {
-    icon: 'lucide:monitor',
-    title: '屏幕共享',
-    desc: '开发中...',
-    to: `/`
-  },
-  {
-    icon: 'lucide:pencil',
-    title: '多人绘画',
-    desc: '开发中...',
-    to: `/`
-  },
-  {
-    icon: 'lucide:videotape',
-    title: '实时投票',
-    desc: '开发中...',
-    to: `/`
+    to: '/'
   }
 ]
-const pin = ref([])
-const pinLength = 4
-const isOpenRoomDrawer = ref(false)
-const isOpenMatchDrawer = ref(false)
 const isOpenFilterDrawer = ref(false)
-const router = useRouter()
-const { isMatch, remoteRoomInfo, firstRequestRemoteRoomInfo } =
-  storeToRefs(useRoomStore())
+const { hasMatchRes, offline, matching, noMatch } = storeToRefs(useMatchStore())
+const { userInfo, globalSocket } = storeToRefs(useUserStore())
 const toast = useToast()
-const pause = ref(false)
-const noMatch = ref(false)
-const offline = ref(false)
-const leave = ref(false)
 const route = useRoute()
 const showCards = computed(() => route.path === '/')
 const selectedGender = ref('other')
@@ -348,138 +279,41 @@ const onSelectGender = gender => {
   selectedGender.value = gender
 }
 
-// 关闭 modal 时需要断开 socket 连接，否则会造成自己匹配到自己
 const afterLeave = () => {
-  leave.value = true
-  pause.value = false
+  // 匹配成功时服务器中会将双方从匹配池中清除，这里不需要再次处理
+  if (!hasMatchRes.value) {
+    globalSocket.value.emit('exit-match', matchType)
+  }
+
+  hasMatchRes.value = false
   offline.value = false
   noMatch.value = false
-  socket && socket.disconnect()
 }
 
-const initSocket = matchType => {
-  socket = io(import.meta.env.VITE_SOCKET_BASE_URL, {
-    reconnection: false
-  })
-
-  // socket.on('connect', () => {})
-  // 如果匹配中突然断网，需要很久才会触发 disconnect 回调，之后会去重试，重试时如果
-  // 失败触发 connect_error 回调
-  socket.on('disconnect', () => {
-    // 匹配成功时会跳转路由，关闭 modal，断开 socket 连接
-    // 只写 !leave.value 会出现匹配成功时出现连接服务器失败提示
-    if (!leave.value && !pause.value) {
-      offline.value = true
-      toast.add({
-        title: '连接服务器失败...',
-        color: 'error'
-      })
-    }
-  })
-
-  socket.on('matched', data => {
-    const { type, message } = data
-
-    if (type === 'fail') {
-      noMatch.value = true
-
-      // 不需要重新发送匹配，因为仍在匹配列表中
-      timer = setTimeout(() => {
-        noMatch.value = false
-        clearTimeout(timer)
-      }, 2000)
-    } else if (type === 'suc') {
-      // 可能出现未匹配到对方，等待再次匹配的过程中被别人给匹配到了
-      clearTimeout(timer)
-      const _remoteRoomInfo = remoteRoomInfo.value
-      _remoteRoomInfo.roomId = message
-      pause.value = true
-      // 手动断开连接，虽然服务器中已经标记该 socket 已匹配并从匹配列表中移除了
-      socket.disconnect()
-      router.replace({ path: target, query: { roomId: message } })
-      // 不需要从匹配列表中移除，因为服务器在匹配成功时会自动将你从匹配列表中移除
-    }
-  })
-  socket.emit('joinmatch', matchType)
-  socket.emit('match', matchType)
+const startMatch = () => {
+  matching.value = true
+  const t = { ...userInfo.value }
+  delete t.tokenVersion
+  const socket = globalSocket.value
+  socket.emit('join-match', matchType, t)
+  socket.emit('start-match', matchType)
 }
 
+// 当匹配时断网会出现重新匹配按钮，点击执行这个函数
 const rematch = () => {
-  noMatch.value = false
   offline.value = false
-  pause.value = false
-  initSocket(matchType)
+  hasMatchRes.value = false
+  startMatch()
 }
 
-const onClick = async (_matchType, to) => {
-  target = to
+const onMatch = async (_matchType, to) => {
+  if (to === '/') {
+    return
+  }
+
   matchType = _matchType
-  const _isMatch = isMatch.value
-
-  // 先打开 modal，否则会造成页面卡顿的样子
-  if (_isMatch) {
-    isOpenMatchDrawer.value = true
-  } else {
-    isOpenRoomDrawer.value = true
-  }
-
-  firstRequestRemoteRoomInfo.value = false
-
-  // 不需要每次都请求房间信息，只在页面首次加载时请求，因为房间信息会随着操作而更新
-  if (firstRequestRemoteRoomInfo.value) {
-    try {
-      const latestRoomInfo = (await getLatestRoom()).data
-      // 如果之前从没参与过匹配， latestRoomInfo 值为 null，
-      const latestId = latestRoomInfo?.latestId
-
-      // 如果 latestId 有值，说明自身还没离开房间
-      if (latestId) {
-        remoteRoomInfo.value = latestRoomInfo
-        // 判断对方是否离开房间
-        const isExit = (await isExitRoom(latestId)).data
-        const _remoteRoomInfo = remoteRoomInfo.value
-        _remoteRoomInfo.inRoom = latestId && !isExit
-        firstRequestRemoteRoomInfo.value = false
-        // 需要更新 pause，否则进入房间后，退出房间时回到匹配页面，会显示正在匹配中，
-        // 实际上根本没进行匹配，通过开启 pause 让用户点击按钮进行匹配
-        pause.value = true
-
-        return router.replace({
-          path: _remoteRoomInfo.path,
-          query: { roomId: _remoteRoomInfo.roomId }
-        })
-      }
-
-      firstRequestRemoteRoomInfo.value = false
-    } catch (error) {
-      toast.add({ title: error.message, color: 'error' })
-
-      if (_isMatch) {
-        isOpenMatchDrawer.value = false
-      } else {
-        isOpenRoomDrawer.value = false
-      }
-      return
-    }
-  }
-
-  if (_isMatch) {
-    initSocket(matchType)
-  }
+  startMatch()
 }
-
-watch(pin, v => {
-  const s = v.join('')
-
-  if (s.length === pinLength) {
-    const roomId = `${matchType}-${s}`
-    const _remoteRoomInfo = remoteRoomInfo.value
-    _remoteRoomInfo.roomId = roomId
-    // TODO: 修复返回时最后一位数字依然存在
-    pin.value.length = 0
-    router.replace({ path: target, query: { roomId } })
-  }
-})
 
 watch(province, v => {
   cityOptions.value = provinceCityMap[v]

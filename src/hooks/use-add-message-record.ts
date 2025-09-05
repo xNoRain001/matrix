@@ -1,24 +1,25 @@
-import useScrollToBottom from './use-scroll-to-bottom'
+import useGetDB from './use-get-db'
+// import useScrollToBottom from './use-scroll-to-bottom'
 
 const minute = 60 * 1000
 const fiveMins = 5 * minute
 
 const addMessageToDB = async (db, message) => await db.add('messages', message)
 
-const overFiveMins = (timestamp, lastMsgTimeStamp) =>
-  timestamp - lastMsgTimeStamp.value > fiveMins
+const overFiveMins = (timestamp, lastMsgInfo) =>
+  timestamp - lastMsgInfo.value.timestamp > fiveMins
 
 const addMessageLabelToDB = async (
   db,
   timestamp: number,
-  lastMsgTimeStamp,
-  remoteRoomInfo
+  lastMsgInfo,
+  targetId
 ) => {
-  const hasLabel = overFiveMins(timestamp, lastMsgTimeStamp)
+  const hasLabel = overFiveMins(timestamp, lastMsgInfo)
 
   if (hasLabel) {
     await addMessageToDB(db, {
-      roomId: remoteRoomInfo.value.roomId,
+      contact: targetId,
       type: 'label',
       timestamp
     })
@@ -32,15 +33,15 @@ const addMessageLabelToDB = async (
 const addMessagesToDB = async (
   db,
   messageRecord,
-  lastMsgTimeStamp,
+  lastMsgInfo,
   messageList,
-  remoteRoomInfo
+  targetId
 ) => {
   const hasLabel = await addMessageLabelToDB(
     db,
     messageRecord.timestamp,
-    lastMsgTimeStamp,
-    remoteRoomInfo
+    lastMsgInfo,
+    targetId
   )
 
   if (hasLabel) {
@@ -56,7 +57,7 @@ const addMessagesToDB = async (
   }
 
   await addMessageToDB(db, {
-    roomId: remoteRoomInfo.value.roomId,
+    targetId,
     ...messageRecord
   })
 }
@@ -64,81 +65,57 @@ const addMessagesToDB = async (
 const addMessageLabelToView = (
   messageRecord,
   messageList,
-  lastMsgTimeStamp,
-  remoteRoomInfo
+  lastMsgInfo,
+  targetId
 ) => {
   const { timestamp } = messageRecord
 
-  if (overFiveMins(timestamp, lastMsgTimeStamp)) {
+  if (overFiveMins(timestamp, lastMsgInfo)) {
     messageList.value.push({
-      roomId: remoteRoomInfo.value.roomId,
+      targetId,
       type: 'label',
       timestamp
     })
   }
-
-  lastMsgTimeStamp.value = timestamp
 }
 
-const addMessageToView = (messageRecord, messageList, msgStamp, modalRef) => {
+const addMessageToView = (messageRecord, messageList, lastMsgInfo) => {
   const _messageList = messageList.value
-  const { content } = messageRecord
+  // const { content } = messageRecord
 
   // content.length > 1 说明不是 message 或 label
   // content[0] !== null 说明是接收方
-  if (content.length > 1 && content[0] !== null) {
-    messageRecord.content[0] = URL.createObjectURL(
-      messageRecord.content[0] as Blob
-    )
-  }
+  // if (content.length > 1 && content[0] !== null) {
+  //   messageRecord.content[0] = URL.createObjectURL(
+  //     messageRecord.content[0] as Blob
+  //   )
+  // }
 
   _messageList.push(messageRecord)
-  msgStamp.value.value = ''
-  useScrollToBottom(modalRef)
+  lastMsgInfo.value.timestamp = messageRecord.timestamp
+  lastMsgInfo.value.value = ''
 }
 
 const addMessagesToView = (
-  modalRef,
   messageRecord,
   messageList,
-  msgStamp,
-  lastMsgTimeStamp,
-  remoteRoomInfo
+  lastMsgInfo,
+  targetId
 ) => {
-  addMessageLabelToView(
-    messageRecord,
-    messageList,
-    lastMsgTimeStamp,
-    remoteRoomInfo
-  )
-  addMessageToView(messageRecord, messageList, msgStamp, modalRef)
+  addMessageLabelToView(messageRecord, messageList, lastMsgInfo, targetId)
+  addMessageToView(messageRecord, messageList, lastMsgInfo)
 }
 
 const useAddMessageRecord = async (
-  db,
-  modalRef,
   messageRecord,
   messageList,
-  msgStamp,
-  lastMsgTimeStamp,
-  remoteRoomInfo
+  lastMsgInfo,
+  targetId
 ) => {
+  const db = await useGetDB()
   // 本地记录中会将 blob 转为 url，因为必须先保存记录进数据库
-  await addMessagesToDB(
-    db,
-    messageRecord,
-    lastMsgTimeStamp,
-    messageList,
-    remoteRoomInfo
-  )
-  addMessagesToView(
-    modalRef,
-    messageRecord,
-    messageList,
-    msgStamp,
-    lastMsgTimeStamp,
-    remoteRoomInfo
-  )
+  await addMessagesToDB(db, messageRecord, lastMsgInfo, messageList, targetId)
+  addMessagesToView(messageRecord, messageList, lastMsgInfo, targetId)
 }
 
 export default useAddMessageRecord

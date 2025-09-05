@@ -1,5 +1,9 @@
 <template>
-  <USlideover v-model:open="isNotificationsSlideoverOpen" title="Notifications">
+  <USlideover
+    v-model:open="isNotificationsSlideoverOpen"
+    title="Notifications"
+    description=" "
+  >
     <template #body>
       <div
         v-for="notification in notifications"
@@ -40,8 +44,35 @@ import { getCandidates } from '@/apis/contact'
 
 const { isNotificationsSlideoverOpen } = useDashboard()
 const notifications = ref([])
+const toast = useToast()
+
+const _initNotifications = async () => {
+  try {
+    const { data } = await getCandidates()
+    localStorage.setItem('notifications', JSON.stringify(data))
+    notifications.value = data
+  } catch (error) {
+    toast.add({ title: error.message, color: 'error' })
+  }
+}
+
+const initNotifications = () => {
+  const localNotifications = localStorage.getItem('notifications')
+
+  if (!localNotifications) {
+    _initNotifications()
+  } else {
+    try {
+      notifications.value = JSON.parse(localNotifications)
+    } catch (error) {
+      // 数据被修改，重新从接口获取
+      localStorage.removeItem('notifications')
+      _initNotifications()
+    }
+  }
+}
 
 onMounted(async () => {
-  notifications.value = (await getCandidates()).data
+  initNotifications()
 })
 </script>

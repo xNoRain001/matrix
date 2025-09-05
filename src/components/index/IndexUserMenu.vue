@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
 import { neutralColors, primaryColors, radiuses } from '@/const'
-import { useUserInfoStore } from '@/store'
+import { useUserStore } from '@/store'
 import type { DropdownMenuItem } from '@nuxt/ui'
 import { useColorMode, useMediaQuery } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
@@ -57,7 +57,7 @@ const logoutModal = overlay.create(ModalLogout)
 const logoutDrawer = overlay.create(DrawerLogout)
 const { store } = useColorMode()
 const appConfig = reactive(_appConfig)
-const { userInfo } = storeToRefs(useUserInfoStore())
+const { userInfo } = storeToRefs(useUserStore())
 const user = ref({
   name: userInfo.value.nickname,
   avatar: {

@@ -1,8 +1,9 @@
-import { useUserInfoStore } from '@/store'
+import { useUserStore } from '@/store'
 
 const useLogout = () => {
   localStorage.removeItem('token')
-  useUserInfoStore().userInfo = null
+  localStorage.removeItem('contacts')
+  useUserStore().userInfo = null
 }
 
 export default useLogout

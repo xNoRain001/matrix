@@ -1,34 +1,446 @@
 <template>
   <UDashboardPanel id="message-2">
     <MessageHeader
-      @close="selectUser = null"
-      :user="selectUser"
+      @close="emits('close')"
+      :target-id="targetId"
+      :is-match="isMatch"
     ></MessageHeader>
-    <div ref="bodyRef" class="relative grow overflow-y-scroll p-4">
-      <MessageBody
-        :message-list="messageList"
-        :msg-stamp="msgStamp"
-      ></MessageBody>
+    <!-- body -->
+    <div ref="bodyRef" class="grow overflow-y-auto px-4 pt-4 pb-8 sm:px-6">
+      <div class="relative">
+        <div
+          v-for="(
+            { separator, type, timestamp, content, sent }, index
+          ) in messageList"
+          :key="index"
+        >
+          <div v-if="type === 'label'" class="mt-4 text-center text-sm">
+            {{ formatTimestamp(timestamp) }}
+          </div>
+          <div v-else-if="type === 'text'">
+            <div
+              :class="separator ? 'mt-4' : 'mt-1'"
+              v-if="sent"
+              class="flex items-center justify-end gap-3"
+            >
+              <div
+                class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2 break-words whitespace-pre-wrap"
+              >
+                {{ content }}
+              </div>
+              <UAvatar
+                v-if="separator"
+                :text="userInfo.nickname[0] || ''"
+                size="md"
+              />
+              <div v-else class="h-8 w-8"></div>
+            </div>
+            <div
+              v-else
+              :class="separator ? 'mt-4' : 'mt-1'"
+              class="flex items-center gap-3"
+            >
+              <UAvatar v-if="separator" :text="targetNickname" size="md" />
+              <div v-else class="w-8"></div>
+              <div
+                class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2 break-words whitespace-pre-wrap"
+              >
+                {{ content }}
+              </div>
+            </div>
+          </div>
+          <div v-else-if="type === 'image'">
+            <div
+              :class="separator ? 'mt-4' : 'mt-1'"
+              v-if="sent"
+              class="flex items-center justify-end gap-3"
+            >
+              <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
+                <img :src="content" />
+              </div>
+              <UAvatar
+                v-if="separator"
+                :text="userInfo.nickname[0] || ''"
+                size="md"
+              />
+              <div v-else class="h-8 w-8"></div>
+            </div>
+            <div
+              v-else
+              :class="separator ? 'mt-4' : 'mt-1'"
+              class="flex items-center gap-3"
+            >
+              <UAvatar v-if="separator" :text="targetNickname" size="md" />
+              <div v-else class="w-8"></div>
+              <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
+                <img :src="content" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          v-if="lastMsgInfo.value"
+          class="absolute -bottom-5 text-xs"
+          :class="lastMsgInfo.sent ? 'right-11' : 'left-11'"
+        >
+          {{ lastMsgInfo.value }}
+        </div>
+      </div>
     </div>
-    <MessageFooter
-      :body-ref="bodyRef"
-      :tmpRoomId="tmpRoomId"
-      v-model:message-list="messageList"
-      v-model:leaved="leaved"
-      v-model:msg-stamp="msgStamp"
-    ></MessageFooter>
+    <!-- footer -->
+    <UPageCard v-if="isDesktop" variant="subtle" :ui="{ container: '!p-4' }">
+      <UTextarea
+        placeholder="Ctrl + Enter 换行"
+        @keydown.enter.prevent="onKeydown"
+        enterkeyhint="send"
+        class="relative w-full"
+        v-model="message"
+        :rows="3"
+        :maxrows="3"
+        autoresize
+        variant="none"
+        :ui="{ base: 'p-0' }"
+      >
+      </UTextarea>
+
+      <div class="flex justify-between">
+        <div class="space-x-3">
+          <UTooltip text="表情">
+            <UButton variant="ghost" icon="lucide:smile"></UButton>
+          </UTooltip>
+          <UTooltip text="图片">
+            <UButton
+              variant="ghost"
+              icon="lucide:file-image"
+              @click="onOpenFileSelector(photoInputRef)"
+            ></UButton>
+          </UTooltip>
+          <UTooltip text="语音">
+            <UButton
+              variant="ghost"
+              icon="lucide:phone"
+              @click="onCall"
+            ></UButton>
+          </UTooltip>
+        </div>
+        <UButton @click="onSendMsg" icon="lucide:send" label="发送"></UButton>
+      </div>
+    </UPageCard>
+    <div class="p-4" v-else>
+      <div class="flex items-end gap-2">
+        <UButton variant="ghost" color="neutral" icon="lucide:mic"></UButton>
+        <UTextarea
+          @keydown.enter.prevent="onSendMsg"
+          @focus="onFocus"
+          enterkeyhint="send"
+          class="grow"
+          v-model="message"
+          :rows="1"
+          :maxrows="9"
+          autoresize
+        />
+        <UButton variant="ghost" color="neutral" icon="lucide:smile"></UButton>
+        <UButton
+          variant="ghost"
+          color="neutral"
+          :icon="expanded ? 'lucide:circle-x' : 'lucide:circle-plus'"
+          @click="onExpand"
+        ></UButton>
+      </div>
+      <UCollapsible v-model:open="expanded">
+        <template #content>
+          <div class="mt-4 grid grid-cols-4 gap-y-4 p-4">
+            <div class="flex flex-col items-center">
+              <UButton
+                color="neutral"
+                icon="lucide:file-image"
+                @click="onOpenFileSelector(photoInputRef)"
+              ></UButton>
+              <div class="mt-2 text-xs">图片</div>
+            </div>
+            <div class="flex flex-col items-center">
+              <UButton
+                color="neutral"
+                icon="lucide:phone"
+                @click="onCall"
+              ></UButton>
+              <div class="mt-2 text-xs">语音</div>
+            </div>
+          </div>
+        </template>
+      </UCollapsible>
+    </div>
+
+    <input
+      ref="photoInputRef"
+      @change="onPhotoInputChange"
+      type="file"
+      hidden
+      multiple
+      accept="image/*"
+    />
   </UDashboardPanel>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import {
+  useScrollToBottom,
+  useAddLastMsgToDB,
+  useGetMessages,
+  useAddLastMsg,
+  useAddMessageRecord,
+  useGenRoomId
+} from '@/hooks'
+import {
+  useMatchStore,
+  useRecentContactsStore,
+  useUserStore,
+  useWebRTCStore
+} from '@/store'
+import { storeToRefs } from 'pinia'
+import { onBeforeUnmount, onMounted, ref, computed } from 'vue'
 import type { message } from '@/types'
+import { useMediaQuery } from '@vueuse/core'
+import { voiceChatInviteToastPendingTime } from '@/const'
 
-defineProps<{ tmpRoomId: string }>()
-
-const selectUser = defineModel()
-const leaved = ref(false)
-const messageList = ref<message[]>([])
-const msgStamp = ref({ sent: false, value: '' })
+let lastMsgTimer = null
+const props = withDefaults(
+  defineProps<{ targetId: string; isMatch?: boolean }>(),
+  {
+    isMatch: false
+  }
+)
+const emits = defineEmits(['close'])
 const bodyRef = ref(null)
+const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
+  // year: 'numeric',
+  // month: 'long',
+  // day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  weekday: 'long'
+}
+const isDesktop = useMediaQuery('(min-width: 768px)')
+// 对方是否收到了文件元信息的标识
+const message = ref('')
+const { messageList, lastMsgInfo, lastMsgMap, lastMsgList } = storeToRefs(
+  useRecentContactsStore()
+)
+const { isVoiceChatModalOpen, roomId, leaveRoomTimer, isVoiceChatMatch } =
+  storeToRefs(useWebRTCStore())
+const { globalSocket, userInfo } = storeToRefs(useUserStore())
+const { matchRes } = storeToRefs(useMatchStore())
+const targetNickname = computed(() =>
+  props.isMatch
+    ? matchRes.value.nickname[0]
+    : lastMsgMap.value[props.targetId].nickname[0]
+)
+const minute = 60 * 1000
+const hour = 60 * minute
+const day = 24 * hour
+const toast = useToast()
+const isIOS = /iPhone/i.test(navigator.userAgent)
+const photoInputRef = ref<HTMLInputElement | null>(null)
+const expanded = ref(false)
+
+// const onDownload = (url, filename) => {
+//   fetch(url)
+//     .then(res => res.blob())
+//     .then(blob => useExportFile(filename, blob))
+// }
+
+const formatTimestamp = (timestamp: number) => {
+  // TODO: 更久远的记录显示日期甚至年份
+  return new Date(timestamp).toLocaleString('zh-CN', dateTimeFormatOptions)
+}
+
+const onCall = () => {
+  if (roomId.value) {
+    toast.add({
+      title: '当前正在语音中',
+      color: 'error'
+    })
+    return
+  }
+
+  isVoiceChatMatch.value = false
+
+  const { targetId } = props
+  const _roomId = (roomId.value = useGenRoomId(userInfo.value.id, targetId))
+  globalSocket.value.emit(
+    'unidirectional-web-rtc',
+    _roomId,
+    userInfo.value.nickname,
+    targetId
+  )
+  leaveRoomTimer.value = setTimeout(() => {
+    globalSocket.value.emit('leave', roomId.value)
+    isVoiceChatModalOpen.value = false
+    roomId.value = ''
+    clearTimeout(leaveRoomTimer.value)
+    toast.add({
+      title: '对方未应答',
+      color: 'error'
+    })
+  }, voiceChatInviteToastPendingTime)
+}
+
+const onExpand = () => {
+  expanded.value = !expanded.value
+}
+
+const resizeHandler = () => {
+  // 安卓：在呼出键盘后，不会将获取焦点的输入框滚动到视图内，直接修改视图高度为原来的
+  // 视图高度 - 键盘高度，原先的视图只是高度变小了，头部依然能够显示，如果内容高度
+  // 大于视口宽度，出现滚动条
+  // iOS: 在呼出键盘后，会将获取焦点的输入框滚动到视图内，视图高度不会改变，而是由
+  // 原本的视图和底部键盘组成，原本的视图溢出的高度最大值为键盘的高度（滚动区域的
+  // 最大距离为键盘高度），由输入框的位置决定，这就导致头部可能无法显示在当前视图中，
+  // 另外，iOS 键盘显示时，页面的头部和底部都会多出一块衬底区域
+
+  // visualViewport.offsetTop 表示视觉视口相对于布局视口的偏移，标签栏在底部时
+  // 这个值可能不准
+  // TODO: 找到解决办法
+  bodyRef.value.style.top = `${visualViewport.offsetTop}px`
+}
+
+const onFocus = () => {
+  expanded.value = false
+  // 输入框获取焦点时，聊天列表滚动到底部
+  useScrollToBottom(bodyRef.value)
+}
+
+const onOpenFileSelector = target => target.click()
+
+const onPhotoInputChange = async () => {
+  const photoInput = photoInputRef.value
+  // const { files } = photoInput
+  // sendFile(files as unknown as extendedFiles, 'image')
+  photoInput.value = ''
+}
+
+const onKeydown = e => {
+  const { ctrlKey, metaKey, target } = e
+
+  // Ctrl + Enter 或 Command + Enter
+  if (ctrlKey || metaKey) {
+    const index = target.selectionStart // 获取光标位置
+    const { value } = target
+    // 插入换行符
+    message.value = value.slice(0, index) + '\n' + value.slice(index)
+    const newIndex = index + 1
+    // 更新光标位置
+    setTimeout(() => target.setSelectionRange(newIndex, newIndex))
+  } else {
+    onSendMsg()
+  }
+}
+
+const onSendMsg = async () => {
+  const _message = message.value
+
+  if (!_message) {
+    return
+  }
+
+  if (_message.length > 2000) {
+    toast.add({ title: '支持的最大消息长度为 2000 字符', color: 'error' })
+    return
+  }
+
+  const timestamp = Date.now()
+  const messageRecord: message = {
+    type: 'text',
+    content: _message,
+    contact: userInfo.value.id,
+    sender: userInfo.value.id,
+    receiver: props.targetId,
+    timestamp
+  }
+  try {
+    globalSocket.value.emit('send-msg', JSON.stringify(messageRecord))
+    messageRecord.sent = true
+    messageRecord.contact = props.targetId
+
+    if (!lastMsgMap.value[props.targetId]) {
+      await useAddLastMsg(lastMsgMap, lastMsgList, matchRes, props.targetId)
+    }
+
+    lastMsgMap.value[props.targetId].content = _message
+    lastMsgMap.value[props.targetId].timestamp = timestamp
+    // 如果发送失败，下面的代码不会被执行
+    await useAddMessageRecord(
+      messageRecord,
+      messageList,
+      lastMsgInfo,
+      props.targetId
+    )
+    // if (!route.query.roomId) {
+    await useAddLastMsgToDB({
+      id: props.targetId,
+      timestamp: messageRecord.timestamp,
+      content: messageRecord.content
+    })
+    // }
+    message.value = ''
+    useScrollToBottom(bodyRef.value)
+  } catch (error) {
+    console.log(error)
+    toast.add({ title: '发送失败', color: 'error' })
+  }
+}
+
+// 处理 iOS 软键盘问题
+const addVisualViewportListeners = () => {
+  if (isIOS) {
+    // 软键盘打开和关闭时触发
+    visualViewport.addEventListener('resize', resizeHandler)
+    visualViewport.addEventListener('scroll', resizeHandler)
+  }
+}
+
+const removeVisualViewportListeners = () => {
+  if (isIOS) {
+    visualViewport.removeEventListener('resize', resizeHandler)
+    visualViewport.removeEventListener('scroll', resizeHandler)
+  }
+}
+
+const updateLastMsgStamp = () => {
+  const _messageList = messageList.value
+  const { length } = _messageList
+
+  if (length) {
+    const lastMsg = _messageList[length - 1]
+    lastMsgInfo.value.sent = lastMsg.sent
+    lastMsgInfo.value.value = formatTimeAgo(lastMsg.timestamp)
+  }
+}
+
+const formatTimeAgo = timestamp => {
+  const diff = Date.now() - timestamp
+
+  return diff < minute
+    ? '刚刚'
+    : diff < hour
+      ? `${Math.floor(diff / minute)} 分钟前`
+      : diff < day
+        ? `${Math.floor(diff / hour)} 小时前`
+        : `${Math.floor(diff / day)} 天前`
+}
+
+onMounted(async () => {
+  await useGetMessages(messageList, lastMsgInfo, props.targetId)
+  useScrollToBottom(bodyRef.value)
+  addVisualViewportListeners()
+  updateLastMsgStamp()
+  lastMsgTimer = setInterval(() => {
+    updateLastMsgStamp()
+  }, 2 * minute)
+})
+
+onBeforeUnmount(() => {
+  clearInterval(lastMsgTimer)
+  removeVisualViewportListeners()
+})
 </script>

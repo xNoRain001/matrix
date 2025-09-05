@@ -1,9 +1,17 @@
 <template>
-  <UDashboardNavbar
-    :ui="{ root: 'bg-default', title: 'absolute left-1/2 -translate-x-1/2' }"
-    :title="props.user.nickname"
-    :toggle="false"
-  >
+  <UDashboardNavbar :toggle="false" :ui="{ root: 'bg-default border-none' }">
+    <template #title>
+      <UUser
+        class="absolute left-1/2 -translate-x-1/2"
+        :name="targetNickname"
+        :avatar="{
+          alt: targetNickname[0]
+        }"
+        :chip="{
+          color: 'primary'
+        }"
+      />
+    </template>
     <template #leading>
       <UButton
         icon="lucide:chevron-left"
@@ -13,8 +21,13 @@
         @click="emits('close')"
       />
     </template>
-
     <template #right>
+      <UButton
+        :icon="open ? 'lucide:chevrons-up' : 'lucide:chevrons-down'"
+        color="neutral"
+        variant="ghost"
+        @click="open = !open"
+      />
       <UDropdownMenu :items="dropdownItems">
         <UButton
           icon="i-lucide-ellipsis-vertical"
@@ -24,15 +37,34 @@
       </UDropdownMenu>
     </template>
   </UDashboardNavbar>
+
+  <UCollapsible v-model:open="open" class="border-default border-b sm:px-2">
+    <template #content>
+      <div class="px-4 py-4 text-sm">
+        <p class="text-muted">性别：{{ useTransformGender(targetGender) }}</p>
+        <p class="text-muted">年龄：{{ computeAge(targetBirthday) }}</p>
+        <p class="text-muted">地区：{{ targetRegion }}</p>
+      </div>
+    </template>
+  </UCollapsible>
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
-  user: any
-}>()
+import { useTransformGender } from '@/hooks'
+import { useMatchStore, useRecentContactsStore } from '@/store'
+import { storeToRefs } from 'pinia'
+import { ref, computed } from 'vue'
 
+const props = withDefaults(
+  defineProps<{ targetId: string; isMatch?: boolean }>(),
+  {
+    isMatch: false
+  }
+)
 const emits = defineEmits(['close'])
-
+const open = ref(true)
+const { lastMsgMap } = storeToRefs(useRecentContactsStore())
+const { matchRes } = storeToRefs(useMatchStore())
 const dropdownItems = [
   [
     {
@@ -55,4 +87,40 @@ const dropdownItems = [
     }
   ]
 ]
+const targetNickname = computed(() =>
+  props.isMatch
+    ? matchRes.value.nickname
+    : lastMsgMap.value[props.targetId].nickname
+)
+const targetRegion = computed(() =>
+  props.isMatch
+    ? matchRes.value.region
+    : lastMsgMap.value[props.targetId].region
+)
+const targetBirthday = computed(() =>
+  props.isMatch
+    ? matchRes.value.birthday
+    : lastMsgMap.value[props.targetId].birthday
+)
+const targetGender = computed(() =>
+  props.isMatch
+    ? matchRes.value.gender
+    : lastMsgMap.value[props.targetId].gender
+)
+
+const computeAge = v => {
+  if (!v) {
+    return '未知'
+  }
+
+  const year = new Date().getFullYear()
+  const month = new Date().getMonth()
+  const day = new Date().getDate()
+  const _year = new Date(v).getFullYear()
+  const _month = new Date(v).getMonth()
+  const _day = new Date(v).getDate()
+  const full = _month > month || (_month === month && _day <= day)
+
+  return year - _year - (full ? 0 : 1)
+}
 </script>

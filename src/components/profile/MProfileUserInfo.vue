@@ -123,7 +123,7 @@
 import { updateProfile } from '@/apis/user'
 import { provinceCityMap } from '@/const'
 import { useBackToProfile, useTransformGender } from '@/hooks'
-import { useUserInfoStore } from '@/store'
+import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
 import { vMaska } from 'maska/vue'
@@ -136,7 +136,7 @@ const openGenderDrawer = ref(false)
 const openBirthdayDrawer = ref(false)
 const openRegionDrawer = ref(false)
 const openNicknameDrawer = ref(false)
-const { userInfo } = storeToRefs(useUserInfoStore())
+const { userInfo } = storeToRefs(useUserStore())
 const userInfoForm = ref({ ...userInfo.value })
 const { region } = userInfo.value
 const [_province, _city] =

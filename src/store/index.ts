@@ -1,5 +1,6 @@
-import useRoomStore from './use-room-store'
-import useSelectedUserStore from './use-selected-user'
-import useUserInfoStore from './use-user-info-store'
+import useMatchStore from './use-match-store'
+import useRecentContactsStore from './use-recent-contacts'
+import useUserStore from './use-user-store'
+import useWebRTCStore from './use-web-rtc-store'
 
-export { useSelectedUserStore, useUserInfoStore, useRoomStore }
+export { useWebRTCStore, useRecentContactsStore, useUserStore, useMatchStore }

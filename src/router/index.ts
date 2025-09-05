@@ -14,14 +14,9 @@ const router = createRouter({
           component: () => import('@/views/Chat.vue')
         },
         {
-          path: 'audio-chat',
+          path: 'voice-chat',
           meta: { requireRoomId: true },
-          component: () => import('@/views/AudioChat.vue')
-        },
-        {
-          path: 'file-transfer',
-          meta: { requireRoomId: true },
-          component: () => import('@/views/FileTransfer.vue')
+          component: () => import('@/views/VoiceChat.vue')
         }
       ]
     },
@@ -30,10 +25,6 @@ const router = createRouter({
       meta: { auth: true },
       component: () => import('@/views/Profile/Index.vue'),
       children: [
-        // {
-        //   path: '',
-        //   component: () => import('@/views/Profile/UserInfo.vue')
-        // },
         {
           path: 'user-info',
           component: () => import('@/views/Profile/UserInfo.vue')
@@ -54,6 +45,11 @@ const router = createRouter({
       component: () => import('@/views/Message.vue')
     },
     {
+      path: '/contacts',
+      meta: { auth: true },
+      component: () => import('@/views/Contacts.vue')
+    },
+    {
       path: '/login',
       meta: { auth: false },
       component: () => import('@/views/Login.vue')
@@ -71,9 +67,8 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach(({ query, meta }, _, next) => {
+router.beforeEach(({ meta: { auth } }, _, next) => {
   const token = localStorage.getItem('token')
-  const { auth, requireRoomId } = meta
 
   // 未登录状态访问需要 token 的页面，跳转到登录页面
   if (auth === true && !token) {
@@ -82,11 +77,6 @@ router.beforeEach(({ query, meta }, _, next) => {
 
   // 登录状态访问登录、重置密码等不需要 token 的页面，禁止访问
   if (auth === false && token) {
-    return next({ path: '/' })
-  }
-
-  // 没有 roomId 时返回上级路由
-  if (requireRoomId && !query.roomId) {
     return next({ path: '/' })
   }
 

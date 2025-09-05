@@ -55,7 +55,7 @@
 </template>
 
 <script lang="ts" setup>
-import { useUserInfoStore } from '@/store'
+import { useUserStore } from '@/store'
 import { useMediaQuery } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
@@ -105,7 +105,7 @@ const cards = [
     }
   ]
 ]
-const { userInfo } = storeToRefs(useUserInfoStore())
+const { userInfo } = storeToRefs(useUserStore())
 const router = useRouter()
 const links = [
   [

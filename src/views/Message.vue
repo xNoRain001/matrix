@@ -11,123 +11,125 @@
         <UDashboardSidebarCollapse />
       </template>
       <template #trailing>
-        <UBadge :label="filteredUsers.length" variant="outline" />
+        <UBadge :label="users.length" variant="outline" />
       </template>
 
-      <template #right>
+      <!-- <template #right>
+        <UButton
+          v-if="activeTab === 'contact'"
+          icon="lucide:plus"
+          variant="ghost"
+        ></UButton>
         <UTabs
           v-model="activeTab"
           :items="tabItems"
           :content="false"
           size="xs"
         />
-      </template>
+      </template> -->
     </UDashboardNavbar>
 
-    <MessageList v-model="selectUser" :users="filteredUsers" />
+    <MessageList v-if="done" v-model="targetId" />
   </UDashboardPanel>
 
   <MessageView
-    v-if="isDesktop && selectUser"
-    v-model="selectUser"
-    :tmpRoomId="tmpRoomId"
+    v-if="targetId"
+    @close="targetId = ''"
+    :target-id="targetId"
   ></MessageView>
-  <div
-    v-if="isDesktop && !selectUser"
-    class="hidden flex-1 items-center justify-center lg:flex"
-  >
+  <div v-else class="hidden flex-1 items-center justify-center lg:flex">
     <UIcon name="lucide:message-circle-more" class="text-dimmed size-32" />
   </div>
 
-  <MMessageView v-if="!isDesktop" v-model="selectUser"></MMessageView>
+  <USlideover
+    v-if="!isDesktop"
+    v-model:open="isMessagePanelOpen"
+    title=" "
+    description=" "
+  >
+    <template #content>
+      <MessageView
+        v-if="targetId"
+        @close="targetId = ''"
+        :target-id="targetId"
+      />
+    </template>
+  </USlideover>
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
-import { getCandidates, getContacts } from '@/apis/contact'
-import MessageView from '@/components/message/MessageView.vue'
-import MMessageView from '@/components/message/MMessageView.vue'
-import { useSelectedUserStore } from '@/store'
+import { getProfiles } from '@/apis/profile'
+import { useGetMessages } from '@/hooks'
+import { useRecentContactsStore } from '@/store'
 import type { users } from '@/types'
 import { useMediaQuery } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
+const done = ref(false)
 const isDesktop = useMediaQuery('(min-width: 768px)')
-const tabItems = [
-  {
-    label: '所有',
-    value: 'all'
-  },
-  {
-    label: '未读',
-    value: 'unread'
-  }
-]
-const activeTab = ref('all')
-// const users = ref([
+// const tabItems = [
 //   {
-//     id: 1,
-//     nickname: 'Alex Smith',
-//     latestMsg: 'Lorem ipsum dolor sit amet consectetur adipisicing'
+//     label: '消息',
+//     value: 'message'
 //   },
 //   {
-//     id: 2,
-//     nickname: 'Jordan Brown',
-//     unread: true,
-//     latestMsg:
-//       'Unde, libero sit sed voluptas aperiam tempora quos delectus corrupti'
-//   },
-//   {
-//     id: 3,
-//     nickname: 'Taylor Green',
-//     unread: true,
-//     latestMsg:
-//       'deserunt, nesciunt illum ipsam quibusdam itaque quo praesentium eaque cumque'
-//   },
-//   {
-//     id: 4,
-//     nickname: 'Morgan White',
-//     latestMsg: 'dolor sit amet consectetur adipisicing'
+//     label: '好友',
+//     value: 'contact'
 //   }
-// ])
+// ]
+// const activeTab = ref('message')
 const users = ref<users>([])
-const filteredUsers = computed(() => {
-  if (activeTab.value === 'unread') {
-    return users.value.filter(user => user.unread)
-  }
-
-  return users.value
-})
-const selectUser = ref(null)
+const targetId = ref('')
+const { messageList, lastMsgInfo, lastMsgMap, lastMsgList } = storeToRefs(
+  useRecentContactsStore()
+)
 const isMessagePanelOpen = computed({
   get() {
-    return Boolean(selectUser.value)
+    return Boolean(targetId.value)
   },
   set(value: boolean) {
     if (!value) {
-      selectUser.value = null
+      targetId.value = ''
     }
   }
 })
-const { globalSocket } = storeToRefs(useSelectedUserStore())
-const tmpRoomId = ref(0)
 
-// 切换消息类型时，如果当前访问的消息类型不符合该类型，取消选中该消息
-watch(filteredUsers, v => {
-  if (!filteredUsers.value.find(user => user.id === selectUser.value?.id)) {
-    selectUser.value = null
-  }
-})
-
-watch(selectUser, v => {
+watch(targetId, v => {
   if (v) {
-    tmpRoomId.value = Math.random() + ''
+    useGetMessages(messageList, lastMsgInfo, v)
   }
 })
+
+const updateProfiles = async (ids, now) => {
+  if (!ids.length) {
+    return
+  }
+
+  const { data: profileMap } = await getProfiles(ids.join('_'))
+  const _lastMsgMap = lastMsgMap.value
+
+  for (let i = 0, l = ids.length; i < l; i++) {
+    const id = ids[i]
+    _lastMsgMap[id] = { ..._lastMsgMap[id], ...profileMap[id] }
+  }
+
+  localStorage.setItem('profileMap', JSON.stringify(_lastMsgMap))
+  localStorage.setItem('profileMapExpireAt', String(now + 1000 * 60 * 60 * 6))
+}
+
+const _getProfiles = async () => {
+  const now = Date.now()
+  const expired = now > Number(localStorage.getItem('profileMapExpireAt'))
+
+  // 过期，获取所有用户的最新资料
+  if (expired) {
+    await updateProfiles(lastMsgList.value, now)
+  }
+}
 
 onMounted(async () => {
-  const { data } = await getContacts()
-  users.value = data || []
+  await _getProfiles()
+  done.value = true
 })
 </script>

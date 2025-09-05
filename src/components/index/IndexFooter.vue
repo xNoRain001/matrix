@@ -28,6 +28,12 @@ const mobileNavs = [
     value: '/' // tab 的值，默认值为索引
   },
   {
+    label: '好友',
+    icon: 'lucide:users-round',
+    to: '/contacts',
+    value: '/contacts'
+  },
+  {
     label: '消息',
     icon: 'lucide:message-circle',
     to: '/message',
