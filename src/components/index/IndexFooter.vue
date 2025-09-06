@@ -6,13 +6,14 @@
       v-model="activeTab"
       variant="link"
       :ui="{
-        list: 'flex justify-evenly  border-none',
+        list: 'flex justify-evenly border-none',
         indicator: 'hidden',
         trigger: 'flex flex-col text-xs'
       }"
       :content="false"
       :items="mobileNavs"
-    />
+    >
+    </UTabs>
   </div>
 </template>
 

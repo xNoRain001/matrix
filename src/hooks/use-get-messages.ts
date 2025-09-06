@@ -23,15 +23,13 @@ const getMessages = async targetId => {
   return data.slice(-10)
 }
 
-const useGetMessages = async (messageList, lastMsgInfo, targetId) => {
+const useGetMessages = async (messageList, targetId) => {
   // 如果处理消息失败，给空消息
   try {
     const messages = await getMessages(targetId)
     messageList.value = [...messages]
-    lastMsgInfo.value.timestamp = messages[messages.length - 1]?.timestamp || 0
   } catch {
     messageList.value = []
-    lastMsgInfo.value.timestamp = 0
   }
 }
 

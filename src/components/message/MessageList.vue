@@ -12,7 +12,13 @@
         ]"
         @click="targetId = id"
       >
-        <UChip inset color="error" :text="5" size="3xl">
+        <UChip
+          inset
+          color="error"
+          :show="Boolean(lastMsgMap[id].unreadMsgs)"
+          :text="lastMsgMap[id].unreadMsgs"
+          size="3xl"
+        >
           <UAvatar :text="lastMsgMap[id].nickname[0]"></UAvatar>
         </UChip>
 
@@ -21,10 +27,10 @@
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
               {{ lastMsgMap[id].nickname }}
-              <UChip :color="Math.random() > 0.5 ? 'primary' : 'error'" />
+              <!-- <UChip :color="Math.random() > 0.5 ? 'primary' : 'error'" /> -->
             </div>
 
-            <span>{{ formatTimeAgo(lastMsgMap[id].timestamp) }}</span>
+            <span>{{ lastMsgMap[id].timeAgo }}</span>
             <!-- <span>{{ isToday(new Date(user.date)) ? format(new Date(user.date), 'HH:mm') : format(new Date(user.date), 'dd MMM') }}</span> -->
           </div>
           <p class="truncate">
@@ -37,11 +43,12 @@
 </template>
 
 <script setup lang="ts">
+import { useFormatTimeAgo } from '@/hooks'
 import { useRecentContactsStore } from '@/store'
-import { formatTimeAgo } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import type { Ref } from 'vue'
+import { onBeforeUnmount, onMounted, type Ref } from 'vue'
 
+let timer = null
 const targetId = defineModel() as Ref<string>
 const { lastMsgMap, lastMsgList } = storeToRefs(useRecentContactsStore())
 
@@ -67,4 +74,21 @@ defineShortcuts({
     }
   }
 })
+
+const updateTimeAgo = () => {
+  const _lastMsgList = lastMsgList.value
+  const _lastMsgMap = lastMsgMap.value
+
+  for (let i = 0, l = _lastMsgList.length; i < l; i++) {
+    const item = _lastMsgMap[_lastMsgList[i]]
+    item.timeAgo = useFormatTimeAgo(item.timestamp)
+  }
+}
+
+onMounted(() => {
+  updateTimeAgo()
+  timer = setInterval(updateTimeAgo, 2 * 1000 * 60)
+})
+
+onBeforeUnmount(() => clearInterval(timer))
 </script>

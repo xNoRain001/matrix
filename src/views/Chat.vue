@@ -21,18 +21,22 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useMatchStore } from '@/store'
+import { useMatchStore, useRecentContactsStore } from '@/store'
 import { storeToRefs } from 'pinia'
 
 const router = useRouter()
 const { matchRes, matchType } = storeToRefs(useMatchStore())
+const { targetId } = storeToRefs(useRecentContactsStore())
 const isOpen = ref(Boolean(matchType.value === 'chat' && matchRes.value))
+targetId.value = matchRes.value?.id || ''
 
 onMounted(async () => {
   if (!isOpen.value) {
-    router.replace('/')
+    return router.replace('/')
   }
 })
+
+onBeforeUnmount(() => (targetId.value = ''))
 </script>

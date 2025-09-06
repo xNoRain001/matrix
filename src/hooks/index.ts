@@ -27,13 +27,21 @@ import { useDashboard } from './use-dashboard'
 import useGetMessages from './use-get-messages'
 import useGenRoomId from './use-gen-room-id'
 import useAddLastMsgToDB from './use-add-last-msg-to-db'
-import useAddMessageRecord from './use-add-message-record'
 import useAddLastMsg from './use-add-last-msg'
 import useGetTargetIdByRoomId from './use-get-target-id-by-roomId'
+import useFormatTimeAgo from './use-format-time-ago'
+import useIsOverFiveMins from './use-is-over-five-mins'
+import useAddMessageRecordToDB from './use-add-message-record-to-db'
+import useAddMessageRecordToView from './use-add-message-record-to-view'
+import useUpdateLastMsg from './use-update-last-msg'
 
 export {
+  useAddMessageRecordToDB,
+  useAddMessageRecordToView,
+  useUpdateLastMsg,
+  useIsOverFiveMins,
+  useFormatTimeAgo,
   useGetTargetIdByRoomId,
-  useAddMessageRecord,
   useAddLastMsg,
   useAddLastMsgToDB,
   useGenRoomId,

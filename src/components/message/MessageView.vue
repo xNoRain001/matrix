@@ -6,7 +6,10 @@
       :is-match="isMatch"
     ></MessageHeader>
     <!-- body -->
-    <div ref="bodyRef" class="grow overflow-y-auto px-4 pt-4 pb-8 sm:px-6">
+    <div
+      ref="msgContainerRef"
+      class="grow overflow-y-auto px-4 pt-4 pb-8 sm:px-6"
+    >
       <div class="relative">
         <div
           v-for="(
@@ -79,11 +82,11 @@
           </div>
         </div>
         <div
-          v-if="lastMsgInfo.value"
+          v-if="lastMsgMap[targetId].timeAgo"
           class="absolute -bottom-5 text-xs"
-          :class="lastMsgInfo.sent ? 'right-11' : 'left-11'"
+          :class="lastMsgMap[targetId].sent ? 'right-11' : 'left-11'"
         >
-          {{ lastMsgInfo.value }}
+          {{ lastMsgMap[targetId].timeAgo }}
         </div>
       </div>
     </div>
@@ -188,8 +191,12 @@ import {
   useAddLastMsgToDB,
   useGetMessages,
   useAddLastMsg,
-  useAddMessageRecord,
-  useGenRoomId
+  useGenRoomId,
+  useFormatTimeAgo,
+  useIsOverFiveMins,
+  useAddMessageRecordToView,
+  useAddMessageRecordToDB,
+  useUpdateLastMsg
 } from '@/hooks'
 import {
   useMatchStore,
@@ -198,12 +205,12 @@ import {
   useWebRTCStore
 } from '@/store'
 import { storeToRefs } from 'pinia'
-import { onBeforeUnmount, onMounted, ref, computed } from 'vue'
+import { onBeforeUnmount, onMounted, ref, computed, watch } from 'vue'
 import type { message } from '@/types'
 import { useMediaQuery } from '@vueuse/core'
 import { voiceChatInviteToastPendingTime } from '@/const'
 
-let lastMsgTimer = null
+let timer = null
 const props = withDefaults(
   defineProps<{ targetId: string; isMatch?: boolean }>(),
   {
@@ -211,7 +218,6 @@ const props = withDefaults(
   }
 )
 const emits = defineEmits(['close'])
-const bodyRef = ref(null)
 const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
   // year: 'numeric',
   // month: 'long',
@@ -223,9 +229,13 @@ const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
 const isDesktop = useMediaQuery('(min-width: 768px)')
 // 对方是否收到了文件元信息的标识
 const message = ref('')
-const { messageList, lastMsgInfo, lastMsgMap, lastMsgList } = storeToRefs(
-  useRecentContactsStore()
-)
+const {
+  msgContainerRef,
+  unreadMsgCounter,
+  messageList,
+  lastMsgMap,
+  lastMsgList
+} = storeToRefs(useRecentContactsStore())
 const { isVoiceChatModalOpen, roomId, leaveRoomTimer, isVoiceChatMatch } =
   storeToRefs(useWebRTCStore())
 const { globalSocket, userInfo } = storeToRefs(useUserStore())
@@ -235,9 +245,6 @@ const targetNickname = computed(() =>
     ? matchRes.value.nickname[0]
     : lastMsgMap.value[props.targetId].nickname[0]
 )
-const minute = 60 * 1000
-const hour = 60 * minute
-const day = 24 * hour
 const toast = useToast()
 const isIOS = /iPhone/i.test(navigator.userAgent)
 const photoInputRef = ref<HTMLInputElement | null>(null)
@@ -301,13 +308,13 @@ const resizeHandler = () => {
   // visualViewport.offsetTop 表示视觉视口相对于布局视口的偏移，标签栏在底部时
   // 这个值可能不准
   // TODO: 找到解决办法
-  bodyRef.value.style.top = `${visualViewport.offsetTop}px`
+  msgContainerRef.value.style.top = `${visualViewport.offsetTop}px`
 }
 
 const onFocus = () => {
   expanded.value = false
   // 输入框获取焦点时，聊天列表滚动到底部
-  useScrollToBottom(bodyRef.value)
+  useScrollToBottom(msgContainerRef)
 }
 
 const onOpenFileSelector = target => target.click()
@@ -349,41 +356,36 @@ const onSendMsg = async () => {
   }
 
   const timestamp = Date.now()
+  const { targetId } = props
   const messageRecord: message = {
     type: 'text',
     content: _message,
     contact: userInfo.value.id,
     sender: userInfo.value.id,
-    receiver: props.targetId,
+    receiver: targetId,
     timestamp
   }
   try {
     globalSocket.value.emit('send-msg', JSON.stringify(messageRecord))
     messageRecord.sent = true
-    messageRecord.contact = props.targetId
+    messageRecord.contact = targetId
 
-    if (!lastMsgMap.value[props.targetId]) {
-      await useAddLastMsg(lastMsgMap, lastMsgList, matchRes, props.targetId)
+    const _lastMsgMap = lastMsgMap.value
+    const isOverFiveMins = useIsOverFiveMins(
+      messageRecord,
+      _lastMsgMap,
+      targetId
+    )
+
+    if (!_lastMsgMap[targetId]) {
+      await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
     }
 
-    lastMsgMap.value[props.targetId].content = _message
-    lastMsgMap.value[props.targetId].timestamp = timestamp
-    // 如果发送失败，下面的代码不会被执行
-    await useAddMessageRecord(
-      messageRecord,
-      messageList,
-      lastMsgInfo,
-      props.targetId
-    )
-    // if (!route.query.roomId) {
-    await useAddLastMsgToDB({
-      id: props.targetId,
-      timestamp: messageRecord.timestamp,
-      content: messageRecord.content
-    })
-    // }
+    await useAddMessageRecordToDB(isOverFiveMins, messageRecord, _lastMsgMap)
+    useAddMessageRecordToView(isOverFiveMins, messageRecord, messageList)
+    useUpdateLastMsg(_lastMsgMap, messageRecord, false, true, unreadMsgCounter)
     message.value = ''
-    useScrollToBottom(bodyRef.value)
+    useScrollToBottom(msgContainerRef)
   } catch (error) {
     console.log(error)
     toast.add({ title: '发送失败', color: 'error' })
@@ -406,41 +408,46 @@ const removeVisualViewportListeners = () => {
   }
 }
 
-const updateLastMsgStamp = () => {
-  const _messageList = messageList.value
-  const { length } = _messageList
+const updateTimeAgo = () => {
+  const item = lastMsgMap.value[props.targetId]
+  item.timeAgo = useFormatTimeAgo(item.timestamp)
+}
 
-  if (length) {
-    const lastMsg = _messageList[length - 1]
-    lastMsgInfo.value.sent = lastMsg.sent
-    lastMsgInfo.value.value = formatTimeAgo(lastMsg.timestamp)
+watch(
+  () => props.targetId,
+  async v => {
+    if (v) {
+      await useGetMessages(messageList, v)
+      useScrollToBottom(msgContainerRef)
+      const item = lastMsgMap.value[v]
+      const { timestamp, content, unreadMsgs, sent } = item
+      unreadMsgCounter.value -= unreadMsgs
+      item.unreadMsgs = 0
+      await useAddLastMsgToDB({
+        id: v,
+        timestamp,
+        content,
+        sent,
+        unreadMsgs: 0
+      })
+    } else {
+      messageList.value = []
+    }
+  },
+  { immediate: true }
+)
+
+onMounted(() => {
+  if (props.isMatch) {
+    updateTimeAgo()
+    timer = setInterval(updateTimeAgo, 1000 * 60)
   }
-}
 
-const formatTimeAgo = timestamp => {
-  const diff = Date.now() - timestamp
-
-  return diff < minute
-    ? '刚刚'
-    : diff < hour
-      ? `${Math.floor(diff / minute)} 分钟前`
-      : diff < day
-        ? `${Math.floor(diff / hour)} 小时前`
-        : `${Math.floor(diff / day)} 天前`
-}
-
-onMounted(async () => {
-  await useGetMessages(messageList, lastMsgInfo, props.targetId)
-  useScrollToBottom(bodyRef.value)
   addVisualViewportListeners()
-  updateLastMsgStamp()
-  lastMsgTimer = setInterval(() => {
-    updateLastMsgStamp()
-  }, 2 * minute)
 })
 
 onBeforeUnmount(() => {
-  clearInterval(lastMsgTimer)
+  clearInterval(timer)
   removeVisualViewportListeners()
 })
 </script>

@@ -1,7 +1,8 @@
-const useScrollToBottom = elm => {
+const useScrollToBottom = msgContainerRef => {
+  const container = msgContainerRef.value
   const timer = setTimeout(() => {
-    elm.scrollTo({
-      top: elm.scrollHeight,
+    container.scrollTo({
+      top: container.scrollHeight,
       behavior: 'smooth'
     })
     clearTimeout(timer)

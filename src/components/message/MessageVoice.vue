@@ -218,8 +218,7 @@ const updateMicLabel = label => (micLabel.value = label)
 
 const updateMicStatus = async () => {
   const newValue = !isMicOpen.value
-  console.log(newValue)
-  console.log(localMediaStream.value)
+
   // 最先加入房间的人会比后加入的更晚完成 pc 初始化
   // 在没初始化之前用户可能点击关闭麦克风，此时是没有媒体流的
   if (localMediaStream.value) {

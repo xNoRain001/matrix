@@ -1,6 +1,9 @@
 <template>
   <Suspense>
-    <UApp v-if="userInfo" :toaster="{ position: 'top-center' }">
+    <UApp
+      v-if="userInfo"
+      :toaster="{ position: 'top-center', progress: false }"
+    >
       <UDashboardGroup unit="rem" storage="local">
         <UDashboardSidebar
           id="default"
@@ -29,7 +32,14 @@
               orientation="vertical"
               tooltip
               popover
-            />
+            >
+              <template #message-trailing>
+                <UBadge
+                  v-if="unreadMsgCounter"
+                  :label="unreadMsgCounter"
+                  size="sm"
+                /> </template
+            ></UNavigationMenu>
 
             <UNavigationMenu
               :collapsed="collapsed"
@@ -90,26 +100,30 @@ import {
   useWebRTCStore
 } from './store'
 import { useMediaQuery } from '@vueuse/core'
-import { computed, onMounted, watch } from 'vue'
+import { computed, watch } from 'vue'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import ModalLogout from './components/modal/ModalLogout.vue'
 import DrawerLogout from './components/drawer/DrawerLogout.vue'
 import { io } from 'socket.io-client'
 import {
   useAddLastMsg,
-  useAddLastMsgToDB,
   useAddMediaStreamToPC,
-  useAddMessageRecord,
   useBindMediaStream,
   useCloseMediaStreamTracks,
   useGetDB,
   useGetTargetIdByRoomId,
   useGetUserMedia,
+  useIsOverFiveMins,
   usePauseMediaStreamTracks,
-  useResumeMediaStreamTracks
+  useResumeMediaStreamTracks,
+  useScrollToBottom,
+  useAddMessageRecordToView,
+  useAddMessageRecordToDB,
+  useUpdateLastMsg
 } from './hooks'
 import { useRouter } from 'vue-router'
 import { voiceChatInviteToastExpireTime } from './const'
+import type { lastMsg, lastMsgMap } from './types'
 
 let voiceChatInviteToastId = null
 let matchTimer = null
@@ -121,13 +135,35 @@ const overlay = useOverlay()
 const logoutModal = overlay.create(ModalLogout)
 const logoutDrawer = overlay.create(DrawerLogout)
 const isDesktop = useMediaQuery('(min-width: 768px)')
+const { globalSocket, globalPC, userInfo } = storeToRefs(useUserStore())
+const {
+  leaveRoomTimer,
+  rtcConnected,
+  isVoiceChatModalOpen,
+  isVoiceChatMatch,
+  roomId,
+  localAudioRef,
+  remoteAudioRef,
+  localMediaStream,
+  isMicOpen,
+  isSpeakerOpen
+} = storeToRefs(useWebRTCStore())
+const {
+  msgContainerRef,
+  unreadMsgCounter,
+  targetId,
+  messageList,
+  lastMsgMap,
+  lastMsgList
+} = storeToRefs(useRecentContactsStore())
+const { matchRes, matchType, hasMatchRes, offline, matching, noMatch } =
+  storeToRefs(useMatchStore())
 const navs = [
   [
     {
       label: '大厅',
       icon: 'lucide:cat',
       to: '/'
-      // badge: 4,
     },
     {
       label: '好友',
@@ -137,7 +173,8 @@ const navs = [
     {
       label: '消息',
       icon: 'lucide:message-circle',
-      to: '/message'
+      to: '/message',
+      slot: 'message'
     },
     {
       label: '我的',
@@ -190,24 +227,6 @@ const groups = computed(() => [
     items: navs.flat()
   }
 ])
-const { globalSocket, globalPC, userInfo } = storeToRefs(useUserStore())
-const {
-  leaveRoomTimer,
-  rtcConnected,
-  isVoiceChatModalOpen,
-  isVoiceChatMatch,
-  roomId,
-  localAudioRef,
-  remoteAudioRef,
-  localMediaStream,
-  isMicOpen,
-  isSpeakerOpen
-} = storeToRefs(useWebRTCStore())
-const { messageList, lastMsgInfo, lastMsgMap, lastMsgList } = storeToRefs(
-  useRecentContactsStore()
-)
-const { matchRes, matchType, hasMatchRes, offline, matching, noMatch } =
-  storeToRefs(useMatchStore())
 const id = computed(() => userInfo.value?.id || '')
 const router = useRouter()
 const constraints = {
@@ -432,25 +451,25 @@ const onWebRTC = async (roomId, { description, candidate }) => {
   }
 }
 
-const onReceiveMsg = async msg => {
-  msg.sent = false
-  const { contact: id, timestamp, content } = msg
+const onReceiveMsg = async messageRecord => {
+  messageRecord.sent = false
   const _lastMsgMap = lastMsgMap.value
+  const { contact: id } = messageRecord
+  const inView = targetId.value === id
+  const isOverFiveMins = useIsOverFiveMins(messageRecord, _lastMsgMap, id)
 
   if (!_lastMsgMap[id]) {
-    await useAddLastMsg(lastMsgMap, lastMsgList, matchRes, id)
+    await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
   }
 
-  _lastMsgMap[id].content = content
-  _lastMsgMap[id].timestamp = timestamp
+  await useAddMessageRecordToDB(isOverFiveMins, messageRecord, _lastMsgMap)
 
-  // TODO: 更新 lastMsgList 索引
-  useAddMessageRecord(msg, messageList, lastMsgInfo, id)
-  useAddLastMsgToDB({
-    id,
-    timestamp,
-    content
-  })
+  if (inView) {
+    useAddMessageRecordToView(isOverFiveMins, messageRecord, messageList)
+    useScrollToBottom(msgContainerRef)
+  }
+
+  useUpdateLastMsg(_lastMsgMap, messageRecord, true, inView, unreadMsgCounter)
 
   // toast.add({
   //   close: false,
@@ -464,52 +483,96 @@ const onReceiveMsg = async msg => {
   // })
 }
 
-const onReceiveOfflineMsgs = async msgs => {
+// 将离线消息按照发送人进行分组
+const mergeOfflineMsgs = offlineMsgs => {
   const grouped = {}
 
-  // 分组
-  for (let i = 0, l = msgs.length; i < l; i++) {
-    const msg = msgs[i]
-    const { contact } = msg
+  for (let i = 0, l = offlineMsgs.length; i < l; i++) {
+    const offlineMsg = offlineMsgs[i]
+    const { contact } = offlineMsg
+
     if (!grouped[contact]) {
       grouped[contact] = []
     }
 
-    grouped[contact].push(msg)
+    grouped[contact].push(offlineMsg)
   }
 
+  return grouped
+}
+
+const onReceiveOfflineMsgs = async offlineMsgs => {
+  const grouped = mergeOfflineMsgs(offlineMsgs)
   const contacts = Object.keys(grouped)
 
   for (let i = 0, l = contacts.length; i < l; i++) {
-    const contact = contacts[i]
-    const msgs = grouped[contact]
+    const id = contacts[i]
+    const offlineMsgs = grouped[id]
+    const offlineMsgsLength = offlineMsgs.length
+    // 接收离线消息时可能处于匹配聊天界面中，需要更新视图
+    const inView = targetId.value === id
+    const _lastMsgMap = lastMsgMap.value
+    // 跳过分隔符判断逻辑
+    const skip = _lastMsgMap[id]?.sent !== offlineMsgs[0].sent
 
-    for (let i = 0, l = msgs.length; i < l; i++) {
-      const msg = msgs[i]
-      msg.sent = false
-      await useAddMessageRecord(msg, messageList, lastMsgInfo, msg.contact)
+    for (let i = 0; i < offlineMsgsLength; i++) {
+      const messageRecord = offlineMsgs[i]
+      messageRecord.sent = false
+      const isOverFiveMins = useIsOverFiveMins(messageRecord, _lastMsgMap, id)
+      await useAddMessageRecordToDB(
+        isOverFiveMins,
+        messageRecord,
+        _lastMsgMap,
+        skip
+      )
+
+      if (inView) {
+        useAddMessageRecordToView(isOverFiveMins, messageRecord, messageList)
+      }
     }
 
-    const lastMsg = msgs[msgs.length - 1]
-    const { contact: id } = lastMsg
-
-    if (!lastMsgMap.value[id]) {
-      await useAddLastMsg(lastMsgMap, lastMsgList, matchRes, id)
+    if (inView) {
+      useScrollToBottom(msgContainerRef)
     }
 
-    lastMsgMap.value[lastMsg.contact].content = lastMsg.content
-    lastMsgMap.value[lastMsg.contact].timestamp = lastMsg.timestamp
-    // TODO: 更新 lastMsgList 索引
-    await useAddLastMsgToDB({
-      id: lastMsg.contact,
-      timestamp: lastMsg.timestamp,
-      content: lastMsg.content
-    })
+    const lastMsg = offlineMsgs[offlineMsgsLength - 1]
+
+    if (!_lastMsgMap[id]) {
+      await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, id)
+    }
+
+    useUpdateLastMsg(
+      _lastMsgMap,
+      lastMsg,
+      true,
+      inView,
+      unreadMsgCounter,
+      true,
+      offlineMsgsLength
+    )
+  }
+}
+
+const acceptWebRTC = (roomId, now, isAccept: boolean) => {
+  // 由于鼠标悬浮在 toast 上时会暂停进度，因此需要判断是否超出时间
+  if (Date.now() - now <= voiceChatInviteToastExpireTime) {
+    const socket = globalSocket.value
+
+    if (isAccept) {
+      socket.emit(
+        'agree-unidirectional-web-rtc',
+        roomId,
+        useGetTargetIdByRoomId(roomId, userInfo)
+      )
+    } else {
+      socket.emit('refuse-web-rtc', roomId)
+    }
+  } else {
+    toast.add({ title: '超时', color: 'error' })
   }
 }
 
 const onInviteWebRTC = (roomId, nickname) => {
-  const socket = globalSocket.value
   const now = Date.now()
 
   voiceChatInviteToastId = toast.add({
@@ -525,26 +588,13 @@ const onInviteWebRTC = (roomId, nickname) => {
         icon: 'lucide:x',
         label: '拒绝',
         color: 'error',
-        onClick: () => {
-          // 由于鼠标悬浮在 toast 上时会暂停进度，因此需要判断是否超出时间
-          if (Date.now() - now <= voiceChatInviteToastExpireTime) {
-            socket.emit('refuse-web-rtc', roomId)
-          }
-        }
+        onClick: () => acceptWebRTC(roomId, now, false)
       },
       {
         icon: 'lucide:check',
         label: '同意',
         color: 'primary',
-        onClick: () => {
-          if (Date.now() - now <= voiceChatInviteToastExpireTime) {
-            socket.emit(
-              'agree-unidirectional-web-rtc',
-              roomId,
-              useGetTargetIdByRoomId(roomId, userInfo)
-            )
-          }
-        }
+        onClick: () => acceptWebRTC(roomId, now, true)
       }
     ]
   }).id
@@ -704,18 +754,11 @@ const initWebRTC = id => {
   socket.on('bye', onBye)
 }
 
-watch(
-  id,
-  id => {
-    initWebRTC(id)
-  },
-  { immediate: true }
-)
-
 const initLastMsgs = async () => {
-  let _lastMsgMap = {}
+  let _lastMsgMap: lastMsgMap = {}
+  let _unreadMsgCounter = 0
   const db = await useGetDB()
-  const lastMsgs = await db.getAll('lastMessages')
+  const lastMsgs: lastMsg[] = await db.getAll('lastMessages')
   const _lastMsgList = []
 
   try {
@@ -724,18 +767,28 @@ const initLastMsgs = async () => {
 
   for (let i = 0, l = lastMsgs.length; i < l; i++) {
     const lastMsg = lastMsgs[i]
-    const { id } = lastMsg
+    const { id, unreadMsgs } = lastMsg
     _lastMsgList.push(id)
     _lastMsgMap[id] = { ..._lastMsgMap[id], ...lastMsg }
+    _unreadMsgCounter += unreadMsgs
+    // delete _lastMsgMap[id].id
   }
 
   lastMsgMap.value = _lastMsgMap
   lastMsgList.value = _lastMsgList
+  unreadMsgCounter.value = _unreadMsgCounter
 }
 
-onMounted(async () => {
-  initLastMsgs()
-})
+watch(
+  id,
+  async id => {
+    // 先获取本地数据库中的数据
+    await initLastMsgs()
+    // 拉取离线数据后，更新本地数据库中的数据和内存中的数据
+    initWebRTC(id)
+  },
+  { immediate: true }
+)
 </script>
 
 <style>

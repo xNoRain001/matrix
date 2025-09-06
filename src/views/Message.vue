@@ -11,7 +11,7 @@
         <UDashboardSidebarCollapse />
       </template>
       <template #trailing>
-        <UBadge :label="users.length" variant="outline" />
+        <UBadge v-if="unreadMsgCounter" :label="unreadMsgCounter" size="sm" />
       </template>
 
       <!-- <template #right>
@@ -59,12 +59,11 @@
 
 <script setup lang="ts">
 import { getProfiles } from '@/apis/profile'
-import { useGetMessages } from '@/hooks'
 import { useRecentContactsStore } from '@/store'
 import type { users } from '@/types'
 import { useMediaQuery } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 const done = ref(false)
 const isDesktop = useMediaQuery('(min-width: 768px)')
@@ -80,8 +79,7 @@ const isDesktop = useMediaQuery('(min-width: 768px)')
 // ]
 // const activeTab = ref('message')
 const users = ref<users>([])
-const targetId = ref('')
-const { messageList, lastMsgInfo, lastMsgMap, lastMsgList } = storeToRefs(
+const { unreadMsgCounter, targetId, lastMsgMap, lastMsgList } = storeToRefs(
   useRecentContactsStore()
 )
 const isMessagePanelOpen = computed({
@@ -92,12 +90,6 @@ const isMessagePanelOpen = computed({
     if (!value) {
       targetId.value = ''
     }
-  }
-})
-
-watch(targetId, v => {
-  if (v) {
-    useGetMessages(messageList, lastMsgInfo, v)
   }
 })
 

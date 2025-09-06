@@ -183,7 +183,7 @@
 import { computed, reactive, ref, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useScrollToTop } from '@/hooks'
-import { useMatchStore, useUserStore } from '@/store'
+import { useMatchStore, useUserStore, useWebRTCStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { createReusableTemplate, useMediaQuery } from '@vueuse/core'
 import { provinceCityMap } from '@/const'
@@ -217,6 +217,7 @@ const list = [
 const isOpenFilterDrawer = ref(false)
 const { hasMatchRes, offline, matching, noMatch } = storeToRefs(useMatchStore())
 const { userInfo, globalSocket } = storeToRefs(useUserStore())
+const { roomId } = storeToRefs(useWebRTCStore())
 const toast = useToast()
 const route = useRoute()
 const showCards = computed(() => route.path === '/')
@@ -306,9 +307,16 @@ const rematch = () => {
   startMatch()
 }
 
-const onMatch = async (_matchType, to) => {
+const onMatch = (_matchType, to) => {
   if (to === '/') {
     return
+  }
+
+  if (_matchType === 'voice-chat' && roomId.value) {
+    return toast.add({
+      title: '匹配失败，当前正在语音中',
+      color: 'error'
+    })
   }
 
   matchType = _matchType
