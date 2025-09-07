@@ -442,7 +442,6 @@ watch(
 )
 
 onMounted(() => {
-  console.log('@')
   if (props.isMatch) {
     updateTimeAgo()
     timer = setInterval(updateTimeAgo, 1000 * 60)

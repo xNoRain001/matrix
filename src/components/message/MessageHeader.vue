@@ -29,21 +29,36 @@
         @click="open = !open"
       />
       <UDropdownMenu :items="dropdownItems">
-        <UButton
-          icon="i-lucide-ellipsis-vertical"
-          color="neutral"
-          variant="ghost"
-        />
+        <UButton icon="lucide:ellipsis" color="neutral" variant="ghost" />
       </UDropdownMenu>
     </template>
   </UDashboardNavbar>
 
   <UCollapsible v-model:open="open" class="border-default border-b sm:px-2">
     <template #content>
-      <div class="px-4 py-4 text-sm">
-        <p class="text-muted">性别：{{ useTransformGender(targetGender) }}</p>
-        <p class="text-muted">年龄：{{ computeAge(targetBirthday) }}</p>
-        <p class="text-muted">地区：{{ targetRegion }}</p>
+      <div class="grid gap-y-2 px-4 py-4 text-sm">
+        <div class="flex items-center gap-1.5">
+          <UIcon name="lucide:user-round" class="text-primary size-5"></UIcon>
+          <p class="text-muted">
+            性别：<span class="text-highlighted">{{
+              useTransformGender(targetGender)
+            }}</span>
+          </p>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <UIcon name="lucide:badge" class="text-primary size-5"></UIcon>
+          <p class="text-muted">
+            年龄：<span class="text-highlighted">{{
+              computeAge(targetBirthday)
+            }}</span>
+          </p>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <UIcon name="lucide:activity" class="text-primary size-5"></UIcon>
+          <p class="text-muted">
+            地区：<span class="text-highlighted">{{ targetRegion }}</span>
+          </p>
+        </div>
       </div>
     </template>
   </UCollapsible>

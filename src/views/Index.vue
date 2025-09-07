@@ -1,6 +1,5 @@
 <template>
-  <!-- PC 端中 sm:p-6 会覆盖 pb-20，不需要额外处理 -->
-  <UDashboardPanel id="home" :ui="{ body: 'pb-20' }">
+  <UDashboardPanel id="home">
     <template #header>
       <IndexHeader></IndexHeader>
     </template>

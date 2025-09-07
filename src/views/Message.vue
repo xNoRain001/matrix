@@ -52,7 +52,7 @@
 
   <USlideover
     v-if="isMobile"
-    v-model:open="isMessagePanelOpen"
+    v-model:open="isOpenSlideover"
     title=" "
     description=" "
   >
@@ -69,9 +69,8 @@
 <script setup lang="ts">
 import { getProfiles } from '@/apis/profile'
 import { useRecentContactsStore, useUserStore } from '@/store'
-import type { users } from '@/types'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 
 // const tabItems = [
 //   {
@@ -84,12 +83,12 @@ import { computed, onMounted, ref } from 'vue'
 //   }
 // ]
 // const activeTab = ref('message')
-const users = ref<users>([])
+const toast = useToast()
 const { isMobile } = storeToRefs(useUserStore())
 const { unreadMsgCounter, targetId, lastMsgMap, lastMsgList } = storeToRefs(
   useRecentContactsStore()
 )
-const isMessagePanelOpen = computed({
+const isOpenSlideover = computed({
   get() {
     return Boolean(targetId.value)
   },
@@ -100,34 +99,39 @@ const isMessagePanelOpen = computed({
   }
 })
 
-const updateProfiles = async (ids, now) => {
-  if (!ids.length) {
-    return
-  }
-
-  const { data: profileMap } = await getProfiles(ids.join('_'))
-  const _lastMsgMap = lastMsgMap.value
-
-  for (let i = 0, l = ids.length; i < l; i++) {
-    const id = ids[i]
-    _lastMsgMap[id] = { ..._lastMsgMap[id], ...profileMap[id] }
-  }
-
-  localStorage.setItem('profileMap', JSON.stringify(_lastMsgMap))
-  localStorage.setItem('profileMapExpireAt', String(now + 1000 * 60 * 60 * 6))
-}
-
-const _getProfiles = async () => {
+const initProfiles = async () => {
   const now = Date.now()
   const expired = now > Number(localStorage.getItem('profileMapExpireAt'))
 
   // 过期，获取所有用户的最新资料
   if (expired) {
-    await updateProfiles(lastMsgList.value, now)
+    const ids = lastMsgList.value
+
+    if (!ids.length) {
+      return
+    }
+
+    try {
+      const { data: profileMap } = await getProfiles(ids.join('_'))
+      const _lastMsgMap = lastMsgMap.value
+
+      for (let i = 0, l = ids.length; i < l; i++) {
+        const id = ids[i]
+        _lastMsgMap[id] = { ..._lastMsgMap[id], ...profileMap[id] }
+      }
+
+      localStorage.setItem('profileMap', JSON.stringify(_lastMsgMap))
+      localStorage.setItem(
+        'profileMapExpireAt',
+        String(now + 1000 * 60 * 60 * 6)
+      )
+    } catch (error) {
+      toast.add({ title: error.message, color: 'error' })
+    }
   }
 }
 
 onMounted(async () => {
-  await _getProfiles()
+  await initProfiles()
 })
 </script>
