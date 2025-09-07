@@ -9,19 +9,20 @@
     :ui="{ content: 'flex justify-center flex-row' }"
   >
     <template #content>
-      <MessageView
-        class="w-full max-w-(--room-width)"
-        v-if="isOpen"
-        @close="isOpen = false"
-        :is-match="true"
-        :target-id="matchRes.id"
-      />
+      <div class="w-full max-w-(--room-width)">
+        <MessageView
+          v-if="targetId"
+          @close="isOpen = false"
+          :is-match="true"
+          :target-id="matchRes.id"
+        />
+      </div>
     </template>
   </UModal>
 </template>
 
 <script lang="ts" setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMatchStore, useRecentContactsStore } from '@/store'
 import { storeToRefs } from 'pinia'
@@ -37,6 +38,4 @@ onMounted(async () => {
     return router.replace('/')
   }
 })
-
-onBeforeUnmount(() => (targetId.value = ''))
 </script>

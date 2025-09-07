@@ -25,11 +25,11 @@
     </div>
   </UDashboardPanel>
 
-  <ContactView
+  <ProfileSpace
     v-if="!isMobile && selectContactId"
     @close="selectContactId = ''"
     :select-contact-id="selectContactId"
-  ></ContactView>
+  ></ProfileSpace>
   <div
     v-if="!isMobile && !selectContactId"
     class="flex flex-1 items-center justify-center"
@@ -44,11 +44,11 @@
     description=" "
   >
     <template #content>
-      <ContactView
+      <ProfileSpace
         v-if="selectContactId"
         @close="selectContactId = ''"
         :select-contact-id="selectContactId"
-      />
+      ></ProfileSpace>
     </template>
   </USlideover>
 </template>

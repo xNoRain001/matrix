@@ -38,6 +38,7 @@
     </div>
   </UDashboardPanel>
 
+  <!-- 由于并不依赖模态框，因此需要手动修改 targetId -->
   <MessageView
     v-if="!isMobile && targetId"
     @close="targetId = ''"
@@ -59,7 +60,7 @@
     <template #content>
       <MessageView
         v-if="targetId"
-        @close="targetId = ''"
+        @close="isOpenSlideover = false"
         :target-id="targetId"
       />
     </template>
@@ -70,7 +71,7 @@
 import { getProfiles } from '@/apis/profile'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 
 // const tabItems = [
 //   {
@@ -92,8 +93,8 @@ const isOpenSlideover = computed({
   get() {
     return Boolean(targetId.value)
   },
-  set(value: boolean) {
-    if (!value) {
+  set(v) {
+    if (!v) {
       targetId.value = ''
     }
   }

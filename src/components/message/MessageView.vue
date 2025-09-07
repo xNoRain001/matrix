@@ -10,7 +10,7 @@
       ref="msgContainerRef"
       class="grow overflow-y-auto px-4 pt-4 pb-8 sm:px-6"
     >
-      <div class="relative">
+      <div class="relative" @click="onClickAvatar">
         <div
           v-for="(
             { separator, type, timestamp, content, sent }, index
@@ -43,7 +43,12 @@
               :class="separator ? 'mt-4' : 'mt-1'"
               class="flex items-center gap-3"
             >
-              <UAvatar v-if="separator" :alt="targetNickname" size="xl" />
+              <UAvatar
+                data-type="avatar"
+                v-if="separator"
+                :alt="targetNickname"
+                size="xl"
+              />
               <div v-else class="w-10"></div>
               <div
                 class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2 break-words whitespace-pre-wrap"
@@ -73,7 +78,12 @@
               :class="separator ? 'mt-4' : 'mt-1'"
               class="flex items-center gap-3"
             >
-              <UAvatar v-if="separator" :alt="targetNickname" size="xl" />
+              <UAvatar
+                data-type="avatar"
+                v-if="separator"
+                :alt="targetNickname"
+                size="xl"
+              />
               <div v-else class="w-10"></div>
               <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
                 <img :src="content" />
@@ -173,16 +183,25 @@
         <UButton @click="onSendMsg" icon="lucide:send" label="发送"></UButton>
       </div>
     </UPageCard>
-
-    <input
-      ref="photoInputRef"
-      @change="onPhotoInputChange"
-      type="file"
-      hidden
-      multiple
-      accept="image/*"
-    />
   </UDashboardPanel>
+
+  <input
+    ref="photoInputRef"
+    @change="onPhotoInputChange"
+    type="file"
+    hidden
+    multiple
+    accept="image/*"
+  />
+  <USlideover v-model:open="isSpaceSlideoverOpen" title=" " description=" ">
+    <template #content>
+      <ProfileSpace
+        v-if="isSpaceSlideoverOpen"
+        :select-contact-id="targetId"
+        @close="isSpaceSlideoverOpen = false"
+      ></ProfileSpace>
+    </template>
+  </USlideover>
 </template>
 
 <script lang="ts" setup>
@@ -228,6 +247,7 @@ const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
 // 对方是否收到了文件元信息的标识
 const message = ref('')
 const {
+  targetId: _targetId,
   msgContainerRef,
   unreadMsgCounter,
   messageList,
@@ -247,9 +267,21 @@ const toast = useToast()
 const isIOS = /iPhone/i.test(navigator.userAgent)
 const photoInputRef = ref<HTMLInputElement | null>(null)
 const expanded = ref(false)
+const isSpaceSlideoverOpen = ref(false)
 const dashboardPanelRef = computed(
   () => msgContainerRef.value?.parentNode as HTMLElement
 )
+
+const onClickAvatar = e => {
+  const { target } = e
+
+  if (
+    target.getAttribute('data-type') ||
+    target.children[0]?.getAttribute('data-type')
+  ) {
+    isSpaceSlideoverOpen.value = true
+  }
+}
 
 // const onDownload = (url, filename) => {
 //   fetch(url)
@@ -274,7 +306,9 @@ const onCall = () => {
   isVoiceChatMatch.value = false
 
   const { targetId } = props
-  const _roomId = (roomId.value = useGenRoomId(userInfo.value.id, targetId))
+  // 不在这里更新 roomId.value，因为要先确保对方能通话时才会显示语音浮动按钮，
+  // 因此在 onJoin 中更新 roomId.value
+  const _roomId = useGenRoomId(userInfo.value.id, targetId)
   globalSocket.value.emit(
     'unidirectional-web-rtc',
     _roomId,
@@ -453,5 +487,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   clearInterval(timer)
   removeVisualViewportListeners()
+  // 组件销毁时重置 targetId，这样其它地方就不用处理了
+  _targetId.value = ''
 })
 </script>

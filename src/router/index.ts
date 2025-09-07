@@ -26,6 +26,10 @@ const router = createRouter({
       component: () => import('@/views/Profile/Index.vue'),
       children: [
         {
+          path: 'space',
+          component: () => import('@/views/Profile/Space.vue')
+        },
+        {
           path: 'user-info',
           component: () => import('@/views/Profile/UserInfo.vue')
         },
@@ -35,7 +39,8 @@ const router = createRouter({
         },
         {
           path: 'notifications',
-          component: () => import('@/views/Profile/Notifications.vue')
+          component: () =>
+            import('@/components/profile/ProfileNotifications.vue')
         }
       ]
     },

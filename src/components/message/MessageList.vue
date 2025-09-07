@@ -90,5 +90,7 @@ onMounted(() => {
   timer = setInterval(updateTimeAgo, 2 * 1000 * 60)
 })
 
-onBeforeUnmount(() => clearInterval(timer))
+onBeforeUnmount(() => {
+  clearInterval(timer)
+})
 </script>

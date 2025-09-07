@@ -179,14 +179,18 @@ const navs = [
     {
       label: '我的',
       icon: 'ic:baseline-face',
-      to: '/profile/user-info',
+      to: '/profile/space',
       defaultOpen: true,
       type: 'trigger',
       children: [
         {
-          label: '修改资料',
-          to: '/profile/user-info',
+          label: '空间',
+          to: '/profile/space',
           exact: true
+        },
+        {
+          label: '修改资料',
+          to: '/profile/user-info'
         },
         {
           label: '修改密码',
@@ -364,6 +368,8 @@ const initLocalMediaStream = async () => {
 }
 
 const onJoined = async (_roomId, _polite) => {
+  roomId.value = _roomId
+
   if (!isVoiceChatMatch.value) {
     isVoiceChatModalOpen.value = true
   } else if (_polite) {
@@ -389,7 +395,6 @@ const onJoined = async (_roomId, _polite) => {
 
   // 同意的一方需要更新 roomId
   if (!_polite) {
-    roomId.value = _roomId
     createPeerConnection(_roomId, onTrack)
     await initLocalMediaStream()
     globalSocket.value.emit('otherjoin', _roomId)
