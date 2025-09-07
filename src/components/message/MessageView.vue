@@ -33,18 +33,18 @@
               </div>
               <UAvatar
                 v-if="separator"
-                :text="userInfo.nickname[0] || ''"
-                size="md"
+                :alt="userInfo.nickname[0] || ''"
+                size="xl"
               />
-              <div v-else class="h-8 w-8"></div>
+              <div v-else class="w-10"></div>
             </div>
             <div
               v-else
               :class="separator ? 'mt-4' : 'mt-1'"
               class="flex items-center gap-3"
             >
-              <UAvatar v-if="separator" :text="targetNickname" size="md" />
-              <div v-else class="w-8"></div>
+              <UAvatar v-if="separator" :alt="targetNickname" size="xl" />
+              <div v-else class="w-10"></div>
               <div
                 class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2 break-words whitespace-pre-wrap"
               >
@@ -63,18 +63,18 @@
               </div>
               <UAvatar
                 v-if="separator"
-                :text="userInfo.nickname[0] || ''"
-                size="md"
+                :alt="userInfo.nickname[0] || ''"
+                size="xl"
               />
-              <div v-else class="h-8 w-8"></div>
+              <div v-else class="w-10"></div>
             </div>
             <div
               v-else
               :class="separator ? 'mt-4' : 'mt-1'"
               class="flex items-center gap-3"
             >
-              <UAvatar v-if="separator" :text="targetNickname" size="md" />
-              <div v-else class="w-8"></div>
+              <UAvatar v-if="separator" :alt="targetNickname" size="xl" />
+              <div v-else class="w-10"></div>
               <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
                 <img :src="content" />
               </div>
@@ -82,54 +82,16 @@
           </div>
         </div>
         <div
-          v-if="lastMsgMap[targetId].timeAgo"
+          v-if="lastMsgMap[targetId]?.timeAgo"
           class="absolute -bottom-5 text-xs"
-          :class="lastMsgMap[targetId].sent ? 'right-11' : 'left-11'"
+          :class="lastMsgMap[targetId]?.sent ? 'right-13' : 'left-13'"
         >
-          {{ lastMsgMap[targetId].timeAgo }}
+          {{ lastMsgMap[targetId]?.timeAgo }}
         </div>
       </div>
     </div>
     <!-- footer -->
-    <UPageCard v-if="isDesktop" variant="subtle" :ui="{ container: '!p-4' }">
-      <UTextarea
-        placeholder="Ctrl + Enter 换行"
-        @keydown.enter.prevent="onKeydown"
-        enterkeyhint="send"
-        class="relative w-full"
-        v-model="message"
-        :rows="3"
-        :maxrows="3"
-        autoresize
-        variant="none"
-        :ui="{ base: 'p-0' }"
-      >
-      </UTextarea>
-
-      <div class="flex justify-between">
-        <div class="space-x-3">
-          <UTooltip text="表情">
-            <UButton variant="ghost" icon="lucide:smile"></UButton>
-          </UTooltip>
-          <UTooltip text="图片">
-            <UButton
-              variant="ghost"
-              icon="lucide:file-image"
-              @click="onOpenFileSelector(photoInputRef)"
-            ></UButton>
-          </UTooltip>
-          <UTooltip text="语音">
-            <UButton
-              variant="ghost"
-              icon="lucide:phone"
-              @click="onCall"
-            ></UButton>
-          </UTooltip>
-        </div>
-        <UButton @click="onSendMsg" icon="lucide:send" label="发送"></UButton>
-      </div>
-    </UPageCard>
-    <div class="p-4" v-else>
+    <div class="p-4" v-if="isMobile">
       <div class="flex items-end gap-2">
         <UButton variant="ghost" color="neutral" icon="lucide:mic"></UButton>
         <UTextarea
@@ -173,6 +135,44 @@
         </template>
       </UCollapsible>
     </div>
+    <UPageCard v-else variant="subtle" :ui="{ container: '!p-4' }">
+      <UTextarea
+        placeholder="Ctrl + Enter 换行"
+        @keydown.enter.prevent="onKeydown"
+        enterkeyhint="send"
+        class="relative w-full"
+        v-model="message"
+        :rows="3"
+        :maxrows="3"
+        autoresize
+        variant="none"
+        :ui="{ base: 'p-0' }"
+      >
+      </UTextarea>
+
+      <div class="flex justify-between">
+        <div class="space-x-3">
+          <UTooltip text="表情">
+            <UButton variant="ghost" icon="lucide:smile"></UButton>
+          </UTooltip>
+          <UTooltip text="图片">
+            <UButton
+              variant="ghost"
+              icon="lucide:file-image"
+              @click="onOpenFileSelector(photoInputRef)"
+            ></UButton>
+          </UTooltip>
+          <UTooltip text="语音">
+            <UButton
+              variant="ghost"
+              icon="lucide:phone"
+              @click="onCall"
+            ></UButton>
+          </UTooltip>
+        </div>
+        <UButton @click="onSendMsg" icon="lucide:send" label="发送"></UButton>
+      </div>
+    </UPageCard>
 
     <input
       ref="photoInputRef"
@@ -207,7 +207,6 @@ import {
 import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onMounted, ref, computed, watch } from 'vue'
 import type { message } from '@/types'
-import { useMediaQuery } from '@vueuse/core'
 import { voiceChatInviteToastPendingTime } from '@/const'
 
 let timer = null
@@ -226,7 +225,6 @@ const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
   minute: '2-digit',
   weekday: 'long'
 }
-const isDesktop = useMediaQuery('(min-width: 768px)')
 // 对方是否收到了文件元信息的标识
 const message = ref('')
 const {
@@ -238,7 +236,7 @@ const {
 } = storeToRefs(useRecentContactsStore())
 const { isVoiceChatModalOpen, roomId, leaveRoomTimer, isVoiceChatMatch } =
   storeToRefs(useWebRTCStore())
-const { globalSocket, userInfo } = storeToRefs(useUserStore())
+const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
 const { matchRes } = storeToRefs(useMatchStore())
 const targetNickname = computed(() =>
   props.isMatch
@@ -249,6 +247,9 @@ const toast = useToast()
 const isIOS = /iPhone/i.test(navigator.userAgent)
 const photoInputRef = ref<HTMLInputElement | null>(null)
 const expanded = ref(false)
+const dashboardPanelRef = computed(
+  () => msgContainerRef.value?.parentNode as HTMLElement
+)
 
 // const onDownload = (url, filename) => {
 //   fetch(url)
@@ -308,14 +309,11 @@ const resizeHandler = () => {
   // visualViewport.offsetTop 表示视觉视口相对于布局视口的偏移，标签栏在底部时
   // 这个值可能不准
   // TODO: 找到解决办法
-  msgContainerRef.value.style.top = `${visualViewport.offsetTop}px`
-}
-
-const onFocus = () => {
-  expanded.value = false
-  // 输入框获取焦点时，聊天列表滚动到底部
+  dashboardPanelRef.value.style.paddingTop = `${visualViewport.offsetTop}px`
   useScrollToBottom(msgContainerRef)
 }
+
+const onFocus = () => (expanded.value = false)
 
 const onOpenFileSelector = target => target.click()
 
@@ -410,7 +408,10 @@ const removeVisualViewportListeners = () => {
 
 const updateTimeAgo = () => {
   const item = lastMsgMap.value[props.targetId]
-  item.timeAgo = useFormatTimeAgo(item.timestamp)
+
+  if (item) {
+    item.timeAgo = useFormatTimeAgo(item.timestamp)
+  }
 }
 
 watch(
@@ -420,16 +421,19 @@ watch(
       await useGetMessages(messageList, v)
       useScrollToBottom(msgContainerRef)
       const item = lastMsgMap.value[v]
-      const { timestamp, content, unreadMsgs, sent } = item
-      unreadMsgCounter.value -= unreadMsgs
-      item.unreadMsgs = 0
-      await useAddLastMsgToDB({
-        id: v,
-        timestamp,
-        content,
-        sent,
-        unreadMsgs: 0
-      })
+
+      if (item) {
+        const { timestamp, content, unreadMsgs, sent } = item
+        unreadMsgCounter.value -= unreadMsgs
+        item.unreadMsgs = 0
+        await useAddLastMsgToDB({
+          id: v,
+          timestamp,
+          content,
+          sent,
+          unreadMsgs: 0
+        })
+      }
     } else {
       messageList.value = []
     }
@@ -438,6 +442,7 @@ watch(
 )
 
 onMounted(() => {
+  console.log('@')
   if (props.isMatch) {
     updateTimeAgo()
     timer = setInterval(updateTimeAgo, 1000 * 60)

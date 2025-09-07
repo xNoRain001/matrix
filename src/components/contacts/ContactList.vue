@@ -1,5 +1,5 @@
 <template>
-  <div class="divide-default divide-y overflow-y-auto">
+  <div v-if="users.length" class="divide-default divide-y overflow-y-auto">
     <div v-for="(user, index) in users" :key="index">
       <div
         class="flex cursor-pointer items-center gap-4 border-l-2 p-4 text-base transition-colors sm:px-6"

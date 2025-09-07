@@ -1,30 +1,6 @@
 <template>
   <!-- 需要放在下面这些模态框之前才不会被覆盖 -->
-  <UDrawer
-    :handle="false"
-    v-model:open="openProfileDrawer"
-    @animation-end="open => useBackToProfile(open, router)"
-    direction="right"
-    class="w-[80vw]"
-    title=" "
-    description=" "
-  >
-    <template #header>
-      <div class="flex items-center">
-        <UButton
-          variant="ghost"
-          color="neutral"
-          icon="lucide:chevron-left"
-          @click="openProfileDrawer = false"
-        />
-        <h2
-          class="text-highlighted absolute left-1/2 -translate-x-1/2 font-semibold"
-        >
-          个人资料
-        </h2>
-      </div>
-    </template>
-    <template #content></template>
+  <USlideover v-model:open="open" title="个人资料" description=" ">
     <template #body>
       <UPageCard variant="subtle" :ui="{ body: 'w-full' }">
         <template #body>
@@ -60,9 +36,9 @@
         </template>
       </UPageCard>
     </template>
-  </UDrawer>
+  </USlideover>
 
-  <UDrawer v-model:open="openNicknameDrawer" title="修改昵称" description=" ">
+  <UDrawer v-model:open="isOpenNicknameDrawer" title="修改昵称" description=" ">
     <template #body>
       <UFormField
         :ui="{ help: 'text-right pr-4' }"
@@ -83,7 +59,7 @@
     </template>
   </UDrawer>
 
-  <UDrawer v-model:open="openGenderDrawer" title="修改性别" description=" ">
+  <UDrawer v-model:open="isOpenGenderDrawer" title="修改性别" description=" ">
     <template #body>
       <USelect
         class="w-full"
@@ -93,7 +69,7 @@
     </template>
   </UDrawer>
 
-  <UDrawer v-model:open="openBirthdayDrawer" title="修改生日" description=" ">
+  <UDrawer v-model:open="isOpenBirthdayDrawer" title="修改生日" description=" ">
     <template #body>
       <UInput
         class="w-full"
@@ -105,7 +81,7 @@
     </template>
   </UDrawer>
 
-  <UDrawer v-model:open="openRegionDrawer" title="修改地区" description=" ">
+  <UDrawer v-model:open="isOpenRegionDrawer" title="修改地区" description=" ">
     <template #body>
       <div class="space-x-2">
         <USelectMenu
@@ -122,20 +98,19 @@
 <script lang="ts" setup>
 import { updateProfile } from '@/apis/user'
 import { provinceCityMap } from '@/const'
-import { useBackToProfile, useTransformGender } from '@/hooks'
+import { useTransformGender } from '@/hooks'
 import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
 import { vMaska } from 'maska/vue'
-import { useRouter } from 'vue-router'
 
+const open = defineModel<boolean>({ required: true })
 const toast = useToast()
-const router = useRouter()
 const openProfileDrawer = ref(true)
-const openGenderDrawer = ref(false)
-const openBirthdayDrawer = ref(false)
-const openRegionDrawer = ref(false)
-const openNicknameDrawer = ref(false)
+const isOpenGenderDrawer = ref(false)
+const isOpenBirthdayDrawer = ref(false)
+const isOpenRegionDrawer = ref(false)
+const isOpenNicknameDrawer = ref(false)
 const { userInfo } = storeToRefs(useUserStore())
 const userInfoForm = ref({ ...userInfo.value })
 const { region } = userInfo.value
@@ -160,22 +135,22 @@ const profileItems = [
   {
     label: '昵称',
     key: 'nickname',
-    click: () => (openNicknameDrawer.value = true)
+    click: () => (isOpenNicknameDrawer.value = true)
   },
   {
     label: '性别',
     key: 'gender',
-    click: () => (openGenderDrawer.value = true)
+    click: () => (isOpenGenderDrawer.value = true)
   },
   {
     label: '生日',
     key: 'birthday',
-    click: () => (openBirthdayDrawer.value = true)
+    click: () => (isOpenBirthdayDrawer.value = true)
   },
   {
     label: '地区',
     key: 'region',
-    click: () => (openRegionDrawer.value = true)
+    click: () => (isOpenRegionDrawer.value = true)
   }
 ]
 

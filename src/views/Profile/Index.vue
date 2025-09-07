@@ -7,13 +7,10 @@
         </template>
       </UDashboardNavbar>
 
-      <UDashboardToolbar v-if="isDesktop">
-        <UNavigationMenu :items="links" highlight class="-mx-1 flex-1" />
-      </UDashboardToolbar>
       <!-- 移动端卡片 -->
-      <div v-else class="flex w-full flex-col p-4">
+      <div v-if="isMobile" class="flex w-full flex-col p-4 sm:p-6">
         <div class="mb-4 flex items-center">
-          <UAvatar :text="userInfo?.nickname?.[0]" class="size-14" />
+          <UAvatar :alt="userInfo?.nickname?.[0]" size="3xl" />
           <div class="ml-4 w-[calc(100%-4rem)]">
             <span class="text-xl font-semibold">您好</span>
             <div class="overflow-hidden text-ellipsis whitespace-nowrap">
@@ -26,11 +23,11 @@
           v-for="items in cards"
           variant="subtle"
           class="mb-4"
-          :ui="{ container: 'gap-y-0' }"
+          :ui="{ container: 'gap-y-0 py-0 sm:py-0' }"
         >
           <div
-            v-for="{ to, label, icon, onSelect } in items"
-            @click="onSelect ? onSelect() : router.replace(to)"
+            v-for="{ label, icon, onSelect } in items"
+            @click="onSelect"
             class="flex h-12 items-center justify-between"
           >
             <div class="flex items-center gap-2">
@@ -40,12 +37,24 @@
             <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
           </div>
         </UPageCard>
-        <RouterView></RouterView>
       </div>
+      <UDashboardToolbar v-else>
+        <UNavigationMenu :items="links" highlight class="-mx-1 flex-1" />
+      </UDashboardToolbar>
     </template>
 
     <template #body>
+      <div v-if="isMobile">
+        <MProfileUserInfo v-model="isOpenUserInfoSliderover"></MProfileUserInfo>
+        <MProfileUpdatePassword
+          v-model="isOpenUpdatePasswordSliderover"
+        ></MProfileUpdatePassword>
+        <MProfileNotifications
+          v-model="isOpenNotificationsSliderover"
+        ></MProfileNotifications>
+      </div>
       <div
+        v-else
         class="mx-auto flex w-full flex-col gap-4 sm:gap-6 lg:max-w-2xl lg:gap-12"
       >
         <RouterView />
@@ -56,47 +65,48 @@
 
 <script lang="ts" setup>
 import { useUserStore } from '@/store'
-import { useMediaQuery } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import ModalLogout from '@/components/modal/ModalLogout.vue'
 import DrawerLogout from '@/components/drawer/DrawerLogout.vue'
+import { ref } from 'vue'
 
-const isDesktop = useMediaQuery('(min-width: 768px)')
 const overlay = useOverlay()
 const logoutModal = overlay.create(ModalLogout)
 const logoutDrawer = overlay.create(DrawerLogout)
+const isOpenUserInfoSliderover = ref(false)
+const isOpenUpdatePasswordSliderover = ref(false)
+const isOpenNotificationsSliderover = ref(false)
 const cards = [
   [
     {
       icon: 'lucide:user-round',
       label: '个人资料',
-      to: '/profile/user-info'
+      onSelect: () => (isOpenUserInfoSliderover.value = true)
     },
     {
       icon: 'lucide:bell',
       label: '通知',
-      to: '/profile/notifications'
+      onSelect: () => (isOpenNotificationsSliderover.value = true)
     }
   ],
   [
     {
       icon: 'lucide:palette',
       label: '主题',
-      to: '/profile'
+      onSelect: () => {}
     },
     {
       icon: 'lucide:sun-moon',
       label: '外观',
-      to: '/profile'
+      onSelect: () => {}
     }
   ],
   [
     {
       icon: 'lucide:shield',
       label: '修改密码',
-      to: '/profile/update-password'
+      onSelect: () => (isOpenUpdatePasswordSliderover.value = true)
     },
     {
       icon: 'lucide:log-out',
@@ -105,8 +115,7 @@ const cards = [
     }
   ]
 ]
-const { userInfo } = storeToRefs(useUserStore())
-const router = useRouter()
+const { isMobile, userInfo } = storeToRefs(useUserStore())
 const links = [
   [
     {

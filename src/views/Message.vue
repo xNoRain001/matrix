@@ -29,20 +29,29 @@
       </template> -->
     </UDashboardNavbar>
 
-    <MessageList v-if="done" v-model="targetId" />
+    <MessageList v-if="lastMsgList.length" v-model="targetId" />
+    <div
+      v-if="isMobile && !lastMsgList.length"
+      class="flex flex-1 items-center justify-center"
+    >
+      <UIcon name="lucide:message-circle-more" class="text-dimmed size-32" />
+    </div>
   </UDashboardPanel>
 
   <MessageView
-    v-if="targetId"
+    v-if="!isMobile && targetId"
     @close="targetId = ''"
     :target-id="targetId"
   ></MessageView>
-  <div v-else class="hidden flex-1 items-center justify-center lg:flex">
+  <div
+    v-if="!isMobile && !targetId"
+    class="flex flex-1 items-center justify-center"
+  >
     <UIcon name="lucide:message-circle-more" class="text-dimmed size-32" />
   </div>
 
   <USlideover
-    v-if="!isDesktop"
+    v-if="isMobile"
     v-model:open="isMessagePanelOpen"
     title=" "
     description=" "
@@ -59,14 +68,11 @@
 
 <script setup lang="ts">
 import { getProfiles } from '@/apis/profile'
-import { useRecentContactsStore } from '@/store'
+import { useRecentContactsStore, useUserStore } from '@/store'
 import type { users } from '@/types'
-import { useMediaQuery } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref } from 'vue'
 
-const done = ref(false)
-const isDesktop = useMediaQuery('(min-width: 768px)')
 // const tabItems = [
 //   {
 //     label: '消息',
@@ -79,6 +85,7 @@ const isDesktop = useMediaQuery('(min-width: 768px)')
 // ]
 // const activeTab = ref('message')
 const users = ref<users>([])
+const { isMobile } = storeToRefs(useUserStore())
 const { unreadMsgCounter, targetId, lastMsgMap, lastMsgList } = storeToRefs(
   useRecentContactsStore()
 )
@@ -122,6 +129,5 @@ const _getProfiles = async () => {
 
 onMounted(async () => {
   await _getProfiles()
-  done.value = true
 })
 </script>

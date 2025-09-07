@@ -157,18 +157,8 @@
       label="确定修改"
     ></UButton>
   </DefineFilterBodyTemplate>
-  <UModal
-    v-if="isDesktop"
-    title="筛选"
-    description=" "
-    v-model:open="isOpenFilterDrawer"
-  >
-    <template #body>
-      <ReuseFilterBodyTemplate></ReuseFilterBodyTemplate>
-    </template>
-  </UModal>
   <UDrawer
-    v-else
+    v-if="isMobile"
     title="筛选"
     description=" "
     v-model:open="isOpenFilterDrawer"
@@ -177,6 +167,11 @@
       <ReuseFilterBodyTemplate></ReuseFilterBodyTemplate>
     </template>
   </UDrawer>
+  <UModal v-else title="筛选" description=" " v-model:open="isOpenFilterDrawer">
+    <template #body>
+      <ReuseFilterBodyTemplate></ReuseFilterBodyTemplate>
+    </template>
+  </UModal>
 </template>
 
 <script lang="ts" setup>
@@ -185,13 +180,12 @@ import { useRoute } from 'vue-router'
 import { useScrollToTop } from '@/hooks'
 import { useMatchStore, useUserStore, useWebRTCStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { createReusableTemplate, useMediaQuery } from '@vueuse/core'
+import { createReusableTemplate } from '@vueuse/core'
 import { provinceCityMap } from '@/const'
 
 let matchType = ''
 const [DefineFilterBodyTemplate, ReuseFilterBodyTemplate] =
   createReusableTemplate()
-const isDesktop = useMediaQuery('(min-width: 768px)')
 const list = [
   {
     icon: 'lucide:message-circle',
@@ -216,7 +210,7 @@ const list = [
 ]
 const isOpenFilterDrawer = ref(false)
 const { hasMatchRes, offline, matching, noMatch } = storeToRefs(useMatchStore())
-const { userInfo, globalSocket } = storeToRefs(useUserStore())
+const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
 const { roomId } = storeToRefs(useWebRTCStore())
 const toast = useToast()
 const route = useRoute()

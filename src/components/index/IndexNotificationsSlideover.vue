@@ -1,7 +1,7 @@
 <template>
   <USlideover
     v-model:open="isNotificationsSlideoverOpen"
-    title="Notifications"
+    title="通知"
     description=" "
   >
     <template #body>

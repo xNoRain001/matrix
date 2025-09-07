@@ -1,10 +1,5 @@
 <template>
-  <ProfileNotifications v-if="isDesktop"></ProfileNotifications>
-  <MProfileNotifications v-else></MProfileNotifications>
+  <ProfileNotifications></ProfileNotifications>
 </template>
 
-<script setup lang="ts">
-import { useMediaQuery } from '@vueuse/core'
-
-const isDesktop = useMediaQuery('(min-width: 768px)')
-</script>
+<script setup lang="ts"></script>

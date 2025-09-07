@@ -58,12 +58,13 @@
         <RouterView />
         <IndexNotificationsSlideover />
         <!-- 移动端底部导航栏 -->
-        <IndexFooter v-if="!isDesktop"></IndexFooter>
+        <IndexFooter v-if="isMobile"></IndexFooter>
       </UDashboardGroup>
 
       <!-- 语音聊天 -->
       <UModal
         fullscreen
+        :overlay="false"
         v-model:open="isVoiceChatModalOpen"
         title=" "
         description=" "
@@ -99,7 +100,6 @@ import {
   useUserStore,
   useWebRTCStore
 } from './store'
-import { useMediaQuery } from '@vueuse/core'
 import { computed, watch } from 'vue'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import ModalLogout from './components/modal/ModalLogout.vue'
@@ -134,8 +134,8 @@ const toast = useToast()
 const overlay = useOverlay()
 const logoutModal = overlay.create(ModalLogout)
 const logoutDrawer = overlay.create(DrawerLogout)
-const isDesktop = useMediaQuery('(min-width: 768px)')
-const { globalSocket, globalPC, userInfo } = storeToRefs(useUserStore())
+const { isMobile, globalSocket, globalPC, userInfo } =
+  storeToRefs(useUserStore())
 const {
   leaveRoomTimer,
   rtcConnected,
@@ -199,7 +199,7 @@ const navs = [
         {
           label: '登出',
           onSelect: () => {
-            isDesktop.value ? logoutModal.open() : logoutDrawer.open()
+            isMobile.value ? logoutDrawer.open() : logoutModal.open()
           }
         }
       ]
@@ -459,7 +459,7 @@ const onReceiveMsg = async messageRecord => {
   const isOverFiveMins = useIsOverFiveMins(messageRecord, _lastMsgMap, id)
 
   if (!_lastMsgMap[id]) {
-    await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
+    await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, id)
   }
 
   await useAddMessageRecordToDB(isOverFiveMins, messageRecord, _lastMsgMap)
@@ -755,6 +755,7 @@ const initWebRTC = id => {
 }
 
 const initLastMsgs = async () => {
+  // TODO: lastMsgMap 和 lastMsgList 完整性检查
   let _lastMsgMap: lastMsgMap = {}
   let _unreadMsgCounter = 0
   const db = await useGetDB()

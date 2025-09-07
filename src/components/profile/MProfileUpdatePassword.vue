@@ -1,26 +1,5 @@
 <template>
-  <UDrawer
-    :handle="false"
-    v-model:open="openUpdatePasswordDrawer"
-    @animation-end="open => useBackToProfile(open, router)"
-    direction="right"
-    class="w-[80vw]"
-    title=" "
-    description=" "
-  >
-    <template #header>
-      <div class="flex items-center">
-        <UButton
-          variant="ghost"
-          color="neutral"
-          icon="lucide:chevron-left"
-          class="cursor-pointer"
-          @click="openUpdatePasswordDrawer = false"
-        />
-        <div class="absolute left-1/2 -translate-x-1/2">修改密码</div>
-      </div>
-    </template>
-    <template #content></template>
+  <USlideover v-model:open="open" title="修改密码" description=" ">
     <template #body>
       <UPageCard variant="subtle">
         <UForm
@@ -115,17 +94,17 @@
         </UForm>
       </UPageCard>
     </template>
-  </UDrawer>
+  </USlideover>
 </template>
 
 <script lang="ts" setup>
 import { updatePassword } from '@/apis/user'
-import { useBackToProfile, useEncryptUserInfo, useLogout } from '@/hooks'
+import { useEncryptUserInfo, useLogout } from '@/hooks'
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import * as z from 'zod'
 
-const openUpdatePasswordDrawer = ref(true)
+const open = defineModel<boolean>({ required: true })
 const schema = z.object({
   oldPassword: z.string().min(8, '密码长度至少为 8 位'),
   password: z.string().min(8, '密码长度至少为 8 位'),

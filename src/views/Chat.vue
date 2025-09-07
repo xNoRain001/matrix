@@ -1,8 +1,8 @@
 <template>
   <UModal
     @after:leave="router.replace('/')"
-    :dismissible="false"
     fullscreen
+    :overlay="false"
     title=" "
     description=" "
     v-model:open="isOpen"

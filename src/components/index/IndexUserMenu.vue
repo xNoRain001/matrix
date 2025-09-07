@@ -38,7 +38,7 @@
 import { neutralColors, primaryColors, radiuses } from '@/const'
 import { useUserStore } from '@/store'
 import type { DropdownMenuItem } from '@nuxt/ui'
-import { useColorMode, useMediaQuery } from '@vueuse/core'
+import { useColorMode } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, reactive, ref } from 'vue'
 import { appConfig as _appConfig } from '@/const'
@@ -50,14 +50,12 @@ import colors from 'tailwindcss/colors'
 defineProps<{
   collapsed?: boolean
 }>()
-
-const isDesktop = useMediaQuery('(min-width: 768px)')
 const overlay = useOverlay()
 const logoutModal = overlay.create(ModalLogout)
 const logoutDrawer = overlay.create(DrawerLogout)
 const { store } = useColorMode()
 const appConfig = reactive(_appConfig)
-const { userInfo } = storeToRefs(useUserStore())
+const { isMobile, userInfo } = storeToRefs(useUserStore())
 const user = ref({
   name: userInfo.value.nickname,
   avatar: {
@@ -179,7 +177,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
       label: '登出',
       icon: 'i-lucide-log-out',
       onSelect: () => {
-        isDesktop.value ? logoutModal.open() : logoutDrawer.open()
+        isMobile.value ? logoutDrawer.open() : logoutModal.open()
       }
     }
   ]

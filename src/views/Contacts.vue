@@ -20,20 +20,18 @@
   </UDashboardPanel>
 
   <div
-    v-if="isDesktop && !selectUser"
+    v-if="!selectUser"
     class="hidden flex-1 items-center justify-center lg:flex"
   >
-    <UIcon name="lucide:message-circle-more" class="text-dimmed size-32" />
+    <UIcon name="lucide:user-round" class="text-dimmed size-32" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { getContacts } from '@/apis/contact'
 import type { users } from '@/types'
-import { useMediaQuery } from '@vueuse/core'
 import { onMounted, ref, watch } from 'vue'
 
-const isDesktop = useMediaQuery('(min-width: 768px)')
 const users = ref<users>([])
 const selectUser = ref(null)
 const toast = useToast()

@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { Socket } from 'socket.io-client'
 import type { userInfo } from '@/types'
+import { useBreakpoints, breakpointsTailwind } from '@vueuse/core'
 
 const useUserStore = defineStore('userStore', () => {
   let userInfo = null
@@ -27,7 +28,11 @@ const useUserStore = defineStore('userStore', () => {
     localStorage.removeItem('token')
   }
 
+  const breakpoints = useBreakpoints(breakpointsTailwind)
+  const isMobile = breakpoints.smaller('lg')
+
   return {
+    isMobile,
     globalSocket: ref<Socket | null>(null),
     globalPC: ref<RTCPeerConnection | null>(null),
     userInfo: ref<userInfo | null>(userInfo)
