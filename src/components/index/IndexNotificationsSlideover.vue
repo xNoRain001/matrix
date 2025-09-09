@@ -3,33 +3,43 @@
     v-model:open="isNotificationsSlideoverOpen"
     title="通知"
     description=" "
+    :ui="{ body: '!p-0' }"
   >
+    <!-- <template #close>
+      <UButton icon="lucide:equal-approximately" variant="ghost"></UButton>
+    </template> -->
     <template #body>
       <div
-        v-for="notification in notifications"
-        :key="notification.id"
-        class="hover:bg-elevated/50 relative -mx-3 flex items-center gap-3 rounded-md px-3 py-2.5 first:-mt-3 last:-mb-3"
+        v-for="(
+          { id, profile: { nickname }, createdAt, content }, index
+        ) in notifications"
+        :key="id"
+        class="text-toned hover:border-primary hover:bg-primary/5 flex cursor-pointer items-center gap-4 border-l-2 border-(--ui-bg) p-4 text-base transition-colors sm:px-6"
       >
-        <UChip color="error" :show="!!notification.unread" inset>
-          <UAvatar :text="notification.profile.nickname[0]" size="md" />
-        </UChip>
-
-        <div class="flex-1 text-sm">
-          <p class="flex items-center justify-between">
-            <span class="text-highlighted font-medium">{{
-              notification.profile.nickname
-            }}</span>
-
-            <time
-              :datetime="notification.date"
-              class="text-muted text-xs"
-              v-text="formatTimeAgo(new Date(notification.createdAt))"
-            />
-          </p>
-
-          <p class="text-dimmed">
-            {{ notification.desc }}
-          </p>
+        <UAvatar :text="nickname[0]" size="3xl" />
+        <div class="flex flex-1 flex-col gap-y-2 text-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-highlighted line-clamp-1 max-w-1/2 font-medium">
+              {{ nickname }}</span
+            >
+            <time class="text-muted text-xs">{{
+              useFormatTimeAgo(createdAt)
+            }}</time>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="text-dimmed line-clamp-1 max-w-1/2">
+              {{ content }}
+            </div>
+            <div>
+              <UButton
+                @click="onDelete(index)"
+                color="error"
+                label="删除"
+                icon="lucide:x"
+                size="xs"
+              ></UButton>
+            </div>
+          </div>
         </div>
       </div>
     </template>
@@ -37,42 +47,16 @@
 </template>
 
 <script setup lang="ts">
-import { formatTimeAgo } from '@vueuse/core'
-import { useDashboard } from '@/hooks'
-import { onMounted, ref } from 'vue'
-import { getCandidates } from '@/apis/contact'
+import { storeToRefs } from 'pinia'
+import { useUserStore } from '@/store'
+import { useFormatTimeAgo } from '@/hooks'
 
-const { isNotificationsSlideoverOpen } = useDashboard()
-const notifications = ref([])
-const toast = useToast()
+const isNotificationsSlideoverOpen = defineModel<boolean>()
+const { notifications } = storeToRefs(useUserStore())
 
-const _initNotifications = async () => {
-  try {
-    const { data } = await getCandidates()
-    localStorage.setItem('notifications', JSON.stringify(data))
-    notifications.value = data
-  } catch (error) {
-    toast.add({ title: error.message, color: 'error' })
-  }
+const onDelete = index => {
+  const _notifications = notifications.value
+  _notifications.splice(index, 1)
+  localStorage.setItem('notifications', JSON.stringify(_notifications))
 }
-
-const initNotifications = () => {
-  const localNotifications = localStorage.getItem('notifications')
-
-  if (!localNotifications) {
-    _initNotifications()
-  } else {
-    try {
-      notifications.value = JSON.parse(localNotifications)
-    } catch (error) {
-      // 数据被修改，重新从接口获取
-      localStorage.removeItem('notifications')
-      _initNotifications()
-    }
-  }
-}
-
-onMounted(async () => {
-  initNotifications()
-})
 </script>

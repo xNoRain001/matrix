@@ -14,4 +14,7 @@ export const refuseCandidate = async targetId =>
 export const getCandidates = async () =>
   HTTP.request(`${prefix}/get-candidates`)
 
+export const deleteCandidate = async targetId =>
+  HTTP.request(`${prefix}/delete-candidate?targetId=${targetId}`)
+
 export const getContacts = async () => HTTP.request(`${prefix}/all`)

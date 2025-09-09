@@ -6,6 +6,11 @@ import { useBreakpoints, breakpointsTailwind } from '@vueuse/core'
 
 const useUserStore = defineStore('userStore', () => {
   let userInfo = null
+  let _notifications = []
+
+  try {
+    _notifications = JSON.parse(localStorage.getItem('notifications') || '[]')
+  } catch {}
 
   try {
     userInfo = JSON.parse(
@@ -35,7 +40,19 @@ const useUserStore = defineStore('userStore', () => {
     isMobile,
     globalSocket: ref<Socket | null>(null),
     globalPC: ref<RTCPeerConnection | null>(null),
-    userInfo: ref<userInfo | null>(userInfo)
+    userInfo: ref<userInfo | null>(userInfo),
+    notifications: ref<
+      {
+        content: string
+        createdAt: number
+        id: string
+        type: string
+        profile: {
+          nickname: string
+          avatar: string
+        }
+      }[]
+    >(_notifications)
   }
 })
 

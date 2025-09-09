@@ -28,9 +28,7 @@
         variant="ghost"
         @click="open = !open"
       />
-      <UDropdownMenu :items="dropdownItems">
-        <UButton icon="lucide:ellipsis" color="neutral" variant="ghost" />
-      </UDropdownMenu>
+      <MessageDropdownMenu :target-id="targetId"></MessageDropdownMenu>
     </template>
   </UDashboardNavbar>
 
@@ -80,28 +78,6 @@ const emits = defineEmits(['close'])
 const open = ref(true)
 const { lastMsgMap } = storeToRefs(useRecentContactsStore())
 const { matchRes } = storeToRefs(useMatchStore())
-const dropdownItems = [
-  [
-    {
-      label: '备注',
-      icon: 'i-lucide-check-circle'
-    },
-    {
-      label: '删除好友',
-      icon: 'i-lucide-triangle-alert'
-    }
-  ],
-  [
-    {
-      label: '删除聊天记录',
-      icon: 'i-lucide-star'
-    },
-    {
-      label: '屏蔽',
-      icon: 'i-lucide-circle-pause'
-    }
-  ]
-]
 const targetNickname = computed(() =>
   props.isMatch
     ? matchRes.value.nickname

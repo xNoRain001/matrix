@@ -1,7 +1,6 @@
 <template>
   <UModal
     @after:leave="router.replace('/')"
-    :overlay="false"
     fullscreen
     title=" "
     description=" "

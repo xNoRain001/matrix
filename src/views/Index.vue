@@ -32,13 +32,13 @@
     </template>
   </UDashboardPanel>
 
+  <!-- 匹配 -->
   <UModal
     v-model:open="matching"
-    :overlay="false"
     fullscreen
     title="匹配"
     description=" "
-    v-on:after:leave="afterLeave"
+    @after:leave="afterLeave"
   >
     <template #body>
       <div class="flex h-full items-center justify-center">

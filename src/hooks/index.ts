@@ -23,7 +23,6 @@ import useTransformGender from './use-transform-gender'
 import useBackToProfile from './use-back-to-profile'
 import useRefreshRoomInfo from './use-refresh-room-info'
 import useVisibilityChange from './use-visibility-change'
-import { useDashboard } from './use-dashboard'
 import useGetMessages from './use-get-messages'
 import useGenRoomId from './use-gen-room-id'
 import useAddLastMsgToDB from './use-add-last-msg-to-db'
@@ -34,8 +33,10 @@ import useIsOverFiveMins from './use-is-over-five-mins'
 import useAddMessageRecordToDB from './use-add-message-record-to-db'
 import useAddMessageRecordToView from './use-add-message-record-to-view'
 import useUpdateLastMsg from './use-update-last-msg'
+import useRefreshContacts from './use-refresh-contacts'
 
 export {
+  useRefreshContacts,
   useAddMessageRecordToDB,
   useAddMessageRecordToView,
   useUpdateLastMsg,
@@ -46,7 +47,6 @@ export {
   useAddLastMsgToDB,
   useGenRoomId,
   useGetMessages,
-  useDashboard,
   useVisibilityChange,
   useRefreshRoomInfo,
   useBackToProfile,

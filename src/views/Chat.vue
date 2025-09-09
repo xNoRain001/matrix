@@ -2,7 +2,6 @@
   <UModal
     @after:leave="router.replace('/')"
     fullscreen
-    :overlay="false"
     title=" "
     description=" "
     v-model:open="isOpen"

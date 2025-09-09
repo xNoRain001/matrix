@@ -4,11 +4,9 @@
       <div
         class="flex cursor-pointer items-center gap-4 border-l-2 p-4 text-sm transition-colors sm:px-6"
         :class="[
-          'text-toned',
-          // user.unread ? 'text-highlighted' : 'text-toned',
           targetId === id
-            ? 'border-primary bg-primary/10'
-            : 'hover:border-primary hover:bg-primary/5 border-(--ui-bg)'
+            ? 'border-primary bg-primary/10 text-highlighted'
+            : 'hover:border-primary hover:bg-primary/5 text-toned border-(--ui-bg)'
         ]"
         @click="targetId = id"
       >

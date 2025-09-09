@@ -17,22 +17,17 @@
         />
       </template>
       <template #right>
-        <UButton
-          v-if="isSelf"
-          icon="lucide:plus"
-          color="neutral"
-          variant="ghost"
-        />
+        <UButton v-if="isSelf" icon="lucide:plus" variant="ghost" />
         <UButton
           v-if="isSelf && isMobile"
           icon="lucide:settings"
-          color="neutral"
           variant="ghost"
           @click="isOpenSettingsSlideover = true"
         />
-        <UDropdownMenu v-if="!isSelf" :items="dropdownItems">
-          <UButton icon="lucide:ellipsis" color="neutral" variant="ghost" />
-        </UDropdownMenu>
+        <MessageDropdownMenu
+          v-if="!isSelf"
+          :target-id="selectContactId"
+        ></MessageDropdownMenu>
       </template>
     </UDashboardNavbar>
     <!-- 背景图片 -->
@@ -50,7 +45,7 @@
         <div class="flex items-center gap-2">
           {{ nickname }}
           <UButton
-            v-if="!isSelf"
+            v-if="!isSelf && Boolean(contactProfileMap[selectContactId])"
             icon="lucide:user-round-pen"
             label="备注"
           ></UButton>
@@ -112,6 +107,7 @@
     </UPageCard>
   </div>
 
+  <!-- 聊天界面 -->
   <USlideover
     v-if="!isSelf"
     v-model:open="isOpenMessageViewSlideover"
@@ -126,6 +122,7 @@
       />
     </template>
   </USlideover>
+  <!-- 移动端设置界面 -->
   <USlideover
     v-if="isMobile && isSelf"
     v-model:open="isOpenSettingsSlideover"
@@ -182,28 +179,6 @@ const isOpenUpdatePasswordSliderover = ref(false)
 const isOpenNotificationsSliderover = ref(false)
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const { targetId, contactProfileMap } = storeToRefs(useRecentContactsStore())
-const dropdownItems = [
-  [
-    {
-      label: '备注',
-      icon: 'i-lucide-check-circle'
-    },
-    {
-      label: '删除好友',
-      icon: 'i-lucide-triangle-alert'
-    }
-  ],
-  [
-    {
-      label: '删除聊天记录',
-      icon: 'i-lucide-star'
-    },
-    {
-      label: '屏蔽',
-      icon: 'i-lucide-circle-pause'
-    }
-  ]
-]
 const cards = [
   [
     {
@@ -244,15 +219,15 @@ const cards = [
 ]
 const tabItems = [
   {
-    label: '消息',
-    value: 'message'
+    label: '我的',
+    value: 'my'
   },
   {
     label: '好友',
-    value: 'contact'
+    value: 'friends'
   }
 ]
-const activeTab = ref('message')
+const activeTab = ref('my')
 const isSelf = !props.selectContactId
 const inView = computed(() => targetId.value === props.selectContactId)
 const nickname = computed(() =>

@@ -1,7 +1,7 @@
 <template>
   <UModal
     fullscreen
-    v-model:open="open"
+    default-open
     title=" "
     description=" "
     :ui="{
@@ -10,20 +10,16 @@
   >
     <template #content>
       <div class="w-1/2">
-        <ProfileSpace @close="onClose"></ProfileSpace>
+        <ProfileSpace
+          @close="router.replace('/profile/user-info')"
+        ></ProfileSpace>
       </div>
     </template>
   </UModal>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-const open = ref(true)
 const router = useRouter()
-const onClose = () => {
-  open.value = false
-  router.replace('/profile/user-info')
-}
 </script>

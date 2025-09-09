@@ -12,7 +12,25 @@
       </template>
 
       <template #right>
-        <UButton icon="lucide:plus" variant="ghost"></UButton>
+        <UTooltip text="通知">
+          <UButton
+            color="neutral"
+            variant="ghost"
+            square
+            @click="isNotificationsSlideoverOpen = true"
+          >
+            <UChip
+              :show="Boolean(contactNotifications.length)"
+              color="error"
+              inset
+            >
+              <UIcon
+                name="i-lucide-bell"
+                class="text-primary size-5 shrink-0"
+              />
+            </UChip>
+          </UButton>
+        </UTooltip>
       </template>
     </UDashboardNavbar>
 
@@ -37,6 +55,11 @@
     <UIcon name="lucide:user-round" class="text-dimmed size-32" />
   </div>
 
+  <!-- 好友申请通知 -->
+  <ContactNotificationsSlideover v-model="isNotificationsSlideoverOpen" />
+
+  <!-- 移动端点击用户进入的个人空间 -->
+  <!-- class="max-w-none" 实现平板全屏 -->
   <USlideover
     v-if="isMobile"
     v-model:open="isOpenSlideover"
@@ -55,6 +78,7 @@
 
 <script setup lang="ts">
 import { getContacts } from '@/apis/contact'
+import { useRefreshContacts } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import type { users } from '@/types'
 import { storeToRefs } from 'pinia'
@@ -63,8 +87,11 @@ import { onMounted, ref, computed } from 'vue'
 const users = ref<users>([])
 const selectContactId = ref('')
 const toast = useToast()
+const isNotificationsSlideoverOpen = ref(false)
 const { isMobile } = storeToRefs(useUserStore())
-const { contactList, contactProfileMap } = storeToRefs(useRecentContactsStore())
+const { contactList, contactProfileMap, contactNotifications } = storeToRefs(
+  useRecentContactsStore()
+)
 const isOpenSlideover = computed({
   get() {
     return Boolean(selectContactId.value)
@@ -84,23 +111,8 @@ const initContactList = async () => {
   if (expired) {
     try {
       const { data } = await getContacts()
-      const _contactProfileMap = contactProfileMap.value
-
-      contactList.value = data
-      for (let i = 0, l = data.length; i < l; i++) {
-        const item = data[i]
-        const { id } = item
-        _contactProfileMap[id] = item
-      }
-      localStorage.setItem('contactList', JSON.stringify(data))
-      localStorage.setItem(
-        'contactProfileMap',
-        JSON.stringify(_contactProfileMap)
-      )
-      localStorage.setItem(
-        'contactListExpireAt',
-        String(now + 1000 * 60 * 60 * 6)
-      )
+      console.log(data)
+      useRefreshContacts(data, contactList, contactProfileMap)
     } catch (error) {
       toast.add({ title: error.message, color: 'error' })
     }

@@ -14,19 +14,19 @@
         <UBadge v-if="unreadMsgCounter" :label="unreadMsgCounter" size="sm" />
       </template>
 
-      <!-- <template #right>
+      <template #right>
         <UButton
-          v-if="activeTab === 'contact'"
-          icon="lucide:plus"
+          @click="onResetMsgCounter"
+          icon="lucide:equal-approximately"
           variant="ghost"
         ></UButton>
-        <UTabs
+        <!-- <UTabs
           v-model="activeTab"
           :items="tabItems"
           :content="false"
           size="xs"
-        />
-      </template> -->
+        /> -->
+      </template>
     </UDashboardNavbar>
 
     <MessageList v-if="lastMsgList.length" v-model="targetId" />
@@ -99,6 +99,18 @@ const isOpenSlideover = computed({
     }
   }
 })
+
+const onResetMsgCounter = () => {
+  const _lastMsgMap = lastMsgMap.value
+  const keys = Object.keys(_lastMsgMap)
+
+  for (let i = 0, l = keys.length; i < l; i++) {
+    _lastMsgMap[keys[i]].unreadMsgs = 0
+  }
+
+  unreadMsgCounter.value = 0
+  localStorage.setItem('profileMap', JSON.stringify(_lastMsgMap))
+}
 
 const initProfiles = async () => {
   const now = Date.now()

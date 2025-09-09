@@ -38,8 +38,14 @@
                   v-if="unreadMsgCounter"
                   :label="unreadMsgCounter"
                   size="sm"
-                /> </template
-            ></UNavigationMenu>
+              /></template>
+              <template #contacts-trailing>
+                <UBadge
+                  v-if="contactNotifications.length"
+                  :label="contactNotifications.length"
+                  size="sm"
+              /></template>
+            </UNavigationMenu>
 
             <UNavigationMenu
               :collapsed="collapsed"
@@ -56,7 +62,6 @@
         </UDashboardSidebar>
         <UDashboardSearch :groups="groups" />
         <RouterView />
-        <IndexNotificationsSlideover />
         <!-- 移动端底部导航栏 -->
         <IndexFooter v-if="isMobile"></IndexFooter>
       </UDashboardGroup>
@@ -64,7 +69,6 @@
       <!-- 语音聊天 -->
       <UModal
         fullscreen
-        :overlay="false"
         v-model:open="isVoiceChatModalOpen"
         title=" "
         description=" "
@@ -119,7 +123,8 @@ import {
   useScrollToBottom,
   useAddMessageRecordToView,
   useAddMessageRecordToDB,
-  useUpdateLastMsg
+  useUpdateLastMsg,
+  useRefreshContacts
 } from './hooks'
 import { useRouter } from 'vue-router'
 import { voiceChatInviteToastExpireTime } from './const'
@@ -134,7 +139,7 @@ const toast = useToast()
 const overlay = useOverlay()
 const logoutModal = overlay.create(ModalLogout)
 const logoutDrawer = overlay.create(DrawerLogout)
-const { isMobile, globalSocket, globalPC, userInfo } =
+const { notifications, isMobile, globalSocket, globalPC, userInfo } =
   storeToRefs(useUserStore())
 const {
   leaveRoomTimer,
@@ -154,7 +159,10 @@ const {
   targetId,
   messageList,
   lastMsgMap,
-  lastMsgList
+  lastMsgList,
+  contactNotifications,
+  contactList,
+  contactProfileMap
 } = storeToRefs(useRecentContactsStore())
 const { matchRes, matchType, hasMatchRes, offline, matching, noMatch } =
   storeToRefs(useMatchStore())
@@ -168,7 +176,8 @@ const navs = [
     {
       label: '好友',
       icon: 'lucide:users-round',
-      to: '/contacts'
+      to: '/contacts',
+      slot: 'contacts'
     },
     {
       label: '消息',
@@ -312,22 +321,65 @@ const startRTC = async roomId => {
   globalSocket.value.emit('web-rtc', roomId, { description: offer })
 }
 
-const onAddContact = targetId => {
-  targetId
+const onAddContact = async notification => {
+  toast.add({ title: `${notification.profile.nickname} 向你发送了好友申请` })
+  const _contactNotifications = contactNotifications.value
+  _contactNotifications.unshift(notification)
+  localStorage.setItem(
+    'contactNotifications',
+    JSON.stringify(_contactNotifications)
+  )
 }
 
-const onRefuseWebRTCContact = toast => {
-  toast.add({
-    title: '对方拒绝了你的好友请求',
-    color: 'error'
-  })
+const onAgreeContact = (notification, contact) => {
+  const _contactNotifications = contactNotifications.value
+  _contactNotifications.unshift(notification)
+  localStorage.setItem(
+    'contactNotifications',
+    JSON.stringify(_contactNotifications)
+  )
+  const _contactList = contactList.value
+  const _contactProfileMap = contactProfileMap.value
+  _contactList.unshift(contact)
+  _contactProfileMap[contact.id] = contact
+  localStorage.setItem('contactList', JSON.stringify(_contactList))
+  localStorage.setItem('contactProfileMap', JSON.stringify(_contactProfileMap))
 }
 
-const onAgreeContact = toast => {
-  toast.add({
-    title: '添加好友成功',
-    color: 'success'
-  })
+const onRefuseContact = notification => {
+  const _contactNotifications = contactNotifications.value
+  _contactNotifications.unshift(notification)
+  localStorage.setItem(
+    'contactNotifications',
+    JSON.stringify(_contactNotifications)
+  )
+}
+
+const onDeleteContact = (notification, id) => {
+  const _contactNotifications = contactNotifications.value
+  _contactNotifications.unshift(notification)
+  localStorage.setItem(
+    'contactNotifications',
+    JSON.stringify(_contactNotifications)
+  )
+
+  const _contactList = contactList.value
+  const _contactProfileMap = contactProfileMap.value
+  const index = _contactList.findIndex(item => item.id === id)
+
+  if (index >= 0) {
+    _contactList.splice(index, 1)
+    delete _contactProfileMap[id]
+    localStorage.setItem('contactList', JSON.stringify(_contactList))
+    localStorage.setItem(
+      'contactProfileMap',
+      JSON.stringify(_contactProfileMap)
+    )
+  }
+}
+
+const onRefreshContacts = data => {
+  useRefreshContacts(data, contactList, contactProfileMap)
 }
 
 const onTrack = ({ track, streams }) => {
@@ -696,6 +748,21 @@ const onOtherWebRTC = () => {
   })
 }
 
+const onRefreshContactNotifications = remoteNotifications => {
+  const _contactNotifications = contactNotifications.value
+  _contactNotifications.unshift(...remoteNotifications)
+  localStorage.setItem(
+    'contactNotifications',
+    JSON.stringify(_contactNotifications)
+  )
+}
+
+const onRefreshNotifications = remoteNotifications => {
+  const _notifications = notifications.value
+  _notifications.unshift(...remoteNotifications)
+  localStorage.setItem('notifications', JSON.stringify(_notifications))
+}
+
 const initWebRTC = id => {
   // 未登录或者登出
   if (!id) {
@@ -732,10 +799,14 @@ const initWebRTC = id => {
   socket.on('web-rtc', onWebRTC)
   // 好友请求
   socket.on('add-contact', onAddContact)
-  // 拒绝好友请求
-  socket.on('refuse-contact', onRefuseWebRTCContact)
-  // 同意好友请求
+  // 对方同意了我的好友请求
   socket.on('agree-contact', onAgreeContact)
+  // 对方拒绝了我的好友请求
+  socket.on('refuse-contact', onRefuseContact)
+  // 对方将我从好友列表中移除了
+  socket.on('delete-contact', onDeleteContact)
+  // 在我离线时，有人同意了我的好友请求，在线时需要刷新好友列表
+  socket.on('refresh-contacts', onRefreshContacts)
   // 接收消息
   socket.on('receive-msg', onReceiveMsg)
   // 接收的离线消息
@@ -757,6 +828,9 @@ const initWebRTC = id => {
   socket.on('matched', onMatched)
   // 对方结束了 web rtc
   socket.on('bye', onBye)
+  // 好友申请通知
+  socket.on('refresh-contact-notifications', onRefreshContactNotifications)
+  socket.on('refresh-notifications', onRefreshNotifications)
 }
 
 const initLastMsgs = async () => {

@@ -5,19 +5,16 @@
     </template>
 
     <template #right>
-      <UTooltip text="通知" :shortcuts="['N']">
-        <UButton
-          color="neutral"
-          variant="ghost"
-          square
-          @click="isNotificationsSlideoverOpen = true"
-        >
-          <UChip color="error" inset>
-            <UIcon name="i-lucide-bell" class="text-primary size-5 shrink-0" />
-          </UChip>
-        </UButton>
-      </UTooltip>
-
+      <UButton
+        color="neutral"
+        variant="ghost"
+        square
+        @click="isNotificationsSlideoverOpen = true"
+      >
+        <UChip :show="Boolean(notifications.length)" color="error" inset>
+          <UIcon name="i-lucide-bell" class="text-primary size-5 shrink-0" />
+        </UChip>
+      </UButton>
       <IndexThemePicker></IndexThemePicker>
       <UButton
         @click="startViewTransition"
@@ -28,16 +25,21 @@
       ></UButton>
     </template>
   </UDashboardNavbar>
+
+  <!-- 通知 -->
+  <IndexNotificationsSlideover v-model="isNotificationsSlideoverOpen" />
 </template>
 
 <script lang="ts" setup>
-import { useDashboard } from '@/hooks'
+import { useUserStore } from '@/store'
 import { useColorMode } from '@vueuse/core'
-import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { ref, computed } from 'vue'
 
-const { isNotificationsSlideoverOpen } = useDashboard()
 const { store } = useColorMode()
 const nextTheme = computed(() => (store.value === 'dark' ? 'light' : 'dark'))
+const isNotificationsSlideoverOpen = ref(false)
+const { notifications, isMobile } = storeToRefs(useUserStore())
 
 const switchTheme = () => (store.value = nextTheme.value)
 

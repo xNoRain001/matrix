@@ -227,6 +227,7 @@ import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onMounted, ref, computed, watch } from 'vue'
 import type { message } from '@/types'
 import { voiceChatInviteToastPendingTime } from '@/const'
+import { useRoute } from 'vue-router'
 
 let timer = null
 const props = withDefaults(
@@ -268,6 +269,7 @@ const isIOS = /iPhone/i.test(navigator.userAgent)
 const photoInputRef = ref<HTMLInputElement | null>(null)
 const expanded = ref(false)
 const isSpaceSlideoverOpen = ref(false)
+const route = useRoute()
 const dashboardPanelRef = computed(
   () => msgContainerRef.value?.parentNode as HTMLElement
 )
@@ -276,8 +278,11 @@ const onClickAvatar = e => {
   const { target } = e
 
   if (
-    target.getAttribute('data-type') ||
-    target.children[0]?.getAttribute('data-type')
+    (target.getAttribute('data-type') ||
+      target.children[0]?.getAttribute('data-type')) &&
+    // 如果 contacts 中点击用户打开的空间中打开了聊天界面，聊天界面中点击
+    // 对方头像不再显示对方空间
+    route.path !== '/contacts'
   ) {
     isSpaceSlideoverOpen.value = true
   }
