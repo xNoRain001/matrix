@@ -1,12 +1,13 @@
 const useRefreshContacts = (data, contactList, contactProfileMap) => {
   const _contactProfileMap = {}
 
-  contactList.value = data
   for (let i = 0, l = data.length; i < l; i++) {
     const item = data[i]
     const { id } = item
     _contactProfileMap[id] = item
   }
+
+  contactList.value = data
   contactProfileMap.value = _contactProfileMap
   localStorage.setItem('contactList', JSON.stringify(data))
   localStorage.setItem('contactProfileMap', JSON.stringify(_contactProfileMap))

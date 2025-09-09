@@ -111,7 +111,6 @@ const initContactList = async () => {
   if (expired) {
     try {
       const { data } = await getContacts()
-      console.log(data)
       useRefreshContacts(data, contactList, contactProfileMap)
     } catch (error) {
       toast.add({ title: error.message, color: 'error' })

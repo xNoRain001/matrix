@@ -23,7 +23,7 @@ const useAddMessageRecordToDB = async (
     messageRecord.separator = true
   }
 
-  await db.add('messages', messageRecord)
+  return db.add('messages', messageRecord)
 }
 
 export default useAddMessageRecordToDB

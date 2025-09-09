@@ -1,33 +1,44 @@
 import useGetDB from './use-get-db'
 
-let db = null
-
 // 获取所有聊天记录
-const getMessages = async targetId => {
-  if (!db) {
-    db = await useGetDB()
+const getMessages = async (hashToBlobURLMap, targetId) => {
+  const db = await useGetDB()
+  const data = (
+    await db.getAllFromIndex('messages', 'contact', targetId)
+  ).slice(-10)
+  const tx = db.transaction('files', 'readonly')
+  const _hashToBlobURLMap = hashToBlobURLMap.value
+
+  for (let i = 0, l = data.length; i < l; i++) {
+    const item = data[i]
+    const { type, hash } = item
+
+    if (type === 'image') {
+      if (_hashToBlobURLMap.has(hash)) {
+        item.url = _hashToBlobURLMap.get(hash)
+        continue
+      }
+
+      try {
+        const record = await tx.objectStore('files').get(hash)
+        const url = URL.createObjectURL(record.blob)
+        item.url = url
+        if (_hashToBlobURLMap.size < 100) {
+          _hashToBlobURLMap.set(hash, url)
+        }
+      } catch {}
+    }
   }
 
-  const data = await db.getAllFromIndex('messages', 'contact', targetId)
-  // data.forEach(({ type, content, sent }) => {
-  //   if (
-  //     type === 'image' ||
-  //     type === 'video' ||
-  //     (type === 'file' && !sent) ||
-  //     type === 'audio'
-  //   ) {
-  //     content[0] = URL.createObjectURL(content[0])
-  //   }
-  // })
+  await tx.done
 
-  return data.slice(-10)
+  return data
 }
 
-const useGetMessages = async (messageList, targetId) => {
+const useGetMessages = async (hashToBlobURLMap, messageList, targetId) => {
   // 如果处理消息失败，给空消息
   try {
-    const messages = await getMessages(targetId)
-    messageList.value = [...messages]
+    messageList.value = await getMessages(hashToBlobURLMap, targetId)
   } catch {
     messageList.value = []
   }

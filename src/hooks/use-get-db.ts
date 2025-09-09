@@ -4,7 +4,7 @@ let db = null
 
 const useGetDB = async () => {
   if (!db) {
-    db = await openDB('chatDB', 4, {
+    db = await openDB('chatDB', 5, {
       upgrade(db) {
         if (!db.objectStoreNames.contains('messages')) {
           const store = db.createObjectStore('messages', {
@@ -18,6 +18,13 @@ const useGetDB = async () => {
           db.createObjectStore('lastMessages', {
             keyPath: 'id' // 对方的 id
           })
+        }
+
+        if (!db.objectStoreNames.contains('files')) {
+          const store = db.createObjectStore('files', {
+            keyPath: 'hash' // 文件哈希名作为主键
+          })
+          store.createIndex('hash', 'hash', { unique: true })
         }
       }
     })

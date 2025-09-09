@@ -20,22 +20,22 @@ export type userInfo = {
 
 export type lastMsg = {
   id: string
+  profile: Omit<userInfo, 'tokenVersion' | 'id'>
   timestamp: number
   content: string
   sent: boolean
   unreadMsgs: number
+  timeAgo: string
 }
 
-export type lastMsgMap = Record<
-  string,
-  Omit<userInfo, 'tokenVersion'> & lastMsg & { timeAgo: string }
->
+export type lastMsgMap = Record<string, lastMsg>
 
 export type message = {
   type: 'text' | 'label' | 'image'
-  filename?: string
-  size?: number
-  content: string
+  hash?: string
+  url?: string
+  ossURL?: string
+  content?: string
   sent?: boolean
   sender: string
   receiver: string

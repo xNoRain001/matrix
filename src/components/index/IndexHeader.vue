@@ -39,7 +39,7 @@ import { ref, computed } from 'vue'
 const { store } = useColorMode()
 const nextTheme = computed(() => (store.value === 'dark' ? 'light' : 'dark'))
 const isNotificationsSlideoverOpen = ref(false)
-const { notifications, isMobile } = storeToRefs(useUserStore())
+const { notifications } = storeToRefs(useUserStore())
 
 const switchTheme = () => (store.value = nextTheme.value)
 

@@ -7,9 +7,7 @@ const useLogout = () => {
   localStorage.removeItem('contactProfileMap')
   localStorage.removeItem('matchRes')
   localStorage.removeItem('matchType')
-  localStorage.removeItem('matchType')
-  localStorage.removeItem('profileMap')
-  localStorage.removeItem('profileMapExpireAt')
+  localStorage.removeItem('lastMsgProfileMapExpireAt')
   useUserStore().userInfo = null
 }
 

@@ -8,16 +8,16 @@
     <template #body>
       <div
         v-for="(
-          { id, profile: { nickname, avatar }, createdAt, content, type }, index
+          { id, profile, createdAt, content, type }, index
         ) in contactNotifications"
         :key="id"
         class="text-toned hover:border-primary hover:bg-primary/5 flex cursor-pointer items-center gap-4 border-l-2 border-(--ui-bg) p-4 text-base transition-colors sm:px-6"
       >
-        <UAvatar :text="nickname[0]" size="3xl" />
+        <UAvatar :text="profile.nickname[0]" size="3xl" />
         <div class="flex flex-1 flex-col gap-y-2 text-sm">
           <div class="flex items-center justify-between">
             <span class="text-highlighted line-clamp-1 max-w-1/2 font-medium">
-              {{ nickname }}</span
+              {{ profile.nickname }}</span
             >
             <time class="text-muted text-xs">{{
               useFormatTimeAgo(createdAt)
@@ -37,7 +37,7 @@
                 size="xs"
               ></UButton>
               <UButton
-                @click="onAgree(id, nickname, avatar)"
+                @click="onAgree(id, profile)"
                 label="同意"
                 icon="lucide:check"
                 size="xs"
@@ -110,9 +110,10 @@ const onRefuse = async targetId => {
   }
 }
 
-const onAgree = async (targetId, targetNickname, targetAvatar) => {
+const onAgree = async (targetId, targetProfile) => {
   try {
     await agreeCandidate(targetId)
+
     contactNotifications.value = contactNotifications.value.filter(
       item => item.id !== targetId
     )
@@ -120,13 +121,22 @@ const onAgree = async (targetId, targetNickname, targetAvatar) => {
       'contactNotifications',
       JSON.stringify(contactNotifications.value)
     )
-    const { id, nickname, avatar } = userInfo.value
+
+    // 互相添加好友，其中一方已经同意，不用进行后续处理
+    if (contactProfileMap.value[targetId]) {
+      return
+    }
+
+    const { id, nickname, avatar, gender, region, birthday } = userInfo.value
     const common = {
       id,
       createdAt: Date.now(),
       profile: {
         nickname,
-        avatar
+        avatar,
+        gender,
+        region,
+        birthday
       }
     }
     const notification = {
@@ -145,10 +155,7 @@ const onAgree = async (targetId, targetNickname, targetAvatar) => {
       createdAt: Date.now(),
       remark: '',
       status: 'normal',
-      profile: {
-        nickname: targetNickname,
-        avatar: targetAvatar
-      }
+      profile: targetProfile
     }
     _contactList.unshift(local)
     _contactProfileMap[local.id] = local

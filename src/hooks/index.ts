@@ -25,7 +25,6 @@ import useRefreshRoomInfo from './use-refresh-room-info'
 import useVisibilityChange from './use-visibility-change'
 import useGetMessages from './use-get-messages'
 import useGenRoomId from './use-gen-room-id'
-import useAddLastMsgToDB from './use-add-last-msg-to-db'
 import useAddLastMsg from './use-add-last-msg'
 import useGetTargetIdByRoomId from './use-get-target-id-by-roomId'
 import useFormatTimeAgo from './use-format-time-ago'
@@ -44,7 +43,6 @@ export {
   useFormatTimeAgo,
   useGetTargetIdByRoomId,
   useAddLastMsg,
-  useAddLastMsgToDB,
   useGenRoomId,
   useGetMessages,
   useVisibilityChange,

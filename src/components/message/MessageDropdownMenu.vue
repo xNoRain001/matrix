@@ -34,16 +34,12 @@ const dropdownItems = computed(() =>
           {
             label: '备注',
             icon: 'i-lucide-check-circle',
-            onSelect: () => {
-              console.log('@')
-            }
+            onSelect: () => {}
           },
           {
             label: '顶置聊天',
             icon: 'i-lucide-check-circle',
-            onSelect: () => {
-              console.log('@')
-            }
+            onSelect: () => {}
           },
           {
             label: '删除好友',

@@ -69,6 +69,7 @@
 
 <script setup lang="ts">
 import { getProfiles } from '@/apis/profile'
+import { useGetDB } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { onMounted, computed } from 'vue'
@@ -100,21 +101,26 @@ const isOpenSlideover = computed({
   }
 })
 
-const onResetMsgCounter = () => {
+const onResetMsgCounter = async () => {
   const _lastMsgMap = lastMsgMap.value
   const keys = Object.keys(_lastMsgMap)
+  const db = await useGetDB()
+  const tx = db.transaction('lastMessages', 'readwrite')
 
   for (let i = 0, l = keys.length; i < l; i++) {
-    _lastMsgMap[keys[i]].unreadMsgs = 0
+    const item = _lastMsgMap[keys[i]]
+    item.unreadMsgs = 0
+    await tx.objectStore('lastMessages').put(JSON.parse(JSON.stringify(item)))
   }
 
+  await tx.done
   unreadMsgCounter.value = 0
-  localStorage.setItem('profileMap', JSON.stringify(_lastMsgMap))
 }
 
 const initProfiles = async () => {
   const now = Date.now()
-  const expired = now > Number(localStorage.getItem('profileMapExpireAt'))
+  const expired =
+    now > Number(localStorage.getItem('lastMsgProfileMapExpireAt'))
 
   // 过期，获取所有用户的最新资料
   if (expired) {
@@ -127,15 +133,24 @@ const initProfiles = async () => {
     try {
       const { data: profileMap } = await getProfiles(ids.join('_'))
       const _lastMsgMap = lastMsgMap.value
+      const db = await useGetDB()
+      const tx = db.transaction('lastMessages', 'readwrite')
 
       for (let i = 0, l = ids.length; i < l; i++) {
         const id = ids[i]
-        _lastMsgMap[id] = { ..._lastMsgMap[id], ...profileMap[id] }
+        _lastMsgMap[id].profile = {
+          ..._lastMsgMap[id].profile,
+          ...profileMap[id]
+        }
+        await tx
+          .objectStore('lastMessages')
+          .put(JSON.parse(JSON.stringify(_lastMsgMap[id])))
       }
 
-      localStorage.setItem('profileMap', JSON.stringify(_lastMsgMap))
+      await tx.done
+
       localStorage.setItem(
-        'profileMapExpireAt',
+        'lastMsgProfileMapExpireAt',
         String(now + 1000 * 60 * 60 * 6)
       )
     } catch (error) {

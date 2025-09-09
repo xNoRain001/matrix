@@ -17,14 +17,14 @@
           :text="lastMsgMap[id].unreadMsgs"
           size="3xl"
         >
-          <UAvatar :text="lastMsgMap[id].nickname[0]"></UAvatar>
+          <UAvatar :text="lastMsgMap[id].profile.nickname[0]"></UAvatar>
         </UChip>
 
         <div class="w-[calc(100%-4rem)]">
           <!-- :class="[user.unread && 'font-semibold']" -->
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
-              {{ lastMsgMap[id].nickname }}
+              {{ lastMsgMap[id].profile.nickname }}
               <!-- <UChip :color="Math.random() > 0.5 ? 'primary' : 'error'" /> -->
             </div>
 

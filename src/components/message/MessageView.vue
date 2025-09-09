@@ -13,7 +13,18 @@
       <div class="relative" @click="onClickAvatar">
         <div
           v-for="(
-            { separator, type, timestamp, content, sent }, index
+            {
+              id,
+              separator,
+              type,
+              timestamp,
+              content,
+              sent,
+              url,
+              hash,
+              ossURL
+            },
+            index
           ) in messageList"
           :key="index"
         >
@@ -64,7 +75,7 @@
               class="flex items-center justify-end gap-3"
             >
               <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
-                <img :src="content" />
+                <img :src="url" />
               </div>
               <UAvatar
                 v-if="separator"
@@ -86,7 +97,11 @@
               />
               <div v-else class="w-10"></div>
               <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
-                <img :src="content" />
+                <img
+                  crossorigin="anonymous"
+                  :src="url || ossURL"
+                  @load="onLoad($event, hash, ossURL, id)"
+                />
               </div>
             </div>
           </div>
@@ -129,7 +144,7 @@
               <UButton
                 color="neutral"
                 icon="lucide:file-image"
-                @click="onOpenFileSelector(photoInputRef)"
+                @click="onOpenFileSelector(inputRef)"
               ></UButton>
               <div class="mt-2 text-xs">图片</div>
             </div>
@@ -169,7 +184,7 @@
             <UButton
               variant="ghost"
               icon="lucide:file-image"
-              @click="onOpenFileSelector(photoInputRef)"
+              @click="onOpenFileSelector(inputRef)"
             ></UButton>
           </UTooltip>
           <UTooltip text="语音">
@@ -186,8 +201,8 @@
   </UDashboardPanel>
 
   <input
-    ref="photoInputRef"
-    @change="onPhotoInputChange"
+    ref="inputRef"
+    @change="onInputChange"
     type="file"
     hidden
     multiple
@@ -207,7 +222,6 @@
 <script lang="ts" setup>
 import {
   useScrollToBottom,
-  useAddLastMsgToDB,
   useGetMessages,
   useAddLastMsg,
   useGenRoomId,
@@ -215,7 +229,8 @@ import {
   useIsOverFiveMins,
   useAddMessageRecordToView,
   useAddMessageRecordToDB,
-  useUpdateLastMsg
+  useUpdateLastMsg,
+  useGetDB
 } from '@/hooks'
 import {
   useMatchStore,
@@ -228,6 +243,7 @@ import { onBeforeUnmount, onMounted, ref, computed, watch } from 'vue'
 import type { message } from '@/types'
 import { voiceChatInviteToastPendingTime } from '@/const'
 import { useRoute } from 'vue-router'
+import { uploadImage } from '@/apis/oss'
 
 let timer = null
 const props = withDefaults(
@@ -253,7 +269,9 @@ const {
   unreadMsgCounter,
   messageList,
   lastMsgMap,
-  lastMsgList
+  lastMsgList,
+  hashToBlobURLMap,
+  contactProfileMap
 } = storeToRefs(useRecentContactsStore())
 const { isVoiceChatModalOpen, roomId, leaveRoomTimer, isVoiceChatMatch } =
   storeToRefs(useWebRTCStore())
@@ -262,17 +280,58 @@ const { matchRes } = storeToRefs(useMatchStore())
 const targetNickname = computed(() =>
   props.isMatch
     ? matchRes.value.nickname[0]
-    : lastMsgMap.value[props.targetId].nickname[0]
+    : lastMsgMap.value[props.targetId]?.profile?.nickname?.[0] ||
+      contactProfileMap.value[props.targetId].profile.nickname[0]
 )
 const toast = useToast()
 const isIOS = /iPhone/i.test(navigator.userAgent)
-const photoInputRef = ref<HTMLInputElement | null>(null)
+const inputRef = ref<HTMLInputElement | null>(null)
 const expanded = ref(false)
 const isSpaceSlideoverOpen = ref(false)
 const route = useRoute()
 const dashboardPanelRef = computed(
   () => msgContainerRef.value?.parentNode as HTMLElement
 )
+
+const onLoad = async (e, hash, ossURL, id) => {
+  // TODO: 删除
+  if (!hash) {
+    return
+  }
+
+  // 没有 ossURL，说明接收图片时本地数据库已经缓存过该图片，因此什么也不用做
+  if (!ossURL) {
+    return
+  }
+
+  const img = e.target
+  const canvas = document.createElement('canvas')
+  const { width, height } = img
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')
+  ctx?.drawImage(img, 0, 0, width, height)
+  const extname = img.src.split('.').pop()
+  canvas.toBlob(
+    async blob => {
+      const db = await useGetDB()
+      const tx = db.transaction('files', 'readwrite')
+      await tx.objectStore('files').put({ hash, blob })
+      await tx.done
+      const _hashToBlobURLMap = hashToBlobURLMap.value
+      if (_hashToBlobURLMap.size < 100) {
+        _hashToBlobURLMap.set(hash, URL.createObjectURL(blob))
+      }
+      // 不再需要 ossURL
+      const tx2 = db.transaction('messages', 'readwrite')
+      const record = await tx2.objectStore('messages').get(id)
+      delete record.ossURL
+      await tx2.objectStore('messages').put(record)
+      await tx2.done
+    },
+    `image/${extname === 'jpg' ? 'jpeg' : extname}`
+  )
+}
 
 const onClickAvatar = e => {
   const { target } = e
@@ -356,11 +415,88 @@ const onFocus = () => (expanded.value = false)
 
 const onOpenFileSelector = target => target.click()
 
-const onPhotoInputChange = async () => {
-  const photoInput = photoInputRef.value
-  // const { files } = photoInput
-  // sendFile(files as unknown as extendedFiles, 'image')
-  photoInput.value = ''
+const getFileHashName = async (file: File) => {
+  const arrayBuffer = await file.arrayBuffer()
+  const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+  const ext = file.name.split('.').pop()
+  return `${hashHex}${ext ? '.' + ext : ''}`
+}
+
+const onInputChange = async () => {
+  const input = inputRef.value
+  const { files } = input
+  const timestamp = Date.now()
+  const { targetId } = props
+  try {
+    const hash = await getFileHashName(files[0])
+    const { data } = await uploadImage(files[0], hash)
+    const url = URL.createObjectURL(files[0])
+    const messageRecord: message = {
+      type: 'image',
+      hash,
+      contact: userInfo.value.id,
+      sender: userInfo.value.id,
+      receiver: targetId,
+      timestamp
+    }
+    globalSocket.value.emit(
+      'send-msg',
+      JSON.stringify({
+        ...messageRecord,
+        ossURL: `https://pub-75ff051ab66a423791dcc3f0d524e897.r2.dev/${data}`
+      })
+    )
+    messageRecord.sent = true
+    messageRecord.contact = targetId
+
+    const _lastMsgMap = lastMsgMap.value
+    const isOverFiveMins = useIsOverFiveMins(
+      messageRecord,
+      _lastMsgMap,
+      targetId
+    )
+
+    if (!_lastMsgMap[targetId]) {
+      await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
+    }
+
+    await useAddMessageRecordToDB(isOverFiveMins, messageRecord, _lastMsgMap)
+    messageRecord.url = url
+    useAddMessageRecordToView(isOverFiveMins, messageRecord, messageList)
+    useUpdateLastMsg(
+      _lastMsgMap,
+      { ...messageRecord, content: '[图片]' },
+      false,
+      true,
+      unreadMsgCounter
+    )
+    message.value = ''
+    useScrollToBottom(msgContainerRef)
+
+    // 如果存在，说明本地中一定有，不用进行处理，不存在，不能说明本地中一定没有，
+    // 可能是没有读取或者存储数量达到上限
+    const _hashToBlobURLMap = hashToBlobURLMap.value
+    if (!_hashToBlobURLMap.has(hash)) {
+      const db = await useGetDB()
+      const tx = db.transaction('files', 'readwrite')
+      const record = await tx.objectStore('files').get(hash)
+      if (!record) {
+        await tx.objectStore('files').put({ hash, blob: files[0] })
+      }
+      await tx.done
+
+      if (_hashToBlobURLMap.size < 100) {
+        _hashToBlobURLMap.set(hash, URL.createObjectURL(files[0]))
+      }
+    }
+  } catch (error) {
+    console.log(error)
+    toast.add({ title: '发送失败', color: 'error' })
+  } finally {
+    input.value = ''
+  }
 }
 
 const onKeydown = e => {
@@ -457,21 +593,16 @@ watch(
   () => props.targetId,
   async v => {
     if (v) {
-      await useGetMessages(messageList, v)
+      await useGetMessages(hashToBlobURLMap, messageList, v)
       useScrollToBottom(msgContainerRef)
       const item = lastMsgMap.value[v]
+      const unreadMsgs = item?.unreadMsgs
 
-      if (item) {
-        const { timestamp, content, unreadMsgs, sent } = item
+      if (item && unreadMsgs) {
         unreadMsgCounter.value -= unreadMsgs
         item.unreadMsgs = 0
-        await useAddLastMsgToDB({
-          id: v,
-          timestamp,
-          content,
-          sent,
-          unreadMsgs: 0
-        })
+        const db = await useGetDB()
+        await db.put('lastMessages', JSON.parse(JSON.stringify(item)))
       }
     } else {
       messageList.value = []

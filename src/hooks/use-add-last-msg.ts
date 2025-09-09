@@ -7,9 +7,10 @@ const useAddLastMsg = async (_lastMsgMap, lastMsgList, matchRes, id) => {
     const profileMap =
       _matchRes?.id === id ? { [id]: _matchRes } : (await getProfiles(id)).data
 
-    _lastMsgMap[id] = { ...profileMap[id] }
+    // TODO: 不需要保存 matchRes 中的 id 到 profile 中
+    // profile 没有返回 id，需要手动补充
+    _lastMsgMap[id] = { id, profile: { ...profileMap[id] } }
     lastMsgList.value.unshift(id)
-    localStorage.setItem('profileMap', JSON.stringify(_lastMsgMap))
   }
 }
 

@@ -66,7 +66,7 @@
 import { useTransformGender } from '@/hooks'
 import { useMatchStore, useRecentContactsStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = withDefaults(
   defineProps<{ targetId: string; isMatch?: boolean }>(),
@@ -76,27 +76,34 @@ const props = withDefaults(
 )
 const emits = defineEmits(['close'])
 const open = ref(true)
-const { lastMsgMap } = storeToRefs(useRecentContactsStore())
+const { lastMsgMap, contactProfileMap } = storeToRefs(useRecentContactsStore())
 const { matchRes } = storeToRefs(useMatchStore())
 const targetNickname = computed(() =>
   props.isMatch
     ? matchRes.value.nickname
-    : lastMsgMap.value[props.targetId].nickname
+    : lastMsgMap.value[props.targetId]?.profile?.nickname ||
+      contactProfileMap.value[props.targetId].profile.nickname
 )
 const targetRegion = computed(() =>
   props.isMatch
     ? matchRes.value.region
-    : lastMsgMap.value[props.targetId].region
+    : lastMsgMap.value[props.targetId]?.profile?.region ||
+      contactProfileMap.value[props.targetId].profile.region
 )
-const targetBirthday = computed(() =>
-  props.isMatch
-    ? matchRes.value.birthday
-    : lastMsgMap.value[props.targetId].birthday
+const targetBirthday = computed(
+  () =>
+    props.isMatch
+      ? matchRes.value.birthday
+      : // TODO: birthday 为空字符串时会去 contactProfileMap 中取值，而空字符串就是它的值
+        lastMsgMap.value[props.targetId]?.profile?.birthday ||
+        contactProfileMap.value[props.targetId]?.profile?.birthday
+  // contactProfileMap.value[props.targetId].profile.birthday
 )
 const targetGender = computed(() =>
   props.isMatch
     ? matchRes.value.gender
-    : lastMsgMap.value[props.targetId].gender
+    : lastMsgMap.value[props.targetId]?.profile?.gender ||
+      contactProfileMap.value[props.targetId].profile.gender
 )
 
 const computeAge = v => {

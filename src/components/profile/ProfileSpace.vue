@@ -66,7 +66,7 @@
       </template>
     </UPageCard>
     <!-- 选项卡 -->
-    <div class="p-4 sm:p-6">
+    <div v-if="isSelf" class="p-4 sm:p-6">
       <UTabs v-model="activeTab" :items="tabItems" :content="false" />
     </div>
     <!-- 动态 -->
@@ -163,7 +163,7 @@
 </template>
 
 <script lang="ts" setup>
-import { useRecentContactsStore, useUserStore } from '@/store'
+import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
 import DrawerLogout from '@/components/drawer/DrawerLogout.vue'
@@ -177,8 +177,11 @@ const logoutDrawer = overlay.create(DrawerLogout)
 const isOpenUserInfoSliderover = ref(false)
 const isOpenUpdatePasswordSliderover = ref(false)
 const isOpenNotificationsSliderover = ref(false)
+const { matchRes } = storeToRefs(useMatchStore())
 const { isMobile, userInfo } = storeToRefs(useUserStore())
-const { targetId, contactProfileMap } = storeToRefs(useRecentContactsStore())
+const { targetId, contactProfileMap, lastMsgMap } = storeToRefs(
+  useRecentContactsStore()
+)
 const cards = [
   [
     {
@@ -233,7 +236,9 @@ const inView = computed(() => targetId.value === props.selectContactId)
 const nickname = computed(() =>
   isSelf
     ? userInfo.value.nickname
-    : contactProfileMap.value[props.selectContactId].profile.nickname
+    : contactProfileMap.value[props.selectContactId]?.profile?.nickname ||
+      lastMsgMap.value[props.selectContactId]?.profile?.nickname ||
+      matchRes.value.nickname
 )
 
 const onChat = () => {

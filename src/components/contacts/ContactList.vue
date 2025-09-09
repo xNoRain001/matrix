@@ -7,10 +7,9 @@
       <div
         class="flex cursor-pointer items-center gap-4 border-l-2 p-4 text-base transition-colors sm:px-6"
         :class="[
-          'text-toned',
           selectContactId === id
-            ? 'border-primary bg-primary/10'
-            : 'hover:border-primary hover:bg-primary/5 border-(--ui-bg)'
+            ? 'border-primary bg-primary/10 text-highlighted'
+            : 'hover:border-primary hover:bg-primary/5 text-toned border-(--ui-bg)'
         ]"
         @click="selectContactId = id"
       >

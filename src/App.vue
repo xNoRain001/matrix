@@ -162,7 +162,8 @@ const {
   lastMsgList,
   contactNotifications,
   contactList,
-  contactProfileMap
+  contactProfileMap,
+  hashToBlobURLMap
 } = storeToRefs(useRecentContactsStore())
 const { matchRes, matchType, hasMatchRes, offline, matching, noMatch } =
   storeToRefs(useMatchStore())
@@ -511,7 +512,8 @@ const onWebRTC = async (roomId, { description, candidate }) => {
 const onReceiveMsg = async messageRecord => {
   messageRecord.sent = false
   const _lastMsgMap = lastMsgMap.value
-  const { contact: id } = messageRecord
+  const { type, contact: id } = messageRecord
+
   const inView = targetId.value === id
   const isOverFiveMins = useIsOverFiveMins(messageRecord, _lastMsgMap, id)
 
@@ -519,14 +521,53 @@ const onReceiveMsg = async messageRecord => {
     await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, id)
   }
 
-  await useAddMessageRecordToDB(isOverFiveMins, messageRecord, _lastMsgMap)
+  let url = ''
+
+  if (type === 'image') {
+    const { hash } = messageRecord
+    const _hashToBlobURLMap = hashToBlobURLMap.value
+    const blobURL = _hashToBlobURLMap.get(hash)
+    if (blobURL) {
+      delete messageRecord.ossURL
+      url = blobURL
+    } else {
+      const db = await useGetDB()
+      const tx = db.transaction('files', 'readwrite')
+      const record = await tx.objectStore('files').get(hash)
+      if (record) {
+        delete messageRecord.ossURL
+        url = URL.createObjectURL(record.blob)
+        if (_hashToBlobURLMap.size < 100) {
+          _hashToBlobURLMap.set(hash, url)
+        }
+      }
+      await tx.done
+    }
+  }
+
+  const msgId = await useAddMessageRecordToDB(
+    isOverFiveMins,
+    messageRecord,
+    _lastMsgMap
+  )
 
   if (inView) {
-    useAddMessageRecordToView(isOverFiveMins, messageRecord, messageList)
+    // 可能需要移除 ossURL，由于消息此时不是从本地数据库获取的，需要补充消息的 id
+    useAddMessageRecordToView(
+      isOverFiveMins,
+      { ...messageRecord, url, id: msgId },
+      messageList
+    )
     useScrollToBottom(msgContainerRef)
   }
 
-  useUpdateLastMsg(_lastMsgMap, messageRecord, true, inView, unreadMsgCounter)
+  useUpdateLastMsg(
+    _lastMsgMap,
+    type === 'image' ? { ...messageRecord, content: '[图片]' } : messageRecord,
+    true,
+    inView,
+    unreadMsgCounter
+  )
 
   // toast.add({
   //   close: false,
@@ -841,17 +882,12 @@ const initLastMsgs = async () => {
   const lastMsgs: lastMsg[] = await db.getAll('lastMessages')
   const _lastMsgList = []
 
-  try {
-    _lastMsgMap = JSON.parse(localStorage.getItem('profileMap') || '{}')
-  } catch {}
-
   for (let i = 0, l = lastMsgs.length; i < l; i++) {
     const lastMsg = lastMsgs[i]
     const { id, unreadMsgs } = lastMsg
     _lastMsgList.push(id)
-    _lastMsgMap[id] = { ..._lastMsgMap[id], ...lastMsg }
+    _lastMsgMap[id] = lastMsg
     _unreadMsgCounter += unreadMsgs
-    // delete _lastMsgMap[id].id
   }
 
   lastMsgMap.value = _lastMsgMap
