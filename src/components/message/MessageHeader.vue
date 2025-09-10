@@ -117,7 +117,7 @@ const computeAge = v => {
   const _year = new Date(v).getFullYear()
   const _month = new Date(v).getMonth()
   const _day = new Date(v).getDate()
-  const full = _month > month || (_month === month && _day <= day)
+  const full = _month < month || (_month === month && _day <= day)
 
   return year - _year - (full ? 0 : 1)
 }

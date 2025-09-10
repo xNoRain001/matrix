@@ -602,6 +602,7 @@ const mergeOfflineMsgs = offlineMsgs => {
 const onReceiveOfflineMsgs = async offlineMsgs => {
   const grouped = mergeOfflineMsgs(offlineMsgs)
   const contacts = Object.keys(grouped)
+  const _lastMsgMap = lastMsgMap.value
 
   for (let i = 0, l = contacts.length; i < l; i++) {
     const id = contacts[i]
@@ -609,20 +610,17 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
     const offlineMsgsLength = offlineMsgs.length
     // 接收离线消息时可能处于匹配聊天界面中，需要更新视图
     const inView = targetId.value === id
-    const _lastMsgMap = lastMsgMap.value
-    // 跳过分隔符判断逻辑
-    const skip = _lastMsgMap[id]?.sent !== offlineMsgs[0].sent
+    const __lastMsgMap: Record<string, { sent: boolean; timestamp: number }> = {
+      [id]: (_lastMsgMap[id] as any) || {}
+    }
 
     for (let i = 0; i < offlineMsgsLength; i++) {
       const messageRecord = offlineMsgs[i]
       messageRecord.sent = false
-      const isOverFiveMins = useIsOverFiveMins(messageRecord, _lastMsgMap, id)
-      await useAddMessageRecordToDB(
-        isOverFiveMins,
-        messageRecord,
-        _lastMsgMap,
-        skip
-      )
+      const isOverFiveMins = useIsOverFiveMins(messageRecord, __lastMsgMap, id)
+      await useAddMessageRecordToDB(isOverFiveMins, messageRecord, __lastMsgMap)
+      __lastMsgMap[id].sent = false
+      __lastMsgMap[id].timestamp = messageRecord.timestamp
 
       if (inView) {
         useAddMessageRecordToView(isOverFiveMins, messageRecord, messageList)

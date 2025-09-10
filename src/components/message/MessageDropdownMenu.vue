@@ -114,14 +114,18 @@ const dropdownItems = computed(() =>
               try {
                 await addCandidate(props.targetId)
                 toast.add({ title: '已向对方发送好友申请' })
-                const { id, nickname } = userInfo.value
+                const { id, nickname, region, birthday, gender } =
+                  userInfo.value
                 const notification = {
                   id,
                   content: '请求添加你为好友',
                   type: 'add-contact',
                   createdAt: Date.now(),
                   profile: {
-                    nickname
+                    nickname,
+                    region,
+                    birthday,
+                    gender
                   }
                 }
                 globalSocket.value.emit(
