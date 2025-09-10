@@ -49,14 +49,13 @@ const dropdownItems = computed(() =>
                 const { targetId } = props
                 await deleteCandidate(targetId)
                 toast.add({ title: '删除好友成功' })
-                const { id, nickname, avatar } = userInfo.value
+                const { id, nickname } = userInfo.value
                 const notification = {
                   id,
                   content: '将你从好友列表中移除了',
                   createdAt: Date.now(),
                   profile: {
-                    nickname,
-                    avatar
+                    nickname
                   }
                 }
                 const _contactList = contactList.value
@@ -115,15 +114,14 @@ const dropdownItems = computed(() =>
               try {
                 await addCandidate(props.targetId)
                 toast.add({ title: '已向对方发送好友申请' })
-                const { id, nickname, avatar } = userInfo.value
+                const { id, nickname } = userInfo.value
                 const notification = {
                   id,
                   content: '请求添加你为好友',
                   type: 'add-contact',
                   createdAt: Date.now(),
                   profile: {
-                    nickname,
-                    avatar
+                    nickname
                   }
                 }
                 globalSocket.value.emit(

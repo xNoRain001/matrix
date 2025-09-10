@@ -26,7 +26,6 @@ const useRecentContactsStore = defineStore('recentContactsStore', () => {
         type: string
         profile: {
           nickname: string
-          avatar: string
         }
       }[]
     >(_contactNotifications), // 好友申请通知

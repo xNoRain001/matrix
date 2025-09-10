@@ -65,10 +65,21 @@
       </template>
       <template #header>
         <UAvatar
+          @click="isSelf ? onUpdateAvatar() : useNoop()"
           class="absolute top-0 -translate-y-1/2"
+          :class="isSelf ? 'cursor-pointer' : ''"
+          :src="avatarURL"
           :alt="nickname"
           size="3xl"
         ></UAvatar>
+        <UButton
+          v-if="isSelf"
+          @click="onUpdateSpaceBg"
+          class="absolute top-4 right-4"
+          icon="lucide:image"
+          label="背景"
+          variant="ghost"
+        ></UButton>
       </template>
     </UPageCard>
     <!-- 选项卡 -->
@@ -113,10 +124,18 @@
     </UPageCard>
   </div>
 
+  <!-- 选择头像 -->
+  <input
+    @change="onChangeAvatar"
+    ref="avatarRef"
+    hidden
+    type="file"
+    accept="image/*"
+  />
   <!-- 选择背景图片 -->
   <input
-    @change="onChange"
-    ref="inputRef"
+    @change="onChangeSpaceBg"
+    ref="spaceBgRef"
     hidden
     type="file"
     accept="image/*"
@@ -182,7 +201,7 @@ import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref } from 'vue'
 import DrawerLogout from '@/components/drawer/DrawerLogout.vue'
 import { useGenHash, useGetDB, useNoop } from '@/hooks'
-import { updateSpaceBg } from '@/apis/oss'
+import { updateAvatar, updateSpaceBg } from '@/apis/oss'
 
 const overlay = useOverlay()
 const props = defineProps<{ selectContactId?: string }>()
@@ -193,7 +212,8 @@ const logoutDrawer = overlay.create(DrawerLogout)
 const isOpenUserInfoSliderover = ref(false)
 const isOpenUpdatePasswordSliderover = ref(false)
 const isOpenNotificationsSliderover = ref(false)
-const inputRef = ref(null)
+const spaceBgRef = ref(null)
+const avatarRef = ref(null)
 const toast = useToast()
 const { matchRes } = storeToRefs(useMatchStore())
 const { isMobile, userInfo } = storeToRefs(useUserStore())
@@ -261,6 +281,9 @@ const nickname = computed(() =>
 const bgBlob = isSelf
   ? (await (await useGetDB()).get('bg', userInfo.value.id))?.blob
   : null
+const avatarBlob = isSelf
+  ? (await (await useGetDB()).get('avatar', userInfo.value.id))?.blob
+  : null
 const { VITE_OSS_BASE_URL } = import.meta.env
 const bgURL = ref(
   isSelf
@@ -270,14 +293,41 @@ const bgURL = ref(
         `${VITE_OSS_BASE_URL}${userInfo.value.id}/space-bg`
     : `${VITE_OSS_BASE_URL}${props.selectContactId}/space-bg`
 )
+const avatarURL = ref(
+  isSelf
+    ? avatarBlob
+      ? URL.createObjectURL(avatarBlob)
+      : `${VITE_OSS_BASE_URL}${userInfo.value.id}/avatar`
+    : `${VITE_OSS_BASE_URL}${props.selectContactId}/avatar`
+)
 const onChat = () => {
   isOpenMessageViewSlideover.value = true
   targetId.value = props.selectContactId
 }
 
-const onUpdateSpaceBg = () => inputRef.value.click()
+const onUpdateSpaceBg = () => spaceBgRef.value.click()
 
-const onChange = async e => {
+const onUpdateAvatar = () => avatarRef.value.click()
+
+const onChangeAvatar = async e => {
+  const input = e.target
+  const avatar = input.files[0]
+
+  try {
+    const hash = await useGenHash(avatar)
+    await updateAvatar(avatar, hash)
+    const db = await useGetDB()
+    await db.put('avatar', { id: userInfo.value.id, blob: avatar })
+    avatarURL.value = URL.createObjectURL(avatar)
+    toast.add({ title: '更新头像成功', icon: 'lucide:smile' })
+  } catch (error) {
+    toast.add({ title: '更新头像失败', color: 'error', icon: 'lucide:annoyed' })
+  } finally {
+    input.value = ''
+  }
+}
+
+const onChangeSpaceBg = async e => {
   const input = e.target
   const bg = input.files[0]
 

@@ -10,7 +10,6 @@ declare module 'axios' {
 
 export type userInfo = {
   nickname: string
-  avatar: string
   gender: 'male' | 'female' | 'other'
   birthday: string
   region: string
@@ -46,7 +45,6 @@ export type message = {
 
 export type user = {
   id: string
-  avatar: string
   nickname: string
   remark: string
   status: 'normal' | 'blocked' | 'deleted'

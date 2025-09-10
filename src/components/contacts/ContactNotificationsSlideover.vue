@@ -90,14 +90,13 @@ const onRefuse = async targetId => {
       'contactNotifications',
       JSON.stringify(contactNotifications.value)
     )
-    const { id, nickname, avatar } = userInfo.value
+    const { id, nickname } = userInfo.value
     const notification = {
       id,
       content: '拒绝了你的好友请求',
       createdAt: Date.now(),
       profile: {
-        nickname,
-        avatar
+        nickname
       }
     }
     globalSocket.value.emit('refuse-contact', targetId, notification)
@@ -127,13 +126,12 @@ const onAgree = async (targetId, targetProfile) => {
       return
     }
 
-    const { id, nickname, avatar, gender, region, birthday } = userInfo.value
+    const { id, nickname, gender, region, birthday } = userInfo.value
     const common = {
       id,
       createdAt: Date.now(),
       profile: {
         nickname,
-        avatar,
         gender,
         region,
         birthday

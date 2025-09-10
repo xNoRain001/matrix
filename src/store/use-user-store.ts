@@ -49,7 +49,6 @@ const useUserStore = defineStore('userStore', () => {
         type: string
         profile: {
           nickname: string
-          avatar: string
         }
       }[]
     >(_notifications)

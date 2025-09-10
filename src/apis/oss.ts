@@ -29,3 +29,17 @@ export const updateSpaceBg = async (image, hash) => {
     }
   })
 }
+
+export const updateAvatar = async (image, hash) => {
+  const formdata = new FormData()
+  formdata.append('hash', hash)
+  formdata.append('file', image)
+
+  return HTTP.request(`${prefix}/update-avatar`, {
+    data: formdata,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}

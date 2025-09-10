@@ -4,7 +4,7 @@ let db = null
 
 const useGetDB = async () => {
   if (!db) {
-    db = await openDB('chatDB', 6, {
+    db = await openDB('chatDB', 7, {
       upgrade(db) {
         if (!db.objectStoreNames.contains('messages')) {
           const store = db.createObjectStore('messages', {
@@ -29,6 +29,12 @@ const useGetDB = async () => {
 
         if (!db.objectStoreNames.contains('bg')) {
           db.createObjectStore('bg', {
+            keyPath: 'id'
+          })
+        }
+
+        if (!db.objectStoreNames.contains('avatar')) {
+          db.createObjectStore('avatar', {
             keyPath: 'id'
           })
         }
