@@ -1,198 +1,204 @@
 <template>
-  <div class="relative h-screen overflow-y-auto">
-    <!-- 顶部导航 -->
-    <UDashboardNavbar
-      :toggle="false"
-      :ui="{
-        root: 'border-none sticky top-0 z-30'
-      }"
+  <div>
+    <div class="relative h-screen overflow-y-auto">
+      <!-- 顶部导航 -->
+      <UDashboardNavbar
+        v-if="!isMatch"
+        :toggle="false"
+        :ui="{
+          root: 'border-none sticky top-0 z-30'
+        }"
+      >
+        <template v-if="!isSelf || (isSelf && !isMobile)" #leading>
+          <UButton
+            icon="lucide:chevron-left"
+            color="neutral"
+            variant="ghost"
+            class="-ms-1.5"
+            @click="emits('close')"
+          />
+        </template>
+        <template #right>
+          <UButton v-if="isSelf" icon="lucide:plus" variant="ghost" />
+          <UButton
+            v-if="isSelf && isMobile"
+            icon="lucide:settings"
+            variant="ghost"
+            @click="isOpenSettingsSlideover = true"
+          />
+          <MessageDropdownMenu
+            v-if="!isSelf"
+            :target-id="selectContactId"
+          ></MessageDropdownMenu>
+        </template>
+      </UDashboardNavbar>
+      <!-- 背景图片 -->
+      <div
+        @click="isSelf ? onUpdateSpaceBg() : useNoop()"
+        :class="[
+          isSelf ? 'cursor-pointer' : '',
+          bgURL ? 'bg-cover bg-center bg-no-repeat' : 'bg-default'
+        ]"
+        :style="bgURL ? { 'background-image': `url(${bgURL})` } : {}"
+        class="sticky -top-[calc(50%-4rem)] z-10 -mt-16 h-1/2"
+      ></div>
+      <!-- 个人资料卡片 -->
+      <UPageCard
+        class="absolute top-1/2 right-4 left-4 z-20 -translate-y-[calc(100%+1rem)] sm:right-6 sm:left-6 sm:-translate-y-[calc(100%+1.5rem)]"
+        :title="nickname"
+        description="Nuxt UI v3 integrates with latest Tailwind CSS v4, bringing significant improvements."
+        variant="soft"
+      >
+        <template #title>
+          <div class="flex items-center gap-2">
+            {{ nickname }}
+            <UButton
+              v-if="!isSelf && Boolean(contactProfileMap[selectContactId])"
+              icon="lucide:user-round-pen"
+              label="备注"
+            ></UButton>
+            <UButton
+              v-if="!isSelf && !inView"
+              @click="onChat"
+              icon="lucide:message-circle-more"
+              label="聊天"
+            ></UButton>
+          </div>
+        </template>
+        <template #header>
+          <UAvatar
+            @click="isSelf ? onUpdateAvatar() : useNoop()"
+            class="absolute top-0 -translate-y-1/2"
+            :class="isSelf ? 'cursor-pointer' : ''"
+            :src="avatarURL"
+            :alt="nickname"
+            size="3xl"
+          ></UAvatar>
+          <UButton
+            v-if="isSelf"
+            @click="onUpdateSpaceBg"
+            class="absolute top-4 right-4"
+            icon="lucide:image"
+            label="背景"
+            variant="ghost"
+          ></UButton>
+        </template>
+      </UPageCard>
+      <!-- 选项卡 -->
+      <div v-if="isSelf" class="p-4 sm:p-6">
+        <UTabs v-model="activeTab" :items="tabItems" :content="false" />
+      </div>
+      <!-- 动态 -->
+      <UPageCard variant="soft" class="border-b-muted rounded-none border-b">
+        <p class="text-highlighted">
+          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Architecto
+          reiciendis exercitationem aperiam natus, pariatur eos iste repellat ab
+          inventore eius harum consequatur necessitatibus libero officiis
+          soluta, autem ea tenetur assumenda!
+        </p>
+        <div class="flex items-center justify-between">
+          <p class="text-muted text-sm">
+            {{ new Date(Date.now()).toLocaleString('zh-CN') }}
+          </p>
+          <UButton variant="ghost" icon="lucide:ellipsis"></UButton>
+        </div>
+      </UPageCard>
+      <UPageCard
+        v-for="i in 3"
+        :key="i"
+        variant="soft"
+        class="border-b-muted rounded-none border-b"
+      >
+        <p class="text-highlighted">
+          Lorem ipsum dolor sit, amet consectetur adipisicing elit. Saepe
+          facilis
+        </p>
+        <img
+          src="https://picsum.photos/id/46/400"
+          alt="Tailwind CSS"
+          class="w-full"
+        />
+        <div class="flex items-center justify-between">
+          <p class="text-muted text-sm">
+            {{ new Date(Date.now()).toLocaleString('zh-CN') }}
+          </p>
+          <UButton variant="ghost" icon="lucide:ellipsis"></UButton>
+        </div>
+      </UPageCard>
+    </div>
+
+    <!-- 选择头像 -->
+    <input
+      @change="onChangeAvatar"
+      ref="avatarRef"
+      hidden
+      type="file"
+      accept="image/*"
+    />
+    <!-- 选择背景图片 -->
+    <input
+      @change="onChangeSpaceBg"
+      ref="spaceBgRef"
+      hidden
+      type="file"
+      accept="image/*"
+    />
+    <!-- 聊天界面 -->
+    <USlideover
+      v-if="!isSelf"
+      v-model:open="isOpenMessageViewSlideover"
+      title=" "
+      description=" "
     >
-      <template v-if="!isSelf || (isSelf && !isMobile)" #leading>
-        <UButton
-          icon="lucide:chevron-left"
-          color="neutral"
-          variant="ghost"
-          class="-ms-1.5"
-          @click="emits('close')"
+      <template #content>
+        <MessageView
+          v-if="targetId"
+          @close="isOpenMessageViewSlideover = false"
+          :target-id="targetId"
         />
       </template>
-      <template #right>
-        <UButton v-if="isSelf" icon="lucide:plus" variant="ghost" />
-        <UButton
-          v-if="isSelf && isMobile"
-          icon="lucide:settings"
-          variant="ghost"
-          @click="isOpenSettingsSlideover = true"
-        />
-        <MessageDropdownMenu
-          v-if="!isSelf"
-          :target-id="selectContactId"
-        ></MessageDropdownMenu>
-      </template>
-    </UDashboardNavbar>
-    <!-- 背景图片 -->
-    <div
-      @click="isSelf ? onUpdateSpaceBg() : useNoop()"
-      :class="[
-        isSelf ? 'cursor-pointer' : '',
-        bgURL ? 'bg-cover bg-center bg-no-repeat' : 'bg-default'
-      ]"
-      :style="bgURL ? { 'background-image': `url(${bgURL})` } : {}"
-      class="sticky -top-[calc(50%-4rem)] z-10 -mt-16 h-1/2"
-    ></div>
-    <!-- 个人资料卡片 -->
-    <UPageCard
-      class="absolute top-1/2 right-4 left-4 z-20 -translate-y-[calc(100%+1rem)] sm:right-6 sm:left-6 sm:-translate-y-[calc(100%+1.5rem)]"
-      :title="nickname"
-      description="Nuxt UI v3 integrates with latest Tailwind CSS v4, bringing significant improvements."
-      variant="soft"
+    </USlideover>
+    <!-- 移动端设置界面 -->
+    <USlideover
+      v-if="isMobile && isSelf"
+      v-model:open="isOpenSettingsSlideover"
+      title="设置"
+      description=" "
     >
-      <template #title>
-        <div class="flex items-center gap-2">
-          {{ nickname }}
-          <UButton
-            v-if="!isSelf && Boolean(contactProfileMap[selectContactId])"
-            icon="lucide:user-round-pen"
-            label="备注"
-          ></UButton>
-          <UButton
-            v-if="!isSelf && !inView"
-            @click="onChat"
-            icon="lucide:message-circle-more"
-            label="聊天"
-          ></UButton>
+      <template #body>
+        <div>
+          <UPageCard
+            v-for="items in cards"
+            variant="subtle"
+            class="mb-4"
+            :ui="{ container: 'gap-y-0 py-0 sm:py-0' }"
+          >
+            <div
+              v-for="{ label, icon, onSelect } in items"
+              @click="onSelect"
+              class="flex h-12 items-center justify-between"
+            >
+              <div class="flex items-center gap-2">
+                <UIcon :name="icon" class="size-5" />
+                <div>{{ label }}</div>
+              </div>
+              <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
+            </div>
+          </UPageCard>
+
+          <MProfileUserInfo
+            v-model="isOpenUserInfoSliderover"
+          ></MProfileUserInfo>
+          <MProfileUpdatePassword
+            v-model="isOpenUpdatePasswordSliderover"
+          ></MProfileUpdatePassword>
+          <MProfileNotifications
+            v-model="isOpenNotificationsSliderover"
+          ></MProfileNotifications>
         </div>
       </template>
-      <template #header>
-        <UAvatar
-          @click="isSelf ? onUpdateAvatar() : useNoop()"
-          class="absolute top-0 -translate-y-1/2"
-          :class="isSelf ? 'cursor-pointer' : ''"
-          :src="avatarURL"
-          :alt="nickname"
-          size="3xl"
-        ></UAvatar>
-        <UButton
-          v-if="isSelf"
-          @click="onUpdateSpaceBg"
-          class="absolute top-4 right-4"
-          icon="lucide:image"
-          label="背景"
-          variant="ghost"
-        ></UButton>
-      </template>
-    </UPageCard>
-    <!-- 选项卡 -->
-    <div v-if="isSelf" class="p-4 sm:p-6">
-      <UTabs v-model="activeTab" :items="tabItems" :content="false" />
-    </div>
-    <!-- 动态 -->
-    <UPageCard variant="soft" class="border-b-muted rounded-none border-b">
-      <p class="text-highlighted">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Architecto
-        reiciendis exercitationem aperiam natus, pariatur eos iste repellat ab
-        inventore eius harum consequatur necessitatibus libero officiis soluta,
-        autem ea tenetur assumenda!
-      </p>
-      <div class="flex items-center justify-between">
-        <p class="text-muted text-sm">
-          {{ new Date(Date.now()).toLocaleString('zh-CN') }}
-        </p>
-        <UButton variant="ghost" icon="lucide:ellipsis"></UButton>
-      </div>
-    </UPageCard>
-    <UPageCard
-      v-for="i in 3"
-      :key="i"
-      variant="soft"
-      class="border-b-muted rounded-none border-b"
-    >
-      <p class="text-highlighted">
-        Lorem ipsum dolor sit, amet consectetur adipisicing elit. Saepe facilis
-      </p>
-      <img
-        src="https://picsum.photos/id/46/400"
-        alt="Tailwind CSS"
-        class="w-full"
-      />
-      <div class="flex items-center justify-between">
-        <p class="text-muted text-sm">
-          {{ new Date(Date.now()).toLocaleString('zh-CN') }}
-        </p>
-        <UButton variant="ghost" icon="lucide:ellipsis"></UButton>
-      </div>
-    </UPageCard>
+    </USlideover>
   </div>
-
-  <!-- 选择头像 -->
-  <input
-    @change="onChangeAvatar"
-    ref="avatarRef"
-    hidden
-    type="file"
-    accept="image/*"
-  />
-  <!-- 选择背景图片 -->
-  <input
-    @change="onChangeSpaceBg"
-    ref="spaceBgRef"
-    hidden
-    type="file"
-    accept="image/*"
-  />
-  <!-- 聊天界面 -->
-  <USlideover
-    v-if="!isSelf"
-    v-model:open="isOpenMessageViewSlideover"
-    title=" "
-    description=" "
-  >
-    <template #content>
-      <MessageView
-        v-if="targetId"
-        @close="isOpenMessageViewSlideover = false"
-        :target-id="targetId"
-      />
-    </template>
-  </USlideover>
-  <!-- 移动端设置界面 -->
-  <USlideover
-    v-if="isMobile && isSelf"
-    v-model:open="isOpenSettingsSlideover"
-    title="设置"
-    description=" "
-  >
-    <template #body>
-      <div>
-        <UPageCard
-          v-for="items in cards"
-          variant="subtle"
-          class="mb-4"
-          :ui="{ container: 'gap-y-0 py-0 sm:py-0' }"
-        >
-          <div
-            v-for="{ label, icon, onSelect } in items"
-            @click="onSelect"
-            class="flex h-12 items-center justify-between"
-          >
-            <div class="flex items-center gap-2">
-              <UIcon :name="icon" class="size-5" />
-              <div>{{ label }}</div>
-            </div>
-            <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
-          </div>
-        </UPageCard>
-
-        <MProfileUserInfo v-model="isOpenUserInfoSliderover"></MProfileUserInfo>
-        <MProfileUpdatePassword
-          v-model="isOpenUpdatePasswordSliderover"
-        ></MProfileUpdatePassword>
-        <MProfileNotifications
-          v-model="isOpenNotificationsSliderover"
-        ></MProfileNotifications>
-      </div>
-    </template>
-  </USlideover>
 </template>
 
 <script lang="ts" setup>
@@ -204,7 +210,12 @@ import { useGenHash, useGetDB, useNoop } from '@/hooks'
 import { updateAvatar, updateSpaceBg } from '@/apis/oss'
 
 const overlay = useOverlay()
-const props = defineProps<{ selectContactId?: string }>()
+const props = withDefaults(
+  defineProps<{ selectContactId?: string; isMatch?: boolean }>(),
+  {
+    isMatch: false
+  }
+)
 const emits = defineEmits(['close'])
 const isOpenMessageViewSlideover = ref(false)
 const isOpenSettingsSlideover = ref(false)

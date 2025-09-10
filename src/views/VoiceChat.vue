@@ -5,19 +5,27 @@
     title=" "
     description=" "
     v-model:open="isOpen"
-    :ui="{ content: 'flex justify-center flex-row' }"
   >
     <template #content>
+      <!-- 规定时间内对方没接通时会清除 matchRes，因此需要使用到 v-if -->
       <div
         v-if="matchType === 'voice-chat' && matchRes.id"
-        class="w-full max-w-(--room-width)"
+        class="flex flex-row justify-center"
       >
-        <MessageHeader
-          @close="isOpen = false"
-          :target-id="matchRes.id"
+        <ProfileSpace
+          v-if="!isMobile"
+          class="w-2/5"
           :is-match="true"
-        ></MessageHeader>
-        <MessageVoice></MessageVoice>
+          :select-contact-id="matchRes.id"
+        ></ProfileSpace>
+        <div class="flex w-3/5 flex-col">
+          <MessageHeader
+            @close="isOpen = false"
+            :target-id="matchRes.id"
+            :is-match="true"
+          ></MessageHeader>
+          <MessageVoice class="m-4 sm:m-6"></MessageVoice>
+        </div>
       </div>
     </template>
   </UModal>
@@ -31,7 +39,7 @@ import { storeToRefs } from 'pinia'
 import { useGenRoomId } from '@/hooks'
 
 const router = useRouter()
-const { globalSocket, userInfo } = storeToRefs(useUserStore())
+const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
 const { matchRes, matchType } = storeToRefs(useMatchStore())
 const { roomId, isVoiceChatMatch } = storeToRefs(useWebRTCStore())
 const isOpen = ref(Boolean(matchType.value === 'voice-chat' && matchRes.value))

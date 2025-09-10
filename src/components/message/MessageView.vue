@@ -115,7 +115,7 @@
         </div>
       </div>
     </div>
-    <!-- footer -->
+    <!-- 移动端输入框 -->
     <div class="p-4" v-if="isMobile">
       <div class="flex items-end gap-2">
         <UButton variant="ghost" color="neutral" icon="lucide:mic"></UButton>
@@ -160,6 +160,7 @@
         </template>
       </UCollapsible>
     </div>
+    <!-- PC 端输入框 -->
     <UPageCard v-else variant="subtle" :ui="{ container: '!p-4' }">
       <UTextarea
         placeholder="Ctrl + Enter 换行"
@@ -341,8 +342,10 @@ const onClickAvatar = e => {
     (target.getAttribute('data-type') ||
       target.children[0]?.getAttribute('data-type')) &&
     // 如果 contacts 中点击用户打开的空间中打开了聊天界面，聊天界面中点击
-    // 对方头像不再显示对方空间
-    route.path !== '/contacts'
+    // 对方头像不显示对方空间
+    route.path !== '/contacts' &&
+    // PC 端的匹配聊天界面中点击对方头像不显示对方空间
+    !(props.isMatch && !isMobile.value)
   ) {
     isSpaceSlideoverOpen.value = true
   }

@@ -8,14 +8,18 @@
     :ui="{ content: 'flex justify-center flex-row' }"
   >
     <template #content>
-      <div class="w-full max-w-(--room-width)">
-        <MessageView
-          v-if="targetId"
-          @close="isOpen = false"
-          :is-match="true"
-          :target-id="matchRes.id"
-        />
-      </div>
+      <ProfileSpace
+        v-if="!isMobile"
+        class="w-2/5"
+        :is-match="true"
+        :select-contact-id="matchRes.id"
+      ></ProfileSpace>
+      <MessageView
+        v-if="targetId"
+        @close="isOpen = false"
+        :is-match="true"
+        :target-id="matchRes.id"
+      />
     </template>
   </UModal>
 </template>
@@ -23,10 +27,11 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useMatchStore, useRecentContactsStore } from '@/store'
+import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 
 const router = useRouter()
+const { isMobile } = storeToRefs(useUserStore())
 const { matchRes, matchType } = storeToRefs(useMatchStore())
 const { targetId } = storeToRefs(useRecentContactsStore())
 const isOpen = ref(Boolean(matchType.value === 'chat' && matchRes.value))

@@ -9,11 +9,10 @@
     }"
   >
     <template #content>
-      <div class="w-1/2">
-        <ProfileSpace
-          @close="router.replace('/profile/user-info')"
-        ></ProfileSpace>
-      </div>
+      <ProfileSpace
+        class="w-1/2"
+        @close="router.replace('/profile/user-info')"
+      ></ProfileSpace>
     </template>
   </UModal>
 </template>

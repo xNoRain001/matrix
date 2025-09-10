@@ -48,9 +48,7 @@
         </template>
       </UDropdownMenu>
     </div>
-    <div
-      class="flex h-full w-full max-w-(--room-width) flex-col justify-center"
-    >
+    <div class="flex w-full flex-col justify-center">
       <div class="text-center">
         {{ rtcConnected ? '通话中...' : '等待对方接通...' }}
       </div>

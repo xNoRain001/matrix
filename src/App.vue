@@ -683,13 +683,13 @@ const onInviteWebRTC = (roomId, nickname) => {
     duration: voiceChatInviteToastExpireTime,
     actions: [
       {
-        icon: 'lucide:x',
+        icon: 'lucide:phone-off',
         label: '拒绝',
         color: 'error',
         onClick: () => acceptWebRTC(roomId, now, false)
       },
       {
-        icon: 'lucide:check',
+        icon: 'lucide:phone',
         label: '同意',
         color: 'primary',
         onClick: () => acceptWebRTC(roomId, now, true)
