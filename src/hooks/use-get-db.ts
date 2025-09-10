@@ -4,7 +4,7 @@ let db = null
 
 const useGetDB = async () => {
   if (!db) {
-    db = await openDB('chatDB', 5, {
+    db = await openDB('chatDB', 6, {
       upgrade(db) {
         if (!db.objectStoreNames.contains('messages')) {
           const store = db.createObjectStore('messages', {
@@ -25,6 +25,12 @@ const useGetDB = async () => {
             keyPath: 'hash' // 文件哈希名作为主键
           })
           store.createIndex('hash', 'hash', { unique: true })
+        }
+
+        if (!db.objectStoreNames.contains('bg')) {
+          db.createObjectStore('bg', {
+            keyPath: 'id'
+          })
         }
       }
     })

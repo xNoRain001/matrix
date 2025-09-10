@@ -33,8 +33,10 @@ import useAddMessageRecordToDB from './use-add-message-record-to-db'
 import useAddMessageRecordToView from './use-add-message-record-to-view'
 import useUpdateLastMsg from './use-update-last-msg'
 import useRefreshContacts from './use-refresh-contacts'
+import useGenHash from './use-gen-hash'
 
 export {
+  useGenHash,
   useRefreshContacts,
   useAddMessageRecordToDB,
   useAddMessageRecordToView,

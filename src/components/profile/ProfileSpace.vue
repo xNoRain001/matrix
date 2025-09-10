@@ -32,7 +32,13 @@
     </UDashboardNavbar>
     <!-- 背景图片 -->
     <div
-      class="sticky -top-[calc(50%-4rem)] z-10 -mt-16 h-1/2 bg-[url(https://picsum.photos/id/46/400)] bg-cover bg-no-repeat"
+      @click="isSelf ? onUpdateSpaceBg() : useNoop()"
+      :class="[
+        isSelf ? 'cursor-pointer' : '',
+        bgURL ? 'bg-cover bg-center bg-no-repeat' : 'bg-default'
+      ]"
+      :style="bgURL ? { 'background-image': `url(${bgURL})` } : {}"
+      class="sticky -top-[calc(50%-4rem)] z-10 -mt-16 h-1/2"
     ></div>
     <!-- 个人资料卡片 -->
     <UPageCard
@@ -107,6 +113,14 @@
     </UPageCard>
   </div>
 
+  <!-- 选择背景图片 -->
+  <input
+    @change="onChange"
+    ref="inputRef"
+    hidden
+    type="file"
+    accept="image/*"
+  />
   <!-- 聊天界面 -->
   <USlideover
     v-if="!isSelf"
@@ -165,8 +179,10 @@
 <script lang="ts" setup>
 import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import DrawerLogout from '@/components/drawer/DrawerLogout.vue'
+import { useGenHash, useGetDB, useNoop } from '@/hooks'
+import { updateSpaceBg } from '@/apis/oss'
 
 const overlay = useOverlay()
 const props = defineProps<{ selectContactId?: string }>()
@@ -177,6 +193,8 @@ const logoutDrawer = overlay.create(DrawerLogout)
 const isOpenUserInfoSliderover = ref(false)
 const isOpenUpdatePasswordSliderover = ref(false)
 const isOpenNotificationsSliderover = ref(false)
+const inputRef = ref(null)
+const toast = useToast()
 const { matchRes } = storeToRefs(useMatchStore())
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const { targetId, contactProfileMap, lastMsgMap } = storeToRefs(
@@ -240,9 +258,40 @@ const nickname = computed(() =>
       lastMsgMap.value[props.selectContactId]?.profile?.nickname ||
       matchRes.value.nickname
 )
-
+const bgBlob = isSelf
+  ? (await (await useGetDB()).get('bg', userInfo.value.id))?.blob
+  : null
+const { VITE_OSS_BASE_URL } = import.meta.env
+const bgURL = ref(
+  isSelf
+    ? bgBlob
+      ? URL.createObjectURL(bgBlob)
+      : // 本地数据库中删除了但 OSS 中还存在，TODO: 重新保存到本地数据库
+        `${VITE_OSS_BASE_URL}${userInfo.value.id}/space-bg`
+    : `${VITE_OSS_BASE_URL}${props.selectContactId}/space-bg`
+)
 const onChat = () => {
   isOpenMessageViewSlideover.value = true
   targetId.value = props.selectContactId
+}
+
+const onUpdateSpaceBg = () => inputRef.value.click()
+
+const onChange = async e => {
+  const input = e.target
+  const bg = input.files[0]
+
+  try {
+    const hash = await useGenHash(bg)
+    await updateSpaceBg(bg, hash)
+    const db = await useGetDB()
+    await db.put('bg', { id: userInfo.value.id, blob: bg })
+    bgURL.value = URL.createObjectURL(bg)
+    toast.add({ title: '更新背景成功', icon: 'lucide:smile' })
+  } catch (error) {
+    toast.add({ title: '更新背景失败', color: 'error', icon: 'lucide:annoyed' })
+  } finally {
+    input.value = ''
+  }
 }
 </script>

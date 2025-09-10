@@ -639,7 +639,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
       await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, id)
     }
 
-    useUpdateLastMsg(
+    await useUpdateLastMsg(
       _lastMsgMap,
       lastMsg,
       true,
@@ -875,7 +875,6 @@ const initWebRTC = id => {
 }
 
 const initLastMsgs = async () => {
-  // TODO: lastMsgMap 和 lastMsgList 完整性检查
   let _lastMsgMap: lastMsgMap = {}
   let _unreadMsgCounter = 0
   const db = await useGetDB()

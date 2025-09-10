@@ -230,7 +230,8 @@ import {
   useAddMessageRecordToView,
   useAddMessageRecordToDB,
   useUpdateLastMsg,
-  useGetDB
+  useGetDB,
+  useGenHash
 } from '@/hooks'
 import {
   useMatchStore,
@@ -415,22 +416,13 @@ const onFocus = () => (expanded.value = false)
 
 const onOpenFileSelector = target => target.click()
 
-const getFileHashName = async (file: File) => {
-  const arrayBuffer = await file.arrayBuffer()
-  const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-  const ext = file.name.split('.').pop()
-  return `${hashHex}${ext ? '.' + ext : ''}`
-}
-
 const onInputChange = async () => {
   const input = inputRef.value
   const { files } = input
   const timestamp = Date.now()
   const { targetId } = props
   try {
-    const hash = await getFileHashName(files[0])
+    const hash = await useGenHash(files[0])
     const { data } = await uploadImage(files[0], hash)
     const url = URL.createObjectURL(files[0])
     const messageRecord: message = {
@@ -445,7 +437,7 @@ const onInputChange = async () => {
       'send-msg',
       JSON.stringify({
         ...messageRecord,
-        ossURL: `https://pub-75ff051ab66a423791dcc3f0d524e897.r2.dev/${data}`
+        ossURL: `${import.meta.env.VITE_OSS_BASE_URL}${data}`
       })
     )
     messageRecord.sent = true

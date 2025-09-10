@@ -15,3 +15,17 @@ export const uploadImage = async (image, hash) => {
     }
   })
 }
+
+export const updateSpaceBg = async (image, hash) => {
+  const formdata = new FormData()
+  formdata.append('hash', hash)
+  formdata.append('file', image)
+
+  return HTTP.request(`${prefix}/update-space-bg`, {
+    data: formdata,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
