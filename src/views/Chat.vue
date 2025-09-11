@@ -8,23 +8,6 @@
     :ui="{ content: 'flex justify-center flex-row' }"
   >
     <template #content>
-      <!-- <USlideover
-        v-if="!isMobile"
-        side="left"
-        default-open
-        :dismissible="false"
-        :overlay="false"
-        title="设置"
-        description=" "
-      >
-        <template #content>
-          <ProfileSpace
-            :is-match="true"
-            :select-contact-id="matchRes.id"
-          ></ProfileSpace>
-        </template>
-      </USlideover> -->
-
       <ProfileSpace
         v-if="!isMobile"
         class="w-2/5"

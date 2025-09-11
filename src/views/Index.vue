@@ -174,9 +174,8 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, reactive, ref, watch, onMounted } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useScrollToTop } from '@/hooks'
 import { useMatchStore, useUserStore, useWebRTCStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { createReusableTemplate } from '@vueuse/core'
@@ -186,6 +185,46 @@ let matchType = ''
 const [DefineFilterBodyTemplate, ReuseFilterBodyTemplate] =
   createReusableTemplate()
 const list = [
+  {
+    icon: 'lucide:message-circle',
+    title: '即时聊天',
+    desc: '端到端加密，不留痕迹的安全对话',
+    matchType: 'chat',
+    to: '/chat'
+  },
+  {
+    icon: 'lucide:phone',
+    title: '语音聊天',
+    desc: '高清音质，实时畅聊无延迟',
+    matchType: 'voice-chat',
+    to: '/voice-chat'
+  },
+  {
+    icon: 'lucide:video',
+    title: '视频聊天',
+    desc: '开发中...',
+    to: '/'
+  },
+  {
+    icon: 'lucide:message-circle',
+    title: '即时聊天',
+    desc: '端到端加密，不留痕迹的安全对话',
+    matchType: 'chat',
+    to: '/chat'
+  },
+  {
+    icon: 'lucide:phone',
+    title: '语音聊天',
+    desc: '高清音质，实时畅聊无延迟',
+    matchType: 'voice-chat',
+    to: '/voice-chat'
+  },
+  {
+    icon: 'lucide:video',
+    title: '视频聊天',
+    desc: '开发中...',
+    to: '/'
+  },
   {
     icon: 'lucide:message-circle',
     title: '即时聊天',
@@ -330,6 +369,4 @@ watch(city, v => {
     selectedRegion.value = `${province.value} - ${v}`
   }
 })
-
-onMounted(useScrollToTop)
 </script>

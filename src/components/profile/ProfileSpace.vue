@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="relative h-screen overflow-y-auto">
+    <div ref="container" class="relative h-screen overflow-y-auto">
       <!-- 顶部导航 -->
       <UDashboardNavbar
         v-if="!isMatch"
@@ -9,6 +9,7 @@
           root: 'border-none sticky top-0 z-30'
         }"
       >
+        <!-- 返回 -->
         <template v-if="!isSelf || (isSelf && !isMobile)" #leading>
           <UButton
             icon="lucide:chevron-left"
@@ -19,6 +20,16 @@
           />
         </template>
         <template #right>
+          <UButton
+            @click="
+              container.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+              })
+            "
+            icon="lucide:chevrons-up"
+            variant="ghost"
+          />
           <UButton v-if="isSelf" icon="lucide:plus" variant="ghost" />
           <UButton
             v-if="isSelf && isMobile"
@@ -250,6 +261,7 @@ const props = withDefaults(
   }
 )
 const emits = defineEmits(['close'])
+const container = ref(null)
 const isOpenMessageViewSlideover = ref(false)
 const isOpenSettingsSlideover = ref(false)
 const logoutDrawer = overlay.create(DrawerLogout)

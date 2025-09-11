@@ -13,10 +13,8 @@ import useBindMediaStream from './use-bind-media-stream'
 import useGetDB from './use-get-db'
 import useClearMessages from './use-clear-messages'
 import useDeleteDB from './use-delete-db'
-import useScrollToBottom from './use-scroll-to-bottom'
 import useEncryptUserInfo from './use-encrypt-userinfo'
 import useLogout from './use-logout'
-import useScrollToTop from './use-scroll-to-top'
 import useUpdateTheme from './use-update-theme'
 import useExportFile from './use-export-file'
 import useTransformGender from './use-transform-gender'
@@ -55,10 +53,8 @@ export {
   useTransformGender,
   useExportFile,
   useUpdateTheme,
-  useScrollToTop,
   useLogout,
   useEncryptUserInfo,
-  useScrollToBottom,
   useDeleteDB,
   useClearMessages,
   useGetDB,

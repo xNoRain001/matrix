@@ -13,6 +13,20 @@
       :content="false"
       :items="mobileNavs"
     >
+      <template #trailing="{ item: { to } }">
+        <UBadge
+          v-if="to === '/message' && unreadMsgCounter"
+          class="absolute top-0 right-0"
+          :label="unreadMsgCounter"
+          size="sm"
+        />
+        <UBadge
+          v-if="to === '/contacts' && contactNotifications.length"
+          class="absolute top-0 right-0"
+          :label="contactNotifications.length"
+          size="sm"
+        />
+      </template>
     </UTabs>
   </div>
 </template>
@@ -21,6 +35,12 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import { storeToRefs } from 'pinia'
+import { useRecentContactsStore } from '@/store'
+
+const { unreadMsgCounter, contactNotifications } = storeToRefs(
+  useRecentContactsStore()
+)
 const mobileNavs = [
   {
     label: '大厅',
