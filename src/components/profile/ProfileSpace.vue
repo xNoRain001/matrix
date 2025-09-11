@@ -196,6 +196,7 @@
           <MProfileNotifications
             v-model="isOpenNotificationsSliderover"
           ></MProfileNotifications>
+          <MPorfileFixer v-model="isOpenFixerSliderover"></MPorfileFixer>
         </div>
       </template>
     </USlideover>
@@ -224,6 +225,7 @@ const logoutDrawer = overlay.create(DrawerLogout)
 const isOpenUserInfoSliderover = ref(false)
 const isOpenUpdatePasswordSliderover = ref(false)
 const isOpenNotificationsSliderover = ref(false)
+const isOpenFixerSliderover = ref(false)
 const spaceBgRef = ref(null)
 const avatarRef = ref(null)
 const toast = useToast()
@@ -258,6 +260,11 @@ const cards = [
     }
   ],
   [
+    {
+      icon: 'lucide:wrench',
+      label: '修复',
+      onSelect: () => (isOpenFixerSliderover.value = true)
+    },
     {
       icon: 'lucide:shield',
       label: '修改密码',

@@ -53,6 +53,11 @@ const links = [
       icon: 'lucide:bell',
       label: '通知',
       to: '/profile/notifications'
+    },
+    {
+      icon: 'lucide:wrench',
+      label: '修复',
+      to: '/profile/fixer'
     }
   ],
   [

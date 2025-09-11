@@ -113,7 +113,11 @@ const initContactList = async () => {
       const { data } = await getContacts()
       useRefreshContacts(data, contactList, contactProfileMap)
     } catch (error) {
-      toast.add({ title: error.message, color: 'error' })
+      toast.add({
+        title: error.message,
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
     }
   }
 }

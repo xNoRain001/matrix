@@ -210,6 +210,10 @@ const navs = [
           to: '/profile/notifications'
         },
         {
+          label: '修复',
+          to: '/profile/fixer'
+        },
+        {
           label: '登出',
           onSelect: () => {
             isMobile.value ? logoutDrawer.open() : logoutModal.open()
@@ -322,7 +326,13 @@ const startRTC = async roomId => {
 }
 
 const onAddContact = async notification => {
-  toast.add({ title: `${notification.profile.nickname} 向你发送了好友申请` })
+  toast.add({
+    title: notification.profile.nickname,
+    description: '请求添加你为好友',
+    avatar: {
+      alt: notification.profile.nickname[0]
+    }
+  })
   const _contactNotifications = contactNotifications.value
   _contactNotifications.unshift(notification)
   localStorage.setItem(
@@ -437,7 +447,8 @@ const onJoined = async (_roomId, _polite) => {
       localStorage.removeItem('matchType')
       toast.add({
         title: '对方已离开房间',
-        color: 'error'
+        color: 'error',
+        icon: 'lucide:annoyed'
       })
       router.replace('/')
     }, 5000)
@@ -675,7 +686,7 @@ const acceptWebRTC = (roomId, now, isAccept: boolean) => {
       socket.emit('refuse-web-rtc', roomId)
     }
   } else {
-    toast.add({ title: '超时', color: 'error' })
+    toast.add({ title: '超时', color: 'error', icon: 'lucide:annoyed' })
   }
 }
 
@@ -713,7 +724,8 @@ const onInviteWebRTCFailed = msg => {
   clearTimeout(leaveRoomTimer.value)
   toast.add({
     title: msg,
-    color: 'error'
+    color: 'error',
+    icon: 'lucide:annoyed'
   })
 }
 
@@ -724,7 +736,8 @@ const onRefuseWebRTC = () => {
   clearTimeout(leaveRoomTimer.value)
   toast.add({
     title: '对方拒绝了你的请求',
-    color: 'error'
+    color: 'error',
+    icon: 'lucide:annoyed'
   })
 }
 
@@ -735,7 +748,8 @@ const onDisconnect = () => {
     offline.value = true
     toast.add({
       title: '连接服务器失败...',
-      color: 'error'
+      color: 'error',
+      icon: 'lucide:annoyed'
     })
   }
 }
@@ -776,7 +790,8 @@ const onBye = _roomId => {
   roomId.value = ''
   toast.add({
     title: '对方结束了通话',
-    color: 'error'
+    color: 'error',
+    icon: 'lucide:annoyed'
   })
 
   if (isVoiceChatMatch.value) {
@@ -788,13 +803,14 @@ const onBye = _roomId => {
 
 const onCancelWebRTC = () => {
   toast.remove(voiceChatInviteToastId)
-  toast.add({ title: '对方取消了通话', color: 'error' })
+  toast.add({ title: '对方取消了通话', color: 'error', icon: 'lucide:annoyed' })
 }
 
 const onOtherWebRTC = () => {
   toast.add({
     title: '已经在房间中了',
-    color: 'error'
+    color: 'error',
+    icon: 'lucide:annoyed'
   })
 }
 
@@ -888,6 +904,7 @@ const initLastMsgs = async () => {
   let _unreadMsgCounter = 0
   const db = await useGetDB()
   const lastMsgs: lastMsg[] = await db.getAll('lastMessages')
+  console.log(lastMsgs)
   const _lastMsgList = []
 
   for (let i = 0, l = lastMsgs.length; i < l; i++) {

@@ -154,7 +154,11 @@ const initProfiles = async () => {
         String(now + 1000 * 60 * 60 * 6)
       )
     } catch (error) {
-      toast.add({ title: error.message, color: 'error' })
+      toast.add({
+        title: error.message,
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
     }
   }
 }

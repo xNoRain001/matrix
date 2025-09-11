@@ -42,7 +42,7 @@ const onRefuseCandidate = async () => {
     isContactModalOpen.value = false
     props.socket.emit('refuse-contact', remoteRoomInfo.value.roomId)
   } catch (error) {
-    toast.add({ title: error.message, color: 'error' })
+    toast.add({ title: error.message, color: 'error', icon: 'lucide:annoyed' })
   } finally {
     isContactModalOpen.value = false
   }
@@ -51,10 +51,10 @@ const onRefuseCandidate = async () => {
 const onAgreeCandidate = async () => {
   try {
     await agreeCandidate(otherInfo.value.id)
-    toast.add({ title: '添加好友成功', color: 'success' })
+    toast.add({ title: '添加好友成功', color: 'success', icon: 'lucide:smile' })
     props.socket.emit('agree-contact', remoteRoomInfo.value.roomId)
   } catch (error) {
-    toast.add({ title: error.message, color: 'error' })
+    toast.add({ title: error.message, color: 'error', icon: 'lucide:annoyed' })
   } finally {
     isContactModalOpen.value = false
   }

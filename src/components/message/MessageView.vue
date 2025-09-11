@@ -155,11 +155,11 @@ const { isVoiceChatModalOpen, roomId, leaveRoomTimer, isVoiceChatMatch } =
 const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
 const { matchRes } = storeToRefs(useMatchStore())
 const toast = useToast()
-const isIOS = /iPhone/i.test(navigator.userAgent)
+const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent)
 const inputRef = ref<HTMLInputElement | null>(null)
 const expanded = ref(false)
 const dashboardPanelRef = computed(
-  () => msgContainerRef.value?.parentNode as HTMLElement
+  () => (msgContainerRef.value as any)?.$el?.parentNode as HTMLElement
 )
 
 // const onDownload = (url, filename) => {
@@ -172,7 +172,8 @@ const onCall = () => {
   if (roomId.value) {
     toast.add({
       title: '当前正在语音中',
-      color: 'error'
+      color: 'error',
+      icon: 'lucide:annoyed'
     })
     return
   }
@@ -196,7 +197,8 @@ const onCall = () => {
     clearTimeout(leaveRoomTimer.value)
     toast.add({
       title: '对方未应答',
-      color: 'error'
+      color: 'error',
+      icon: 'lucide:annoyed'
     })
   }, voiceChatInviteToastPendingTime)
 }
@@ -217,6 +219,8 @@ const resizeHandler = () => {
   // visualViewport.offsetTop 表示视觉视口相对于布局视口的偏移，标签栏在底部时
   // 这个值可能不准
   // TODO: 找到解决办法
+  console.log(dashboardPanelRef.value)
+  console.log(visualViewport.offsetTop)
   dashboardPanelRef.value.style.paddingTop = `${visualViewport.offsetTop}px`
   ;(msgContainerRef.value as any).scrollToBottom()
 }
@@ -342,7 +346,11 @@ const onSendMsg = async () => {
   }
 
   if (_message.length > 2000) {
-    toast.add({ title: '支持的最大消息长度为 2000 字符', color: 'error' })
+    toast.add({
+      title: '支持的最大消息长度为 2000 字符',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
     return
   }
 
@@ -389,7 +397,7 @@ const onSendMsg = async () => {
     ;(msgContainerRef.value as any).scrollToBottom()
   } catch (error) {
     console.log(error)
-    toast.add({ title: '发送失败', color: 'error' })
+    toast.add({ title: '发送失败', color: 'error', icon: 'lucide:annoyed' })
   }
 }
 

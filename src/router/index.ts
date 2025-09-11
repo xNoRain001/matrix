@@ -41,6 +41,10 @@ const router = createRouter({
           path: 'notifications',
           component: () =>
             import('@/components/profile/ProfileNotifications.vue')
+        },
+        {
+          path: 'fixer',
+          component: () => import('@/components/profile/ProfileFixer.vue')
         }
       ]
     },

@@ -135,14 +135,16 @@ const onUpdatePassword = async () => {
     const { message } = await updatePassword(encryptedUserInfo)
     toast.add({
       title: message,
-      color: 'success'
+      color: 'success',
+      icon: 'lucide:smile'
     })
     useLogout()
     router.replace('/login')
   } catch (error) {
     toast.add({
       title: error.message,
-      color: 'error'
+      color: 'error',
+      icon: 'lucide:annoyed'
     })
   }
 }

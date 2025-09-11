@@ -308,7 +308,8 @@ const onMatch = (_matchType, to) => {
   if (_matchType === 'voice-chat' && roomId.value) {
     return toast.add({
       title: '匹配失败，当前正在语音中',
-      color: 'error'
+      color: 'error',
+      icon: 'lucide:annoyed'
     })
   }
 

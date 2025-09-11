@@ -351,7 +351,8 @@ const sendLoginPin = async () => {
       const { message } = await sendPin(email, 'login')
       toast.add({
         title: message,
-        color: 'success'
+        color: 'success',
+        icon: 'lucide:smile'
       })
       loginWithPinReamingTime.value = 300
       loginWithPinTimer = setInterval(() => {
@@ -363,7 +364,8 @@ const sendLoginPin = async () => {
   } catch (error) {
     toast.add({
       title: error.message,
-      color: 'error'
+      color: 'error',
+      icon: 'lucide:annoyed'
     })
   }
 }
@@ -398,7 +400,8 @@ const onResetPassword = async () => {
       const { message } = await sendResetPasswordURL(email)
       toast.add({
         title: message,
-        color: 'success'
+        color: 'success',
+        icon: 'lucide:smile'
       })
     }
 
@@ -406,7 +409,8 @@ const onResetPassword = async () => {
   } catch (error) {
     toast.add({
       title: error.message,
-      color: 'error'
+      color: 'error',
+      icon: 'lucide:annoyed'
     })
   }
 }
@@ -442,7 +446,7 @@ const sendRegisterPin = async () => {
       }, 1000)
     } else {
       const { message } = await sendPin(email, 'register')
-      toast.add({ title: message, color: 'success' })
+      toast.add({ title: message, color: 'success', icon: 'lucide:smile' })
       registerReamingTime.value = 300
       registerTimer = setInterval(() => {
         registerReamingTime.value = registerReamingTime.value - 1
@@ -451,7 +455,7 @@ const sendRegisterPin = async () => {
 
     hasRegisterPin.value = true
   } catch (error) {
-    toast.add({ title: error.message, color: 'error' })
+    toast.add({ title: error.message, color: 'error', icon: 'lucide:annoyed' })
   }
 }
 
@@ -482,13 +486,15 @@ const onLogin = async () => {
     router.replace('/')
     toast.add({
       title: '登录成功',
-      color: 'success'
+      color: 'success',
+      icon: 'lucide:smile'
     })
   } catch (error) {
     toast.add({
       title: '登录失败',
       description: error.message,
-      color: 'error'
+      color: 'error',
+      icon: 'lucide:annoyed'
     })
   }
 }
@@ -501,7 +507,8 @@ watch(registerPin, async v => {
       registerPin.value.length = 0
       return toast.add({
         title: '注册表单格式不正确',
-        color: 'error'
+        color: 'error',
+        icon: 'lucide:annoyed'
       })
     }
 
@@ -521,13 +528,15 @@ watch(registerPin, async v => {
       router.replace('/')
       toast.add({
         title: '登录成功',
-        color: 'success'
+        color: 'success',
+        icon: 'lucide:smile'
       })
     } catch (error) {
       toast.add({
         title: '注册失败',
         description: error.message,
-        color: 'error'
+        color: 'error',
+        icon: 'lucide:annoyed'
       })
       registerPin.value.length = 0
     }
@@ -542,7 +551,8 @@ watch(loginWithVCPin, async v => {
       loginWithVCPin.value.length = 0
       return toast.add({
         title: '登录表单格式不正确',
-        color: 'error'
+        color: 'error',
+        icon: 'lucide:annoyed'
       })
     }
 
@@ -555,12 +565,14 @@ watch(loginWithVCPin, async v => {
       router.replace('/')
       toast.add({
         title: '登录成功',
-        color: 'success'
+        color: 'success',
+        icon: 'lucide:smile'
       })
     } catch (error) {
       toast.add({
         title: error.message,
-        color: 'error'
+        color: 'error',
+        icon: 'lucide:annoyed'
       })
       loginWithVCPin.value.length = 0
     }

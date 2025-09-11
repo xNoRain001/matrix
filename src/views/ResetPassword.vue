@@ -101,7 +101,8 @@ const onResetPassword = async () => {
   if (!token) {
     toast.add({
       title: '身份错误',
-      color: 'error'
+      color: 'error',
+      icon: 'lucide:annoyed'
     })
     return
   }
@@ -117,13 +118,15 @@ const onResetPassword = async () => {
     const { message } = await resetPassword(token, encryptedUserInfo)
     toast.add({
       title: message,
-      color: 'success'
+      color: 'success',
+      icon: 'lucide:smile'
     })
     router.replace('/login')
   } catch (error) {
     toast.add({
       title: error.message,
-      color: 'error'
+      color: 'error',
+      icon: 'lucide:annoyed'
     })
   }
 }
