@@ -101,7 +101,6 @@
     @change="onInputChange"
     type="file"
     hidden
-    multiple
     accept="image/*"
   />
 </template>
@@ -229,85 +228,93 @@ const onOpenFileSelector = target => target.click()
 const onInputChange = async () => {
   const input = inputRef.value
   const { files } = input
-  const timestamp = Date.now()
-  const { targetId } = props
-  try {
-    const hash = await useGenHash(files[0])
-    const { data } = await uploadImage(files[0], hash)
-    const url = URL.createObjectURL(files[0])
-    const messageRecord: message = {
-      type: 'image',
-      hash,
-      contact: userInfo.value.id,
-      sender: userInfo.value.id,
-      receiver: targetId,
-      timestamp
-    }
-    globalSocket.value.emit(
-      'send-msg',
-      JSON.stringify({
-        ...messageRecord,
-        ossURL: `${import.meta.env.VITE_OSS_BASE_URL}${data}`
-      })
-    )
-    messageRecord.sent = true
-    messageRecord.contact = targetId
-
-    const _lastMsgMap = lastMsgMap.value
-    const isOverFiveMins = useIsOverFiveMins(
-      messageRecord,
-      _lastMsgMap,
-      targetId
-    )
-
-    if (!_lastMsgMap[targetId]) {
-      await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
-    }
-
-    const [labelId, msgId] = await useAddMessageRecordToDB(
-      isOverFiveMins,
-      messageRecord,
-      _lastMsgMap
-    )
-    messageRecord.url = url
-    useAddMessageRecordToView(
-      isOverFiveMins,
-      messageRecord,
-      messageList,
-      labelId,
-      msgId
-    )
-    useUpdateLastMsg(
-      _lastMsgMap,
-      { ...messageRecord, content: '[图片]' },
-      false,
-      true,
-      unreadMsgCounter
-    )
-    message.value = ''
-    ;(msgContainerRef.value as any).scrollToBottom()
-
-    // 如果存在，说明本地中一定有，不用进行处理，不存在，不能说明本地中一定没有，
-    // 可能是没有读取或者存储数量达到上限
-    const _hashToBlobURLMap = hashToBlobURLMap.value
-    if (!_hashToBlobURLMap.has(hash)) {
-      const db = await useGetDB()
-      const tx = db.transaction('files', 'readwrite')
-      const record = await tx.objectStore('files').get(hash)
-      if (!record) {
-        await tx.objectStore('files').put({ hash, blob: files[0] })
+  const file = files[0]
+  const url = URL.createObjectURL(file)
+  const img = new Image()
+  img.onload = async () => {
+    const { width, height } = img
+    const timestamp = Date.now()
+    const { targetId } = props
+    try {
+      const hash = await useGenHash(file)
+      const { data } = await uploadImage(file, hash)
+      const messageRecord: message = {
+        type: 'image',
+        hash,
+        contact: userInfo.value.id,
+        sender: userInfo.value.id,
+        receiver: targetId,
+        timestamp,
+        width,
+        height
       }
-      await tx.done
+      globalSocket.value.emit(
+        'send-msg',
+        JSON.stringify({
+          ...messageRecord,
+          ossURL: `${import.meta.env.VITE_OSS_BASE_URL}${data}`
+        })
+      )
+      messageRecord.sent = true
+      messageRecord.contact = targetId
 
-      if (_hashToBlobURLMap.size < 100) {
-        _hashToBlobURLMap.set(hash, URL.createObjectURL(files[0]))
+      const _lastMsgMap = lastMsgMap.value
+      const isOverFiveMins = useIsOverFiveMins(
+        messageRecord,
+        _lastMsgMap,
+        targetId
+      )
+
+      if (!_lastMsgMap[targetId]) {
+        await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
       }
+
+      // 本地数据库中不需要保存临时的 url
+      const [labelId, msgId] = await useAddMessageRecordToDB(
+        isOverFiveMins,
+        messageRecord,
+        _lastMsgMap
+      )
+      messageRecord.url = url
+      useAddMessageRecordToView(
+        isOverFiveMins,
+        messageRecord,
+        messageList,
+        labelId,
+        msgId
+      )
+      useUpdateLastMsg(
+        _lastMsgMap,
+        { ...messageRecord, content: '[图片]' },
+        false,
+        true,
+        unreadMsgCounter
+      )
+      ;(msgContainerRef.value as any).scrollToBottom()
+
+      // 如果存在，说明本地中一定有，不用进行处理，不存在，不能说明本地中一定没有，
+      // 可能是没有读取或者存储数量达到上限
+      const _hashToBlobURLMap = hashToBlobURLMap.value
+      if (!_hashToBlobURLMap.has(hash)) {
+        const db = await useGetDB()
+        const tx = db.transaction('files', 'readwrite')
+        const record = await tx.objectStore('files').get(hash)
+        if (!record) {
+          await tx.objectStore('files').put({ hash, blob: file })
+        }
+        await tx.done
+
+        if (_hashToBlobURLMap.size < 100) {
+          _hashToBlobURLMap.set(hash, url)
+        }
+      }
+    } catch (error) {
+      toast.add({ title: '发送失败', color: 'error', icon: 'lucide:annoyed' })
+    } finally {
+      input.value = ''
     }
-  } catch (error) {
-    toast.add({ title: '发送失败', color: 'error' })
-  } finally {
-    input.value = ''
   }
+  img.src = url
 }
 
 const onKeydown = e => {

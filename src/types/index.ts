@@ -35,6 +35,8 @@ export type message = {
   hash?: string
   url?: string
   ossURL?: string
+  width?: number
+  height?: number
   content?: string
   sent?: boolean
   sender: string

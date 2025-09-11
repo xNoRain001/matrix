@@ -37,10 +37,11 @@
         @click="isSelf ? onUpdateSpaceBg() : useNoop()"
         :class="[
           isSelf ? 'cursor-pointer' : '',
-          bgURL ? 'bg-cover bg-center bg-no-repeat' : 'bg-default'
+          bgURL ? 'bg-cover bg-center bg-no-repeat' : 'bg-default',
+          isMatch ? '' : '-mt-16'
         ]"
         :style="bgURL ? { 'background-image': `url(${bgURL})` } : {}"
-        class="sticky -top-[calc(50%-4rem)] z-10 -mt-16 h-1/2"
+        class="sticky -top-[calc(50%-4rem)] z-10 h-1/2"
       ></div>
       <!-- 个人资料卡片 -->
       <UPageCard
@@ -204,7 +205,7 @@
 <script lang="ts" setup>
 import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import DrawerLogout from '@/components/drawer/DrawerLogout.vue'
 import { useGenHash, useGetDB, useNoop } from '@/hooks'
 import { updateAvatar, updateSpaceBg } from '@/apis/oss'

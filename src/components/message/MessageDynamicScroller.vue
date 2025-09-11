@@ -4,7 +4,7 @@
     :min-item-size="44"
     :emit-update="true"
     ref="msgContainerRef"
-    class="relative h-full p-4 sm:p-6"
+    class="h-full p-4 sm:p-6"
     @update="onUpdate"
     @click="onClickAvatar"
     @scroll="onScroll"
@@ -61,7 +61,7 @@
             class="flex items-center justify-end gap-3 pb-1"
           >
             <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
-              <img :src="item.url" />
+              <img :width="item.width" :height="item.height" :src="item.url" />
             </div>
             <UAvatar
               v-if="item.separator"
@@ -81,6 +81,8 @@
             <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
               <img
                 crossorigin="anonymous"
+                :width="item.width"
+                :height="item.height"
                 :src="item.url || item.ossURL"
                 @load="onLoad($event, item.hash, item.ossURL, item.id)"
               />
