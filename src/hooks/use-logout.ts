@@ -1,5 +1,3 @@
-import { useUserStore } from '@/store'
-
 const useLogout = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('contactList')
@@ -8,7 +6,6 @@ const useLogout = () => {
   localStorage.removeItem('matchRes')
   localStorage.removeItem('matchType')
   localStorage.removeItem('lastMsgProfileMapExpireAt')
-  useUserStore().userInfo = null
 }
 
 export default useLogout

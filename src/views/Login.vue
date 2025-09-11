@@ -243,9 +243,9 @@
 </template>
 
 <script lang="ts" setup>
-import { watch, reactive, ref } from 'vue'
+import { watch, reactive, ref, onBeforeMount } from 'vue'
 import { useEncryptUserInfo } from '@/hooks'
-import { useRouter } from 'vue-router'
+// import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import {
@@ -302,7 +302,7 @@ const loginWithVCForm = reactive({
 const resetPasswordForm = reactive({ email: '' })
 const isLogin = ref(true)
 const isRegister = ref(false)
-const router = useRouter()
+// const router = useRouter()
 const { userInfo } = storeToRefs(useUserStore())
 const isResetPassword = ref(false)
 const isLoginWithVC = ref(false)
@@ -482,13 +482,15 @@ const onLogin = async () => {
       data: { token, userInfo: _userInfo }
     } = await login(encryptedUserInfo)
     localStorage.setItem('token', token)
-    userInfo.value = _userInfo
-    router.replace('/')
+    // userInfo.value = _userInfo
     toast.add({
       title: '登录成功',
       color: 'success',
       icon: 'lucide:smile'
     })
+    // TODO: 解决路由切换会造成 UApp 中只显示 RouterView 中内容，其他组件不显示
+    // router.replace('/')
+    location.replace('/')
   } catch (error) {
     toast.add({
       title: '登录失败',
@@ -524,13 +526,13 @@ watch(registerPin, async v => {
         data: { token, userInfo: _userInfo }
       } = await register(encryptedUserInfo)
       localStorage.setItem('token', token)
-      userInfo.value = _userInfo
-      router.replace('/')
+      // userInfo.value = _userInfo
       toast.add({
         title: '登录成功',
         color: 'success',
         icon: 'lucide:smile'
       })
+      location.replace('/')
     } catch (error) {
       toast.add({
         title: '注册失败',
@@ -561,13 +563,13 @@ watch(loginWithVCPin, async v => {
         data: { token, userInfo: _userInfo }
       } = await loginWithPin(loginWithVCForm.email, s)
       localStorage.setItem('token', token)
-      userInfo.value = _userInfo
-      router.replace('/')
+      // userInfo.value = _userInfo
       toast.add({
         title: '登录成功',
         color: 'success',
         icon: 'lucide:smile'
       })
+      location.replace('/')
     } catch (error) {
       toast.add({
         title: error.message,
@@ -577,5 +579,11 @@ watch(loginWithVCPin, async v => {
       loginWithVCPin.value.length = 0
     }
   }
+})
+
+onBeforeMount(() => {
+  // 登出时清空了本地 token，路由中放行，才能进入到这里，在这里重置 userInfo，因为
+  // 其他页面可能会使用到 userInfo，提前清空会报错
+  userInfo.value = null
 })
 </script>

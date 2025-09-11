@@ -90,7 +90,7 @@
     </UApp>
 
     <!-- 注册登录和重置密码等内容 -->
-    <UApp v-else :toaster="{ position: 'top-center' }">
+    <UApp v-else :toaster="{ position: 'top-center', progress: false }">
       <RouterView />
     </UApp>
   </Suspense>
@@ -742,9 +742,8 @@ const onRefuseWebRTC = () => {
 }
 
 const onDisconnect = () => {
-  // 匹配成功时会跳转路由，关闭 modal,只写 !matching.value 会出现匹配成功时出现
-  // 连接服务器失败提示
-  if (!matching.value && !hasMatchRes.value) {
+  // 匹配时连接服务器失败提示
+  if (matching.value) {
     offline.value = true
     toast.add({
       title: '连接服务器失败...',
@@ -830,21 +829,6 @@ const onRefreshNotifications = remoteNotifications => {
 }
 
 const initWebRTC = id => {
-  // 未登录或者登出
-  if (!id) {
-    const socket = globalSocket.value
-    const pc = globalPC.value
-
-    if (pc) {
-      pc.close()
-      globalPC.value = null
-    }
-
-    socket && socket.disconnect()
-    globalSocket.value = null
-    return
-  }
-
   const socket = (globalSocket.value = io(
     import.meta.env.VITE_SOCKET_BASE_URL,
     {
@@ -904,7 +888,6 @@ const initLastMsgs = async () => {
   let _unreadMsgCounter = 0
   const db = await useGetDB()
   const lastMsgs: lastMsg[] = await db.getAll('lastMessages')
-  console.log(lastMsgs)
   const _lastMsgList = []
 
   for (let i = 0, l = lastMsgs.length; i < l; i++) {
@@ -923,10 +906,24 @@ const initLastMsgs = async () => {
 watch(
   id,
   async id => {
-    // 先获取本地数据库中的数据
-    await initLastMsgs()
-    // 拉取离线数据后，更新本地数据库中的数据和内存中的数据
-    initWebRTC(id)
+    if (id) {
+      // 先获取本地数据库中的数据
+      await initLastMsgs()
+      // 拉取离线数据后，更新本地数据库中的数据和内存中的数据
+      initWebRTC(id)
+    } else {
+      // 未登录或者登出
+      const socket = globalSocket.value
+      const pc = globalPC.value
+
+      if (pc) {
+        pc.close()
+        globalPC.value = null
+      }
+
+      socket && socket.disconnect()
+      globalSocket.value = null
+    }
   },
   { immediate: true }
 )
