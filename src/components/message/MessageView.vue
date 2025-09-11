@@ -5,116 +5,11 @@
       :target-id="targetId"
       :is-match="isMatch"
     ></MessageHeader>
-    <!-- body -->
-    <div
-      ref="msgContainerRef"
-      class="grow overflow-y-auto px-4 pt-4 pb-8 sm:px-6"
-    >
-      <div class="relative" @click="onClickAvatar">
-        <div
-          v-for="(
-            {
-              id,
-              separator,
-              type,
-              timestamp,
-              content,
-              sent,
-              url,
-              hash,
-              ossURL
-            },
-            index
-          ) in messageList"
-          :key="index"
-        >
-          <div v-if="type === 'label'" class="mt-4 text-center text-sm">
-            {{ formatTimestamp(timestamp) }}
-          </div>
-          <div v-else-if="type === 'text'">
-            <div
-              :class="separator ? 'mt-4' : 'mt-1'"
-              v-if="sent"
-              class="flex items-center justify-end gap-3"
-            >
-              <div
-                class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2 break-words whitespace-pre-wrap"
-              >
-                {{ content }}
-              </div>
-              <UAvatar
-                v-if="separator"
-                :alt="userInfo.nickname[0] || ''"
-                size="xl"
-              />
-              <div v-else class="w-10"></div>
-            </div>
-            <div
-              v-else
-              :class="separator ? 'mt-4' : 'mt-1'"
-              class="flex items-center gap-3"
-            >
-              <UAvatar
-                data-type="avatar"
-                v-if="separator"
-                :alt="targetNickname"
-                size="xl"
-              />
-              <div v-else class="w-10"></div>
-              <div
-                class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2 break-words whitespace-pre-wrap"
-              >
-                {{ content }}
-              </div>
-            </div>
-          </div>
-          <div v-else-if="type === 'image'">
-            <div
-              :class="separator ? 'mt-4' : 'mt-1'"
-              v-if="sent"
-              class="flex items-center justify-end gap-3"
-            >
-              <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
-                <img :src="url" />
-              </div>
-              <UAvatar
-                v-if="separator"
-                :alt="userInfo.nickname[0] || ''"
-                size="xl"
-              />
-              <div v-else class="w-10"></div>
-            </div>
-            <div
-              v-else
-              :class="separator ? 'mt-4' : 'mt-1'"
-              class="flex items-center gap-3"
-            >
-              <UAvatar
-                data-type="avatar"
-                v-if="separator"
-                :alt="targetNickname"
-                size="xl"
-              />
-              <div v-else class="w-10"></div>
-              <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
-                <img
-                  crossorigin="anonymous"
-                  :src="url || ossURL"
-                  @load="onLoad($event, hash, ossURL, id)"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div
-          v-if="lastMsgMap[targetId]?.timeAgo"
-          class="absolute -bottom-5 text-xs"
-          :class="lastMsgMap[targetId]?.sent ? 'right-13' : 'left-13'"
-        >
-          {{ lastMsgMap[targetId]?.timeAgo }}
-        </div>
-      </div>
-    </div>
+    <!-- 聊天内容 -->
+    <MessageDynamicScroller
+      :target-id="targetId"
+      :is-match="isMatch"
+    ></MessageDynamicScroller>
     <!-- 移动端输入框 -->
     <div class="p-4" v-if="isMobile">
       <div class="flex items-end gap-2">
@@ -209,20 +104,10 @@
     multiple
     accept="image/*"
   />
-  <USlideover v-model:open="isSpaceSlideoverOpen" title=" " description=" ">
-    <template #content>
-      <ProfileSpace
-        v-if="isSpaceSlideoverOpen"
-        :select-contact-id="targetId"
-        @close="isSpaceSlideoverOpen = false"
-      ></ProfileSpace>
-    </template>
-  </USlideover>
 </template>
 
 <script lang="ts" setup>
 import {
-  useScrollToBottom,
   useGetMessages,
   useAddLastMsg,
   useGenRoomId,
@@ -244,7 +129,6 @@ import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onMounted, ref, computed, watch } from 'vue'
 import type { message } from '@/types'
 import { voiceChatInviteToastPendingTime } from '@/const'
-import { useRoute } from 'vue-router'
 import { uploadImage } from '@/apis/oss'
 
 let timer = null
@@ -255,14 +139,6 @@ const props = withDefaults(
   }
 )
 const emits = defineEmits(['close'])
-const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
-  // year: 'numeric',
-  // month: 'long',
-  // day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-  weekday: 'long'
-}
 // 对方是否收到了文件元信息的标识
 const message = ref('')
 const {
@@ -273,94 +149,25 @@ const {
   lastMsgMap,
   lastMsgList,
   hashToBlobURLMap,
-  contactProfileMap
+  lastFetchedId
 } = storeToRefs(useRecentContactsStore())
 const { isVoiceChatModalOpen, roomId, leaveRoomTimer, isVoiceChatMatch } =
   storeToRefs(useWebRTCStore())
 const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
 const { matchRes } = storeToRefs(useMatchStore())
-const targetNickname = computed(() =>
-  props.isMatch
-    ? matchRes.value.nickname[0]
-    : lastMsgMap.value[props.targetId]?.profile?.nickname?.[0] ||
-      contactProfileMap.value[props.targetId].profile.nickname[0]
-)
 const toast = useToast()
 const isIOS = /iPhone/i.test(navigator.userAgent)
 const inputRef = ref<HTMLInputElement | null>(null)
 const expanded = ref(false)
-const isSpaceSlideoverOpen = ref(false)
-const route = useRoute()
 const dashboardPanelRef = computed(
   () => msgContainerRef.value?.parentNode as HTMLElement
 )
-
-const onLoad = async (e, hash, ossURL, id) => {
-  // TODO: 删除
-  if (!hash) {
-    return
-  }
-
-  // 没有 ossURL，说明接收图片时本地数据库已经缓存过该图片，因此什么也不用做
-  if (!ossURL) {
-    return
-  }
-
-  const img = e.target
-  const canvas = document.createElement('canvas')
-  const { width, height } = img
-  canvas.width = width
-  canvas.height = height
-  const ctx = canvas.getContext('2d')
-  ctx?.drawImage(img, 0, 0, width, height)
-  const extname = img.src.split('.').pop()
-  canvas.toBlob(
-    async blob => {
-      const db = await useGetDB()
-      const tx = db.transaction('files', 'readwrite')
-      await tx.objectStore('files').put({ hash, blob })
-      await tx.done
-      const _hashToBlobURLMap = hashToBlobURLMap.value
-      if (_hashToBlobURLMap.size < 100) {
-        _hashToBlobURLMap.set(hash, URL.createObjectURL(blob))
-      }
-      // 不再需要 ossURL
-      const tx2 = db.transaction('messages', 'readwrite')
-      const record = await tx2.objectStore('messages').get(id)
-      delete record.ossURL
-      await tx2.objectStore('messages').put(record)
-      await tx2.done
-    },
-    `image/${extname === 'jpg' ? 'jpeg' : extname}`
-  )
-}
-
-const onClickAvatar = e => {
-  const { target } = e
-
-  if (
-    (target.getAttribute('data-type') ||
-      target.children[0]?.getAttribute('data-type')) &&
-    // 如果 contacts 中点击用户打开的空间中打开了聊天界面，聊天界面中点击
-    // 对方头像不显示对方空间
-    route.path !== '/contacts' &&
-    // PC 端的匹配聊天界面中点击对方头像不显示对方空间
-    !(props.isMatch && !isMobile.value)
-  ) {
-    isSpaceSlideoverOpen.value = true
-  }
-}
 
 // const onDownload = (url, filename) => {
 //   fetch(url)
 //     .then(res => res.blob())
 //     .then(blob => useExportFile(filename, blob))
 // }
-
-const formatTimestamp = (timestamp: number) => {
-  // TODO: 更久远的记录显示日期甚至年份
-  return new Date(timestamp).toLocaleString('zh-CN', dateTimeFormatOptions)
-}
 
 const onCall = () => {
   if (roomId.value) {
@@ -412,7 +219,7 @@ const resizeHandler = () => {
   // 这个值可能不准
   // TODO: 找到解决办法
   dashboardPanelRef.value.style.paddingTop = `${visualViewport.offsetTop}px`
-  useScrollToBottom(msgContainerRef)
+  ;(msgContainerRef.value as any).scrollToBottom()
 }
 
 const onFocus = () => (expanded.value = false)
@@ -457,9 +264,19 @@ const onInputChange = async () => {
       await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
     }
 
-    await useAddMessageRecordToDB(isOverFiveMins, messageRecord, _lastMsgMap)
+    const [labelId, msgId] = await useAddMessageRecordToDB(
+      isOverFiveMins,
+      messageRecord,
+      _lastMsgMap
+    )
     messageRecord.url = url
-    useAddMessageRecordToView(isOverFiveMins, messageRecord, messageList)
+    useAddMessageRecordToView(
+      isOverFiveMins,
+      messageRecord,
+      messageList,
+      labelId,
+      msgId
+    )
     useUpdateLastMsg(
       _lastMsgMap,
       { ...messageRecord, content: '[图片]' },
@@ -468,7 +285,7 @@ const onInputChange = async () => {
       unreadMsgCounter
     )
     message.value = ''
-    useScrollToBottom(msgContainerRef)
+    ;(msgContainerRef.value as any).scrollToBottom()
 
     // 如果存在，说明本地中一定有，不用进行处理，不存在，不能说明本地中一定没有，
     // 可能是没有读取或者存储数量达到上限
@@ -487,7 +304,6 @@ const onInputChange = async () => {
       }
     }
   } catch (error) {
-    console.log(error)
     toast.add({ title: '发送失败', color: 'error' })
   } finally {
     input.value = ''
@@ -549,11 +365,21 @@ const onSendMsg = async () => {
       await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
     }
 
-    await useAddMessageRecordToDB(isOverFiveMins, messageRecord, _lastMsgMap)
-    useAddMessageRecordToView(isOverFiveMins, messageRecord, messageList)
+    const [labelId, msgId] = await useAddMessageRecordToDB(
+      isOverFiveMins,
+      messageRecord,
+      _lastMsgMap
+    )
+    useAddMessageRecordToView(
+      isOverFiveMins,
+      messageRecord,
+      messageList,
+      labelId,
+      msgId
+    )
     useUpdateLastMsg(_lastMsgMap, messageRecord, false, true, unreadMsgCounter)
     message.value = ''
-    useScrollToBottom(msgContainerRef)
+    ;(msgContainerRef.value as any).scrollToBottom()
   } catch (error) {
     console.log(error)
     toast.add({ title: '发送失败', color: 'error' })
@@ -588,8 +414,9 @@ watch(
   () => props.targetId,
   async v => {
     if (v) {
-      await useGetMessages(hashToBlobURLMap, messageList, v)
-      useScrollToBottom(msgContainerRef)
+      lastFetchedId.value = Infinity
+      await useGetMessages(hashToBlobURLMap, messageList, lastFetchedId, v)
+      ;(msgContainerRef.value as any).scrollToBottom()
       const item = lastMsgMap.value[v]
       const unreadMsgs = item?.unreadMsgs
 

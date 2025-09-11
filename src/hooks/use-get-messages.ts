@@ -1,46 +1,56 @@
+import useFormatMsgs from './use-format-msgs'
 import useGetDB from './use-get-db'
 
-// 获取所有聊天记录
-const getMessages = async (hashToBlobURLMap, targetId) => {
+const getMessages = async (lastFetchedId, hashToBlobURLMap, targetId) => {
+  const messages = []
+  const _lastFetchedId = lastFetchedId.value
   const db = await useGetDB()
-  const data = (
-    await db.getAllFromIndex('messages', 'contact', targetId)
-  ).slice(-10)
-  const tx = db.transaction('files', 'readonly')
-  const _hashToBlobURLMap = hashToBlobURLMap.value
+  const transaction = db.transaction('messages', 'readonly')
+  const store = transaction.objectStore('messages')
+  const index = store.index('contact_id')
+  let cursor = await index.openCursor(
+    IDBKeyRange.bound([targetId, 0], [targetId, _lastFetchedId], false, true),
+    'prev'
+  )
 
-  for (let i = 0, l = data.length; i < l; i++) {
-    const item = data[i]
-    const { type, hash } = item
-
-    if (type === 'image') {
-      if (_hashToBlobURLMap.has(hash)) {
-        item.url = _hashToBlobURLMap.get(hash)
-        continue
-      }
-
-      try {
-        const record = await tx.objectStore('files').get(hash)
-        const url = URL.createObjectURL(record.blob)
-        item.url = url
-        if (_hashToBlobURLMap.size < 100) {
-          _hashToBlobURLMap.set(hash, url)
-        }
-      } catch {}
-    }
+  // 已经获取了所有
+  if (!cursor) {
+    lastFetchedId.value = 0
+    return messages
   }
 
-  await tx.done
+  let counter = 0
+  while (cursor && counter < 20) {
+    messages.unshift(cursor.value)
+    counter++
+    cursor = await cursor.continue()
+  }
 
-  return data
+  lastFetchedId.value = messages[0].id
+  useFormatMsgs(messages, hashToBlobURLMap)
+
+  return messages
 }
 
-const useGetMessages = async (hashToBlobURLMap, messageList, targetId) => {
+const useGetMessages = async (
+  hashToBlobURLMap,
+  messageList,
+  lastFetchedId,
+  targetId,
+  unshift = false
+) => {
   // 如果处理消息失败，给空消息
   try {
-    messageList.value = await getMessages(hashToBlobURLMap, targetId)
+    const data = await getMessages(lastFetchedId, hashToBlobURLMap, targetId)
+
+    if (unshift) {
+      messageList.value.unshift(...data)
+    } else {
+      messageList.value = data
+    }
   } catch {
     messageList.value = []
+    lastFetchedId.value = 0
   }
 }
 

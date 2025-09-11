@@ -5,12 +5,13 @@ const useAddMessageRecordToDB = async (
   messageRecord,
   _lastMsgMap
 ) => {
+  let labelId = ''
   const { contact: targetId, timestamp, sent } = messageRecord
   const db = await useGetDB()
 
   if (isOverFiveMins) {
     // 如果间隔超过 5 分钟，需要添加 label
-    await db.add('messages', {
+    labelId = await db.add('messages', {
       contact: targetId,
       type: 'label',
       timestamp
@@ -22,7 +23,8 @@ const useAddMessageRecordToDB = async (
     messageRecord.separator = true
   }
 
-  return db.add('messages', messageRecord)
+  const msgId = await db.add('messages', messageRecord)
+  return [labelId, msgId]
 }
 
 export default useAddMessageRecordToDB

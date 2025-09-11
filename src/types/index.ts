@@ -30,6 +30,7 @@ export type lastMsg = {
 export type lastMsgMap = Record<string, lastMsg>
 
 export type message = {
+  id?: number
   type: 'text' | 'label' | 'image'
   hash?: string
   url?: string

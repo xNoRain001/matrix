@@ -120,7 +120,6 @@ import {
   useIsOverFiveMins,
   usePauseMediaStreamTracks,
   useResumeMediaStreamTracks,
-  useScrollToBottom,
   useAddMessageRecordToView,
   useAddMessageRecordToDB,
   useUpdateLastMsg,
@@ -545,7 +544,7 @@ const onReceiveMsg = async messageRecord => {
     }
   }
 
-  const msgId = await useAddMessageRecordToDB(
+  const [labelId, msgId] = await useAddMessageRecordToDB(
     isOverFiveMins,
     messageRecord,
     _lastMsgMap
@@ -555,10 +554,12 @@ const onReceiveMsg = async messageRecord => {
     // 可能需要移除 ossURL，由于消息此时不是从本地数据库获取的，需要补充消息的 id
     useAddMessageRecordToView(
       isOverFiveMins,
-      { ...messageRecord, url, id: msgId },
-      messageList
+      { ...messageRecord, url },
+      messageList,
+      labelId,
+      msgId
     )
-    useScrollToBottom(msgContainerRef)
+    ;(msgContainerRef.value as any).scrollToBottom()
   }
 
   useUpdateLastMsg(
@@ -618,17 +619,27 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
       const messageRecord = offlineMsgs[i]
       messageRecord.sent = false
       const isOverFiveMins = useIsOverFiveMins(messageRecord, __lastMsgMap, id)
-      await useAddMessageRecordToDB(isOverFiveMins, messageRecord, __lastMsgMap)
+      const [labelId, msgId] = await useAddMessageRecordToDB(
+        isOverFiveMins,
+        messageRecord,
+        __lastMsgMap
+      )
       __lastMsgMap[id].sent = false
       __lastMsgMap[id].timestamp = messageRecord.timestamp
 
       if (inView) {
-        useAddMessageRecordToView(isOverFiveMins, messageRecord, messageList)
+        useAddMessageRecordToView(
+          isOverFiveMins,
+          messageRecord,
+          messageList,
+          labelId,
+          msgId
+        )
       }
     }
 
     if (inView) {
-      useScrollToBottom(msgContainerRef)
+      ;(msgContainerRef.value as any).scrollToBottom()
     }
 
     const lastMsg = offlineMsgs[offlineMsgsLength - 1]

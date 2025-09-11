@@ -34,6 +34,7 @@ const useRecentContactsStore = defineStore('recentContactsStore', () => {
     msgContainerRef: ref<HTMLElement | null>(null), // 聊天记录容器
     targetId: ref(''), // 当前聊天界面中的对象
     messageList: ref([]),
+    lastFetchedId: ref(Infinity),
     hashToBlobURLMap: ref<Map<string, string>>(new Map()),
     lastMsgMap: ref<lastMsgMap>({}),
     lastMsgList: ref<string[]>([]),

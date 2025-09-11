@@ -284,7 +284,6 @@ const afterLeave = () => {
   noMatch.value = false
 }
 
-console.log(userInfo.value)
 const startMatch = () => {
   matching.value = true
   const t = { ...userInfo.value }

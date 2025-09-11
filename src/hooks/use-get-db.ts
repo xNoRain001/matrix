@@ -4,14 +4,17 @@ let db = null
 
 const useGetDB = async () => {
   if (!db) {
-    db = await openDB('chatDB', 7, {
+    db = await openDB('chatDB', 23, {
       upgrade(db) {
+        let store = null
+
         if (!db.objectStoreNames.contains('messages')) {
-          const store = db.createObjectStore('messages', {
+          store = db.createObjectStore('messages', {
             keyPath: 'id',
             autoIncrement: true
           })
-          store.createIndex('contact', 'contact')
+          // 创建符合索引
+          store.createIndex('contact_id', ['contact', 'id'], { unique: false })
         }
 
         if (!db.objectStoreNames.contains('lastMessages')) {
@@ -40,14 +43,6 @@ const useGetDB = async () => {
         }
       }
     })
-
-    // const storeNames = db.objectStoreNames
-    // for (let i = 0; i < storeNames.length; i++) {
-    //   const storeName = storeNames[i]
-    //   const tx = db.transaction(storeName, 'readwrite')
-    //   await tx.objectStore(storeName).clear()
-    //   await tx.done
-    // }
   }
 
   return db
