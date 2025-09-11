@@ -95,7 +95,7 @@
       </div>
     </UPageCard>
   </UDashboardPanel>
-
+  <!-- 图片选择器 -->
   <input
     ref="inputRef"
     @change="onInputChange"

@@ -92,7 +92,7 @@
       </DynamicScrollerItem>
     </template>
   </DynamicScroller>
-
+  <!-- 移动端匹配或聊天列表点击对方头像进入的空间 -->
   <USlideover v-model:open="isSpaceSlideoverOpen" title=" " description=" ">
     <template #content>
       <ProfileSpace

@@ -150,8 +150,8 @@ const items = computed<DropdownMenuItem[][]>(() => [
       icon: 'i-lucide-sun-moon',
       children: [
         {
-          label: '亮',
-          icon: 'i-lucide-sun',
+          label: '亮色',
+          icon: 'lucide:sun',
           type: 'checkbox',
           checked: store.value === 'light',
           onSelect(e: Event) {
@@ -160,13 +160,23 @@ const items = computed<DropdownMenuItem[][]>(() => [
           }
         },
         {
-          label: '暗',
-          icon: 'i-lucide-moon',
+          label: '暗色',
+          icon: 'lucide:moon',
           type: 'checkbox',
           checked: store.value === 'dark',
           onSelect(e: Event) {
             e.preventDefault()
             store.value = 'dark'
+          }
+        },
+        {
+          label: '系统',
+          icon: 'lucide:monitor',
+          type: 'checkbox',
+          checked: store.value === 'auto',
+          onSelect(e: Event) {
+            e.preventDefault()
+            store.value = 'auto'
           }
         }
       ]

@@ -44,7 +44,10 @@
           </p>
         </div>
         <div class="flex items-center gap-1.5">
-          <UIcon name="lucide:badge" class="text-primary size-5"></UIcon>
+          <UIcon
+            name="lucide:audio-waveform"
+            class="text-primary size-5"
+          ></UIcon>
           <p class="text-muted">
             年龄：<span class="text-highlighted">{{
               computeAge(targetBirthday)
@@ -75,7 +78,7 @@ const props = withDefaults(
   }
 )
 const emits = defineEmits(['close'])
-const open = ref(true)
+const open = ref(props.isMatch ? true : false)
 const { lastMsgMap, contactProfileMap } = storeToRefs(useRecentContactsStore())
 const { matchRes } = storeToRefs(useMatchStore())
 const targetNickname = computed(() =>

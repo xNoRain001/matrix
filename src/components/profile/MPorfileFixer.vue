@@ -6,7 +6,7 @@
     :ui="{ body: 'flex flex-col gap-4' }"
   >
     <template #body>
-      <ProfileFix></ProfileFix>
+      <ProfileFixer></ProfileFixer>
     </template>
   </USlideover>
 </template>

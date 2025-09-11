@@ -79,8 +79,7 @@
             v-if="isSelf"
             @click="onUpdateSpaceBg"
             class="absolute top-4 right-4"
-            icon="lucide:image"
-            label="背景"
+            icon="lucide:camera"
             variant="ghost"
           ></UButton>
         </template>
@@ -90,7 +89,11 @@
         <UTabs v-model="activeTab" :items="tabItems" :content="false" />
       </div>
       <!-- 动态 -->
-      <UPageCard variant="soft" class="border-b-muted rounded-none border-b">
+      <UPageCard
+        @click="isOpenCardSlideover = true"
+        variant="soft"
+        class="border-b-muted cursor-pointer rounded-none border-b"
+      >
         <p class="text-highlighted">
           Lorem ipsum dolor sit amet consectetur, adipisicing elit. Architecto
           reiciendis exercitationem aperiam natus, pariatur eos iste repellat ab
@@ -105,10 +108,11 @@
         </div>
       </UPageCard>
       <UPageCard
+        @click="isOpenCardSlideover = true"
         v-for="i in 3"
         :key="i"
         variant="soft"
-        class="border-b-muted rounded-none border-b"
+        class="border-b-muted cursor-pointer rounded-none border-b"
       >
         <p class="text-highlighted">
           Lorem ipsum dolor sit, amet consectetur adipisicing elit. Saepe
@@ -188,16 +192,43 @@
           </UPageCard>
 
           <MProfileUserInfo
-            v-model="isOpenUserInfoSliderover"
+            v-model="isOpenUserInfoSlideover"
           ></MProfileUserInfo>
           <MProfileUpdatePassword
-            v-model="isOpenUpdatePasswordSliderover"
+            v-model="isOpenUpdatePasswordSlideover"
           ></MProfileUpdatePassword>
           <MProfileNotifications
-            v-model="isOpenNotificationsSliderover"
+            v-model="isOpenNotificationsSlideover"
           ></MProfileNotifications>
-          <MPorfileFixer v-model="isOpenFixerSliderover"></MPorfileFixer>
+          <MPorfileFixer v-model="isOpenFixerSlideover"></MPorfileFixer>
         </div>
+      </template>
+    </USlideover>
+    <!-- 空间动态详情 -->
+    <USlideover
+      :dismissible="!isMobile && isMatch ? false : true"
+      :overlay="!isMobile && isMatch ? false : true"
+      :side="!isMobile && isMatch ? 'left' : 'right'"
+      v-model:open="isOpenCardSlideover"
+      :class="!isMobile && isMatch ? 'max-w-2/5' : ''"
+      title="详情"
+      description=" "
+    >
+      <template #body>
+        <UPageCard @click="isOpenCardSlideover = true" variant="soft">
+          <p class="text-highlighted">
+            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Architecto
+            reiciendis exercitationem aperiam natus, pariatur eos iste repellat
+            ab inventore eius harum consequatur necessitatibus libero officiis
+            soluta, autem ea tenetur assumenda!
+          </p>
+          <div class="flex items-center justify-between">
+            <p class="text-muted text-sm">
+              {{ new Date(Date.now()).toLocaleString('zh-CN') }}
+            </p>
+            <UButton variant="ghost" icon="lucide:ellipsis"></UButton>
+          </div>
+        </UPageCard>
       </template>
     </USlideover>
   </div>
@@ -222,10 +253,11 @@ const emits = defineEmits(['close'])
 const isOpenMessageViewSlideover = ref(false)
 const isOpenSettingsSlideover = ref(false)
 const logoutDrawer = overlay.create(DrawerLogout)
-const isOpenUserInfoSliderover = ref(false)
-const isOpenUpdatePasswordSliderover = ref(false)
-const isOpenNotificationsSliderover = ref(false)
-const isOpenFixerSliderover = ref(false)
+const isOpenUserInfoSlideover = ref(false)
+const isOpenUpdatePasswordSlideover = ref(false)
+const isOpenNotificationsSlideover = ref(false)
+const isOpenFixerSlideover = ref(false)
+const isOpenCardSlideover = ref(false)
 const spaceBgRef = ref(null)
 const avatarRef = ref(null)
 const toast = useToast()
@@ -239,12 +271,12 @@ const cards = [
     {
       icon: 'lucide:user-round',
       label: '个人资料',
-      onSelect: () => (isOpenUserInfoSliderover.value = true)
+      onSelect: () => (isOpenUserInfoSlideover.value = true)
     },
     {
       icon: 'lucide:bell',
       label: '通知',
-      onSelect: () => (isOpenNotificationsSliderover.value = true)
+      onSelect: () => (isOpenNotificationsSlideover.value = true)
     }
   ],
   [
@@ -263,12 +295,12 @@ const cards = [
     {
       icon: 'lucide:wrench',
       label: '修复',
-      onSelect: () => (isOpenFixerSliderover.value = true)
+      onSelect: () => (isOpenFixerSlideover.value = true)
     },
     {
       icon: 'lucide:shield',
       label: '修改密码',
-      onSelect: () => (isOpenUpdatePasswordSliderover.value = true)
+      onSelect: () => (isOpenUpdatePasswordSlideover.value = true)
     },
     {
       icon: 'lucide:log-out',
