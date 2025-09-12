@@ -27,7 +27,7 @@ const getMessages = async (lastFetchedId, hashToBlobURLMap, targetId) => {
   }
 
   lastFetchedId.value = messages[0].id
-  useFormatMsgs(messages, hashToBlobURLMap)
+  await useFormatMsgs(messages, hashToBlobURLMap)
 
   return messages
 }

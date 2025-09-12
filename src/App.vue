@@ -520,20 +520,19 @@ const onWebRTC = async (roomId, { description, candidate }) => {
 }
 
 const onReceiveMsg = async messageRecord => {
-  messageRecord.sent = false
+  let url = ''
   const _lastMsgMap = lastMsgMap.value
   const { type, contact: id } = messageRecord
-
+  const isImage = type === 'image'
   const inView = targetId.value === id
   const isOverFiveMins = useIsOverFiveMins(messageRecord, _lastMsgMap, id)
+  messageRecord.sent = false
 
   if (!_lastMsgMap[id]) {
     await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, id)
   }
 
-  let url = ''
-
-  if (type === 'image') {
+  if (isImage) {
     const { hash } = messageRecord
     const _hashToBlobURLMap = hashToBlobURLMap.value
     const blobURL = _hashToBlobURLMap.get(hash)
@@ -565,7 +564,7 @@ const onReceiveMsg = async messageRecord => {
     // 可能需要移除 ossURL，由于消息此时不是从本地数据库获取的，需要补充消息的 id
     useAddMessageRecordToView(
       isOverFiveMins,
-      { ...messageRecord, url },
+      isImage ? { ...messageRecord, url } : messageRecord,
       messageList,
       labelId,
       msgId
@@ -575,7 +574,7 @@ const onReceiveMsg = async messageRecord => {
 
   useUpdateLastMsg(
     _lastMsgMap,
-    type === 'image' ? { ...messageRecord, content: '[图片]' } : messageRecord,
+    isImage ? { ...messageRecord, content: '[图片]' } : messageRecord,
     true,
     inView,
     unreadMsgCounter
@@ -627,9 +626,35 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
     }
 
     for (let i = 0; i < offlineMsgsLength; i++) {
+      let url = ''
       const messageRecord = offlineMsgs[i]
-      messageRecord.sent = false
+      const { type, hash } = messageRecord
+      const isImage = type === 'image'
       const isOverFiveMins = useIsOverFiveMins(messageRecord, __lastMsgMap, id)
+      messageRecord.sent = false
+
+      if (isImage) {
+        const _hashToBlobURLMap = hashToBlobURLMap.value
+        const blobURL = _hashToBlobURLMap.get(hash)
+
+        if (blobURL) {
+          delete messageRecord.ossURL
+          url = blobURL
+        } else {
+          const db = await useGetDB()
+          const tx = db.transaction('files', 'readwrite')
+          const record = await tx.objectStore('files').get(hash)
+          if (record) {
+            delete messageRecord.ossURL
+            url = URL.createObjectURL(record.blob)
+            if (_hashToBlobURLMap.size < 100) {
+              _hashToBlobURLMap.set(hash, url)
+            }
+          }
+          await tx.done
+        }
+      }
+
       const [labelId, msgId] = await useAddMessageRecordToDB(
         isOverFiveMins,
         messageRecord,
@@ -641,7 +666,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
       if (inView) {
         useAddMessageRecordToView(
           isOverFiveMins,
-          messageRecord,
+          isImage ? { ...messageRecord, url } : messageRecord,
           messageList,
           labelId,
           msgId
@@ -661,7 +686,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
 
     await useUpdateLastMsg(
       _lastMsgMap,
-      lastMsg,
+      lastMsg.type === 'image' ? { ...lastMsg, content: '[图片]' } : lastMsg,
       true,
       inView,
       unreadMsgCounter,
