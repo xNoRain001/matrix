@@ -6,7 +6,7 @@
     ref="msgContainerRef"
     class="h-full p-4 sm:p-6"
     @update="onUpdate"
-    @click="onClickAvatar"
+    @click="onClick"
     @scroll="onScroll"
   >
     <template #after>
@@ -60,9 +60,12 @@
             v-if="item.sent"
             class="flex items-center justify-end gap-3 pb-1"
           >
-            <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
-              <img :width="item.width" :height="item.height" :src="item.url" />
-            </div>
+            <img
+              class="max-w-3/4"
+              :width="item.width"
+              :height="item.height"
+              :src="item.url"
+            />
             <UAvatar
               v-if="item.separator"
               :alt="userInfo.nickname[0] || ''"
@@ -78,15 +81,15 @@
               size="xl"
             />
             <div v-else class="w-10"></div>
-            <div class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2">
-              <img
-                crossorigin="anonymous"
-                :width="item.width"
-                :height="item.height"
-                :src="item.url || item.ossURL"
-                @load="onLoad($event, item.hash, item.ossURL, item.id)"
-              />
-            </div>
+            <img
+              data-type="image"
+              class="max-w-3/4"
+              crossorigin="anonymous"
+              :width="item.width"
+              :height="item.height"
+              :src="item.url || item.ossURL"
+              @load="onLoad($event, item.hash, item.ossURL, item.id)"
+            />
           </div>
         </template>
       </DynamicScrollerItem>
@@ -102,6 +105,12 @@
       ></ProfileSpace>
     </template>
   </USlideover>
+  <!-- 图片预览器 -->
+  <ModalViewer
+    fullscreen
+    v-model="isViewerModalOpen"
+    :url="viewerURL"
+  ></ModalViewer>
 </template>
 
 <script lang="ts" setup>
@@ -127,6 +136,8 @@ const {
 } = storeToRefs(useRecentContactsStore())
 const route = useRoute()
 const isSpaceSlideoverOpen = ref(false)
+const isViewerModalOpen = ref(false)
+const viewerURL = ref('')
 const items = ref([])
 const search = ref('')
 const updateParts = ref({
@@ -229,12 +240,17 @@ const onLoad = async (e, hash, ossURL, id) => {
   )
 }
 
-const onClickAvatar = e => {
+const onClick = e => {
   const { target } = e
+  const type =
+    target.getAttribute('data-type') ||
+    target.children[0]?.getAttribute('data-type')
 
-  if (
-    (target.getAttribute('data-type') ||
-      target.children[0]?.getAttribute('data-type')) &&
+  if (type === 'image') {
+    isViewerModalOpen.value = true
+    viewerURL.value = target.src
+  } else if (
+    type &&
     // 如果 contacts 中点击用户打开的空间中打开了聊天界面，聊天界面中点击
     // 对方头像不显示对方空间
     route.path !== '/contacts' &&

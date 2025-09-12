@@ -18,7 +18,7 @@
       <IndexThemePicker></IndexThemePicker>
       <UButton
         @click="startViewTransition"
-        :icon="store === 'dark' ? 'lucide:moon' : 'lucide:sun'"
+        :icon="nextTheme === 'dark' ? 'lucide:moon' : 'lucide:sun'"
         variant="ghost"
         color="neutral"
         :ui="{ leadingIcon: 'text-primary' }"
@@ -34,10 +34,18 @@
 import { useUserStore } from '@/store'
 import { useColorMode } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, watch } from 'vue'
 
 const { store } = useColorMode()
-const nextTheme = computed(() => (store.value === 'dark' ? 'light' : 'dark'))
+const getNextTheme = () =>
+  store.value === 'auto'
+    ? document.documentElement.classList[0] === 'dark'
+      ? 'light'
+      : 'dark'
+    : store.value === 'dark'
+      ? 'light'
+      : 'dark'
+const nextTheme = ref<'light' | 'dark' | 'auto'>(getNextTheme())
 const isNotificationsSlideoverOpen = ref(false)
 const { notifications } = storeToRefs(useUserStore())
 
@@ -75,4 +83,9 @@ const startViewTransition = (event: MouseEvent) => {
     )
   })
 }
+
+watch(store, () =>
+  // 在定时器中获取的才是最新的
+  setTimeout(() => (nextTheme.value = getNextTheme()))
+)
 </script>
