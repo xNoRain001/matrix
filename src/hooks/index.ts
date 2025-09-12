@@ -14,7 +14,6 @@ import useGetDB from './use-get-db'
 import useClearMessages from './use-clear-messages'
 import useDeleteDB from './use-delete-db'
 import useEncryptUserInfo from './use-encrypt-userinfo'
-import useLogout from './use-logout'
 import useUpdateTheme from './use-update-theme'
 import useExportFile from './use-export-file'
 import useTransformGender from './use-transform-gender'
@@ -53,7 +52,6 @@ export {
   useTransformGender,
   useExportFile,
   useUpdateTheme,
-  useLogout,
   useEncryptUserInfo,
   useDeleteDB,
   useClearMessages,

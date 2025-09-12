@@ -75,7 +75,7 @@ const onDelete = index => {
   const _contactNotifications = contactNotifications.value
   _contactNotifications.splice(index, 1)
   localStorage.setItem(
-    'contactNotifications',
+    `contactNotifications-${userInfo.value.id}`,
     JSON.stringify(_contactNotifications)
   )
 }
@@ -87,7 +87,7 @@ const onRefuse = async targetId => {
       item => item.id !== targetId
     )
     localStorage.setItem(
-      'contactNotifications',
+      `contactNotifications-${userInfo.value.id}`,
       JSON.stringify(contactNotifications.value)
     )
     const { id, nickname } = userInfo.value
@@ -116,8 +116,10 @@ const onAgree = async (targetId, targetProfile) => {
     contactNotifications.value = contactNotifications.value.filter(
       item => item.id !== targetId
     )
+    const { id, nickname, gender, region, birthday } = userInfo.value
+
     localStorage.setItem(
-      'contactNotifications',
+      `contactNotifications-${id}`,
       JSON.stringify(contactNotifications.value)
     )
 
@@ -126,7 +128,6 @@ const onAgree = async (targetId, targetProfile) => {
       return
     }
 
-    const { id, nickname, gender, region, birthday } = userInfo.value
     const common = {
       id,
       createdAt: Date.now(),
@@ -157,9 +158,9 @@ const onAgree = async (targetId, targetProfile) => {
     }
     _contactList.unshift(local)
     _contactProfileMap[local.id] = local
-    localStorage.setItem('contactList', JSON.stringify(_contactList))
+    localStorage.setItem(`contactList-${id}`, JSON.stringify(_contactList))
     localStorage.setItem(
-      'contactProfileMap',
+      `contactProfileMap-${id}`,
       JSON.stringify(_contactProfileMap)
     )
     globalSocket.value.emit('agree-contact', targetId, notification, contact)

@@ -1,4 +1,3 @@
-import { useLogout } from '@/hooks'
 import axios from 'axios'
 import qs from 'querystring'
 
@@ -66,7 +65,7 @@ class HTTP {
           const { code, message } = response.data
 
           if (code === 401) {
-            useLogout()
+            localStorage.removeItem('token')
             location.href = '/login'
           }
 

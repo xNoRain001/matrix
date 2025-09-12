@@ -109,7 +109,7 @@
 
 <script setup lang="ts">
 import { updatePassword } from '@/apis/user'
-import { useEncryptUserInfo, useLogout } from '@/hooks'
+import { useEncryptUserInfo } from '@/hooks'
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import * as z from 'zod'
@@ -147,7 +147,7 @@ const onUpdatePassword = async () => {
       color: 'success',
       icon: 'lucide:smile'
     })
-    useLogout()
+    localStorage.removeItem('token')
     router.replace('/login')
   } catch (error) {
     toast.add({

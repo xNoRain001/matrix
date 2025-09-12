@@ -1,13 +1,14 @@
 import useGetDB from './use-get-db'
 
 const useAddMessageRecordToDB = async (
+  id,
   isOverFiveMins,
   messageRecord,
   _lastMsgMap
 ) => {
   let labelId = ''
   const { contact: targetId, timestamp, sent } = messageRecord
-  const db = await useGetDB()
+  const db = await useGetDB(id)
 
   if (isOverFiveMins) {
     // 如果间隔超过 5 分钟，需要添加 label

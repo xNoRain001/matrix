@@ -17,7 +17,6 @@
 </template>
 
 <script setup lang="ts">
-import { useLogout } from '@/hooks'
 import { useRouter } from 'vue-router'
 
 const emit = defineEmits<{ close: [boolean] }>()
@@ -25,7 +24,7 @@ const router = useRouter()
 
 const onLogout = () => {
   emit('close', true)
-  useLogout()
+  localStorage.removeItem('token')
   router.replace('/login')
 }
 </script>

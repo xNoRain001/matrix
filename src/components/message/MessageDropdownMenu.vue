@@ -68,11 +68,11 @@ const dropdownItems = computed(() =>
                   _contactList.splice(index, 1)
                   delete _contactProfileMap[targetId]
                   localStorage.setItem(
-                    'contactList',
+                    `contactList-${id}`,
                     JSON.stringify(_contactList)
                   )
                   localStorage.setItem(
-                    'contactProfileMap',
+                    `contactProfileMap-${id}`,
                     JSON.stringify(_contactProfileMap)
                   )
                 }

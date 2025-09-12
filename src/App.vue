@@ -336,7 +336,7 @@ const onAddContact = async notification => {
   const _contactNotifications = contactNotifications.value
   _contactNotifications.unshift(notification)
   localStorage.setItem(
-    'contactNotifications',
+    `contactNotifications-${userInfo.value.id}`,
     JSON.stringify(_contactNotifications)
   )
 }
@@ -344,52 +344,57 @@ const onAddContact = async notification => {
 const onAgreeContact = (notification, contact) => {
   const _contactNotifications = contactNotifications.value
   _contactNotifications.unshift(notification)
+  const { id } = userInfo.value
   localStorage.setItem(
-    'contactNotifications',
+    `contactNotifications-${id}`,
     JSON.stringify(_contactNotifications)
   )
   const _contactList = contactList.value
   const _contactProfileMap = contactProfileMap.value
   _contactList.unshift(contact)
   _contactProfileMap[contact.id] = contact
-  localStorage.setItem('contactList', JSON.stringify(_contactList))
-  localStorage.setItem('contactProfileMap', JSON.stringify(_contactProfileMap))
+  localStorage.setItem(`contactList-${id}`, JSON.stringify(_contactList))
+  localStorage.setItem(
+    `contactProfileMap-${id}`,
+    JSON.stringify(_contactProfileMap)
+  )
 }
 
 const onRefuseContact = notification => {
   const _contactNotifications = contactNotifications.value
   _contactNotifications.unshift(notification)
   localStorage.setItem(
-    'contactNotifications',
+    `contactNotifications-${userInfo.value.id}`,
     JSON.stringify(_contactNotifications)
   )
 }
 
-const onDeleteContact = (notification, id) => {
+const onDeleteContact = (notification, targetId) => {
   const _contactNotifications = contactNotifications.value
   _contactNotifications.unshift(notification)
+  const { id } = userInfo.value
   localStorage.setItem(
-    'contactNotifications',
+    `contactNotifications-${id}`,
     JSON.stringify(_contactNotifications)
   )
 
   const _contactList = contactList.value
   const _contactProfileMap = contactProfileMap.value
-  const index = _contactList.findIndex(item => item.id === id)
+  const index = _contactList.findIndex(item => item.id === targetId)
 
   if (index >= 0) {
     _contactList.splice(index, 1)
-    delete _contactProfileMap[id]
-    localStorage.setItem('contactList', JSON.stringify(_contactList))
+    delete _contactProfileMap[targetId]
+    localStorage.setItem(`contactList-${id}`, JSON.stringify(_contactList))
     localStorage.setItem(
-      'contactProfileMap',
+      `contactProfileMap-${id}`,
       JSON.stringify(_contactProfileMap)
     )
   }
 }
 
 const onRefreshContacts = data => {
-  useRefreshContacts(data, contactList, contactProfileMap)
+  useRefreshContacts(userInfo.value.id, data, contactList, contactProfileMap)
 }
 
 const onTrack = ({ track, streams }) => {
@@ -443,8 +448,9 @@ const onJoined = async (_roomId, _polite) => {
       clearTimeout(leaveRoomTimer.value)
       matchType.value = ''
       matchRes.value = null
-      localStorage.removeItem('matchRes')
-      localStorage.removeItem('matchType')
+      const { id } = userInfo.value
+      localStorage.removeItem(`matchRes-${id}`)
+      localStorage.removeItem(`matchType-${id}`)
       toast.add({
         title: '对方已离开房间',
         color: 'error',
@@ -540,7 +546,7 @@ const onReceiveMsg = async messageRecord => {
       delete messageRecord.ossURL
       url = blobURL
     } else {
-      const db = await useGetDB()
+      const db = await useGetDB(userInfo.value.id)
       const tx = db.transaction('files', 'readwrite')
       const record = await tx.objectStore('files').get(hash)
       if (record) {
@@ -555,6 +561,7 @@ const onReceiveMsg = async messageRecord => {
   }
 
   const [labelId, msgId] = await useAddMessageRecordToDB(
+    userInfo.value.id,
     isOverFiveMins,
     messageRecord,
     _lastMsgMap
@@ -573,6 +580,7 @@ const onReceiveMsg = async messageRecord => {
   }
 
   useUpdateLastMsg(
+    userInfo.value.id,
     _lastMsgMap,
     isImage ? { ...messageRecord, content: '[图片]' } : messageRecord,
     true,
@@ -641,7 +649,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
           delete messageRecord.ossURL
           url = blobURL
         } else {
-          const db = await useGetDB()
+          const db = await useGetDB(userInfo.value.id)
           const tx = db.transaction('files', 'readwrite')
           const record = await tx.objectStore('files').get(hash)
           if (record) {
@@ -656,6 +664,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
       }
 
       const [labelId, msgId] = await useAddMessageRecordToDB(
+        userInfo.value.id,
         isOverFiveMins,
         messageRecord,
         __lastMsgMap
@@ -685,6 +694,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
     }
 
     await useUpdateLastMsg(
+      userInfo.value.id,
       _lastMsgMap,
       lastMsg.type === 'image' ? { ...lastMsg, content: '[图片]' } : lastMsg,
       true,
@@ -795,8 +805,9 @@ const onMatched = data => {
     hasMatchRes.value = true
     matchType.value = _matchType
     matchRes.value = _matchRes
-    localStorage.setItem('matchType', _matchType)
-    localStorage.setItem('matchRes', JSON.stringify(_matchRes))
+    const { id } = userInfo.value
+    localStorage.setItem(`matchType-${id}`, _matchType)
+    localStorage.setItem(`matchRes-${id}`, JSON.stringify(_matchRes))
     matching.value = false
     router.replace(`/${_matchType}`)
   }
@@ -842,7 +853,7 @@ const onRefreshContactNotifications = remoteNotifications => {
   const _contactNotifications = contactNotifications.value
   _contactNotifications.unshift(...remoteNotifications)
   localStorage.setItem(
-    'contactNotifications',
+    `contactNotifications-${userInfo.value.id}`,
     JSON.stringify(_contactNotifications)
   )
 }
@@ -911,7 +922,7 @@ const initWebRTC = id => {
 const initLastMsgs = async () => {
   let _lastMsgMap: lastMsgMap = {}
   let _unreadMsgCounter = 0
-  const db = await useGetDB()
+  const db = await useGetDB(userInfo.value.id)
   const lastMsgs: lastMsg[] = await db.getAll('lastMessages')
   const _lastMsgList = []
 

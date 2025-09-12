@@ -219,8 +219,6 @@ const resizeHandler = () => {
   // visualViewport.offsetTop 表示视觉视口相对于布局视口的偏移，标签栏在底部时
   // 这个值可能不准
   // TODO: 找到解决办法
-  console.log(dashboardPanelRef.value)
-  console.log(visualViewport.offsetTop)
   dashboardPanelRef.value.style.paddingTop = `${visualViewport.offsetTop}px`
   ;(msgContainerRef.value as any).scrollToBottom()
 }
@@ -275,6 +273,7 @@ const onInputChange = async () => {
 
       // 本地数据库中不需要保存临时的 url
       const [labelId, msgId] = await useAddMessageRecordToDB(
+        userInfo.value.id,
         isOverFiveMins,
         messageRecord,
         _lastMsgMap
@@ -288,6 +287,7 @@ const onInputChange = async () => {
         msgId
       )
       useUpdateLastMsg(
+        userInfo.value.id,
         _lastMsgMap,
         { ...messageRecord, content: '[图片]' },
         false,
@@ -300,7 +300,7 @@ const onInputChange = async () => {
       // 可能是没有读取或者存储数量达到上限
       const _hashToBlobURLMap = hashToBlobURLMap.value
       if (!_hashToBlobURLMap.has(hash)) {
-        const db = await useGetDB()
+        const db = await useGetDB(userInfo.value.id)
         const tx = db.transaction('files', 'readwrite')
         const record = await tx.objectStore('files').get(hash)
         if (!record) {
@@ -381,6 +381,7 @@ const onSendMsg = async () => {
     }
 
     const [labelId, msgId] = await useAddMessageRecordToDB(
+      userInfo.value.id,
       isOverFiveMins,
       messageRecord,
       _lastMsgMap
@@ -392,7 +393,14 @@ const onSendMsg = async () => {
       labelId,
       msgId
     )
-    useUpdateLastMsg(_lastMsgMap, messageRecord, false, true, unreadMsgCounter)
+    useUpdateLastMsg(
+      userInfo.value.id,
+      _lastMsgMap,
+      messageRecord,
+      false,
+      true,
+      unreadMsgCounter
+    )
     message.value = ''
     ;(msgContainerRef.value as any).scrollToBottom()
   } catch (error) {
@@ -430,7 +438,13 @@ watch(
   async v => {
     if (v) {
       lastFetchedId.value = Infinity
-      await useGetMessages(hashToBlobURLMap, messageList, lastFetchedId, v)
+      await useGetMessages(
+        userInfo.value.id,
+        hashToBlobURLMap,
+        messageList,
+        lastFetchedId,
+        v
+      )
       ;(msgContainerRef.value as any).scrollToBottom()
       const item = lastMsgMap.value[v]
       const unreadMsgs = item?.unreadMsgs
@@ -438,7 +452,7 @@ watch(
       if (item && unreadMsgs) {
         unreadMsgCounter.value -= unreadMsgs
         item.unreadMsgs = 0
-        const db = await useGetDB()
+        const db = await useGetDB(userInfo.value.id)
         await db.put('lastMessages', JSON.parse(JSON.stringify(item)))
       }
     } else {

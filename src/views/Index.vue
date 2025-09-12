@@ -204,46 +204,6 @@ const list = [
     title: '视频聊天',
     desc: '开发中...',
     to: '/'
-  },
-  {
-    icon: 'lucide:message-circle',
-    title: '即时聊天',
-    desc: '端到端加密，不留痕迹的安全对话',
-    matchType: 'chat',
-    to: '/chat'
-  },
-  {
-    icon: 'lucide:phone',
-    title: '语音聊天',
-    desc: '高清音质，实时畅聊无延迟',
-    matchType: 'voice-chat',
-    to: '/voice-chat'
-  },
-  {
-    icon: 'lucide:video',
-    title: '视频聊天',
-    desc: '开发中...',
-    to: '/'
-  },
-  {
-    icon: 'lucide:message-circle',
-    title: '即时聊天',
-    desc: '端到端加密，不留痕迹的安全对话',
-    matchType: 'chat',
-    to: '/chat'
-  },
-  {
-    icon: 'lucide:phone',
-    title: '语音聊天',
-    desc: '高清音质，实时畅聊无延迟',
-    matchType: 'voice-chat',
-    to: '/voice-chat'
-  },
-  {
-    icon: 'lucide:video',
-    title: '视频聊天',
-    desc: '开发中...',
-    to: '/'
   }
 ]
 const isOpenFilterDrawer = ref(false)

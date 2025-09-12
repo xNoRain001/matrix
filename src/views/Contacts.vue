@@ -88,7 +88,7 @@ const users = ref<users>([])
 const selectContactId = ref('')
 const toast = useToast()
 const isNotificationsSlideoverOpen = ref(false)
-const { isMobile } = storeToRefs(useUserStore())
+const { isMobile, userInfo } = storeToRefs(useUserStore())
 const { contactList, contactProfileMap, contactNotifications } = storeToRefs(
   useRecentContactsStore()
 )
@@ -105,13 +105,20 @@ const isOpenSlideover = computed({
 
 const initContactList = async () => {
   const now = Date.now()
-  const expired = now > Number(localStorage.getItem('contactListExpireAt'))
+  const expired =
+    now >
+    Number(localStorage.getItem(`contactListExpireAt-${userInfo.value.id}`))
 
   // 过期，获取所有好友的最新资料
   if (expired) {
     try {
       const { data } = await getContacts()
-      useRefreshContacts(data, contactList, contactProfileMap)
+      useRefreshContacts(
+        userInfo.value.id,
+        data,
+        contactList,
+        contactProfileMap
+      )
     } catch (error) {
       toast.add({
         title: error.message,

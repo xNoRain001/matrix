@@ -179,13 +179,18 @@ const filteredItems = computed(() => {
 const onScroll = useThrottleFn(
   async e => {
     if (e.target.scrollTop === 0 && lastFetchedId.value) {
-      await useGetMessages(
+      const unshiftCounter = await useGetMessages(
+        userInfo.value.id,
         hashToBlobURLMap,
         messageList,
         lastFetchedId,
         props.targetId,
         true
       )
+
+      if (unshiftCounter) {
+        ;(msgContainerRef.value as any).scrollToItem(unshiftCounter)
+      }
     }
   },
   200,
@@ -242,7 +247,7 @@ const onLoad = async (e, item) => {
   const extname = img.src.split('.').pop()
   canvas.toBlob(
     async blob => {
-      const db = await useGetDB()
+      const db = await useGetDB(userInfo.value.id)
       const tx = db.transaction('files', 'readwrite')
       await tx.objectStore('files').put({ hash, blob })
       await tx.done

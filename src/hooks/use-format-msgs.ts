@@ -1,7 +1,7 @@
 import useGetDB from './use-get-db'
 
-const useFormatMsgs = async (data, hashToBlobURLMap) => {
-  const db = await useGetDB()
+const useFormatMsgs = async (id, data, hashToBlobURLMap) => {
+  const db = await useGetDB(id)
   const tx = db.transaction('files', 'readonly')
   const _hashToBlobURLMap = hashToBlobURLMap.value
 

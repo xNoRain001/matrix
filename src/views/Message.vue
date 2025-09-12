@@ -86,7 +86,7 @@ import { onMounted, computed } from 'vue'
 // ]
 // const activeTab = ref('message')
 const toast = useToast()
-const { isMobile } = storeToRefs(useUserStore())
+const { isMobile, userInfo } = storeToRefs(useUserStore())
 const { unreadMsgCounter, targetId, lastMsgMap, lastMsgList } = storeToRefs(
   useRecentContactsStore()
 )
@@ -104,7 +104,7 @@ const isOpenSlideover = computed({
 const onResetMsgCounter = async () => {
   const _lastMsgMap = lastMsgMap.value
   const keys = Object.keys(_lastMsgMap)
-  const db = await useGetDB()
+  const db = await useGetDB(userInfo.value.id)
   const tx = db.transaction('lastMessages', 'readwrite')
 
   for (let i = 0, l = keys.length; i < l; i++) {
@@ -119,8 +119,9 @@ const onResetMsgCounter = async () => {
 
 const initProfiles = async () => {
   const now = Date.now()
+  const { id } = userInfo.value
   const expired =
-    now > Number(localStorage.getItem('lastMsgProfileMapExpireAt'))
+    now > Number(localStorage.getItem(`lastMsgProfileMapExpireAt-${id}`))
 
   // 过期，获取所有用户的最新资料
   if (expired) {
@@ -133,7 +134,7 @@ const initProfiles = async () => {
     try {
       const { data: profileMap } = await getProfiles(ids.join('_'))
       const _lastMsgMap = lastMsgMap.value
-      const db = await useGetDB()
+      const db = await useGetDB(userInfo.value.id)
       const tx = db.transaction('lastMessages', 'readwrite')
 
       for (let i = 0, l = ids.length; i < l; i++) {
@@ -150,7 +151,7 @@ const initProfiles = async () => {
       await tx.done
 
       localStorage.setItem(
-        'lastMsgProfileMapExpireAt',
+        `lastMsgProfileMapExpireAt-${id}`,
         String(now + 1000 * 60 * 60 * 6)
       )
     } catch (error) {

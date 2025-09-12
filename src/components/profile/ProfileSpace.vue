@@ -342,10 +342,12 @@ const nickname = computed(() =>
       matchRes.value.nickname
 )
 const bgBlob = isSelf
-  ? (await (await useGetDB()).get('bg', userInfo.value.id))?.blob
+  ? (await (await useGetDB(userInfo.value.id)).get('bg', userInfo.value.id))
+      ?.blob
   : null
 const avatarBlob = isSelf
-  ? (await (await useGetDB()).get('avatar', userInfo.value.id))?.blob
+  ? (await (await useGetDB(userInfo.value.id)).get('avatar', userInfo.value.id))
+      ?.blob
   : null
 const { VITE_OSS_BASE_URL } = import.meta.env
 const bgURL = ref(
@@ -379,7 +381,7 @@ const onChangeAvatar = async e => {
   try {
     const hash = await useGenHash(avatar)
     await updateAvatar(avatar, hash)
-    const db = await useGetDB()
+    const db = await useGetDB(userInfo.value.id)
     await db.put('avatar', { id: userInfo.value.id, blob: avatar })
     avatarURL.value = URL.createObjectURL(avatar)
     toast.add({ title: '更新头像成功', icon: 'lucide:smile' })
@@ -397,7 +399,7 @@ const onChangeSpaceBg = async e => {
   try {
     const hash = await useGenHash(bg)
     await updateSpaceBg(bg, hash)
-    const db = await useGetDB()
+    const db = await useGetDB(userInfo.value.id)
     await db.put('bg', { id: userInfo.value.id, blob: bg })
     bgURL.value = URL.createObjectURL(bg)
     toast.add({ title: '更新背景成功', icon: 'lucide:smile' })

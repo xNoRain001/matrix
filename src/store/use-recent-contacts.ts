@@ -1,19 +1,21 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { lastMsgMap } from '@/types'
+import useUserStore from './use-user-store'
 
 const useRecentContactsStore = defineStore('recentContactsStore', () => {
   let _contactList = []
   let _contactNotifications = []
   let _contactProfileMap = {}
+  const { id } = useUserStore().userInfo
 
   try {
-    _contactList = JSON.parse(localStorage.getItem('contactList') || '[]')
+    _contactList = JSON.parse(localStorage.getItem(`contactList-${id}`) || '[]')
     _contactNotifications = JSON.parse(
-      localStorage.getItem('contactNotifications') || '[]'
+      localStorage.getItem(`contactNotifications-${id}`) || '[]'
     )
     _contactProfileMap = JSON.parse(
-      localStorage.getItem('contactProfileMap') || '{}'
+      localStorage.getItem(`contactProfileMap-${id}`) || '{}'
     )
   } catch {}
 

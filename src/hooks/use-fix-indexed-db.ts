@@ -1,11 +1,11 @@
 import useGetDB from './use-get-db'
 
-const useFixIndexedDB = async () => {
-  const db = await useGetDB()
+const useFixIndexedDB = async id => {
+  const db = await useGetDB(id)
   db.close()
   const req = indexedDB.deleteDatabase('chatDB')
   req.onsuccess = () => {
-    localStorage.removeItem('lastMsgProfileMapExpireAt')
+    localStorage.removeItem(`lastMsgProfileMapExpireAt-${id}`)
     location.reload()
   }
   req.onerror = () => {

@@ -2,9 +2,9 @@ import { openDB } from 'idb'
 
 let db = null
 
-const useGetDB = async () => {
+const useGetDB = async id => {
   if (!db) {
-    db = await openDB('chatDB', 23, {
+    db = await openDB(`chatDB-${id}`, 23, {
       upgrade(db) {
         let store = null
 
