@@ -194,7 +194,7 @@ const onCancel = () => {
 
   socket.emit('leave', _roomId, true)
   roomId.value = ''
-  toast.add({ title: '已结束通话' })
+  toast.add({ title: '已结束通话', icon: 'lucide:smile' })
 
   if (isVoiceChatMatch.value) {
     router.replace('/')

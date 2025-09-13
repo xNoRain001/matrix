@@ -5,144 +5,120 @@
 </template>
 
 <script lang="ts" setup>
-import { addCandidate, deleteCandidate } from '@/apis/contact'
+import { addCandidate } from '@/apis/contact'
+import { useClearMessageRecord, useHideMessageList } from '@/hooks'
+import useDeleteMessageList from '@/hooks/use-delete-message-list'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 
-const props = defineProps<{ targetId: string }>()
+const props = withDefaults(defineProps<{ isMatch?: boolean }>(), {
+  isMatch: false
+})
 const toast = useToast()
-const { contactList, contactProfileMap } = storeToRefs(useRecentContactsStore())
+const {
+  contactProfileMap,
+  lastMsgMap,
+  lastMsgList,
+  messageList,
+  lastFetchedId,
+  targetId
+} = storeToRefs(useRecentContactsStore())
 const { globalSocket, userInfo } = storeToRefs(useUserStore())
 const isFriend = computed(() =>
-  Boolean(contactProfileMap.value[props.targetId])
+  Boolean(contactProfileMap.value[targetId.value])
 )
+const route = useRoute()
+const isContacts = computed(() => route.path === '/contacts')
+const deleteList = {
+  label: '删除列表',
+  icon: 'lucide:circle-x',
+  onSelect: () => {
+    const _targetId = targetId.value
+    useDeleteMessageList(
+      userInfo,
+      _targetId,
+      lastMsgList,
+      lastMsgMap,
+      messageList,
+      targetId,
+      lastFetchedId
+    )
+  }
+}
+const deleteMessageRecord = {
+  label: '清空聊天记录',
+  icon: 'lucide:circle-arrow-out-up-right',
+  onSelect: () => {
+    useClearMessageRecord(
+      userInfo,
+      targetId.value,
+      messageList,
+      lastMsgMap,
+      targetId,
+      lastFetchedId
+    )
+  }
+}
+const addContact = {
+  label: '添加好友',
+  icon: 'lucide:circle-plus',
+  onSelect: async () => {
+    try {
+      const _targetId = targetId.value
+      await addCandidate(_targetId)
+      toast.add({ title: '已向对方发送好友申请', icon: 'lucide:smile' })
+      const { id, nickname, region, birthday, gender } = userInfo.value
+      const notification = {
+        id,
+        content: '请求添加你为好友',
+        type: 'add-contact',
+        createdAt: Date.now(),
+        profile: {
+          nickname,
+          region,
+          birthday,
+          gender
+        }
+      }
+      globalSocket.value.emit('add-contact', _targetId, notification)
+    } catch (error) {
+      toast.add({
+        title: error.message,
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
+    }
+  }
+}
 const dropdownItems = computed(() =>
   isFriend.value
-    ? [
-        [
-          {
-            label: '清空聊天列表',
-            icon: 'i-lucide-star'
-          },
-          {
-            label: '清空聊天记录',
-            icon: 'i-lucide-star'
-          }
-        ],
-        [
-          {
-            label: '备注',
-            icon: 'i-lucide-check-circle',
-            onSelect: () => {}
-          },
-          {
-            label: '顶置聊天',
-            icon: 'i-lucide-check-circle',
-            onSelect: () => {}
-          },
-          {
-            label: '删除好友',
-            icon: 'i-lucide-triangle-alert',
-            onSelect: async () => {
-              try {
-                const { targetId } = props
-                await deleteCandidate(targetId)
-                toast.add({ title: '删除好友成功' })
-                const { id, nickname } = userInfo.value
-                const notification = {
-                  id,
-                  content: '将你从好友列表中移除了',
-                  createdAt: Date.now(),
-                  profile: {
-                    nickname
-                  }
-                }
-                const _contactList = contactList.value
-                const _contactProfileMap = contactProfileMap.value
-                const index = _contactList.findIndex(
-                  item => item.id === targetId
+    ? props.isMatch
+      ? [deleteMessageRecord]
+      : isContacts
+        ? [deleteMessageRecord]
+        : [
+            // 好友才提供隐藏列表的选项，这个操作能保留聊天记录
+            {
+              label: '隐藏列表',
+              icon: 'lucide:eye-off',
+              onSelect: () => {
+                const _targetId = targetId.value
+                useHideMessageList(
+                  userInfo,
+                  _targetId,
+                  lastMsgList,
+                  lastMsgMap,
+                  targetId
                 )
-
-                if (index >= 0) {
-                  _contactList.splice(index, 1)
-                  delete _contactProfileMap[targetId]
-                  localStorage.setItem(
-                    `contactList-${id}`,
-                    JSON.stringify(_contactList)
-                  )
-                  localStorage.setItem(
-                    `contactProfileMap-${id}`,
-                    JSON.stringify(_contactProfileMap)
-                  )
-                }
-
-                // TODO: 删除聊天记录和 lastMsg
-
-                globalSocket.value.emit(
-                  'delete-contact',
-                  targetId,
-                  notification
-                )
-              } catch (error) {
-                toast.add({
-                  title: error.message,
-                  color: 'error',
-                  icon: 'lucide:annoyed'
-                })
               }
-            }
-          }
-        ]
-      ]
-    : [
-        [
-          {
-            label: '清空聊天列表',
-            icon: 'i-lucide-star'
-          },
-          {
-            label: '清空聊天记录',
-            icon: 'i-lucide-star'
-          }
-        ],
-        [
-          {
-            label: '添加好友',
-            icon: 'i-lucide-check-circle',
-            onSelect: async () => {
-              try {
-                await addCandidate(props.targetId)
-                toast.add({ title: '已向对方发送好友申请' })
-                const { id, nickname, region, birthday, gender } =
-                  userInfo.value
-                const notification = {
-                  id,
-                  content: '请求添加你为好友',
-                  type: 'add-contact',
-                  createdAt: Date.now(),
-                  profile: {
-                    nickname,
-                    region,
-                    birthday,
-                    gender
-                  }
-                }
-                globalSocket.value.emit(
-                  'add-contact',
-                  props.targetId,
-                  notification
-                )
-              } catch (error) {
-                toast.add({
-                  title: error.message,
-                  color: 'error',
-                  icon: 'lucide:annoyed'
-                })
-              }
-            }
-          }
-        ]
-      ]
+            },
+            deleteList,
+            deleteMessageRecord
+          ]
+    : props.isMatch
+      ? [deleteMessageRecord, addContact]
+      : [deleteList, deleteMessageRecord, addContact]
 )
 </script>

@@ -126,12 +126,12 @@ import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 const props = defineProps<{
-  targetId: string
   isMatch: boolean
 }>()
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const { matchRes } = storeToRefs(useMatchStore())
 const {
+  targetId,
   lastMsgMap,
   contactProfileMap,
   hashToBlobURLMap,
@@ -154,8 +154,8 @@ const updateParts = ref({
 const targetNickname = computed(() =>
   props.isMatch
     ? matchRes.value.nickname[0]
-    : lastMsgMap.value[props.targetId]?.profile?.nickname?.[0] ||
-      contactProfileMap.value[props.targetId].profile.nickname[0]
+    : lastMsgMap.value[targetId.value]?.profile?.nickname?.[0] ||
+      contactProfileMap.value[targetId.value].profile.nickname[0]
 )
 const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
   // year: 'numeric',
@@ -184,7 +184,7 @@ const onScroll = useThrottleFn(
         hashToBlobURLMap,
         messageList,
         lastFetchedId,
-        props.targetId,
+        targetId.value,
         true
       )
 

@@ -42,7 +42,6 @@
   <MessageView
     v-if="!isMobile && targetId"
     @close="targetId = ''"
-    :target-id="targetId"
   ></MessageView>
   <div
     v-if="!isMobile && !targetId"
@@ -58,11 +57,7 @@
     description=" "
   >
     <template #content>
-      <MessageView
-        v-if="targetId"
-        @close="isOpenSlideover = false"
-        :target-id="targetId"
-      />
+      <MessageView v-if="targetId" @close="isOpenSlideover = false" />
     </template>
   </USlideover>
 </template>

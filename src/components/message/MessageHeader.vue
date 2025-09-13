@@ -28,37 +28,44 @@
         variant="ghost"
         @click="open = !open"
       />
-      <MessageDropdownMenu :target-id="targetId"></MessageDropdownMenu>
+      <MessageDropdownMenu :is-match="isMatch"></MessageDropdownMenu>
     </template>
   </UDashboardNavbar>
 
-  <UCollapsible v-model:open="open" class="border-default border-b sm:px-2">
+  <UCollapsible v-model:open="open" class="border-default border-b sm:p-2">
     <template #content>
-      <div class="grid gap-y-2 px-4 py-4 text-sm">
-        <div class="flex items-center gap-1.5">
-          <UIcon name="lucide:user-round" class="text-primary size-5"></UIcon>
-          <p class="text-muted">
-            性别：<span class="text-highlighted">{{
-              useTransformGender(targetGender)
-            }}</span>
-          </p>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <UIcon
-            name="lucide:audio-waveform"
-            class="text-primary size-5"
-          ></UIcon>
-          <p class="text-muted">
-            年龄：<span class="text-highlighted">{{
-              computeAge(targetBirthday)
-            }}</span>
-          </p>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <UIcon name="lucide:activity" class="text-primary size-5"></UIcon>
-          <p class="text-muted">
-            地区：<span class="text-highlighted">{{ targetRegion }}</span>
-          </p>
+      <div class="p-4">
+        <UAvatarGroup size="3xl">
+          <UAvatar :alt="userInfo.nickname[0]" />
+          <UAvatar :alt="targetNickname[0]" />
+        </UAvatarGroup>
+
+        <div class="mt-4 flex flex-col gap-2 text-sm">
+          <div class="flex items-center gap-2">
+            <UIcon name="lucide:user-round" class="text-primary size-5"></UIcon>
+            <p class="text-muted">
+              性别：<span class="text-highlighted">{{
+                useTransformGender(targetGender)
+              }}</span>
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <UIcon
+              name="lucide:audio-waveform"
+              class="text-primary size-5"
+            ></UIcon>
+            <p class="text-muted">
+              年龄：<span class="text-highlighted">{{
+                computeAge(targetBirthday)
+              }}</span>
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <UIcon name="lucide:activity" class="text-primary size-5"></UIcon>
+            <p class="text-muted">
+              地区：<span class="text-highlighted">{{ targetRegion }}</span>
+            </p>
+          </div>
         </div>
       </div>
     </template>
@@ -67,46 +74,46 @@
 
 <script setup lang="ts">
 import { useTransformGender } from '@/hooks'
-import { useMatchStore, useRecentContactsStore } from '@/store'
+import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
 
-const props = withDefaults(
-  defineProps<{ targetId: string; isMatch?: boolean }>(),
-  {
-    isMatch: false
-  }
-)
+const props = withDefaults(defineProps<{ isMatch?: boolean }>(), {
+  isMatch: false
+})
 const emits = defineEmits(['close'])
 const open = ref(props.isMatch ? true : false)
-const { lastMsgMap, contactProfileMap } = storeToRefs(useRecentContactsStore())
+const { userInfo } = storeToRefs(useUserStore())
+const { targetId, lastMsgMap, contactProfileMap } = storeToRefs(
+  useRecentContactsStore()
+)
 const { matchRes } = storeToRefs(useMatchStore())
 const targetNickname = computed(() =>
   props.isMatch
     ? matchRes.value.nickname
-    : lastMsgMap.value[props.targetId]?.profile?.nickname ||
-      contactProfileMap.value[props.targetId].profile.nickname
+    : lastMsgMap.value[targetId.value]?.profile?.nickname ||
+      contactProfileMap.value[targetId.value].profile.nickname
 )
 const targetRegion = computed(() =>
   props.isMatch
     ? matchRes.value.region
-    : lastMsgMap.value[props.targetId]?.profile?.region ||
-      contactProfileMap.value[props.targetId].profile.region
+    : lastMsgMap.value[targetId.value]?.profile?.region ||
+      contactProfileMap.value[targetId.value].profile.region
 )
 const targetBirthday = computed(
   () =>
     props.isMatch
       ? matchRes.value.birthday
       : // TODO: birthday 为空字符串时会去 contactProfileMap 中取值，而空字符串就是它的值
-        lastMsgMap.value[props.targetId]?.profile?.birthday ||
-        contactProfileMap.value[props.targetId]?.profile?.birthday
-  // contactProfileMap.value[props.targetId].profile.birthday
+        lastMsgMap.value[targetId.value]?.profile?.birthday ||
+        contactProfileMap.value[targetId.value]?.profile?.birthday
+  // contactProfileMap.value[targetId.value].profile.birthday
 )
 const targetGender = computed(() =>
   props.isMatch
     ? matchRes.value.gender
-    : lastMsgMap.value[props.targetId]?.profile?.gender ||
-      contactProfileMap.value[props.targetId].profile.gender
+    : lastMsgMap.value[targetId.value]?.profile?.gender ||
+      contactProfileMap.value[targetId.value].profile.gender
 )
 
 const computeAge = v => {

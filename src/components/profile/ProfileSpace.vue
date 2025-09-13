@@ -29,18 +29,24 @@
             "
             icon="lucide:chevrons-up"
             variant="ghost"
+            color="neutral"
           />
-          <UButton v-if="isSelf" icon="lucide:plus" variant="ghost" />
+          <UButton
+            v-if="isSelf"
+            icon="lucide:plus"
+            variant="ghost"
+            color="neutral"
+          />
           <UButton
             v-if="isSelf && isMobile"
             icon="lucide:settings"
             variant="ghost"
+            color="neutral"
             @click="isOpenSettingsSlideover = true"
           />
-          <MessageDropdownMenu
-            v-if="!isSelf"
-            :target-id="selectContactId"
-          ></MessageDropdownMenu>
+          <ContactDropdownMenu
+            v-if="!isSelf && route.path === '/contacts'"
+          ></ContactDropdownMenu>
         </template>
       </UDashboardNavbar>
       <!-- 背景图片 -->
@@ -65,13 +71,13 @@
           <div class="flex items-center gap-2">
             {{ nickname }}
             <UButton
-              v-if="!isSelf && Boolean(contactProfileMap[selectContactId])"
+              v-if="!isSelf && Boolean(contactProfileMap[targetId])"
               icon="lucide:user-round-pen"
               label="备注"
             ></UButton>
             <UButton
               v-if="!isSelf && !inView"
-              @click="onChat"
+              @click="isOpenMessageViewSlideover = true"
               icon="lucide:message-circle-more"
               label="聊天"
             ></UButton>
@@ -170,7 +176,6 @@
         <MessageView
           v-if="targetId"
           @close="isOpenMessageViewSlideover = false"
-          :target-id="targetId"
         />
       </template>
     </USlideover>
@@ -252,14 +257,12 @@ import { computed, ref } from 'vue'
 import DrawerLogout from '@/components/drawer/DrawerLogout.vue'
 import { useGenHash, useGetDB, useNoop } from '@/hooks'
 import { updateAvatar, updateSpaceBg } from '@/apis/oss'
+import { useRoute } from 'vue-router'
 
 const overlay = useOverlay()
-const props = withDefaults(
-  defineProps<{ selectContactId?: string; isMatch?: boolean }>(),
-  {
-    isMatch: false
-  }
-)
+withDefaults(defineProps<{ isMatch?: boolean }>(), {
+  isMatch: false
+})
 const emits = defineEmits(['close'])
 const container = ref(null)
 const isOpenMessageViewSlideover = ref(false)
@@ -332,13 +335,18 @@ const tabItems = [
   }
 ]
 const activeTab = ref('my')
-const isSelf = !props.selectContactId
-const inView = computed(() => targetId.value === props.selectContactId)
+const isSelf = !targetId.value
+const route = useRoute()
+// 在聊天界面中打开对方空间或匹配到对方显示的空间不需要显示聊天按钮
+const inView = computed(() => {
+  const { path } = route
+  return path === '/message' || path === '/chat' || path === '/audio'
+})
 const nickname = computed(() =>
   isSelf
     ? userInfo.value.nickname
-    : contactProfileMap.value[props.selectContactId]?.profile?.nickname ||
-      lastMsgMap.value[props.selectContactId]?.profile?.nickname ||
+    : contactProfileMap.value[targetId.value]?.profile?.nickname ||
+      lastMsgMap.value[targetId.value]?.profile?.nickname ||
       matchRes.value.nickname
 )
 const bgBlob = isSelf
@@ -356,19 +364,15 @@ const bgURL = ref(
       ? URL.createObjectURL(bgBlob)
       : // 本地数据库中删除了但 OSS 中还存在，TODO: 重新保存到本地数据库
         `${VITE_OSS_BASE_URL}${userInfo.value.id}/space-bg`
-    : `${VITE_OSS_BASE_URL}${props.selectContactId}/space-bg`
+    : `${VITE_OSS_BASE_URL}${targetId.value}/space-bg`
 )
 const avatarURL = ref(
   isSelf
     ? avatarBlob
       ? URL.createObjectURL(avatarBlob)
       : `${VITE_OSS_BASE_URL}${userInfo.value.id}/avatar`
-    : `${VITE_OSS_BASE_URL}${props.selectContactId}/avatar`
+    : `${VITE_OSS_BASE_URL}${targetId.value}/avatar`
 )
-const onChat = () => {
-  isOpenMessageViewSlideover.value = true
-  targetId.value = props.selectContactId
-}
 
 const onUpdateSpaceBg = () => spaceBgRef.value.click()
 

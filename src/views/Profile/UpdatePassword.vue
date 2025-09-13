@@ -144,7 +144,6 @@ const onUpdatePassword = async () => {
     const { message } = await updatePassword(encryptedUserInfo)
     toast.add({
       title: message,
-      color: 'success',
       icon: 'lucide:smile'
     })
     localStorage.removeItem('token')

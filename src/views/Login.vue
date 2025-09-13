@@ -351,7 +351,6 @@ const sendLoginPin = async () => {
       const { message } = await sendPin(email, 'login')
       toast.add({
         title: message,
-        color: 'success',
         icon: 'lucide:smile'
       })
       loginWithPinReamingTime.value = 300
@@ -400,7 +399,6 @@ const onResetPassword = async () => {
       const { message } = await sendResetPasswordURL(email)
       toast.add({
         title: message,
-        color: 'success',
         icon: 'lucide:smile'
       })
     }
@@ -446,7 +444,7 @@ const sendRegisterPin = async () => {
       }, 1000)
     } else {
       const { message } = await sendPin(email, 'register')
-      toast.add({ title: message, color: 'success', icon: 'lucide:smile' })
+      toast.add({ title: message, icon: 'lucide:smile' })
       registerReamingTime.value = 300
       registerTimer = setInterval(() => {
         registerReamingTime.value = registerReamingTime.value - 1
@@ -485,7 +483,6 @@ const onLogin = async () => {
     // userInfo.value = _userInfo
     toast.add({
       title: '登录成功',
-      color: 'success',
       icon: 'lucide:smile'
     })
     // TODO: 解决路由切换会造成 UApp 中只显示 RouterView 中内容，其他组件不显示
@@ -529,7 +526,6 @@ watch(registerPin, async v => {
       // userInfo.value = _userInfo
       toast.add({
         title: '登录成功',
-        color: 'success',
         icon: 'lucide:smile'
       })
       location.replace('/')
@@ -566,7 +562,6 @@ watch(loginWithVCPin, async v => {
       // userInfo.value = _userInfo
       toast.add({
         title: '登录成功',
-        color: 'success',
         icon: 'lucide:smile'
       })
       location.replace('/')

@@ -118,7 +118,6 @@ const onResetPassword = async () => {
     const { message } = await resetPassword(token, encryptedUserInfo)
     toast.add({
       title: message,
-      color: 'success',
       icon: 'lucide:smile'
     })
     router.replace('/login')

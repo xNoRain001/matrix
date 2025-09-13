@@ -171,7 +171,6 @@ const onUpdateProfile = async () => {
   ) {
     toast.add({
       title: '修改资料成功',
-      color: 'success',
       icon: 'lucide:smile'
     })
     return
@@ -189,7 +188,6 @@ const onUpdateProfile = async () => {
     userInfo.value = _userInfo
     toast.add({
       title: '修改资料成功',
-      color: 'success',
       icon: 'lucide:smile'
     })
   } catch (error) {

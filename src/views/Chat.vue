@@ -14,12 +14,7 @@
         :is-match="true"
         :select-contact-id="matchRes.id"
       ></ProfileSpace>
-      <MessageView
-        v-if="targetId"
-        @close="isOpen = false"
-        :is-match="true"
-        :target-id="matchRes.id"
-      />
+      <MessageView v-if="targetId" @close="isOpen = false" :is-match="true" />
     </template>
   </UModal>
 </template>
@@ -35,7 +30,8 @@ const { isMobile } = storeToRefs(useUserStore())
 const { matchRes, matchType } = storeToRefs(useMatchStore())
 const { targetId } = storeToRefs(useRecentContactsStore())
 const isOpen = ref(Boolean(matchType.value === 'chat' && matchRes.value))
-targetId.value = matchRes.value?.id || ''
+
+targetId.value = matchType.value === 'chat' ? matchRes.value.id : ''
 
 onMounted(async () => {
   if (!isOpen.value) {

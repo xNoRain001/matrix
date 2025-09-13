@@ -1,15 +1,8 @@
 <template>
   <UDashboardPanel id="message-2">
-    <MessageHeader
-      @close="emits('close')"
-      :target-id="targetId"
-      :is-match="isMatch"
-    ></MessageHeader>
+    <MessageHeader @close="emits('close')" :is-match="isMatch"></MessageHeader>
     <!-- 聊天内容 -->
-    <MessageDynamicScroller
-      :target-id="targetId"
-      :is-match="isMatch"
-    ></MessageDynamicScroller>
+    <MessageDynamicScroller :is-match="isMatch"></MessageDynamicScroller>
     <!-- 移动端输入框 -->
     <div class="p-4" v-if="isMobile">
       <div class="flex items-end gap-2">
@@ -129,19 +122,17 @@ import { onBeforeUnmount, onMounted, ref, computed, watch } from 'vue'
 import type { message } from '@/types'
 import { voiceChatInviteToastPendingTime } from '@/const'
 import { uploadImage } from '@/apis/oss'
+import { useRoute } from 'vue-router'
 
 let timer = null
-const props = withDefaults(
-  defineProps<{ targetId: string; isMatch?: boolean }>(),
-  {
-    isMatch: false
-  }
-)
+const props = withDefaults(defineProps<{ isMatch?: boolean }>(), {
+  isMatch: false
+})
 const emits = defineEmits(['close'])
 // 对方是否收到了文件元信息的标识
 const message = ref('')
 const {
-  targetId: _targetId,
+  targetId,
   msgContainerRef,
   unreadMsgCounter,
   messageList,
@@ -161,6 +152,7 @@ const expanded = ref(false)
 const dashboardPanelRef = computed(
   () => (msgContainerRef.value as any)?.$el?.parentNode as HTMLElement
 )
+const route = useRoute()
 
 // const onDownload = (url, filename) => {
 //   fetch(url)
@@ -179,16 +171,16 @@ const onCall = () => {
   }
 
   isVoiceChatMatch.value = false
+  const _targetId = targetId.value
 
-  const { targetId } = props
   // 不在这里更新 roomId.value，因为要先确保对方能通话时才会显示语音浮动按钮，
   // 因此在 onJoin 中更新 roomId.value
-  const _roomId = useGenRoomId(userInfo.value.id, targetId)
+  const _roomId = useGenRoomId(userInfo.value.id, _targetId)
   globalSocket.value.emit(
     'unidirectional-web-rtc',
     _roomId,
     userInfo.value.nickname,
-    targetId
+    _targetId
   )
   leaveRoomTimer.value = setTimeout(() => {
     globalSocket.value.emit('leave', roomId.value)
@@ -236,7 +228,7 @@ const onInputChange = async () => {
   img.onload = async () => {
     const { width, height } = img
     const timestamp = Date.now()
-    const { targetId } = props
+    const _targetId = targetId.value
     try {
       const hash = await useGenHash(file)
       const { data } = await uploadImage(file, hash)
@@ -245,7 +237,7 @@ const onInputChange = async () => {
         hash,
         contact: userInfo.value.id,
         sender: userInfo.value.id,
-        receiver: targetId,
+        receiver: _targetId,
         timestamp,
         width,
         height
@@ -258,17 +250,17 @@ const onInputChange = async () => {
         })
       )
       messageRecord.sent = true
-      messageRecord.contact = targetId
+      messageRecord.contact = _targetId
 
       const _lastMsgMap = lastMsgMap.value
       const isOverFiveMins = useIsOverFiveMins(
         messageRecord,
         _lastMsgMap,
-        targetId
+        _targetId
       )
 
-      if (!_lastMsgMap[targetId]) {
-        await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
+      if (!_lastMsgMap[_targetId]) {
+        await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, _targetId)
       }
 
       // 本地数据库中不需要保存临时的 url
@@ -355,29 +347,29 @@ const onSendMsg = async () => {
   }
 
   const timestamp = Date.now()
-  const { targetId } = props
+  const _targetId = targetId.value
   const messageRecord: message = {
     type: 'text',
     content: _message,
     contact: userInfo.value.id,
     sender: userInfo.value.id,
-    receiver: targetId,
+    receiver: _targetId,
     timestamp
   }
   try {
     globalSocket.value.emit('send-msg', JSON.stringify(messageRecord))
     messageRecord.sent = true
-    messageRecord.contact = targetId
+    messageRecord.contact = _targetId
 
     const _lastMsgMap = lastMsgMap.value
     const isOverFiveMins = useIsOverFiveMins(
       messageRecord,
       _lastMsgMap,
-      targetId
+      _targetId
     )
 
-    if (!_lastMsgMap[targetId]) {
-      await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
+    if (!_lastMsgMap[_targetId]) {
+      await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, _targetId)
     }
 
     const [labelId, msgId] = await useAddMessageRecordToDB(
@@ -404,7 +396,6 @@ const onSendMsg = async () => {
     message.value = ''
     ;(msgContainerRef.value as any).scrollToBottom()
   } catch (error) {
-    console.log(error)
     toast.add({ title: '发送失败', color: 'error', icon: 'lucide:annoyed' })
   }
 }
@@ -426,17 +417,21 @@ const removeVisualViewportListeners = () => {
 }
 
 const updateTimeAgo = () => {
-  const item = lastMsgMap.value[props.targetId]
+  const item = lastMsgMap.value[targetId.value]
 
   if (item) {
     item.timeAgo = useFormatTimeAgo(item.timestamp)
   }
 }
 
+// 由于组件上有基于 props.targetId 的 v-if，因此重置逻辑不能写在 watch 里，targetId
+// 值被重置为 '' 时不会执行回调
 watch(
-  () => props.targetId,
+  targetId,
   async v => {
     if (v) {
+      // PC 端可能存在不关闭聊天界面点击其他用户列表的情况，组件不会销毁，此时需要重置
+      // lastFetchedId，这里就不加 isMobile 判断了
       lastFetchedId.value = Infinity
       await useGetMessages(
         userInfo.value.id,
@@ -455,8 +450,6 @@ watch(
         const db = await useGetDB(userInfo.value.id)
         await db.put('lastMessages', JSON.parse(JSON.stringify(item)))
       }
-    } else {
-      messageList.value = []
     }
   },
   { immediate: true }
@@ -474,7 +467,13 @@ onMounted(() => {
 onBeforeUnmount(() => {
   clearInterval(timer)
   removeVisualViewportListeners()
-  // 组件销毁时重置 targetId，这样其它地方就不用处理了
-  _targetId.value = ''
+  // 组件销毁时重置相关值，这样其它地方就不用处理了，处于 contacts 下的聊天界面关闭
+  // 时不重置 targetId，否则会造成空间也被关闭，在空间关闭时重置 targetId
+  if (route.path !== '/contacts') {
+    targetId.value = ''
+  }
+
+  messageList.value = []
+  lastFetchedId.value = Infinity
 })
 </script>

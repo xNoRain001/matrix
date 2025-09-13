@@ -34,7 +34,7 @@
       </template>
     </UDashboardNavbar>
 
-    <ContactList v-if="contactList.length" v-model="selectContactId" />
+    <ContactList v-if="contactList.length" />
     <div
       v-if="isMobile && !contactList.length"
       class="flex flex-1 items-center justify-center"
@@ -44,12 +44,11 @@
   </UDashboardPanel>
 
   <ProfileSpace
-    v-if="!isMobile && selectContactId"
-    @close="selectContactId = ''"
-    :select-contact-id="selectContactId"
+    v-if="!isMobile && targetId"
+    @close="targetId = ''"
   ></ProfileSpace>
   <div
-    v-if="!isMobile && !selectContactId"
+    v-if="!isMobile && !targetId"
     class="flex flex-1 items-center justify-center"
   >
     <UIcon name="lucide:user-round" class="text-dimmed size-32" />
@@ -67,11 +66,7 @@
     description=" "
   >
     <template #content>
-      <ProfileSpace
-        v-if="selectContactId"
-        @close="selectContactId = ''"
-        :select-contact-id="selectContactId"
-      ></ProfileSpace>
+      <ProfileSpace v-if="targetId" @close="targetId = ''"></ProfileSpace>
     </template>
   </USlideover>
 </template>
@@ -80,25 +75,21 @@
 import { getContacts } from '@/apis/contact'
 import { useRefreshContacts } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
-import type { users } from '@/types'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref, computed } from 'vue'
 
-const users = ref<users>([])
-const selectContactId = ref('')
 const toast = useToast()
 const isNotificationsSlideoverOpen = ref(false)
 const { isMobile, userInfo } = storeToRefs(useUserStore())
-const { contactList, contactProfileMap, contactNotifications } = storeToRefs(
-  useRecentContactsStore()
-)
+const { targetId, contactList, contactProfileMap, contactNotifications } =
+  storeToRefs(useRecentContactsStore())
 const isOpenSlideover = computed({
   get() {
-    return Boolean(selectContactId.value)
+    return Boolean(targetId.value)
   },
   set(value: boolean) {
     if (!value) {
-      selectContactId.value = ''
+      targetId.value = ''
     }
   }
 })

@@ -11,7 +11,6 @@ import useGetAudioOutput from './use-get-audio-output'
 import useGetAudioOutputs from './use-get-audio-outputs'
 import useBindMediaStream from './use-bind-media-stream'
 import useGetDB from './use-get-db'
-import useClearMessages from './use-clear-messages'
 import useDeleteDB from './use-delete-db'
 import useEncryptUserInfo from './use-encrypt-userinfo'
 import useUpdateTheme from './use-update-theme'
@@ -32,8 +31,14 @@ import useUpdateLastMsg from './use-update-last-msg'
 import useRefreshContacts from './use-refresh-contacts'
 import useGenHash from './use-gen-hash'
 import useFixIndexedDB from './use-fix-indexed-db'
+import useHideMessageList from './use-hide-message-list'
+import useClearMessageRecord from './use-clear-message-record'
+import useDeleteContact from './use-delete-contact'
 
 export {
+  useDeleteContact,
+  useClearMessageRecord,
+  useHideMessageList,
   useFixIndexedDB,
   useGenHash,
   useRefreshContacts,
@@ -54,7 +59,6 @@ export {
   useUpdateTheme,
   useEncryptUserInfo,
   useDeleteDB,
-  useClearMessages,
   useGetDB,
   useBindMediaStream,
   useGetAudioInput,

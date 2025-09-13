@@ -931,7 +931,7 @@ const initLastMsgs = async () => {
     const { id, unreadMsgs } = lastMsg
     _lastMsgList.push(id)
     _lastMsgMap[id] = lastMsg
-    _unreadMsgCounter += unreadMsgs
+    _unreadMsgCounter += unreadMsgs || 0
   }
 
   lastMsgMap.value = _lastMsgMap

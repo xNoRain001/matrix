@@ -242,7 +242,6 @@ const onUpdateFilter = async () => {
     isOpenFilterDrawer.value = false
     toast.add({
       title: '修改成功',
-      color: 'success',
       icon: 'lucide:smile'
     })
   } catch (error) {

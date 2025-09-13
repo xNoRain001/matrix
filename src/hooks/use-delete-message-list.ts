@@ -1,0 +1,32 @@
+import useClearMessageRecord from './use-clear-message-record'
+import useHideMessageList from './use-hide-message-list'
+
+const useDeleteMessageList = async (
+  userInfo,
+  targetId,
+  lastMsgList,
+  lastMsgMap,
+  messageList,
+  _targetId,
+  lastFetchedId
+) => {
+  await useHideMessageList(
+    userInfo,
+    targetId,
+    lastMsgList,
+    lastMsgMap,
+    _targetId
+  )
+  await useClearMessageRecord(
+    userInfo,
+    targetId,
+    messageList,
+    lastMsgMap,
+    _targetId,
+    lastFetchedId,
+    false
+  )
+  // 不需要在这里重置 store 中的 targetId，因为上面函数的内部会重置
+}
+
+export default useDeleteMessageList

@@ -21,7 +21,6 @@
         <div class="flex w-3/5 flex-col">
           <MessageHeader
             @close="isOpen = false"
-            :target-id="matchRes.id"
             :is-match="true"
           ></MessageHeader>
           <MessageVoice class="m-4 sm:m-6"></MessageVoice>
@@ -34,7 +33,12 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useMatchStore, useUserStore, useWebRTCStore } from '@/store'
+import {
+  useMatchStore,
+  useRecentContactsStore,
+  useUserStore,
+  useWebRTCStore
+} from '@/store'
 import { storeToRefs } from 'pinia'
 import { useGenRoomId } from '@/hooks'
 
@@ -42,7 +46,10 @@ const router = useRouter()
 const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
 const { matchRes, matchType } = storeToRefs(useMatchStore())
 const { roomId, isVoiceChatMatch } = storeToRefs(useWebRTCStore())
+const { targetId } = storeToRefs(useRecentContactsStore())
 const isOpen = ref(Boolean(matchType.value === 'voice-chat' && matchRes.value))
+
+targetId.value = matchType.value === 'voice-chat' ? matchRes.value.id : ''
 
 onMounted(async () => {
   if (!isOpen.value) {
