@@ -1,5 +1,9 @@
 <template>
-  <USlideover v-model:open="open" title="修改密码" description=" ">
+  <USlideover
+    v-model:open="isUpdatePasswordSlideoverOpen"
+    title="修改密码"
+    description=" "
+  >
     <template #body>
       <UPageCard variant="subtle">
         <UForm
@@ -104,7 +108,7 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import * as z from 'zod'
 
-const open = defineModel<boolean>({ required: true })
+const isUpdatePasswordSlideoverOpen = defineModel<boolean>({ required: true })
 const schema = z.object({
   oldPassword: z.string().min(8, '密码长度至少为 8 位'),
   password: z.string().min(8, '密码长度至少为 8 位'),

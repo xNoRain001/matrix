@@ -82,7 +82,6 @@
         v-if="roomId"
         @click="isVoiceChatModalOpen = true"
         icon="lucide:phone"
-        class="absolute top-20 right-4"
       ></UButton>
       <!-- 音频 -->
       <audio hidden ref="localAudioRef" muted></audio>

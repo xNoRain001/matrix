@@ -124,6 +124,7 @@ import { voiceChatInviteToastPendingTime } from '@/const'
 import { uploadImage } from '@/apis/oss'
 import { useRoute } from 'vue-router'
 
+let first = true
 let timer = null
 const props = withDefaults(defineProps<{ isMatch?: boolean }>(), {
   isMatch: false
@@ -139,7 +140,8 @@ const {
   lastMsgMap,
   lastMsgList,
   hashToBlobURLMap,
-  lastFetchedId
+  lastFetchedId,
+  skipUnshiftMessageRecord
 } = storeToRefs(useRecentContactsStore())
 const { isVoiceChatModalOpen, roomId, leaveRoomTimer, isVoiceChatMatch } =
   storeToRefs(useWebRTCStore())
@@ -223,6 +225,17 @@ const onInputChange = async () => {
   const input = inputRef.value
   const { files } = input
   const file = files[0]
+
+  if (file.size > 10 * 1024 * 1024) {
+    toast.add({
+      title: '发送失败，图片大小不能超过 10MB',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+    input.value = ''
+    return
+  }
+
   const url = URL.createObjectURL(file)
   const img = new Image()
   img.onload = async () => {
@@ -430,6 +443,21 @@ watch(
   targetId,
   async v => {
     if (v) {
+      // PC 端可能不关闭聊天界面点击其他用户列表的情况，如果不先重置 messageList 会
+      // 造成切换后滚动条不一定在底部的问题，通过清空聊天记录，将设置 scrollTop 恢复
+      // 为 0
+      messageList.value = []
+
+      // scrollTop 为 0 时，会触发拉取消息的行为，需要跳过，当组件未销毁时切换
+      // targetId 会执行里面的逻辑
+      if (!first) {
+        skipUnshiftMessageRecord.value = true
+      }
+
+      if (first) {
+        first = false
+      }
+
       // PC 端可能存在不关闭聊天界面点击其他用户列表的情况，组件不会销毁，此时需要重置
       // lastFetchedId，这里就不加 isMobile 判断了
       lastFetchedId.value = Infinity
@@ -441,6 +469,9 @@ watch(
         v
       )
       ;(msgContainerRef.value as any).scrollToBottom()
+      // 需要重置为 false，恢复拉取消息
+      skipUnshiftMessageRecord.value = false
+
       const item = lastMsgMap.value[v]
       const unreadMsgs = item?.unreadMsgs
 

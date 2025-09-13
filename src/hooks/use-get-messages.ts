@@ -58,6 +58,7 @@ const useGetMessages = async (
   } catch {
     messageList.value = []
     lastFetchedId.value = Infinity
+    return []
   }
 }
 

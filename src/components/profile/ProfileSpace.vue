@@ -42,7 +42,7 @@
             icon="lucide:settings"
             variant="ghost"
             color="neutral"
-            @click="isOpenSettingsSlideover = true"
+            @click="isSettingSlideoverOpen = true"
           />
           <ContactDropdownMenu
             v-if="!isSelf && route.path === '/contacts'"
@@ -77,7 +77,7 @@
             ></UButton>
             <UButton
               v-if="!isSelf && !inView"
-              @click="isOpenMessageViewSlideover = true"
+              @click="isMessageViewSlideoverOpen = true"
               icon="lucide:message-circle-more"
               label="聊天"
             ></UButton>
@@ -107,7 +107,7 @@
       </div>
       <!-- 动态 -->
       <UPageCard
-        @click="isOpenCardSlideover = true"
+        @click="isCardSlideoverOpen = true"
         variant="soft"
         class="border-b-muted cursor-pointer rounded-none border-b"
       >
@@ -125,7 +125,7 @@
         </div>
       </UPageCard>
       <UPageCard
-        @click="isOpenCardSlideover = true"
+        @click="isCardSlideoverOpen = true"
         v-for="i in 3"
         :key="i"
         variant="soft"
@@ -168,21 +168,21 @@
     <!-- 聊天界面 -->
     <USlideover
       v-if="!isSelf"
-      v-model:open="isOpenMessageViewSlideover"
+      v-model:open="isMessageViewSlideoverOpen"
       title=" "
       description=" "
     >
       <template #content>
         <MessageView
           v-if="targetId"
-          @close="isOpenMessageViewSlideover = false"
+          @close="isMessageViewSlideoverOpen = false"
         />
       </template>
     </USlideover>
     <!-- 移动端设置界面 -->
     <USlideover
       v-if="isMobile && isSelf"
-      v-model:open="isOpenSettingsSlideover"
+      v-model:open="isSettingSlideoverOpen"
       title="设置"
       description=" "
     >
@@ -208,15 +208,15 @@
           </UPageCard>
 
           <MProfileUserInfo
-            v-model="isOpenUserInfoSlideover"
+            v-model="isUserInfoSlideoverOpen"
           ></MProfileUserInfo>
           <MProfileUpdatePassword
-            v-model="isOpenUpdatePasswordSlideover"
+            v-model="isUpdatePasswordSlideoverOpen"
           ></MProfileUpdatePassword>
           <MProfileNotifications
-            v-model="isOpenNotificationsSlideover"
+            v-model="isNotificationSlideoverOpen"
           ></MProfileNotifications>
-          <MPorfileFixer v-model="isOpenFixerSlideover"></MPorfileFixer>
+          <MPorfileFixer v-model="isFixerSlideoverOpen"></MPorfileFixer>
         </div>
       </template>
     </USlideover>
@@ -225,13 +225,13 @@
       :dismissible="!isMobile && isMatch ? false : true"
       :overlay="!isMobile && isMatch ? false : true"
       :side="!isMobile && isMatch ? 'left' : 'right'"
-      v-model:open="isOpenCardSlideover"
+      v-model:open="isCardSlideoverOpen"
       :class="!isMobile && isMatch ? 'max-w-2/5' : ''"
       title="详情"
       description=" "
     >
       <template #body>
-        <UPageCard @click="isOpenCardSlideover = true" variant="soft">
+        <UPageCard @click="isCardSlideoverOpen = true" variant="soft">
           <p class="text-highlighted">
             Lorem ipsum dolor sit amet consectetur, adipisicing elit. Architecto
             reiciendis exercitationem aperiam natus, pariatur eos iste repellat
@@ -265,14 +265,14 @@ withDefaults(defineProps<{ isMatch?: boolean }>(), {
 })
 const emits = defineEmits(['close'])
 const container = ref(null)
-const isOpenMessageViewSlideover = ref(false)
-const isOpenSettingsSlideover = ref(false)
+const isMessageViewSlideoverOpen = ref(false)
+const isSettingSlideoverOpen = ref(false)
 const logoutDrawer = overlay.create(DrawerLogout)
-const isOpenUserInfoSlideover = ref(false)
-const isOpenUpdatePasswordSlideover = ref(false)
-const isOpenNotificationsSlideover = ref(false)
-const isOpenFixerSlideover = ref(false)
-const isOpenCardSlideover = ref(false)
+const isUserInfoSlideoverOpen = ref(false)
+const isUpdatePasswordSlideoverOpen = ref(false)
+const isNotificationSlideoverOpen = ref(false)
+const isFixerSlideoverOpen = ref(false)
+const isCardSlideoverOpen = ref(false)
 const spaceBgRef = ref(null)
 const avatarRef = ref(null)
 const toast = useToast()
@@ -286,12 +286,12 @@ const cards = [
     {
       icon: 'lucide:user-round',
       label: '个人资料',
-      onSelect: () => (isOpenUserInfoSlideover.value = true)
+      onSelect: () => (isUserInfoSlideoverOpen.value = true)
     },
     {
       icon: 'lucide:bell',
       label: '通知',
-      onSelect: () => (isOpenNotificationsSlideover.value = true)
+      onSelect: () => (isNotificationSlideoverOpen.value = true)
     }
   ],
   [
@@ -310,12 +310,12 @@ const cards = [
     {
       icon: 'lucide:wrench',
       label: '修复',
-      onSelect: () => (isOpenFixerSlideover.value = true)
+      onSelect: () => (isFixerSlideoverOpen.value = true)
     },
     {
       icon: 'lucide:shield',
       label: '修改密码',
-      onSelect: () => (isOpenUpdatePasswordSlideover.value = true)
+      onSelect: () => (isUpdatePasswordSlideoverOpen.value = true)
     },
     {
       icon: 'lucide:log-out',
@@ -382,6 +382,16 @@ const onChangeAvatar = async e => {
   const input = e.target
   const avatar = input.files[0]
 
+  if (avatar.size > 10 * 1024 * 1024) {
+    toast.add({
+      title: '发送失败，图片大小不能超过 10MB',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+    input.value = ''
+    return
+  }
+
   try {
     const hash = await useGenHash(avatar)
     await updateAvatar(avatar, hash)
@@ -399,6 +409,16 @@ const onChangeAvatar = async e => {
 const onChangeSpaceBg = async e => {
   const input = e.target
   const bg = input.files[0]
+
+  if (bg.size > 10 * 1024 * 1024) {
+    toast.add({
+      title: '发送失败，图片大小不能超过 10MB',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+    input.value = ''
+    return
+  }
 
   try {
     const hash = await useGenHash(bg)

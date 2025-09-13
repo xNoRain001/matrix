@@ -1,6 +1,6 @@
 <template>
   <USlideover
-    v-model:open="open"
+    v-model:open="isFixerSlideoverOpen"
     title="通知"
     description=" "
     :ui="{ body: 'flex flex-col gap-4' }"
@@ -12,5 +12,5 @@
 </template>
 
 <script setup lang="ts">
-const open = defineModel<boolean>({ required: true })
+const isFixerSlideoverOpen = defineModel<boolean>({ required: true })
 </script>

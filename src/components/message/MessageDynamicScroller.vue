@@ -122,7 +122,7 @@ import { useGetDB, useGetMessages } from '@/hooks'
 import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
 import { useThrottleFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 const props = defineProps<{
@@ -137,7 +137,8 @@ const {
   hashToBlobURLMap,
   msgContainerRef,
   messageList,
-  lastFetchedId
+  lastFetchedId,
+  skipUnshiftMessageRecord
 } = storeToRefs(useRecentContactsStore())
 const route = useRoute()
 const isSpaceSlideoverOpen = ref(false)
@@ -178,7 +179,11 @@ const filteredItems = computed(() => {
 
 const onScroll = useThrottleFn(
   async e => {
-    if (e.target.scrollTop === 0 && lastFetchedId.value) {
+    if (
+      !skipUnshiftMessageRecord.value &&
+      e.target.scrollTop === 0 &&
+      lastFetchedId.value
+    ) {
       const unshiftCounter = await useGetMessages(
         userInfo.value.id,
         hashToBlobURLMap,
@@ -288,4 +293,8 @@ const onClick = e => {
     isSpaceSlideoverOpen.value = true
   }
 }
+
+onBeforeUnmount(() =>
+  (msgContainerRef.value as any).$el.removeEventListener('scroll', onScroll)
+)
 </script>

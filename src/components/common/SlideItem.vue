@@ -63,7 +63,6 @@ const onTouchEnd = () => {
 }
 
 const onClick = (e: Event) => {
-  console.log((e.target as any).parentNode.parentNode === rightRef.value)
   // 如果滑动项打开时点击对应用户，关闭滑动项并阻止事件传播，不需要打开聊天界面
   if (
     offsetX.value &&

@@ -34,8 +34,10 @@ import useFixIndexedDB from './use-fix-indexed-db'
 import useHideMessageList from './use-hide-message-list'
 import useClearMessageRecord from './use-clear-message-record'
 import useDeleteContact from './use-delete-contact'
+import useAddContact from './use-add-contact'
 
 export {
+  useAddContact,
   useDeleteContact,
   useClearMessageRecord,
   useHideMessageList,

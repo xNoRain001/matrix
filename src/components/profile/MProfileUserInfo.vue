@@ -1,6 +1,10 @@
 <template>
   <!-- 需要放在下面这些模态框之前才不会被覆盖 -->
-  <USlideover v-model:open="open" title="个人资料" description=" ">
+  <USlideover
+    v-model:open="isUserInfoSlideoverOpen"
+    title="个人资料"
+    description=" "
+  >
     <template #body>
       <UPageCard variant="subtle" :ui="{ body: 'w-full' }">
         <template #body>
@@ -104,9 +108,8 @@ import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
 import { vMaska } from 'maska/vue'
 
-const open = defineModel<boolean>({ required: true })
+const isUserInfoSlideoverOpen = defineModel<boolean>({ required: true })
 const toast = useToast()
-const openProfileDrawer = ref(true)
 const isOpenGenderDrawer = ref(false)
 const isOpenBirthdayDrawer = ref(false)
 const isOpenRegionDrawer = ref(false)
@@ -174,7 +177,7 @@ const onUpdateProfile = async () => {
       title: '修改资料成功',
       icon: 'lucide:smile'
     })
-    openProfileDrawer.value = false
+    isUserInfoSlideoverOpen.value = false
     return
   }
 
@@ -192,7 +195,7 @@ const onUpdateProfile = async () => {
       title: '修改资料成功',
       icon: 'lucide:smile'
     })
-    openProfileDrawer.value = false
+    isUserInfoSlideoverOpen.value = false
   } catch (error) {
     toast.add({
       title: error.message,
