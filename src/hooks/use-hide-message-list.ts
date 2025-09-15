@@ -3,6 +3,7 @@ import useGetDB from './use-get-db'
 const useHideMessageList = async (
   userInfo,
   targetId,
+  unreadMsgCounter,
   indexMap,
   lastMsgList,
   lastMsgMap,
@@ -16,8 +17,16 @@ const useHideMessageList = async (
   const _lastMsgList = lastMsgList.value
   const index = _lastMsgList.findIndex(id => id === targetId)
   const _indexMap = indexMap.value
+  const _lastMsgMap = lastMsgMap.value
+  const unreadMsgs = _lastMsgMap[targetId].unreadMsgs || 0
+
   _lastMsgList.splice(index, 1)
-  delete lastMsgMap.value[targetId]
+
+  if (unreadMsgs) {
+    unreadMsgCounter.value -= unreadMsgs
+  }
+
+  delete _lastMsgMap[targetId]
   delete _indexMap[targetId]
 
   for (let i = index, l = _lastMsgList.length; i < l; i++) {

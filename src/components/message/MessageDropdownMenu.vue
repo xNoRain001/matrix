@@ -27,7 +27,8 @@ const {
   messageList,
   lastFetchedId,
   targetId,
-  indexMap
+  indexMap,
+  unreadMsgCounter
 } = storeToRefs(useRecentContactsStore())
 const { globalSocket, userInfo } = storeToRefs(useUserStore())
 const isFriend = computed(() =>
@@ -43,6 +44,7 @@ const deleteList = {
     useDeleteMessageList(
       userInfo,
       _targetId,
+      unreadMsgCounter,
       indexMap,
       lastMsgList,
       lastMsgMap,
@@ -87,6 +89,7 @@ const dropdownItems = computed(() =>
                 useHideMessageList(
                   userInfo,
                   _targetId,
+                  unreadMsgCounter,
                   indexMap,
                   lastMsgList,
                   lastMsgMap,

@@ -20,6 +20,11 @@
         class="-ms-1.5"
         @click="emits('close')"
       />
+      <UBadge
+        v-if="unreadMsgCounter && (isMobile || (!isMobile && isMatch))"
+        :label="unreadMsgCounter"
+        size="sm"
+      ></UBadge>
     </template>
     <template #right>
       <UButton
@@ -84,10 +89,9 @@ const props = withDefaults(defineProps<{ isMatch?: boolean }>(), {
 })
 const emits = defineEmits(['close'])
 const open = ref(props.isMatch ? true : false)
-const { userInfo } = storeToRefs(useUserStore())
-const { targetId, lastMsgMap, contactProfileMap } = storeToRefs(
-  useRecentContactsStore()
-)
+const { isMobile, userInfo } = storeToRefs(useUserStore())
+const { targetId, lastMsgMap, contactProfileMap, unreadMsgCounter } =
+  storeToRefs(useRecentContactsStore())
 const { matchRes } = storeToRefs(useMatchStore())
 const route = useRoute()
 const isMessage = computed(() => route.path === '/message')

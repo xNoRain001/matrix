@@ -56,15 +56,15 @@
                 <p class="truncate">
                   {{ lastMsgMap[id].content }}
                 </p>
-                <UChip
+                <UBadge
+                  v-if="lastMsgMap[id].unreadMsgs"
                   inset
-                  color="error"
+                  color="primary"
                   :show="Boolean(lastMsgMap[id].unreadMsgs)"
-                  :text="lastMsgMap[id].unreadMsgs"
-                  size="3xl"
-                  class="text-highlighted"
+                  :label="lastMsgMap[id].unreadMsgs"
+                  size="sm"
                 >
-                </UChip>
+                </UBadge>
               </div>
             </div>
           </div>
@@ -75,11 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  useClearMessageRecord,
-  useFormatTimeAgo,
-  useHideMessageList
-} from '@/hooks'
+import { useFormatTimeAgo, useHideMessageList } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref, onBeforeUnmount, onMounted } from 'vue'
@@ -96,7 +92,8 @@ const {
   messageList,
   lastFetchedId,
   contactProfileMap,
-  indexMap
+  indexMap,
+  unreadMsgCounter
 } = storeToRefs(useRecentContactsStore())
 const contextMenuItems = ref<ContextMenuItem[][]>([
   [
@@ -107,6 +104,7 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
         useHideMessageList(
           userInfo,
           contextmenuId,
+          unreadMsgCounter,
           indexMap,
           lastMsgList,
           lastMsgMap,
@@ -120,23 +118,11 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
         useDeleteMessageList(
           userInfo,
           contextmenuId,
+          unreadMsgCounter,
           indexMap,
           lastMsgList,
           lastMsgMap,
           messageList,
-          targetId,
-          lastFetchedId
-        )
-    },
-    {
-      label: '删除聊天记录',
-      icon: 'lucide:circle-arrow-out-up-right',
-      onSelect: () =>
-        useClearMessageRecord(
-          userInfo,
-          contextmenuId,
-          messageList,
-          lastMsgMap,
           targetId,
           lastFetchedId
         )
@@ -164,6 +150,7 @@ const onDeleteMessageList = id =>
   useDeleteMessageList(
     userInfo,
     id,
+    unreadMsgCounter,
     indexMap,
     lastMsgList,
     lastMsgMap,
@@ -173,7 +160,15 @@ const onDeleteMessageList = id =>
   )
 
 const onHideMessageList = id =>
-  useHideMessageList(userInfo, id, indexMap, lastMsgList, lastMsgMap, targetId)
+  useHideMessageList(
+    userInfo,
+    id,
+    unreadMsgCounter,
+    indexMap,
+    lastMsgList,
+    lastMsgMap,
+    targetId
+  )
 
 defineShortcuts({
   arrowdown: () => {

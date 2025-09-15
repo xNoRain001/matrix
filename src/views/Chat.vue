@@ -5,7 +5,7 @@
     title=" "
     description=" "
     v-model:open="isOpen"
-    :ui="{ content: 'flex justify-center flex-row' }"
+    :ui="{ content: 'flex-row' }"
   >
     <template #content>
       <ProfileSpace

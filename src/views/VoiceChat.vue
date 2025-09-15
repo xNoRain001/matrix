@@ -8,17 +8,14 @@
   >
     <template #content>
       <!-- 规定时间内对方没接通时会清除 matchRes，因此需要使用到 v-if -->
-      <div
-        v-if="matchType === 'voice-chat' && matchRes.id"
-        class="flex flex-row justify-center"
-      >
+      <div v-if="matchType === 'voice-chat' && matchRes.id" class="flex">
         <ProfileSpace
           v-if="!isMobile"
           class="w-2/5"
           :is-match="true"
           :select-contact-id="matchRes.id"
         ></ProfileSpace>
-        <div class="flex w-3/5 flex-col">
+        <div class="relative flex w-3/5 flex-col">
           <MessageHeader
             @close="isOpen = false"
             :is-match="true"

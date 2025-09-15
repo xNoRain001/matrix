@@ -4,6 +4,7 @@ import useHideMessageList from './use-hide-message-list'
 const useDeleteMessageList = async (
   userInfo,
   targetId,
+  unreadMsgCounter,
   indexMap,
   lastMsgList,
   lastMsgMap,
@@ -14,6 +15,7 @@ const useDeleteMessageList = async (
   await useHideMessageList(
     userInfo,
     targetId,
+    unreadMsgCounter,
     indexMap,
     lastMsgList,
     lastMsgMap,

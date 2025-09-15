@@ -697,6 +697,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
     await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, id)
     await useUpdateLastMsg(
       userInfo.value.id,
+      indexMap,
       _lastMsgMap,
       lastMsg.type === 'image' ? { ...lastMsg, content: '[图片]' } : lastMsg,
       true,
