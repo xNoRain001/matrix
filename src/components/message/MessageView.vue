@@ -104,12 +104,13 @@ import {
   useAddLastMsg,
   useGenRoomId,
   useFormatTimeAgo,
-  useIsOverFiveMins,
   useAddMessageRecordToView,
   useAddMessageRecordToDB,
   useUpdateLastMsg,
   useGetDB,
-  useGenHash
+  useGenHash,
+  useInitLabelAndSeparator,
+  useUUID
 } from '@/hooks'
 import {
   useMatchStore,
@@ -141,7 +142,8 @@ const {
   lastMsgList,
   hashToBlobURLMap,
   lastFetchedId,
-  skipUnshiftMessageRecord
+  skipUnshiftMessageRecord,
+  indexMap
 } = storeToRefs(useRecentContactsStore())
 const { isVoiceChatModalOpen, roomId, leaveRoomTimer, isVoiceChatMatch } =
   storeToRefs(useWebRTCStore())
@@ -244,8 +246,7 @@ const onInputChange = async () => {
     const _targetId = targetId.value
     try {
       const hash = await useGenHash(file)
-      const { data } = await uploadImage(file, hash)
-      const messageRecord: message = {
+      const payload: message = {
         type: 'image',
         hash,
         contact: userInfo.value.id,
@@ -255,52 +256,50 @@ const onInputChange = async () => {
         width,
         height
       }
-      globalSocket.value.emit(
-        'send-msg',
-        JSON.stringify({
-          ...messageRecord,
-          ossURL: `${import.meta.env.VITE_OSS_BASE_URL}${data}`
-        })
-      )
-      messageRecord.sent = true
-      messageRecord.contact = _targetId
-
       const _lastMsgMap = lastMsgMap.value
-      const isOverFiveMins = useIsOverFiveMins(
+      const messageRecord = {
+        ...payload,
+        url,
+        sent: true,
+        contact: _targetId
+      }
+      const label = useInitLabelAndSeparator(
         messageRecord,
         _lastMsgMap,
         _targetId
       )
+      const indexdbLabel = label ? { ...label } : null
+      // 本地数据库中不需要保存临时的 url
+      const indexdbMessageRecord = { ...messageRecord, url: '' }
 
-      if (!_lastMsgMap[_targetId]) {
-        await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, _targetId)
+      if (label) {
+        label.id = useUUID()
       }
 
-      // 本地数据库中不需要保存临时的 url
-      const [labelId, msgId] = await useAddMessageRecordToDB(
+      messageRecord.id = useUUID()
+      // 为了用户体验，图片优先显示在本地
+      useAddMessageRecordToView(label, messageRecord, messageList)
+      ;(msgContainerRef.value as any).scrollToBottom()
+      const { data } = await uploadImage(file, hash)
+      payload.ossURL = `${import.meta.env.VITE_OSS_BASE_URL}${data}`
+      globalSocket.value.emit('send-msg', JSON.stringify(payload))
+      await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, _targetId)
+      await useAddMessageRecordToDB(
         userInfo.value.id,
-        isOverFiveMins,
-        messageRecord,
-        _lastMsgMap
-      )
-      messageRecord.url = url
-      useAddMessageRecordToView(
-        isOverFiveMins,
-        messageRecord,
-        messageList,
-        labelId,
-        msgId
+        indexdbLabel,
+        indexdbMessageRecord
       )
       useUpdateLastMsg(
         userInfo.value.id,
+        indexMap,
+        lastMsgList,
         _lastMsgMap,
+        // messageRecord 被保存到了内存中，因此不能修改它
         { ...messageRecord, content: '[图片]' },
         false,
         true,
         unreadMsgCounter
       )
-      ;(msgContainerRef.value as any).scrollToBottom()
-
       // 如果存在，说明本地中一定有，不用进行处理，不存在，不能说明本地中一定没有，
       // 可能是没有读取或者存储数量达到上限
       const _hashToBlobURLMap = hashToBlobURLMap.value
@@ -361,7 +360,7 @@ const onSendMsg = async () => {
 
   const timestamp = Date.now()
   const _targetId = targetId.value
-  const messageRecord: message = {
+  const payload: message = {
     type: 'text',
     content: _message,
     contact: userInfo.value.id,
@@ -369,47 +368,47 @@ const onSendMsg = async () => {
     receiver: _targetId,
     timestamp
   }
+  const _lastMsgMap = lastMsgMap.value
+  const messageRecord = {
+    ...payload,
+    sent: true,
+    contact: _targetId
+  }
+  const label = useInitLabelAndSeparator(messageRecord, _lastMsgMap, _targetId)
+  const indexdbLabel = label ? { ...label } : null
+  const indexdbMessageRecord = { ...messageRecord }
+
+  if (label) {
+    label.id = useUUID()
+  }
+
+  messageRecord.id = useUUID()
+
+  useAddMessageRecordToView(label, messageRecord, messageList)
+  globalSocket.value.emit('send-msg', JSON.stringify(payload))
+
   try {
-    globalSocket.value.emit('send-msg', JSON.stringify(messageRecord))
-    messageRecord.sent = true
-    messageRecord.contact = _targetId
-
-    const _lastMsgMap = lastMsgMap.value
-    const isOverFiveMins = useIsOverFiveMins(
-      messageRecord,
-      _lastMsgMap,
-      _targetId
-    )
-
-    if (!_lastMsgMap[_targetId]) {
-      await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, _targetId)
-    }
-
-    const [labelId, msgId] = await useAddMessageRecordToDB(
+    await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, _targetId)
+    await useAddMessageRecordToDB(
       userInfo.value.id,
-      isOverFiveMins,
-      messageRecord,
-      _lastMsgMap
-    )
-    useAddMessageRecordToView(
-      isOverFiveMins,
-      messageRecord,
-      messageList,
-      labelId,
-      msgId
+      indexdbLabel,
+      indexdbMessageRecord
     )
     useUpdateLastMsg(
       userInfo.value.id,
+      indexMap,
+      lastMsgList,
       _lastMsgMap,
       messageRecord,
       false,
       true,
       unreadMsgCounter
     )
-    message.value = ''
     ;(msgContainerRef.value as any).scrollToBottom()
   } catch (error) {
     toast.add({ title: '发送失败', color: 'error', icon: 'lucide:annoyed' })
+  } finally {
+    message.value = ''
   }
 }
 

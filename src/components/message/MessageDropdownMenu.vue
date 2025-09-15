@@ -26,7 +26,8 @@ const {
   lastMsgList,
   messageList,
   lastFetchedId,
-  targetId
+  targetId,
+  indexMap
 } = storeToRefs(useRecentContactsStore())
 const { globalSocket, userInfo } = storeToRefs(useUserStore())
 const isFriend = computed(() =>
@@ -42,6 +43,7 @@ const deleteList = {
     useDeleteMessageList(
       userInfo,
       _targetId,
+      indexMap,
       lastMsgList,
       lastMsgMap,
       messageList,
@@ -73,7 +75,7 @@ const dropdownItems = computed(() =>
   isFriend.value
     ? props.isMatch
       ? [deleteMessageRecord]
-      : isContacts
+      : isContacts.value
         ? [deleteMessageRecord]
         : [
             // 好友才提供隐藏列表的选项，这个操作能保留聊天记录
@@ -85,6 +87,7 @@ const dropdownItems = computed(() =>
                 useHideMessageList(
                   userInfo,
                   _targetId,
+                  indexMap,
                   lastMsgList,
                   lastMsgMap,
                   targetId

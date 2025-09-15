@@ -19,7 +19,7 @@
       </div>
     </template>
     <template #default="{ item, active }">
-      <DynamicScrollerItem v-if="active" :item="item" :active="active">
+      <DynamicScrollerItem :item="item" :active="active">
         <div v-if="item.type === 'label'" class="pt-3 pb-4 text-center text-sm">
           {{ formatTimestamp(item.timestamp) }}
         </div>

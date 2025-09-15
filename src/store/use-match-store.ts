@@ -4,7 +4,7 @@ import type { userInfo } from '@/types'
 import useUserStore from './use-user-store'
 
 const useMatchStore = defineStore('matchStore', () => {
-  const { id } = useUserStore().userInfo
+  const id = useUserStore().userInfo?.id || ''
 
   return {
     matching: ref(false), // 正在匹配中，值为 true 时匹配 modal 会处于打开状态

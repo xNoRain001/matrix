@@ -14,6 +14,7 @@
                 批量
               </div> -->
               <div
+                v-if="contactProfileMap[id]"
                 class="bg-primary flex flex-1 items-center justify-center"
                 @click="onHideMessageList(id)"
               >
@@ -83,8 +84,15 @@ import useDeleteMessageList from '@/hooks/use-delete-message-list'
 let timer = null
 let contextmenuId = ''
 const { userInfo } = storeToRefs(useUserStore())
-const { lastMsgMap, lastMsgList, targetId, messageList, lastFetchedId } =
-  storeToRefs(useRecentContactsStore())
+const {
+  lastMsgMap,
+  lastMsgList,
+  targetId,
+  messageList,
+  lastFetchedId,
+  contactProfileMap,
+  indexMap
+} = storeToRefs(useRecentContactsStore())
 const contextMenuItems = ref<ContextMenuItem[][]>([
   [
     {
@@ -94,6 +102,7 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
         useHideMessageList(
           userInfo,
           contextmenuId,
+          indexMap,
           lastMsgList,
           lastMsgMap,
           targetId
@@ -106,6 +115,7 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
         useDeleteMessageList(
           userInfo,
           contextmenuId,
+          indexMap,
           lastMsgList,
           lastMsgMap,
           messageList,
@@ -149,6 +159,7 @@ const onDeleteMessageList = id =>
   useDeleteMessageList(
     userInfo,
     id,
+    indexMap,
     lastMsgList,
     lastMsgMap,
     messageList,
@@ -157,7 +168,7 @@ const onDeleteMessageList = id =>
   )
 
 const onHideMessageList = id =>
-  useHideMessageList(userInfo, id, lastMsgList, lastMsgMap, targetId)
+  useHideMessageList(userInfo, id, indexMap, lastMsgList, lastMsgMap, targetId)
 
 defineShortcuts({
   arrowdown: () => {

@@ -67,7 +67,7 @@ import { getProfiles } from '@/apis/profile'
 import { useGetDB } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, onBeforeUnmount } from 'vue'
 
 // const tabItems = [
 //   {
@@ -162,4 +162,6 @@ const initProfiles = async () => {
 onMounted(async () => {
   await initProfiles()
 })
+
+onBeforeUnmount(() => (targetId.value = ''))
 </script>

@@ -29,8 +29,15 @@ export type lastMsg = {
 
 export type lastMsgMap = Record<string, lastMsg>
 
+export type messageLabel = {
+  id?: string | number
+  contact: string
+  type: 'label'
+  timestamp: number
+}
+
 export type message = {
-  id?: number
+  id?: string | number
   type: 'text' | 'label' | 'image'
   hash?: string
   url?: string

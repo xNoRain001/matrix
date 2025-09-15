@@ -32,7 +32,7 @@
     </template>
   </UDashboardNavbar>
 
-  <UCollapsible v-model:open="open" class="border-default border-b sm:p-2">
+  <UCollapsible v-model:open="open" class="border-default border-b sm:px-2">
     <template #content>
       <div class="p-4">
         <UAvatarGroup size="3xl">

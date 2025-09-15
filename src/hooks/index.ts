@@ -24,7 +24,6 @@ import useGenRoomId from './use-gen-room-id'
 import useAddLastMsg from './use-add-last-msg'
 import useGetTargetIdByRoomId from './use-get-target-id-by-roomId'
 import useFormatTimeAgo from './use-format-time-ago'
-import useIsOverFiveMins from './use-is-over-five-mins'
 import useAddMessageRecordToDB from './use-add-message-record-to-db'
 import useAddMessageRecordToView from './use-add-message-record-to-view'
 import useUpdateLastMsg from './use-update-last-msg'
@@ -35,8 +34,12 @@ import useHideMessageList from './use-hide-message-list'
 import useClearMessageRecord from './use-clear-message-record'
 import useDeleteContact from './use-delete-contact'
 import useAddContact from './use-add-contact'
+import useInitLabelAndSeparator from './use-init-label-and-separator'
+import useUUID from './use-uuid'
 
 export {
+  useUUID,
+  useInitLabelAndSeparator,
   useAddContact,
   useDeleteContact,
   useClearMessageRecord,
@@ -47,7 +50,6 @@ export {
   useAddMessageRecordToDB,
   useAddMessageRecordToView,
   useUpdateLastMsg,
-  useIsOverFiveMins,
   useFormatTimeAgo,
   useGetTargetIdByRoomId,
   useAddLastMsg,

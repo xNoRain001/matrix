@@ -76,7 +76,7 @@ import { getContacts } from '@/apis/contact'
 import { useRefreshContacts } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, onBeforeUnmount } from 'vue'
 
 const toast = useToast()
 const isNotificationsSlideoverOpen = ref(false)
@@ -123,4 +123,6 @@ const initContactList = async () => {
 onMounted(async () => {
   await initContactList()
 })
+
+onBeforeUnmount(() => (targetId.value = ''))
 </script>

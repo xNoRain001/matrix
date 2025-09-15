@@ -7,13 +7,19 @@ const useRecentContactsStore = defineStore('recentContactsStore', () => {
   let _contactList = []
   let _contactNotifications = []
   let _contactProfileMap = {}
-  const { id } = useUserStore().userInfo
+  const id = useUserStore().userInfo?.id || ''
 
   try {
     _contactList = JSON.parse(localStorage.getItem(`contactList-${id}`) || '[]')
+  } catch {}
+
+  try {
     _contactNotifications = JSON.parse(
       localStorage.getItem(`contactNotifications-${id}`) || '[]'
     )
+  } catch {}
+
+  try {
     _contactProfileMap = JSON.parse(
       localStorage.getItem(`contactProfileMap-${id}`) || '{}'
     )
@@ -34,8 +40,10 @@ const useRecentContactsStore = defineStore('recentContactsStore', () => {
     contactList: ref(_contactList),
     contactProfileMap: ref(_contactProfileMap),
     msgContainerRef: ref<HTMLElement | null>(null), // 聊天记录容器
-    targetId: ref(''), // 当前聊天界面中的对象
+    targetId: ref(''), // 当前聊天对象或者联系人的 id
+    pinId: ref(''), // 置顶对象的 id
     skipUnshiftMessageRecord: ref(false),
+    indexMap: ref({}),
     messageList: ref([]),
     lastFetchedId: ref(Infinity),
     hashToBlobURLMap: ref<Map<string, string>>(new Map()),
