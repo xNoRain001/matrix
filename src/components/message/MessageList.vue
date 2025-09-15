@@ -39,28 +39,33 @@
           >
             <UChip
               inset
-              color="error"
-              :show="Boolean(lastMsgMap[id].unreadMsgs)"
-              :text="lastMsgMap[id].unreadMsgs"
+              :color="lastMsgMap[id].online ? 'primary' : 'error'"
               size="3xl"
             >
               <UAvatar :text="lastMsgMap[id].profile.nickname[0]"></UAvatar>
             </UChip>
 
             <div class="w-[calc(100%-4rem)]">
-              <!-- :class="[user.unread && 'font-semibold']" -->
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                   {{ lastMsgMap[id].profile.nickname }}
-                  <!-- <UChip :color="Math.random() > 0.5 ? 'primary' : 'error'" /> -->
                 </div>
-
                 <span>{{ lastMsgMap[id].timeAgo }}</span>
-                <!-- <span>{{ isToday(new Date(user.date)) ? format(new Date(user.date), 'HH:mm') : format(new Date(user.date), 'dd MMM') }}</span> -->
               </div>
-              <p class="truncate">
-                {{ lastMsgMap[id].content }}
-              </p>
+              <div class="flex items-center justify-between">
+                <p class="truncate">
+                  {{ lastMsgMap[id].content }}
+                </p>
+                <UChip
+                  inset
+                  color="error"
+                  :show="Boolean(lastMsgMap[id].unreadMsgs)"
+                  :text="lastMsgMap[id].unreadMsgs"
+                  size="3xl"
+                  class="text-highlighted"
+                >
+                </UChip>
+              </div>
             </div>
           </div>
         </SlideItem>

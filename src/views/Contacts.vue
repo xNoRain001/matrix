@@ -73,14 +73,15 @@
 
 <script setup lang="ts">
 import { getContacts } from '@/apis/contact'
-import { useRefreshContacts } from '@/hooks'
+import { useRefreshContacts, useRefreshOnline } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref, computed, onBeforeUnmount } from 'vue'
 
+let timer = null
 const toast = useToast()
 const isNotificationsSlideoverOpen = ref(false)
-const { isMobile, userInfo } = storeToRefs(useUserStore())
+const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
 const { targetId, contactList, contactProfileMap, contactNotifications } =
   storeToRefs(useRecentContactsStore())
 const isOpenSlideover = computed({
@@ -122,7 +123,11 @@ const initContactList = async () => {
 
 onMounted(async () => {
   await initContactList()
+  timer = useRefreshOnline(globalSocket, 'contactList', contactList.value)
 })
 
-onBeforeUnmount(() => (targetId.value = ''))
+onBeforeUnmount(() => {
+  targetId.value = ''
+  clearTimeout(timer)
+})
 </script>

@@ -12,9 +12,9 @@ const useMatchStore = defineStore('matchStore', () => {
     hasMatchRes: ref(false), // 最终有匹配结果时值为 true
     noMatch: ref(false), // 暂时没有匹配结果时值为 true
     matchType: ref(localStorage.getItem(`matchType-${id}`) || ''), // 匹配类型
-    matchRes: ref<Omit<userInfo, 'tokenVersion'> | null>(
-      JSON.parse(localStorage.getItem(`matchRes-${id}`)) || null
-    ) // 匹配结果
+    matchRes: ref<
+      (Omit<userInfo, 'tokenVersion'> & { online: boolean }) | null
+    >(JSON.parse(localStorage.getItem(`matchRes-${id}`)) || null) // 匹配结果
   }
 })
 

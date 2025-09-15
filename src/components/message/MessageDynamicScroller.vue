@@ -152,11 +152,13 @@ const updateParts = ref({
   visibleStartIdx: 0,
   visibleEndIdx: 0
 })
+const isMessage = computed(() => route.path === '/message')
 const targetNickname = computed(() =>
   props.isMatch
     ? matchRes.value.nickname[0]
-    : lastMsgMap.value[targetId.value]?.profile?.nickname?.[0] ||
-      contactProfileMap.value[targetId.value].profile.nickname[0]
+    : isMessage.value
+      ? lastMsgMap.value[targetId.value].profile.nickname[0]
+      : contactProfileMap.value[targetId.value].profile.nickname[0]
 )
 const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
   // year: 'numeric',

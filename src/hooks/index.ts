@@ -36,8 +36,10 @@ import useDeleteContact from './use-delete-contact'
 import useAddContact from './use-add-contact'
 import useInitLabelAndSeparator from './use-init-label-and-separator'
 import useUUID from './use-uuid'
+import useRefreshOnline from './use-refresh-online'
 
 export {
+  useRefreshOnline,
   useUUID,
   useInitLabelAndSeparator,
   useAddContact,

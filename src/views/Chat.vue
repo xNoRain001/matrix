@@ -20,13 +20,15 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
+import { useRefreshOnline } from '@/hooks'
 
+let timer = null
 const router = useRouter()
-const { isMobile } = storeToRefs(useUserStore())
+const { isMobile, globalSocket } = storeToRefs(useUserStore())
 const { matchRes, matchType } = storeToRefs(useMatchStore())
 const { targetId } = storeToRefs(useRecentContactsStore())
 const isOpen = ref(Boolean(matchType.value === 'chat' && matchRes.value))
@@ -37,5 +39,8 @@ onMounted(async () => {
   if (!isOpen.value) {
     return router.replace('/')
   }
+  timer = useRefreshOnline(globalSocket, 'matchTarget', [targetId.value])
 })
+
+onBeforeUnmount(() => clearTimeout(timer))
 </script>

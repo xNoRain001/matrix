@@ -352,8 +352,9 @@ const onAgreeContact = (notification, contact) => {
   )
   const _contactList = contactList.value
   const _contactProfileMap = contactProfileMap.value
-  _contactList.unshift(contact)
-  _contactProfileMap[contact.id] = contact
+  const { id: contactId } = contact
+  _contactList.unshift(contactId)
+  _contactProfileMap[contactId] = contact
   localStorage.setItem(`contactList-${id}`, JSON.stringify(_contactList))
   localStorage.setItem(
     `contactProfileMap-${id}`,
@@ -381,7 +382,7 @@ const onDeleteContact = (notification, targetId) => {
 
   const _contactList = contactList.value
   const _contactProfileMap = contactProfileMap.value
-  const index = _contactList.findIndex(item => item.id === targetId)
+  const index = _contactList.findIndex(id => id === targetId)
 
   if (index >= 0) {
     _contactList.splice(index, 1)
@@ -865,6 +866,26 @@ const onRefreshNotifications = remoteNotifications => {
   localStorage.setItem('notifications', JSON.stringify(_notifications))
 }
 
+const onOnline = (type, res) => {
+  const _lastMsgMap = lastMsgMap.value
+  const _contactProfileMap = contactProfileMap.value
+  const ids = Object.keys(res)
+
+  if (type === 'messageList') {
+    for (let i = 0, l = ids.length; i < l; i++) {
+      const id = ids[i]
+      _lastMsgMap[id].online = res[id]
+    }
+  } else if (type === 'contactList') {
+    for (let i = 0, l = ids.length; i < l; i++) {
+      const id = ids[i]
+      _contactProfileMap[id].online = res[id]
+    }
+  } else if (type === 'matchTarget') {
+    matchRes.value.online = res[ids[0]]
+  }
+}
+
 const initWebRTC = id => {
   const socket = (globalSocket.value = io(
     import.meta.env.VITE_SOCKET_BASE_URL,
@@ -917,7 +938,10 @@ const initWebRTC = id => {
   socket.on('bye', onBye)
   // 好友申请通知
   socket.on('refresh-contact-notifications', onRefreshContactNotifications)
+  // 其他通知
   socket.on('refresh-notifications', onRefreshNotifications)
+  // 在线状态
+  socket.on('online', onOnline)
 }
 
 const initLastMsgs = async () => {

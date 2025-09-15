@@ -156,8 +156,8 @@ const onAgree = async (targetId, targetProfile) => {
       status: 'normal',
       profile: targetProfile
     }
-    _contactList.unshift(local)
-    _contactProfileMap[local.id] = local
+    _contactList.unshift(targetId)
+    _contactProfileMap[targetId] = local
     localStorage.setItem(`contactList-${id}`, JSON.stringify(_contactList))
     localStorage.setItem(
       `contactProfileMap-${id}`,

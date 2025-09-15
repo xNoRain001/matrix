@@ -64,7 +64,7 @@
 
 <script setup lang="ts">
 import { getProfiles } from '@/apis/profile'
-import { useGetDB } from '@/hooks'
+import { useGetDB, useRefreshOnline } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { onMounted, computed, onBeforeUnmount } from 'vue'
@@ -80,8 +80,9 @@ import { onMounted, computed, onBeforeUnmount } from 'vue'
 //   }
 // ]
 // const activeTab = ref('message')
+let timer = null
 const toast = useToast()
-const { isMobile, userInfo } = storeToRefs(useUserStore())
+const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
 const { unreadMsgCounter, targetId, lastMsgMap, lastMsgList } = storeToRefs(
   useRecentContactsStore()
 )
@@ -161,7 +162,11 @@ const initProfiles = async () => {
 
 onMounted(async () => {
   await initProfiles()
+  timer = useRefreshOnline(globalSocket, 'messageList', lastMsgList.value)
 })
 
-onBeforeUnmount(() => (targetId.value = ''))
+onBeforeUnmount(() => {
+  targetId.value = ''
+  clearTimeout(timer)
+})
 </script>

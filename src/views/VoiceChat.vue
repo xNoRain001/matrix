@@ -31,7 +31,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   useMatchStore,
@@ -40,8 +40,9 @@ import {
   useWebRTCStore
 } from '@/store'
 import { storeToRefs } from 'pinia'
-import { useGenRoomId } from '@/hooks'
+import { useGenRoomId, useRefreshOnline } from '@/hooks'
 
+let timer = null
 const router = useRouter()
 const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
 const { matchRes, matchType } = storeToRefs(useMatchStore())
@@ -62,5 +63,8 @@ onMounted(async () => {
     matchRes.value.id
   ))
   globalSocket.value.emit('bidirectional-web-rtc', _roomId)
+  timer = useRefreshOnline(globalSocket, 'matchTarget', [targetId.value])
 })
+
+onBeforeUnmount(() => clearTimeout(timer))
 </script>

@@ -8,7 +8,7 @@
           alt: targetNickname[0]
         }"
         :chip="{
-          color: 'primary'
+          color: isOnline ? 'primary' : 'error'
         }"
       />
     </template>
@@ -77,6 +77,7 @@ import { useTransformGender } from '@/hooks'
 import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 const props = withDefaults(defineProps<{ isMatch?: boolean }>(), {
   isMatch: false
@@ -88,32 +89,42 @@ const { targetId, lastMsgMap, contactProfileMap } = storeToRefs(
   useRecentContactsStore()
 )
 const { matchRes } = storeToRefs(useMatchStore())
+const route = useRoute()
+const isMessage = computed(() => route.path === '/message')
 const targetNickname = computed(() =>
   props.isMatch
     ? matchRes.value.nickname
-    : lastMsgMap.value[targetId.value]?.profile?.nickname ||
-      contactProfileMap.value[targetId.value].profile.nickname
+    : isMessage.value
+      ? lastMsgMap.value[targetId.value].profile.nickname
+      : contactProfileMap.value[targetId.value].profile.nickname
 )
 const targetRegion = computed(() =>
   props.isMatch
     ? matchRes.value.region
-    : lastMsgMap.value[targetId.value]?.profile?.region ||
-      contactProfileMap.value[targetId.value].profile.region
+    : isMessage.value
+      ? lastMsgMap.value[targetId.value].profile.region
+      : contactProfileMap.value[targetId.value].profile.region
 )
-const targetBirthday = computed(
-  () =>
-    props.isMatch
-      ? matchRes.value.birthday
-      : // TODO: birthday 为空字符串时会去 contactProfileMap 中取值，而空字符串就是它的值
-        lastMsgMap.value[targetId.value]?.profile?.birthday ||
-        contactProfileMap.value[targetId.value]?.profile?.birthday
-  // contactProfileMap.value[targetId.value].profile.birthday
+const targetBirthday = computed(() =>
+  props.isMatch
+    ? matchRes.value.birthday
+    : isMessage.value
+      ? lastMsgMap.value[targetId.value].profile.birthday
+      : contactProfileMap.value[targetId.value].profile.birthday
 )
 const targetGender = computed(() =>
   props.isMatch
     ? matchRes.value.gender
-    : lastMsgMap.value[targetId.value]?.profile?.gender ||
-      contactProfileMap.value[targetId.value].profile.gender
+    : isMessage.value
+      ? lastMsgMap.value[targetId.value].profile.gender
+      : contactProfileMap.value[targetId.value].profile.gender
+)
+const isOnline = computed(() =>
+  props.isMatch
+    ? matchRes.value.online
+    : isMessage.value
+      ? lastMsgMap.value[targetId.value].online
+      : contactProfileMap.value[targetId.value].online
 )
 
 const computeAge = v => {

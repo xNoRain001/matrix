@@ -25,6 +25,7 @@ export type lastMsg = {
   sent: boolean
   unreadMsgs: number
   timeAgo: string
+  online: boolean
 }
 
 export type lastMsgMap = Record<string, lastMsg>

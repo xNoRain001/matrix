@@ -6,11 +6,7 @@
     }"
   >
     <div class="divide-default divide-y overflow-y-auto">
-      <div
-        v-for="({ id, profile: { nickname } }, index) in contactList"
-        :key="index"
-        @contextmenu="onContextmenu(id)"
-      >
+      <div v-for="id in contactList" :key="id" @contextmenu="onContextmenu(id)">
         <SlideItem>
           <template #right>
             <div class="flex flex-1 text-sm font-semibold">
@@ -34,11 +30,17 @@
             ]"
             @click="targetId = id"
           >
-            <UChip inset color="primary" size="3xl">
-              <UAvatar :text="nickname[0]"></UAvatar>
+            <UChip
+              inset
+              :color="contactProfileMap[id].online ? 'primary' : 'error'"
+              size="3xl"
+            >
+              <UAvatar
+                :text="contactProfileMap[id].profile.nickname[0]"
+              ></UAvatar>
             </UChip>
 
-            {{ nickname }}
+            {{ contactProfileMap[id].profile.nickname }}
           </div>
         </SlideItem>
       </div>
@@ -94,22 +96,22 @@ const onContextmenu = id => (contextmenuId = id)
 defineShortcuts({
   arrowdown: () => {
     const _contactList = contactList.value
-    const index = _contactList.findIndex(item => item.id === targetId.value)
+    const index = _contactList.findIndex(id => id === targetId.value)
 
     if (index === -1) {
-      targetId.value = _contactList[0].id
+      targetId.value = _contactList[0]
     } else if (index < _contactList.length - 1) {
-      targetId.value = _contactList[index + 1].id
+      targetId.value = _contactList[index + 1]
     }
   },
   arrowup: () => {
     const _contactList = contactList.value
-    const index = _contactList.findIndex(item => item.id === targetId.value)
+    const index = _contactList.findIndex(id => id === targetId.value)
 
     if (index === -1) {
-      targetId.value = _contactList[_contactList.length - 1].id
+      targetId.value = _contactList[_contactList.length - 1]
     } else if (index > 0) {
-      targetId.value = _contactList[index - 1].id
+      targetId.value = _contactList[index - 1]
     }
   }
 })

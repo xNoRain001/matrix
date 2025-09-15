@@ -23,7 +23,7 @@ const useDeleteContact = async (
     }
     const _contactList = contactList.value
     const _contactProfileMap = contactProfileMap.value
-    const index = _contactList.findIndex(item => item.id === targetId)
+    const index = _contactList.findIndex(id => id === targetId)
 
     if (index >= 0) {
       _contactList.splice(index, 1)
