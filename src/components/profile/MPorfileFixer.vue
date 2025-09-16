@@ -1,7 +1,7 @@
 <template>
   <USlideover
     v-model:open="isFixerSlideoverOpen"
-    title="通知"
+    title="数据管理"
     description=" "
     :ui="{ body: 'flex flex-col gap-4' }"
   >

@@ -46,7 +46,11 @@
         class="justify-center"
         @click="isFixModalOpen = false"
       />
-      <UButton label="确认" class="justify-center" @click="useFixIndexedDB" />
+      <UButton
+        label="确认"
+        class="justify-center"
+        @click="useFixIndexedDB(userInfo.id)"
+      />
     </template>
   </UModal>
 </template>
@@ -58,7 +62,7 @@ import { storeToRefs } from 'pinia'
 import { reactive, ref } from 'vue'
 
 const isFixModalOpen = ref(false)
-const { isMobile } = storeToRefs(useUserStore())
+const { isMobile, userInfo } = storeToRefs(useUserStore())
 const state = reactive<{ [key: string]: boolean }>({
   a: false,
   b: false
@@ -69,8 +73,12 @@ const sections = [
     fields: [
       {
         name: 'a',
-        label: '修复聊天记录'
+        label: '清空聊天记录'
       }
+      // {
+      //   name: 'b',
+      //   label: '清空缓存图片'
+      // }
     ]
   }
 ]

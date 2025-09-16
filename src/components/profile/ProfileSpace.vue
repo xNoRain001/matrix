@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <div ref="container" class="relative h-screen overflow-y-auto">
+  <div class="h-screen">
+    <div ref="container" class="relative h-full overflow-y-auto">
       <!-- 顶部导航 -->
       <UDashboardNavbar
         v-if="!isMatch"
@@ -49,7 +49,7 @@
           ></ContactDropdownMenu>
         </template>
       </UDashboardNavbar>
-      <!-- 背景图片 -->
+      <!-- 背景图片，由于移动端有 pb-16，所有高度全部使用 50vh，而不是 50% -->
       <div
         @click="isSelf ? onUpdateSpaceBg() : useNoop()"
         :class="[
@@ -58,11 +58,11 @@
           isMatch ? '' : '-mt-16'
         ]"
         :style="bgURL ? { 'background-image': `url(${bgURL})` } : {}"
-        class="sticky -top-[calc(50%-4rem)] z-10 h-1/2"
+        class="sticky -top-[calc(50vh-4rem)] z-10 h-[50vh]"
       ></div>
       <!-- 个人资料卡片 -->
       <UPageCard
-        class="absolute top-1/2 right-4 left-4 z-20 -translate-y-[calc(100%+1rem)] sm:right-6 sm:left-6 sm:-translate-y-[calc(100%+1.5rem)]"
+        class="absolute top-[50vh] right-4 left-4 z-20 -translate-y-[calc(100%+1rem)] sm:right-6 sm:left-6 sm:-translate-y-[calc(100%+1.5rem)]"
         :title="nickname"
         description="Nuxt UI v3 integrates with latest Tailwind CSS v4, bringing significant improvements."
         variant="soft"
@@ -297,26 +297,23 @@ const cards = [
   [
     {
       icon: 'lucide:palette',
-      label: '主题',
-      onSelect: () => {}
-    },
-    {
-      icon: 'lucide:sun-moon',
-      label: '外观',
-      onSelect: () => {}
+      label: '重置主题',
+      onSelect: () => (isUserInfoSlideoverOpen.value = true)
     }
   ],
   [
     {
-      icon: 'lucide:wrench',
-      label: '修复',
+      icon: 'lucide:database',
+      label: '数据管理',
       onSelect: () => (isFixerSlideoverOpen.value = true)
     },
     {
       icon: 'lucide:shield',
       label: '修改密码',
       onSelect: () => (isUpdatePasswordSlideoverOpen.value = true)
-    },
+    }
+  ],
+  [
     {
       icon: 'lucide:log-out',
       label: '退出登录',

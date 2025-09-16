@@ -134,11 +134,13 @@ let matchTimer = null
 let ignoreOffer = false
 let polite = true
 let makingOffer = false
+let beepTimer = null
+let playBeep = true
 const toast = useToast()
 const overlay = useOverlay()
 const logoutModal = overlay.create(ModalLogout)
 const logoutDrawer = overlay.create(DrawerLogout)
-const { notifications, isMobile, globalSocket, globalPC, userInfo } =
+const { notifications, isMobile, globalSocket, globalPC, userInfo, config } =
   storeToRefs(useUserStore())
 const {
   leaveRoomTimer,
@@ -211,7 +213,7 @@ const navs = [
           to: '/profile/notifications'
         },
         {
-          label: '修复',
+          label: '数据管理',
           to: '/profile/fixer'
         },
         {
@@ -578,6 +580,19 @@ const onReceiveMsg = async messageRecord => {
     inView,
     unreadMsgCounter
   )
+
+  if (!inView && config.value.beep) {
+    if (playBeep) {
+      const audio = new Audio('/audio/beep.mp3')
+      audio.play()
+      playBeep = false
+      beepTimer = setTimeout(() => {
+        playBeep = true
+        clearTimeout(beepTimer)
+      }, 3000)
+    }
+  }
+
   // toast.add({
   //   close: false,
   //   title: _lastMsgMap[id].nickname,
@@ -698,6 +713,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
     await useUpdateLastMsg(
       userInfo.value.id,
       indexMap,
+      lastMsgList,
       _lastMsgMap,
       lastMsg.type === 'image' ? { ...lastMsg, content: '[图片]' } : lastMsg,
       true,

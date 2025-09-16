@@ -30,6 +30,10 @@
       </UPageCard>
       <router-view v-if="!showCards"></router-view>
     </template>
+
+    <template v-if="isMobile" #footer>
+      <div class="h-16"></div>
+    </template>
   </UDashboardPanel>
 
   <!-- 匹配 -->

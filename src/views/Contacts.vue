@@ -5,6 +5,8 @@
     :min-size="20"
     :max-size="30"
     resizable
+    :class="isMobile ? 'pb-16' : ''"
+    :ui="{}"
   >
     <UDashboardNavbar title="好友">
       <template #leading>

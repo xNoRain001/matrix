@@ -1,5 +1,5 @@
 <template>
-  <ProfileSpace v-if="isMobile"></ProfileSpace>
+  <ProfileSpace class="pb-16" v-if="isMobile"></ProfileSpace>
   <UDashboardPanel v-else id="settings" :ui="{ body: 'lg:py-12' }">
     <template #header>
       <UDashboardNavbar title="我的">
@@ -55,8 +55,8 @@ const links = [
       to: '/profile/notifications'
     },
     {
-      icon: 'lucide:wrench',
-      label: '修复',
+      icon: 'lucide:database',
+      label: '数据管理',
       to: '/profile/fixer'
     }
   ],

@@ -5,6 +5,7 @@
     :min-size="20"
     :max-size="30"
     resizable
+    :class="isMobile ? 'pb-16' : ''"
   >
     <UDashboardNavbar title="消息">
       <template #leading>

@@ -7,6 +7,9 @@ import { useBreakpoints, breakpointsTailwind } from '@vueuse/core'
 const useUserStore = defineStore('userStore', () => {
   let userInfo = null
   let _notifications = []
+  let _config = {
+    beep: true
+  }
 
   try {
     _notifications = JSON.parse(localStorage.getItem('notifications') || '[]')
@@ -33,6 +36,12 @@ const useUserStore = defineStore('userStore', () => {
     localStorage.removeItem('token')
   }
 
+  try {
+    _config = JSON.parse(
+      localStorage.getItem(`config-${userInfo?.id || ''}`) || '{}'
+    )
+  } catch {}
+
   const breakpoints = useBreakpoints(breakpointsTailwind)
   const isMobile = breakpoints.smaller('lg')
 
@@ -41,6 +50,7 @@ const useUserStore = defineStore('userStore', () => {
     globalSocket: ref<Socket | null>(null),
     globalPC: ref<RTCPeerConnection | null>(null),
     userInfo: ref<userInfo | null>(userInfo),
+    config: ref<{ beep: boolean }>(_config),
     notifications: ref<
       {
         content: string

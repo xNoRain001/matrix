@@ -10,47 +10,37 @@
         :label="label"
         class="flex items-center justify-between gap-2 not-last:pb-4"
       >
-        <USwitch v-model="state[name]" @update:model-value="onChange" />
+        <USwitch v-model="config[name]" @update:model-value="onChange" />
       </UFormField>
     </UPageCard>
   </div>
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { useUserStore } from '@/store'
+import { storeToRefs } from 'pinia'
 
-const state = reactive<{ [key: string]: boolean }>({
-  email: true,
-  desktop: false,
-  product_updates: true
-})
+const { config, userInfo } = storeToRefs(useUserStore())
 const sections = [
   {
     title: '消息通知',
     fields: [
       {
-        name: 'email',
-        label: '邮箱消息提醒'
-      },
-      {
-        name: 'desktop',
-        label: '桌面消息提醒'
+        name: 'beep',
+        label: '消息提示音'
       }
-    ]
-  },
-  {
-    title: '隐私设置',
-    fields: [
-      {
-        name: 'product_updates',
-        label: '显示切换到其他应用'
-      }
+      // {
+      //   name: 'notify',
+      //   label: '页面内消息横幅'
+      // }
     ]
   }
 ]
 
-async function onChange() {
-  // Do something with data
-  // console.log(state)
+const onChange = async () => {
+  localStorage.setItem(
+    `config-${userInfo.value.id}`,
+    JSON.stringify(config.value)
+  )
 }
 </script>
