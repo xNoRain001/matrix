@@ -82,6 +82,7 @@
         v-if="roomId"
         @click="isVoiceChatModalOpen = true"
         icon="lucide:phone"
+        class="absolute top-4 right-4"
       ></UButton>
       <!-- 音频 -->
       <audio hidden ref="localAudioRef" muted></audio>
@@ -123,7 +124,8 @@ import {
   useUpdateLastMsg,
   useRefreshContacts,
   useInitLabelAndSeparator,
-  useUUID
+  useUUID,
+  useSendMsg
 } from './hooks'
 import { useRouter } from 'vue-router'
 import { voiceChatInviteToastExpireTime } from './const'
@@ -173,7 +175,7 @@ const navs = [
   [
     {
       label: '大厅',
-      icon: 'lucide:cat',
+      icon: 'lucide:bubbles',
       to: '/'
     },
     {
@@ -190,7 +192,7 @@ const navs = [
     },
     {
       label: '我的',
-      icon: 'ic:baseline-face',
+      icon: 'lucide:user-round-cog',
       to: '/profile/space',
       defaultOpen: true,
       type: 'trigger',
@@ -729,15 +731,52 @@ const acceptWebRTC = (roomId, now, isAccept: boolean) => {
   // 由于鼠标悬浮在 toast 上时会暂停进度，因此需要判断是否超出时间
   if (Date.now() - now <= voiceChatInviteToastExpireTime) {
     const socket = globalSocket.value
+    const _targetId = useGetTargetIdByRoomId(roomId, userInfo)
 
     if (isAccept) {
-      socket.emit(
-        'agree-unidirectional-web-rtc',
-        roomId,
-        useGetTargetIdByRoomId(roomId, userInfo)
+      socket.emit('agree-unidirectional-web-rtc', roomId, _targetId)
+      useSendMsg(
+        'text',
+        '同意了语音通话',
+        null,
+        null,
+        null,
+        null,
+        null,
+        _targetId,
+        userInfo,
+        globalSocket,
+        messageList,
+        lastMsgList,
+        lastMsgMap,
+        matchRes,
+        indexMap,
+        unreadMsgCounter,
+        msgContainerRef,
+        _targetId === targetId.value
       )
     } else {
       socket.emit('refuse-web-rtc', roomId)
+      useSendMsg(
+        'text',
+        '拒绝了语音通话',
+        null,
+        null,
+        null,
+        null,
+        null,
+        _targetId,
+        userInfo,
+        globalSocket,
+        messageList,
+        lastMsgList,
+        lastMsgMap,
+        matchRes,
+        indexMap,
+        unreadMsgCounter,
+        msgContainerRef,
+        _targetId === targetId.value
+      )
     }
   } else {
     toast.add({ title: '超时', color: 'error', icon: 'lucide:annoyed' })
@@ -807,7 +846,7 @@ const onDisconnect = () => {
   }
 }
 
-const onMatched = data => {
+const onMatched = async data => {
   const { status, matchType: _matchType, matchRes: _matchRes } = data
 
   if (status === 'fail') {
@@ -828,6 +867,19 @@ const onMatched = data => {
     localStorage.setItem(`matchType-${id}`, _matchType)
     localStorage.setItem(`matchRes-${id}`, JSON.stringify(_matchRes))
     matching.value = false
+
+    // TODO: 处理匹配结果是好友的情况
+    if (_matchType === 'voice-chat') {
+      const _lastMsgMap = lastMsgMap.value
+      const targetId = _matchRes.id
+      await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
+      const db = await useGetDB(id)
+      await db.put(
+        'lastMessages',
+        JSON.parse(JSON.stringify(_lastMsgMap[targetId]))
+      )
+    }
+
     router.replace(`/${_matchType}`)
   }
 }

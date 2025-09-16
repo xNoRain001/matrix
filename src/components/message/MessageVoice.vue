@@ -108,7 +108,7 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import {
   useCloseMediaStreamTracks,
   useGetAudioInputs,
@@ -116,11 +116,17 @@ import {
   useGetTargetIdByRoomId,
   useGetUserMedia,
   usePauseMediaStreamTracks,
-  useResumeMediaStreamTracks
+  useResumeMediaStreamTracks,
+  useSendMsg
 } from '@/hooks'
 import { storeToRefs } from 'pinia'
-import { useUserStore, useWebRTCStore } from '@/store'
-import { useRouter } from 'vue-router'
+import {
+  useMatchStore,
+  useRecentContactsStore,
+  useUserStore,
+  useWebRTCStore
+} from '@/store'
+import { useRoute, useRouter } from 'vue-router'
 
 const {
   roomId,
@@ -134,6 +140,16 @@ const {
   isMicOpen,
   isSpeakerOpen
 } = storeToRefs(useWebRTCStore())
+const {
+  targetId,
+  messageList,
+  lastMsgList,
+  lastMsgMap,
+  indexMap,
+  unreadMsgCounter,
+  msgContainerRef
+} = storeToRefs(useRecentContactsStore())
+const { matchRes } = storeToRefs(useMatchStore())
 const { globalPC, globalSocket, userInfo } = storeToRefs(useUserStore())
 const audioInputs = await useGetAudioInputs()
 const audioInputLabels = audioInputs.map(
@@ -162,20 +178,23 @@ const _speakerOptions = speakerOptions.map(item => ({ label: item, icon: '' }))
 const volume = ref(1)
 const noMic = ref(!audioInputLabelsLength)
 const noSpeaker = ref(!audioOutputLabelsLength)
+const route = useRoute()
 const router = useRouter()
 const toast = useToast()
+const isVoiceChat = computed(() => route.path === '/voice-chat')
 
 // TODO: 里面的逻辑和 onBye 很相似，可以考虑合并
 const onCancel = () => {
   const socket = globalSocket.value
   const _roomId = roomId.value
+  const _targetId = useGetTargetIdByRoomId(_roomId, userInfo)
 
   if (!isVoiceChatMatch.value) {
     clearTimeout(leaveRoomTimer.value)
 
     // 非匹配模式下，在对方接通前挂掉，对方需要移除语音通知
     if (!rtcConnected.value) {
-      socket.emit('cancel-web-rtc', useGetTargetIdByRoomId(_roomId, userInfo))
+      socket.emit('cancel-web-rtc', _targetId)
     }
   }
 
@@ -196,11 +215,38 @@ const onCancel = () => {
   roomId.value = ''
   toast.add({ title: '已结束通话', icon: 'lucide:smile' })
 
-  if (isVoiceChatMatch.value) {
+  // isVoiceChatMatch 值为 true 表示双方接通成功，接通成功时点击挂断，只有在没有离开
+  // 语音匹配界面的情况下，才需要跳转到主页
+  if (isVoiceChatMatch.value && isVoiceChat.value) {
     router.replace('/')
   }
 
   isVoiceChatModalOpen.value = false
+
+  // 语音匹配挂断时不进行通知
+  // TODO: 处理匹配结果是好友的情况
+  if (matchRes.value.id !== _targetId) {
+    useSendMsg(
+      'text',
+      '结束了语音通话',
+      null,
+      null,
+      null,
+      null,
+      null,
+      _targetId,
+      userInfo,
+      globalSocket,
+      messageList,
+      lastMsgList,
+      lastMsgMap,
+      matchRes,
+      indexMap,
+      unreadMsgCounter,
+      msgContainerRef,
+      _targetId === targetId.value
+    )
+  }
 }
 
 const updateSpeakerLabel = (label: string) => (speakerLabel.value = label)

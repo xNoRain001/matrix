@@ -5,12 +5,25 @@ import useUserStore from './use-user-store'
 
 const useMatchStore = defineStore('matchStore', () => {
   const id = useUserStore().userInfo?.id || ''
+  let _filter = null
+
+  try {
+    _filter = JSON.parse(localStorage.getItem(`filter-${id}`)) || {
+      gender: 'other',
+      age: {
+        min: Number.MAX_SAFE_INTEGER,
+        max: Number.MAX_SAFE_INTEGER
+      },
+      region: null
+    }
+  } catch {}
 
   return {
     matching: ref(false), // 正在匹配中，值为 true 时匹配 modal 会处于打开状态
     offline: ref(false), // 匹配时断网
     hasMatchRes: ref(false), // 最终有匹配结果时值为 true
     noMatch: ref(false), // 暂时没有匹配结果时值为 true
+    filter: ref(_filter),
     matchType: ref(localStorage.getItem(`matchType-${id}`) || ''), // 匹配类型
     matchRes: ref<
       (Omit<userInfo, 'tokenVersion'> & { online: boolean }) | null

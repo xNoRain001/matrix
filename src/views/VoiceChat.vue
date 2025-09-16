@@ -63,5 +63,8 @@ onMounted(async () => {
   timer = useRefreshOnline(globalSocket, 'matchTarget', [targetId.value])
 })
 
-onBeforeUnmount(() => clearTimeout(timer))
+onBeforeUnmount(() => {
+  targetId.value = ''
+  clearTimeout(timer)
+})
 </script>

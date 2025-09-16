@@ -69,7 +69,7 @@
 
   <DefineFilterBodyTemplate>
     <div class="flex items-center">
-      <div class="font-semibold">性别：</div>
+      <div>性别：</div>
       <UButtonGroup class="ml-2">
         <UButton
           @click="onSelectGender('male')"
@@ -95,7 +95,7 @@
       </UButtonGroup>
     </div>
     <div class="mt-4 flex items-center">
-      <div class="font-semibold">年龄：</div>
+      <div>年龄：</div>
       <UButtonGroup class="ml-2">
         <UButton
           @click="onSelectAge(18, 24)"
@@ -128,7 +128,7 @@
       </UButtonGroup>
     </div>
     <div class="mt-4 flex items-center">
-      <div class="font-semibold">地区：</div>
+      <div>地区：</div>
       <div class="ml-2 flex gap-2">
         <USelectMenu
           :color="province ? 'primary' : 'neutral'"
@@ -211,30 +211,27 @@ const list = [
   }
 ]
 const isOpenFilterDrawer = ref(false)
-const { hasMatchRes, offline, matching, noMatch } = storeToRefs(useMatchStore())
+const { hasMatchRes, offline, matching, noMatch, filter } =
+  storeToRefs(useMatchStore())
 const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
 const { roomId } = storeToRefs(useWebRTCStore())
 const toast = useToast()
 const route = useRoute()
 const showCards = computed(() => route.path === '/')
-const selectedGender = ref('other')
-const selectedAge = reactive({
-  min: Number.MAX_SAFE_INTEGER,
-  max: Number.MAX_SAFE_INTEGER
-})
-const isMale = computed(() => selectedGender.value === 'male')
-const isFemale = computed(() => selectedGender.value === 'female')
-const isUndefGener = computed(() => selectedGender.value === 'other')
+const isMale = computed(() => filter.value.gender === 'male')
+const isFemale = computed(() => filter.value.gender === 'female')
+const isUndefGener = computed(() => filter.value.gender === 'other')
 const is18to24 = computed(
-  () => selectedAge.min === 18 && selectedAge.max === 24
+  () => filter.value.age.min === 18 && filter.value.age.max === 24
 )
 const is24to30 = computed(
-  () => selectedAge.min === 24 && selectedAge.max === 30
+  () => filter.value.age.min === 24 && filter.value.age.max === 30
 )
-const is30Plus = computed(() => selectedAge.min === 30)
-const isUndefAge = computed(() => selectedAge.min === Number.MAX_SAFE_INTEGER)
-const selectedRegion = ref(null)
-const isUndefRegion = computed(() => selectedRegion.value === null)
+const is30Plus = computed(() => filter.value.age.min === 30)
+const isUndefAge = computed(
+  () => filter.value.age.min === Number.MAX_SAFE_INTEGER
+)
+const isUndefRegion = computed(() => filter.value.region === null)
 const province = ref(null)
 const city = ref(null)
 const sourceProvinceOptions = Object.keys(provinceCityMap)
@@ -244,6 +241,10 @@ const cityOptions = ref(provinceCityMap[province.value] || [])
 const onUpdateFilter = async () => {
   try {
     isOpenFilterDrawer.value = false
+    localStorage.setItem(
+      `filter-${userInfo.value.id}`,
+      JSON.stringify(filter.value)
+    )
     toast.add({
       title: '修改成功',
       icon: 'lucide:smile'
@@ -264,15 +265,16 @@ const onSelectRegion = () => {
 }
 
 const onSelectAge = (min: number, max?: number) => {
-  selectedAge.min = min
+  const _filter = filter.value
+  _filter.age.min = min
 
   if (max) {
-    selectedAge.max = max
+    _filter.age.max = max
   }
 }
 
 const onSelectGender = gender => {
-  selectedGender.value = gender
+  filter.value.gender = gender
 }
 
 const afterLeave = () => {
@@ -323,13 +325,13 @@ watch(province, v => {
   cityOptions.value = provinceCityMap[v]
   // 切换省份时清空市区
   city.value = null // 赋值为 '' 会引起样式问题
-  selectedRegion.value = v
+  filter.value.region = v
 })
 
 watch(city, v => {
   // 切换省份时清空市区，此时值是空字符串
   if (v) {
-    selectedRegion.value = `${province.value} - ${v}`
+    filter.value.region = `${province.value} - ${v}`
   }
 })
 </script>

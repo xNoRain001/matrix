@@ -37,8 +37,10 @@ import useAddContact from './use-add-contact'
 import useInitLabelAndSeparator from './use-init-label-and-separator'
 import useUUID from './use-uuid'
 import useRefreshOnline from './use-refresh-online'
+import useSendMsg from './use-send-msg'
 
 export {
+  useSendMsg,
   useRefreshOnline,
   useUUID,
   useInitLabelAndSeparator,

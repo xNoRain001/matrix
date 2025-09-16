@@ -101,16 +101,11 @@
 <script lang="ts" setup>
 import {
   useGetMessages,
-  useAddLastMsg,
   useGenRoomId,
   useFormatTimeAgo,
-  useAddMessageRecordToView,
-  useAddMessageRecordToDB,
-  useUpdateLastMsg,
   useGetDB,
   useGenHash,
-  useInitLabelAndSeparator,
-  useUUID
+  useSendMsg
 } from '@/hooks'
 import {
   useMatchStore,
@@ -122,7 +117,6 @@ import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onMounted, ref, computed, watch } from 'vue'
 import type { message } from '@/types'
 import { voiceChatInviteToastPendingTime } from '@/const'
-import { uploadImage } from '@/apis/oss'
 import { useRoute } from 'vue-router'
 
 let first = true
@@ -197,6 +191,28 @@ const onCall = () => {
       icon: 'lucide:annoyed'
     })
   }, voiceChatInviteToastPendingTime)
+  // 发起语音、对方同意、对方拒绝、对方未接通前发起方挂断、接通后任意一方挂断，只有
+  // 这些情况下会在聊天记录中出现
+  useSendMsg(
+    'text',
+    '发起了语音通话',
+    null,
+    null,
+    null,
+    null,
+    null,
+    targetId.value,
+    userInfo,
+    globalSocket,
+    messageList,
+    lastMsgList,
+    lastMsgMap,
+    matchRes,
+    indexMap,
+    unreadMsgCounter,
+    msgContainerRef,
+    true
+  )
 }
 
 const onExpand = () => {
@@ -242,64 +258,29 @@ const onInputChange = async () => {
   const img = new Image()
   img.onload = async () => {
     const { width, height } = img
-    const timestamp = Date.now()
-    const _targetId = targetId.value
     try {
       const hash = await useGenHash(file)
-      const payload: message = {
-        type: 'image',
+      await useSendMsg(
+        'image',
+        null,
         hash,
-        contact: userInfo.value.id,
-        sender: userInfo.value.id,
-        receiver: _targetId,
-        timestamp,
+        file,
         width,
-        height
-      }
-      const _lastMsgMap = lastMsgMap.value
-      const messageRecord = {
-        ...payload,
+        height,
         url,
-        sent: true,
-        contact: _targetId
-      }
-      const label = useInitLabelAndSeparator(
-        messageRecord,
-        _lastMsgMap,
-        _targetId
-      )
-      const indexdbLabel = label ? { ...label } : null
-      // 本地数据库中不需要保存临时的 url
-      const indexdbMessageRecord = { ...messageRecord, url: '' }
-
-      if (label) {
-        label.id = useUUID()
-      }
-
-      messageRecord.id = useUUID()
-      // 为了用户体验，图片优先显示在本地
-      useAddMessageRecordToView(label, messageRecord, messageList)
-      ;(msgContainerRef.value as any).scrollToBottom()
-      const { data } = await uploadImage(file, hash)
-      payload.ossURL = `${import.meta.env.VITE_OSS_BASE_URL}${data}`
-      globalSocket.value.emit('send-msg', JSON.stringify(payload))
-      await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, _targetId)
-      await useAddMessageRecordToDB(
-        userInfo.value.id,
-        indexdbLabel,
-        indexdbMessageRecord
-      )
-      useUpdateLastMsg(
-        userInfo.value.id,
-        indexMap,
+        targetId.value,
+        userInfo,
+        globalSocket,
+        messageList,
         lastMsgList,
-        _lastMsgMap,
-        // messageRecord 被保存到了内存中，因此不能修改它
-        { ...messageRecord, content: '[图片]' },
-        false,
-        true,
-        unreadMsgCounter
+        lastMsgMap,
+        matchRes,
+        indexMap,
+        unreadMsgCounter,
+        msgContainerRef,
+        true
       )
+
       // 如果存在，说明本地中一定有，不用进行处理，不存在，不能说明本地中一定没有，
       // 可能是没有读取或者存储数量达到上限
       const _hashToBlobURLMap = hashToBlobURLMap.value
@@ -358,54 +339,28 @@ const onSendMsg = async () => {
     return
   }
 
-  const timestamp = Date.now()
-  const _targetId = targetId.value
-  const payload: message = {
-    type: 'text',
-    content: _message,
-    contact: userInfo.value.id,
-    sender: userInfo.value.id,
-    receiver: _targetId,
-    timestamp
-  }
-  const _lastMsgMap = lastMsgMap.value
-  const messageRecord = {
-    ...payload,
-    sent: true,
-    contact: _targetId
-  }
-  const label = useInitLabelAndSeparator(messageRecord, _lastMsgMap, _targetId)
-  const indexdbLabel = label ? { ...label } : null
-  const indexdbMessageRecord = { ...messageRecord }
-
-  if (label) {
-    label.id = useUUID()
-  }
-
-  messageRecord.id = useUUID()
-
-  useAddMessageRecordToView(label, messageRecord, messageList)
-  globalSocket.value.emit('send-msg', JSON.stringify(payload))
-
   try {
-    await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, _targetId)
-    await useAddMessageRecordToDB(
-      userInfo.value.id,
-      indexdbLabel,
-      indexdbMessageRecord
-    )
-    useUpdateLastMsg(
-      userInfo.value.id,
-      indexMap,
+    await useSendMsg(
+      'text',
+      _message,
+      null,
+      null,
+      null,
+      null,
+      null,
+      targetId.value,
+      userInfo,
+      globalSocket,
+      messageList,
       lastMsgList,
-      _lastMsgMap,
-      messageRecord,
-      false,
-      true,
-      unreadMsgCounter
+      lastMsgMap,
+      matchRes,
+      indexMap,
+      unreadMsgCounter,
+      msgContainerRef,
+      true
     )
-    ;(msgContainerRef.value as any).scrollToBottom()
-  } catch (error) {
+  } catch {
     toast.add({ title: '发送失败', color: 'error', icon: 'lucide:annoyed' })
   } finally {
     message.value = ''
