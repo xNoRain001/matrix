@@ -338,7 +338,7 @@ const isContacts = computed(() => route.path === '/contacts')
 // 在聊天界面中打开对方空间或匹配到对方显示的空间不需要显示聊天按钮
 const inView = computed(() => {
   const { path } = route
-  return path === '/message' || path === '/chat' || path === '/audio'
+  return path === '/message' || path === '/chat' || path === '/voice-chat'
 })
 const nickname = computed(() =>
   isSelf

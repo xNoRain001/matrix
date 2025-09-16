@@ -536,7 +536,7 @@ const onReceiveMsg = async messageRecord => {
   const _lastMsgMap = lastMsgMap.value
   const { type, contact: id, hash } = messageRecord
   const isImage = type === 'image'
-  const inView = targetId.value === id
+  const inView = targetId.value === id && msgContainerRef.value
   messageRecord.sent = false
   const label = useInitLabelAndSeparator(messageRecord, _lastMsgMap, id)
 
@@ -660,7 +660,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
     const offlineMsgs = grouped[id]
     const offlineMsgsLength = offlineMsgs.length
     // 接收离线消息时可能处于匹配聊天界面中，需要更新视图
-    const inView = targetId.value === id
+    const inView = targetId.value === id && msgContainerRef.value
     const __lastMsgMap: Record<string, { sent: boolean; timestamp: number }> = {
       [id]: (_lastMsgMap[id] as any) || {}
     }
@@ -753,7 +753,7 @@ const acceptWebRTC = (roomId, now, isAccept: boolean) => {
         indexMap,
         unreadMsgCounter,
         msgContainerRef,
-        _targetId === targetId.value
+        _targetId === targetId.value && msgContainerRef.value
       )
     } else {
       socket.emit('refuse-web-rtc', roomId)
@@ -775,7 +775,7 @@ const acceptWebRTC = (roomId, now, isAccept: boolean) => {
         indexMap,
         unreadMsgCounter,
         msgContainerRef,
-        _targetId === targetId.value
+        _targetId === targetId.value && msgContainerRef.value
       )
     }
   } else {

@@ -12,7 +12,6 @@
         v-if="!isMobile"
         class="w-2/5"
         :is-match="true"
-        :select-contact-id="matchRes.id"
       ></ProfileSpace>
       <MessageView v-if="targetId" @close="isOpen = false" :is-match="true" />
     </template>

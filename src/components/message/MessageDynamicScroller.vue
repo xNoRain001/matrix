@@ -104,7 +104,6 @@
     <template #content>
       <ProfileSpace
         v-if="isSpaceSlideoverOpen"
-        :select-contact-id="targetId"
         @close="isSpaceSlideoverOpen = false"
       ></ProfileSpace>
     </template>
@@ -296,7 +295,8 @@ const onClick = e => {
   }
 }
 
-onBeforeUnmount(() =>
-  (msgContainerRef.value as any).$el.removeEventListener('scroll', onScroll)
-)
+onBeforeUnmount(() => {
+  ;(msgContainerRef.value as any).$el.removeEventListener('scroll', onScroll)
+  msgContainerRef.value = null
+})
 </script>

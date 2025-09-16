@@ -244,7 +244,7 @@ const onCancel = () => {
       indexMap,
       unreadMsgCounter,
       msgContainerRef,
-      _targetId === targetId.value
+      _targetId === targetId.value && msgContainerRef.value
     )
   }
 }

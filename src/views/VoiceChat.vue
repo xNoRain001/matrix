@@ -13,7 +13,6 @@
           v-if="!isMobile"
           class="w-2/5"
           :is-match="true"
-          :select-contact-id="matchRes.id"
         ></ProfileSpace>
         <div class="relative flex w-3/5 flex-col">
           <MessageHeader

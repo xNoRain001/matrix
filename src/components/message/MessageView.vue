@@ -387,7 +387,9 @@ const updateTimeAgo = () => {
   const item = lastMsgMap.value[targetId.value]
 
   if (item) {
-    item.timeAgo = useFormatTimeAgo(item.timestamp)
+    if (item.timestamp) {
+      item.timeAgo = useFormatTimeAgo(item.timestamp)
+    }
   }
 }
 
@@ -441,6 +443,7 @@ watch(
 )
 
 onMounted(() => {
+  // 非匹配时打开 message list 组件时会更新 time ago
   if (props.isMatch) {
     updateTimeAgo()
     timer = setInterval(updateTimeAgo, 1000 * 60)

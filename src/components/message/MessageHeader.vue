@@ -2,6 +2,7 @@
   <UDashboardNavbar :toggle="false" :ui="{ root: 'bg-default border-none' }">
     <template #title>
       <UUser
+        @click="toSpace"
         class="absolute left-1/2 -translate-x-1/2"
         :name="targetNickname"
         :avatar="{
@@ -40,7 +41,7 @@
   <UCollapsible v-model:open="open" class="border-default border-b sm:px-2">
     <template #content>
       <div class="p-4">
-        <UAvatarGroup size="3xl">
+        <UAvatarGroup size="3xl" @click="toSpace">
           <UAvatar :alt="userInfo.nickname[0]" />
           <UAvatar :alt="targetNickname[0]" />
         </UAvatarGroup>
@@ -75,6 +76,16 @@
       </div>
     </template>
   </UCollapsible>
+
+  <!-- 移动端匹配或聊天列表点击对方头像进入的空间 -->
+  <USlideover v-model:open="isSpaceSlideoverOpen" title=" " description=" ">
+    <template #content>
+      <ProfileSpace
+        v-if="isSpaceSlideoverOpen"
+        @close="isSpaceSlideoverOpen = false"
+      ></ProfileSpace>
+    </template>
+  </USlideover>
 </template>
 
 <script setup lang="ts">
@@ -93,6 +104,7 @@ const { isMobile, userInfo } = storeToRefs(useUserStore())
 const { targetId, lastMsgMap, contactProfileMap, unreadMsgCounter } =
   storeToRefs(useRecentContactsStore())
 const { matchRes } = storeToRefs(useMatchStore())
+const isSpaceSlideoverOpen = ref(false)
 const route = useRoute()
 const isMessage = computed(() => route.path === '/message')
 const targetNickname = computed(() =>
@@ -130,6 +142,12 @@ const isOnline = computed(() =>
       ? lastMsgMap.value[targetId.value].online
       : contactProfileMap.value[targetId.value].online
 )
+
+const toSpace = () => {
+  if (route.path !== '/contacts' && !(props.isMatch && !isMobile.value)) {
+    isSpaceSlideoverOpen.value = true
+  }
+}
 
 const computeAge = v => {
   if (!v) {
