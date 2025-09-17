@@ -39,9 +39,10 @@ export type messageLabel = {
 
 export type message = {
   id?: string | number
-  type: 'text' | 'label' | 'image'
+  type: 'text' | 'label' | 'image' | 'audio'
   hash?: string
   url?: string
+  duration?: number
   ossURL?: string
   width?: number
   height?: number

@@ -67,7 +67,9 @@
               :height="item.height"
               :src="item.url"
             />
-            <UIcon v-else name="lucide:image-off" class="size-16"></UIcon>
+            <div v-else class="rounded-xl bg-(--ui-bg-muted) px-4 py-2 text-sm">
+              [图片已失效]
+            </div>
             <UAvatar
               v-if="item.separator"
               :alt="userInfo.nickname[0] || ''"
@@ -84,16 +86,60 @@
             />
             <div v-else class="w-10"></div>
             <img
-              v-if="item.url || item.ossURL"
+              v-if="item.url"
               data-type="image"
               class="max-w-3/4"
-              crossorigin="anonymous"
               :width="item.width"
               :height="item.height"
-              :src="item.url || item.ossURL"
-              @load="onLoad($event, item)"
+              :src="item.url"
             />
-            <UIcon v-else name="lucide:image-off" class="size-16"></UIcon>
+            <div v-else class="rounded-xl bg-(--ui-bg-muted) px-4 py-2 text-sm">
+              [图片已失效]
+            </div>
+          </div>
+        </template>
+        <template v-else-if="item.type === 'audio'">
+          <div
+            v-if="item.sent"
+            class="flex items-center justify-end gap-3 pb-1"
+          >
+            <div
+              v-if="item.url"
+              @click="onPlayAudio(item.url)"
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2 text-sm"
+            >
+              {{ item.duration }}''
+              <UIcon name="lucide:audio-lines" class="size-6"></UIcon>
+            </div>
+            <div v-else class="rounded-xl bg-(--ui-bg-muted) px-4 py-2 text-sm">
+              [音频已失效]
+            </div>
+            <UAvatar
+              v-if="item.separator"
+              :alt="userInfo.nickname[0] || ''"
+              size="xl"
+            />
+            <div v-else class="w-10"></div>
+          </div>
+          <div v-else class="flex items-center gap-3 pb-1">
+            <UAvatar
+              data-type="avatar"
+              v-if="item.separator"
+              :alt="targetNickname"
+              size="xl"
+            />
+            <div v-else class="w-10"></div>
+            <div
+              v-if="item.url"
+              @click="onPlayAudio(item.url)"
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2 text-sm"
+            >
+              {{ item.duration }}''
+              <UIcon name="lucide:audio-lines" class="size-6"></UIcon>
+            </div>
+            <div v-else class="rounded-xl bg-(--ui-bg-muted) px-4 py-2 text-sm">
+              [音频已失效]
+            </div>
           </div>
         </template>
       </DynamicScrollerItem>
@@ -114,16 +160,19 @@
     v-model="isViewerModalOpen"
     :url="viewerURL"
   ></ModalViewer>
+  <!-- 音频播放器 -->
+  <audio @ended="onEnded" ref="audioRef" hidden></audio>
 </template>
 
 <script lang="ts" setup>
-import { useGetDB, useGetMessages } from '@/hooks'
+import { useGetMessages } from '@/hooks'
 import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
 import { useThrottleFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
+let playingURL = ''
 const props = defineProps<{
   isMatch: boolean
 }>()
@@ -177,6 +226,24 @@ const filteredItems = computed(() => {
     i.message.toLowerCase().includes(lowerCaseSearch)
   )
 })
+const audioRef = ref(null)
+
+const onEnded = () => (playingURL = '')
+
+const onPlayAudio = url => {
+  const audio = audioRef.value
+
+  if (playingURL === url) {
+    // 未播放完成时点击相同的音频，停止播放
+    playingURL = ''
+    audio.pause()
+    audio.currentTime = 0
+  } else {
+    playingURL = url
+    audio.src = url
+    audio.play()
+  }
+}
 
 const onScroll = useThrottleFn(
   async e => {
@@ -218,60 +285,6 @@ const onUpdate = (
 const formatTimestamp = (timestamp: number) => {
   // TODO: 更久远的记录显示日期甚至年份
   return new Date(timestamp).toLocaleString('zh-CN', dateTimeFormatOptions)
-}
-
-const onLoad = async (e, item) => {
-  const { hash, ossURL, id } = item
-
-  // 没有 ossURL，如果是在线接收图片，说明内存中有该图片或本地数据库中有该图片，
-  // 不是在线接收图片，那一定是查看过往图片时
-  if (!ossURL) {
-    return
-  }
-
-  // 存在 ossURL，如果是在线接收图片，说明本地数据库中没有该图片（内存中一定没有），
-  // 不是在线接收图片，那一定是加载本地数据库中没有的离线图片
-
-  // 因为图片从视图中滚动消失再滚动出现时也会触发 load，没有 ossURL 会被上面拦截，
-  // 存在 ossURL 的图片保存到本地数据库后没有刷新页面或重新打开聊天界面的情况下
-  // ossURL 是存在的，如果不是首次加载，不需要保存在本地数据库中，因此需要拦截，
-  // 通过缓存判断是否已经保存到数据库中了，但如果缓存满了的话依然会触发之后的行为，
-  // 还需要判断本地数据库中是否存在，这里先不处理判断本地数据库中的逻辑
-  const _hashToBlobURLMap = hashToBlobURLMap.value
-
-  if (_hashToBlobURLMap.has(hash)) {
-    return
-  }
-
-  const img = e.target
-  const canvas = document.createElement('canvas')
-  const { width, height } = img
-  canvas.width = width
-  canvas.height = height
-  const ctx = canvas.getContext('2d')
-  ctx?.drawImage(img, 0, 0, width, height)
-  const extname = img.src.split('.').pop()
-  canvas.toBlob(
-    async blob => {
-      const db = await useGetDB(userInfo.value.id)
-      const tx = db.transaction('files', 'readwrite')
-      await tx.objectStore('files').put({ hash, blob })
-      await tx.done
-
-      if (_hashToBlobURLMap.size < 100) {
-        _hashToBlobURLMap.set(hash, URL.createObjectURL(blob))
-      }
-      // 不再需要 ossURL
-      const tx2 = db.transaction('messages', 'readwrite')
-      const record = await tx2.objectStore('messages').get(id)
-      delete record.ossURL
-      await tx2.objectStore('messages').put(record)
-      await tx2.done
-      // 不需要从内存中删除 ossURL，因为图片已经显示，如果替换 url 会重新渲染，
-      // 当刷新或者重新进入聊天界面时会使用基于本地数据库生成的 blob url
-    },
-    `image/${extname === 'jpg' ? 'jpeg' : extname}`
-  )
 }
 
 const onClick = e => {

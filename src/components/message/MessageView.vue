@@ -4,10 +4,42 @@
     <!-- 聊天内容 -->
     <MessageDynamicScroller :is-match="isMatch"></MessageDynamicScroller>
     <!-- 移动端输入框 -->
-    <div class="p-4" v-if="isMobile">
+    <div class="relative p-4" v-if="isMobile">
       <div class="flex items-end gap-2">
-        <UButton variant="ghost" color="neutral" icon="lucide:mic"></UButton>
+        <UButton
+          v-if="!recording && !isRecord"
+          @click="isRecord = !isRecord"
+          variant="ghost"
+          color="neutral"
+          icon="lucide:mic"
+        ></UButton>
+        <UButton
+          v-if="!recording && isRecord"
+          @click="isRecord = !isRecord"
+          variant="ghost"
+          color="neutral"
+          icon="lucide:keyboard"
+        ></UButton>
+        <div
+          v-if="recording"
+          :class="isCancelRecordTipShow ? 'text-error' : ''"
+          class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full text-sm"
+        >
+          {{ isCancelRecordTipShow ? '松手取消' : '松手发送 上移取消' }}
+        </div>
+        <UBadge
+          @touchstart="onTouchstart"
+          @touchend="onTouchend"
+          @touchmove="onTouchmove"
+          v-if="isRecord"
+          class="grow justify-center select-none"
+          size="xl"
+          :icon="recording ? 'lucide:audio-lines' : ''"
+          :label="recording ? '' : '按住说话'"
+        >
+        </UBadge>
         <UTextarea
+          v-if="!recording && !isRecord"
           @keydown.enter.prevent="onSendMsg"
           @focus="onFocus"
           enterkeyhint="send"
@@ -17,8 +49,14 @@
           :maxrows="9"
           autoresize
         />
-        <UButton variant="ghost" color="neutral" icon="lucide:smile"></UButton>
         <UButton
+          v-if="!recording"
+          variant="ghost"
+          color="neutral"
+          icon="lucide:smile"
+        ></UButton>
+        <UButton
+          v-if="!recording"
           variant="ghost"
           color="neutral"
           :icon="expanded ? 'lucide:circle-x' : 'lucide:circle-plus'"
@@ -119,8 +157,14 @@ import type { message } from '@/types'
 import { voiceChatInviteToastPendingTime } from '@/const'
 import { useRoute } from 'vue-router'
 
+let startTime = 0
+let startY = 0
+let recorderTimer = null
 let first = true
 let timer = null
+let chunks = []
+let mediaRecorder = null
+const constraints = { audio: true }
 const props = withDefaults(defineProps<{ isMatch?: boolean }>(), {
   isMatch: false
 })
@@ -151,12 +195,113 @@ const dashboardPanelRef = computed(
   () => (msgContainerRef.value as any)?.$el?.parentNode as HTMLElement
 )
 const route = useRoute()
+const isRecord = ref(false)
+const recording = ref(false)
+const isCancelRecordTipShow = ref(false)
 
 // const onDownload = (url, filename) => {
 //   fetch(url)
 //     .then(res => res.blob())
 //     .then(blob => useExportFile(filename, blob))
 // }
+
+const onSuccess = stream => {
+  mediaRecorder = new MediaRecorder(stream)
+  mediaRecorder.start()
+  mediaRecorder.onstop = async () => {
+    if (isCancelRecordTipShow.value) {
+      isCancelRecordTipShow.value = false
+    } else {
+      const duration = Math.round((Date.now() - startTime) / 1000)
+      const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' })
+      const url = window.URL.createObjectURL(blob)
+      try {
+        const hash = await useGenHash(blob, 'ogg')
+        await useSendMsg(
+          'audio',
+          null,
+          hash,
+          blob,
+          null,
+          null,
+          url,
+          duration,
+          targetId.value,
+          userInfo,
+          globalSocket,
+          messageList,
+          lastMsgList,
+          lastMsgMap,
+          matchRes,
+          indexMap,
+          unreadMsgCounter,
+          msgContainerRef,
+          true
+        )
+        const db = await useGetDB(userInfo.value.id)
+        const tx = db.transaction('files', 'readwrite')
+        // 音频肯定不会重复，因此不需要判断本地数据库中是否存在该 hash
+        await tx.objectStore('files').put({ hash, blob })
+        await tx.done
+      } catch (error) {
+        toast.add({ title: '发送失败', color: 'error', icon: 'lucide:annoyed' })
+      }
+    }
+
+    chunks = []
+    // 关闭麦克风
+    stream.getTracks().forEach(track => track.stop())
+  }
+  mediaRecorder.ondataavailable = ({ data }) => chunks.push(data)
+}
+
+const onError = () => {
+  toast.add({
+    title: '请开启麦克风权限',
+    color: 'error',
+    icon: 'lucide:annoyed'
+  })
+}
+
+const onTouchstart = e => {
+  startY = e.touches[0].clientY
+
+  recorderTimer = setTimeout(() => {
+    recording.value = true
+    startTime = Date.now()
+    navigator.vibrate(200)
+    navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError)
+  }, 200)
+}
+
+const onTouchmove = e => {
+  if (!recording.value) {
+    return
+  }
+
+  if (startY - e.touches[0].clientY > 100) {
+    if (!isCancelRecordTipShow.value) {
+      navigator.vibrate(200)
+    }
+
+    isCancelRecordTipShow.value = true
+  } else {
+    if (isCancelRecordTipShow.value) {
+      navigator.vibrate(200)
+    }
+
+    isCancelRecordTipShow.value = false
+  }
+}
+
+const onTouchend = () => {
+  clearTimeout(recorderTimer)
+
+  if (recording.value) {
+    recording.value = false
+    mediaRecorder.stop()
+  }
+}
 
 const onCall = () => {
   if (roomId.value) {
@@ -196,6 +341,7 @@ const onCall = () => {
   useSendMsg(
     'text',
     '发起了语音通话',
+    null,
     null,
     null,
     null,
@@ -268,6 +414,7 @@ const onInputChange = async () => {
         width,
         height,
         url,
+        null,
         targetId.value,
         userInfo,
         globalSocket,
@@ -343,6 +490,7 @@ const onSendMsg = async () => {
     await useSendMsg(
       'text',
       _message,
+      null,
       null,
       null,
       null,

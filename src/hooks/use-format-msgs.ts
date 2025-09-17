@@ -23,6 +23,12 @@ const useFormatMsgs = async (id, data, hashToBlobURLMap) => {
           _hashToBlobURLMap.set(hash, url)
         }
       } catch {}
+    } else if (type === 'audio') {
+      try {
+        const record = await tx.objectStore('files').get(hash)
+        const url = URL.createObjectURL(record.blob)
+        item.url = url
+      } catch {}
     }
   }
 

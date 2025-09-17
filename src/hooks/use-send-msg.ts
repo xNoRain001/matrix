@@ -15,6 +15,7 @@ const useSendMsg = async (
   width,
   height,
   url,
+  duration,
   targetId,
   userInfo,
   globalSocket,
@@ -28,6 +29,7 @@ const useSendMsg = async (
   inView
 ) => {
   const isText = type === 'text'
+  const isImage = type === 'image'
   const timestamp = Date.now()
   const { id } = userInfo.value
   const common = {
@@ -42,13 +44,20 @@ const useSendMsg = async (
         content: message,
         ...common
       }
-    : {
-        type: 'image',
-        hash,
-        width,
-        height,
-        ...common
-      }
+    : isImage
+      ? {
+          type: 'image',
+          hash,
+          width,
+          height,
+          ...common
+        }
+      : {
+          type: 'audio',
+          hash,
+          duration,
+          ...common
+        }
   const _lastMsgMap = lastMsgMap.value
   const common2 = { sent: true, contact: targetId }
   const messageRecord = isText
@@ -95,7 +104,10 @@ const useSendMsg = async (
     isText
       ? messageRecord
       : // messageRecord 被保存到了内存中，因此不能修改它
-        { ...messageRecord, content: '[图片]' },
+        {
+          ...messageRecord,
+          content: isImage ? '[图片]' : `[语音] ${duration}''`
+        },
     false,
     true,
     unreadMsgCounter

@@ -104,7 +104,7 @@ import {
   useUserStore,
   useWebRTCStore
 } from './store'
-import { computed, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import ModalLogout from './components/modal/ModalLogout.vue'
 import DrawerLogout from './components/drawer/DrawerLogout.vue'
@@ -254,8 +254,8 @@ const router = useRouter()
 const constraints = {
   video: false,
   audio: {
-    echoCancellation: true, // 回声消除
-    noiseSuppression: true, // 降噪
+    echoCancellation: false, // 回声消除
+    noiseSuppression: false, // 降噪
     autoGainControl: true // 自动增益
   }
 }
@@ -535,14 +535,20 @@ const onReceiveMsg = async messageRecord => {
   let url = ''
   const _lastMsgMap = lastMsgMap.value
   const { type, contact: id, hash } = messageRecord
+  const isText = type === 'text'
   const isImage = type === 'image'
+  const isAudio = type === 'audio'
   const inView = targetId.value === id && msgContainerRef.value
   messageRecord.sent = false
   const label = useInitLabelAndSeparator(messageRecord, _lastMsgMap, id)
 
   // 可能会移除 ossURL
   if (isImage) {
-    url = await replaceOSSURLToURL(hash, messageRecord)
+    url = await replaceImageOSSURLToURL(hash, messageRecord)
+  }
+
+  if (isAudio) {
+    url = await replaceAudioOSSURLToURL(hash, messageRecord)
   }
 
   const indexdbLabel = label ? { ...label } : null
@@ -577,7 +583,9 @@ const onReceiveMsg = async messageRecord => {
     indexMap,
     lastMsgList,
     _lastMsgMap,
-    isImage ? { ...messageRecord, content: '[图片]' } : messageRecord,
+    isText
+      ? messageRecord
+      : { ...messageRecord, content: isImage ? '[图片]' : '[语音]' },
     true,
     inView,
     unreadMsgCounter
@@ -625,7 +633,13 @@ const mergeOfflineMsgs = offlineMsgs => {
   return grouped
 }
 
-const replaceOSSURLToURL = async (hash, messageRecord) => {
+const ossURLToBlob = async messageRecord => {
+  const response = await fetch(messageRecord.ossURL)
+  const arrayBuffer = await response.arrayBuffer()
+  return new Blob([arrayBuffer])
+}
+
+const replaceImageOSSURLToURL = async (hash, messageRecord) => {
   let url = ''
   const _hashToBlobURLMap = hashToBlobURLMap.value
   const blobURL = _hashToBlobURLMap.get(hash)
@@ -643,11 +657,29 @@ const replaceOSSURLToURL = async (hash, messageRecord) => {
       if (_hashToBlobURLMap.size < 100) {
         _hashToBlobURLMap.set(hash, url)
       }
+    } else {
+      const blob = await ossURLToBlob(messageRecord)
+      await tx.objectStore('files').put({ hash, blob })
+      delete messageRecord.ossURL
+      url = URL.createObjectURL(blob)
+      if (_hashToBlobURLMap.size < 100) {
+        _hashToBlobURLMap.set(hash, url)
+      }
     }
     await tx.done
   }
 
   return url
+}
+
+const replaceAudioOSSURLToURL = async (hash, messageRecord) => {
+  const blob = await ossURLToBlob(messageRecord)
+  const db = await useGetDB(userInfo.value.id)
+  const tx = db.transaction('files', 'readwrite')
+  await tx.objectStore('files').put({ hash, blob })
+  await tx.done
+  delete messageRecord.ossURL
+  return URL.createObjectURL(blob)
 }
 
 const onReceiveOfflineMsgs = async offlineMsgs => {
@@ -670,11 +702,16 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
       const messageRecord = offlineMsgs[i]
       const { type, hash } = messageRecord
       const isImage = type === 'image'
+      const isAudio = type === 'audio'
       messageRecord.sent = false
       const label = useInitLabelAndSeparator(messageRecord, _lastMsgMap, id)
 
       if (isImage) {
-        url = await replaceOSSURLToURL(hash, messageRecord)
+        url = await replaceImageOSSURLToURL(hash, messageRecord)
+      }
+
+      if (isAudio) {
+        url = await replaceAudioOSSURLToURL(hash, messageRecord)
       }
 
       const indexdbLabel = { ...label }
@@ -710,6 +747,9 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
     }
 
     const lastMsg = offlineMsgs[offlineMsgsLength - 1]
+    const { type, duration } = lastMsg
+    const isText = type === 'text'
+    const isImage = type === 'image'
 
     await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, id)
     await useUpdateLastMsg(
@@ -717,7 +757,9 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
       indexMap,
       lastMsgList,
       _lastMsgMap,
-      lastMsg.type === 'image' ? { ...lastMsg, content: '[图片]' } : lastMsg,
+      isText
+        ? lastMsg
+        : { ...lastMsg, content: isImage ? '[图片]' : `[语音] ${duration}''` },
       true,
       inView,
       unreadMsgCounter,
@@ -743,6 +785,7 @@ const acceptWebRTC = (roomId, now, isAccept: boolean) => {
         null,
         null,
         null,
+        null,
         _targetId,
         userInfo,
         globalSocket,
@@ -760,6 +803,7 @@ const acceptWebRTC = (roomId, now, isAccept: boolean) => {
       useSendMsg(
         'text',
         '拒绝了语音通话',
+        null,
         null,
         null,
         null,
@@ -1038,30 +1082,32 @@ const initLastMsgs = async () => {
   unreadMsgCounter.value = _unreadMsgCounter
 }
 
-watch(
-  id,
-  async id => {
-    if (id) {
-      // 先获取本地数据库中的数据
-      await initLastMsgs()
-      // 拉取离线数据后，更新本地数据库中的数据和内存中的数据
-      initWebRTC(id)
-    } else {
-      // 未登录或者登出
-      const socket = globalSocket.value
-      const pc = globalPC.value
+onMounted(() => {
+  watch(
+    id,
+    async id => {
+      if (id) {
+        // 先获取本地数据库中的数据
+        await initLastMsgs()
+        // 拉取离线数据后，更新本地数据库中的数据和内存中的数据
+        initWebRTC(id)
+      } else {
+        // 未登录或者登出
+        const socket = globalSocket.value
+        const pc = globalPC.value
 
-      if (pc) {
-        pc.close()
-        globalPC.value = null
+        if (pc) {
+          pc.close()
+          globalPC.value = null
+        }
+
+        socket && socket.disconnect()
+        globalSocket.value = null
       }
-
-      socket && socket.disconnect()
-      globalSocket.value = null
-    }
-  },
-  { immediate: true }
-)
+    },
+    { immediate: true }
+  )
+})
 </script>
 
 <style>
