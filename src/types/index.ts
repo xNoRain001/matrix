@@ -53,6 +53,8 @@ export type message = {
   contact: string
   timestamp: number
   separator?: boolean
+  error?: boolean
+  resendArgs?: any[]
 }
 
 export type user = {

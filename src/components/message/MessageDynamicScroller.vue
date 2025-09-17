@@ -28,6 +28,13 @@
             v-if="item.sent"
             class="flex items-center justify-end gap-3 pb-1"
           >
+            <UButton
+              v-if="item.error"
+              @click="onResendMsg(item)"
+              icon="lucide:circle-alert"
+              variant="ghost"
+              color="error"
+            ></UButton>
             <div
               class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2 break-words whitespace-pre-wrap"
             >
@@ -60,6 +67,13 @@
             v-if="item.sent"
             class="flex items-center justify-end gap-3 pb-1"
           >
+            <UButton
+              v-if="item.error"
+              @click="onResendMsg(item)"
+              icon="lucide:circle-alert"
+              variant="ghost"
+              color="error"
+            ></UButton>
             <img
               v-if="item.url"
               class="max-w-3/4"
@@ -103,6 +117,13 @@
             v-if="item.sent"
             class="flex items-center justify-end gap-3 pb-1"
           >
+            <UButton
+              v-if="item.error"
+              @click="onResendMsg(item)"
+              icon="lucide:circle-alert"
+              variant="ghost"
+              color="error"
+            ></UButton>
             <div
               v-if="item.url"
               @click="onPlayAudio(item.url)"
@@ -166,6 +187,7 @@
 
 <script lang="ts" setup>
 import { useGetMessages } from '@/hooks'
+import { sendMsg } from '@/hooks/use-send-msg'
 import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
 import { useThrottleFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
@@ -227,6 +249,20 @@ const filteredItems = computed(() => {
   )
 })
 const audioRef = ref(null)
+const toast = useToast()
+
+const onResendMsg = messageRecord => {
+  if (!messageRecord.resendArgs) {
+    toast.add({
+      title: '发送失败，数据已过期',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+  } else {
+    // @ts-ignore
+    sendMsg(...messageRecord.resendArgs, true)
+  }
+}
 
 const onEnded = () => (playingURL = '')
 

@@ -7,31 +7,23 @@ import useAddMessageRecordToDB from './use-add-message-record-to-db'
 import useUpdateLastMsg from './use-update-last-msg'
 import type { message } from '@/types'
 
-const useSendMsg = async (
-  type,
+const addMsgToView = (
+  isText,
+  isImage,
+  id,
   message,
   hash,
-  file,
   width,
   height,
   url,
   duration,
   targetId,
-  userInfo,
-  globalSocket,
   messageList,
-  lastMsgList,
-  lastMsgMap,
-  matchRes,
-  indexMap,
-  unreadMsgCounter,
+  _lastMsgMap,
   msgContainerRef,
   inView
 ) => {
-  const isText = type === 'text'
-  const isImage = type === 'image'
   const timestamp = Date.now()
-  const { id } = userInfo.value
   const common = {
     contact: id,
     sender: id,
@@ -58,7 +50,6 @@ const useSendMsg = async (
           duration,
           ...common
         }
-  const _lastMsgMap = lastMsgMap.value
   const common2 = { sent: true, contact: targetId }
   const messageRecord = isText
     ? {
@@ -88,12 +79,24 @@ const useSendMsg = async (
     ;(msgContainerRef.value as any).scrollToBottom()
   }
 
-  if (!isText) {
-    const { data } = await uploadImage(file, hash)
-    payload.ossURL = `${import.meta.env.VITE_OSS_BASE_URL}${data}`
-  }
+  return [indexdbLabel, indexdbMessageRecord, payload, messageRecord]
+}
 
-  globalSocket.value.emit('send-msg', JSON.stringify(payload))
+export const addMsgToDB = async (
+  id,
+  indexdbLabel,
+  indexdbMessageRecord,
+  isText,
+  isImage,
+  messageRecord,
+  _lastMsgMap,
+  duration,
+  targetId,
+  lastMsgList,
+  matchRes,
+  indexMap,
+  unreadMsgCounter
+) => {
   await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
   await useAddMessageRecordToDB(id, indexdbLabel, indexdbMessageRecord)
   useUpdateLastMsg(
@@ -112,6 +115,129 @@ const useSendMsg = async (
     true,
     unreadMsgCounter
   )
+}
+
+export const sendMsg = async (
+  file,
+  hash,
+  payload,
+  isText,
+  indexdbMessageRecord,
+  messageRecord,
+  _lastMsgMap,
+  globalSocket,
+  resend = false
+) => {
+  if (!isText) {
+    try {
+      const { data } = await uploadImage(file, hash)
+      payload.ossURL = `${import.meta.env.VITE_OSS_BASE_URL}${data}`
+
+      if (resend) {
+        // 修改为当前时间
+        payload.timestamp = Date.now()
+        delete messageRecord.resendArgs
+        delete messageRecord.error
+        // 如果发送失败的状态保存在 db 中，这里还需要修改 db 中的 error
+      }
+    } catch {
+      // 重新发送时需要这些信息，重新发送时发送失败不需要重复添加这些信息
+      if (!resend) {
+        messageRecord.resendArgs = [
+          file,
+          hash,
+          payload,
+          isText,
+          indexdbMessageRecord,
+          messageRecord,
+          _lastMsgMap,
+          globalSocket
+        ]
+        messageRecord.error = true
+        // 发送失败的状态可以保存在 db 中，但是刷新后 resendArgs 就消失了，无法重新
+        // 发送，这里不保存，刷新后发送失败的消息不会出现失败提示
+        // indexdbMessageRecord.error = true
+      }
+
+      throw Error()
+    }
+  }
+
+  globalSocket.value.emit('send-msg', JSON.stringify(payload))
+}
+
+const useSendMsg = async (
+  type,
+  message,
+  hash,
+  file,
+  width,
+  height,
+  url,
+  duration,
+  targetId,
+  userInfo,
+  globalSocket,
+  messageList,
+  lastMsgList,
+  lastMsgMap,
+  matchRes,
+  indexMap,
+  unreadMsgCounter,
+  msgContainerRef,
+  inView
+) => {
+  const isText = type === 'text'
+  const isImage = type === 'image'
+  const { id } = userInfo.value
+  const _lastMsgMap = lastMsgMap.value
+  const [indexdbLabel, indexdbMessageRecord, payload, messageRecord] =
+    addMsgToView(
+      isText,
+      isImage,
+      id,
+      message,
+      hash,
+      width,
+      height,
+      url,
+      duration,
+      targetId,
+      messageList,
+      _lastMsgMap,
+      msgContainerRef,
+      inView
+    )
+  try {
+    await sendMsg(
+      file,
+      hash,
+      payload,
+      isText,
+      indexdbMessageRecord,
+      messageRecord,
+      _lastMsgMap,
+      globalSocket
+    )
+  } catch {
+    // 发送失败也保存到本地
+    await addMsgToDB(
+      id,
+      indexdbLabel,
+      indexdbMessageRecord,
+      isText,
+      isImage,
+      messageRecord,
+      _lastMsgMap,
+      duration,
+      targetId,
+      lastMsgList,
+      matchRes,
+      indexMap,
+      unreadMsgCounter
+    )
+    throw Error()
+  }
 }
 
 export default useSendMsg

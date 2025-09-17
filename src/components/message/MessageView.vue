@@ -243,7 +243,7 @@ const onSuccess = stream => {
         // 音频肯定不会重复，因此不需要判断本地数据库中是否存在该 hash
         await tx.objectStore('files').put({ hash, blob })
         await tx.done
-      } catch (error) {
+      } catch {
         toast.add({ title: '发送失败', color: 'error', icon: 'lucide:annoyed' })
       }
     }
@@ -444,7 +444,7 @@ const onInputChange = async () => {
           _hashToBlobURLMap.set(hash, url)
         }
       }
-    } catch (error) {
+    } catch {
       toast.add({ title: '发送失败', color: 'error', icon: 'lucide:annoyed' })
     } finally {
       input.value = ''
