@@ -1,30 +1,22 @@
 <template>
-  <UModal
-    :dismissible="false"
-    v-model:open="showOfflineModal"
-    title="网络错误"
-    description=" "
-    :ui="{ close: 'hidden' }"
-  >
+  <UModal :dismissible="false" title="网络错误" description=" " :close="false">
     <template #body>
       <UButton
         color="error"
         label="重新连接"
-        :loading="loading"
+        :loading="reconnecting"
         loading-icon="i-lucide-loader"
-        @click="onClick"
+        @click="onReconnect(emit)"
       ></UButton>
     </template>
   </UModal>
 </template>
 
 <script lang="ts" setup>
-import type { Ref } from 'vue'
-
 defineProps<{
-  loading: boolean
-  onClick: () => void
+  reconnecting: boolean
+  onReconnect: (emit) => void
 }>()
 
-const showOfflineModal = defineModel() as Ref<boolean>
+const emit = defineEmits<{ close: [boolean] }>()
 </script>

@@ -17,12 +17,11 @@
 <script lang="ts" setup>
 import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import type { Ref } from 'vue'
 
 defineProps<{
   url: string
 }>()
 
 const { isMobile } = storeToRefs(useUserStore())
-const isViewerModalOpen = defineModel() as Ref<boolean>
+const isViewerModalOpen = defineModel<boolean>()
 </script>

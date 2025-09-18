@@ -66,6 +66,8 @@
         <IndexFooter v-if="isMobile"></IndexFooter>
       </UDashboardGroup>
 
+      <!-- 需要提前获取到断网重连时 icon，否则断网时，icon 加载不出来 -->
+      <UIcon hidden name="i-lucide-loader"></UIcon>
       <!-- 语音聊天 -->
       <UModal
         fullscreen
@@ -130,6 +132,7 @@ import {
 import { useRouter } from 'vue-router'
 import { voiceChatInviteToastExpireTime } from './const'
 import type { lastMsg, lastMsgMap } from './types'
+import ModalOffline from './components/modal/ModalOffline.vue'
 
 let voiceChatInviteToastId = null
 let matchTimer = null
@@ -138,10 +141,15 @@ let polite = true
 let makingOffer = false
 let beepTimer = null
 let playBeep = true
+let firstConnectionSuccess = false
+let reconnectionAttempts = 0
+let isOfflineModalOpen = false
+const maxReconnectionAttempts = 1
 const toast = useToast()
 const overlay = useOverlay()
 const logoutModal = overlay.create(ModalLogout)
 const logoutDrawer = overlay.create(DrawerLogout)
+const offlineModal = overlay.create(ModalOffline)
 const { notifications, isMobile, globalSocket, globalPC, userInfo, config } =
   storeToRefs(useUserStore())
 const {
@@ -283,6 +291,14 @@ const rtcConfiguration: RTCConfiguration = {
   bundlePolicy: 'max-bundle', // 可选: 'balanced' | 'max-compat' | 'max-bundle'
   rtcpMuxPolicy: 'require', // 可选: 'require'
   iceCandidatePoolSize: 0 // 可选: 0~N，通常为0
+}
+
+const onReconnect = emit => {
+  offlineModal.patch({
+    reconnecting: true
+  })
+  const socket = createSocket(id.value, emit)
+  initSocket(socket)
 }
 
 const createPeerConnection = (
@@ -438,6 +454,23 @@ const initLocalMediaStream = async () => {
     console.error(err)
     console.log('未获取到用户设备')
     isMicOpen.value = false
+  }
+}
+
+const onConnect = emit => {
+  if (!firstConnectionSuccess) {
+    firstConnectionSuccess = true
+  }
+
+  reconnectionAttempts = 0
+
+  // 在模态框内成功连接
+  if (isOfflineModalOpen) {
+    offlineModal.patch({
+      reconnecting: false
+    })
+    isOfflineModalOpen = false
+    emit('close', false)
   }
 }
 
@@ -891,6 +924,55 @@ const onDisconnect = () => {
   }
 }
 
+const onConnectError = () => {
+  reconnectionAttempts++
+
+  if (isOfflineModalOpen) {
+    // 模态框打开时，首次连接可能失败，失败后会再进行重试，
+    // 因此 reconnectionAttempts 的最大值为 maxReconnectionAttempts + 1
+    if (
+      reconnectionAttempts ===
+      (firstConnectionSuccess
+        ? maxReconnectionAttempts
+        : maxReconnectionAttempts + 1)
+    ) {
+      toast.add({
+        title: '重连失败，请检查网络后重试',
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
+      // 在断网模态框中的重连失败，取消 loading 状态，让用户再次点击
+
+      offlineModal.patch({
+        reconnecting: false
+      })
+      firstConnectionSuccess = false
+      // 同时需要重置尝试次数
+      reconnectionAttempts = 0
+    }
+  } else if (
+    reconnectionAttempts ===
+    (firstConnectionSuccess
+      ? maxReconnectionAttempts
+      : maxReconnectionAttempts + 1)
+  ) {
+    // 首次连接可能失败，如果失败，
+    // reconnectionAttempts 的最大值为 maxReconnectionAttempts + 1
+    // 如果成功连接后断开，重连时 reconnectionAttempts 的最大值为
+    // maxReconnectionAttempts
+
+    // 当模态框未打开时，重试次数满了就打开模态框
+    isOfflineModalOpen = true
+    // 同时需要重置尝试次数
+    reconnectionAttempts = 0
+    firstConnectionSuccess = false
+    offlineModal.open({
+      reconnecting: false,
+      onReconnect
+    })
+  }
+}
+
 const onMatched = async data => {
   const { status, matchType: _matchType, matchRes: _matchRes } = data
 
@@ -1000,23 +1082,27 @@ const onOnline = (type, res) => {
   }
 }
 
-const createSocket = id => {
+const createSocket = (id, emit = null) => {
   const socket = (globalSocket.value = io(
     import.meta.env.VITE_SOCKET_BASE_URL,
     {
-      // reconnectionAttempts: maxReconnectionAttempts,
+      reconnectionAttempts: maxReconnectionAttempts,
       auth: {
         id
       }
     }
   ))
+  // 连接成功
+  socket.on('connect', () => onConnect(emit))
+  // 断开连接
+  socket.on('disconnect', onDisconnect)
+  // 连接成功后，断开连接，不会触发，只会在最开始建立连接失败时或者重连失败时触发
+  socket.on('connect_error', onConnectError)
 
   return socket
 }
 
 const initSocket = socket => {
-  // 建立连接
-  socket.on('connect', () => {})
   // 成功加入房间
   socket.on('joined', onJoined)
   // 对方成功加入房间
@@ -1048,8 +1134,6 @@ const initSocket = socket => {
   // 邀请对方进行 web rtc，对方同意了，但是在你之前，对方刚刚同意了别人的请求，已经
   // 进入别人的房间了
   socket.on('other-web-rtc', onOtherWebRTC)
-  // 断开连接
-  socket.on('disconnect', onDisconnect)
   // 匹配成功
   socket.on('matched', onMatched)
   // 对方结束了 web rtc

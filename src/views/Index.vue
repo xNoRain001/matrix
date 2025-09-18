@@ -178,12 +178,14 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMatchStore, useUserStore, useWebRTCStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { createReusableTemplate } from '@vueuse/core'
 import { provinceCityMap } from '@/const'
+import ModalLogout from '@/components/modal/ModalLogout.vue'
+import ModalOffline from '@/components/modal/ModalOffline.vue'
 
 let matchType = ''
 const [DefineFilterBodyTemplate, ReuseFilterBodyTemplate] =
@@ -299,6 +301,7 @@ const startMatch = () => {
 
 // 当匹配时断网会出现重新匹配按钮，点击执行这个函数
 const rematch = () => {
+  noMatch.value = false
   offline.value = false
   hasMatchRes.value = false
   startMatch()
