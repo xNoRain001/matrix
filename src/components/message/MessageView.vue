@@ -157,6 +157,7 @@ import type { message } from '@/types'
 import { voiceChatInviteToastPendingTime } from '@/const'
 import { useRoute } from 'vue-router'
 
+let receivingOfflineMsgsTimer = null
 let startTime = 0
 let startY = 0
 let recorderTimer = null
@@ -181,7 +182,8 @@ const {
   hashToBlobURLMap,
   lastFetchedId,
   skipUnshiftMessageRecord,
-  indexMap
+  indexMap,
+  isReceivingOfflineMsgs
 } = storeToRefs(useRecentContactsStore())
 const { isVoiceChatModalOpen, roomId, leaveRoomTimer, isVoiceChatMatch } =
   storeToRefs(useWebRTCStore())
@@ -198,6 +200,7 @@ const route = useRoute()
 const isRecord = ref(false)
 const recording = ref(false)
 const isCancelRecordTipShow = ref(false)
+const isContacts = computed(() => route.path === '/contacts')
 
 // const onDownload = (url, filename) => {
 //   fetch(url)
@@ -269,7 +272,7 @@ const onTouchstart = e => {
   recorderTimer = setTimeout(() => {
     recording.value = true
     startTime = Date.now()
-    navigator.vibrate(200)
+    navigator.vibrate && navigator.vibrate(200)
     navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError)
   }, 200)
 }
@@ -281,13 +284,13 @@ const onTouchmove = e => {
 
   if (startY - e.touches[0].clientY > 100) {
     if (!isCancelRecordTipShow.value) {
-      navigator.vibrate(200)
+      navigator.vibrate && navigator.vibrate(200)
     }
 
     isCancelRecordTipShow.value = true
   } else {
     if (isCancelRecordTipShow.value) {
-      navigator.vibrate(200)
+      navigator.vibrate && navigator.vibrate(200)
     }
 
     isCancelRecordTipShow.value = false
@@ -541,58 +544,80 @@ const updateTimeAgo = () => {
   }
 }
 
-// 由于组件上有基于 props.targetId 的 v-if，因此重置逻辑不能写在 watch 里，targetId
-// 值被重置为 '' 时不会执行回调
-watch(
-  targetId,
-  async v => {
-    if (v) {
-      // PC 端可能不关闭聊天界面点击其他用户列表的情况，如果不先重置 messageList 会
-      // 造成切换后滚动条不一定在底部的问题，通过清空聊天记录，将设置 scrollTop 恢复
-      // 为 0
-      messageList.value = []
+const resetUnreadMsgs = async targetId => {
+  const item = lastMsgMap.value[targetId]
+  // 如果当前打开的是非消息列表中对象的聊天界面，item 值为 undefined
+  const unreadMsgs = item?.unreadMsgs
 
-      // scrollTop 为 0 时，会触发拉取消息的行为，需要跳过，当组件未销毁时切换
-      // targetId 会执行里面的逻辑
-      if (!first) {
-        skipUnshiftMessageRecord.value = true
+  if (item && unreadMsgs) {
+    unreadMsgCounter.value -= unreadMsgs
+    item.unreadMsgs = 0
+    const db = await useGetDB(userInfo.value.id)
+    await db.put('lastMessages', JSON.parse(JSON.stringify(item)))
+  }
+}
+
+const initMessages = async () => {
+  const _targetId = targetId.value
+  await useGetMessages(
+    userInfo.value.id,
+    hashToBlobURLMap,
+    messageList,
+    lastFetchedId,
+    _targetId
+  )
+  ;(msgContainerRef.value as any).scrollToBottom()
+  resetUnreadMsgs(_targetId)
+}
+
+const initMessagesInMatch = async () => {
+  if (!isReceivingOfflineMsgs.value) {
+    initMessages()
+  } else {
+    receivingOfflineMsgsTimer = setInterval(async () => {
+      if (!isReceivingOfflineMsgs.value) {
+        clearInterval(receivingOfflineMsgsTimer)
+        initMessages()
       }
+    }, 1000)
+  }
+}
 
-      if (first) {
-        first = false
-      }
+props.isMatch
+  ? initMessagesInMatch()
+  : watch(
+      targetId,
+      async v => {
+        if (v) {
+          // PC 端可能不关闭聊天界面点击其他用户列表的情况，如果不先重置 messageList 会
+          // 造成切换后滚动条不一定在底部的问题，通过清空聊天记录，将 scrollTop 恢复
+          // 为 0
+          messageList.value = []
 
-      // PC 端可能存在不关闭聊天界面点击其他用户列表的情况，组件不会销毁，此时需要重置
-      // lastFetchedId，这里就不加 isMobile 判断了
-      lastFetchedId.value = Infinity
-      await useGetMessages(
-        userInfo.value.id,
-        hashToBlobURLMap,
-        messageList,
-        lastFetchedId,
-        v
-      )
-      ;(msgContainerRef.value as any).scrollToBottom()
-      // 需要重置为 false，恢复拉取消息
-      skipUnshiftMessageRecord.value = false
+          // scrollTop 为 0 时，会触发拉取消息的行为，需要跳过，当组件未销毁时切换
+          // targetId 会执行里面的逻辑
+          if (!first) {
+            skipUnshiftMessageRecord.value = true
+          }
 
-      const item = lastMsgMap.value[v]
-      const unreadMsgs = item?.unreadMsgs
+          if (first) {
+            first = false
+          }
 
-      if (item && unreadMsgs) {
-        unreadMsgCounter.value -= unreadMsgs
-        item.unreadMsgs = 0
-        const db = await useGetDB(userInfo.value.id)
-        await db.put('lastMessages', JSON.parse(JSON.stringify(item)))
-      }
-    }
-  },
-  { immediate: true }
-)
+          // PC 端可能存在不关闭聊天界面点击其他用户列表的情况，组件不会销毁，此时需要重置
+          // lastFetchedId，这里就不加 isMobile 判断了
+          lastFetchedId.value = Infinity
+          initMessages()
+          // 需要重置为 false，恢复拉取消息
+          skipUnshiftMessageRecord.value = false
+        }
+      },
+      { immediate: true }
+    )
 
 onMounted(() => {
-  // 非匹配时打开 message list 组件时会更新 time ago
-  if (props.isMatch) {
+  // message list 组件会更新 time ago，不需要处理该页面的聊天界面的 time ago
+  if (props.isMatch || isContacts.value) {
     updateTimeAgo()
     timer = setInterval(updateTimeAgo, 1000 * 60)
   }
@@ -601,11 +626,17 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  clearInterval(timer)
   removeVisualViewportListeners()
+
+  if (props.isMatch) {
+    clearInterval(timer)
+  }
+
   // 组件销毁时重置相关值，这样其它地方就不用处理了，处于 contacts 下的聊天界面关闭
-  // 时不重置 targetId，否则会造成空间也被关闭，在空间关闭时重置 targetId
-  if (route.path !== '/contacts') {
+  // 时不重置 targetId，否则会造成空间也被关闭，在空间关闭时重置 targetId，由于组件
+  // 上有基于 props.targetId 的 v-if，因此重置逻辑不能写在 watch 里，targetId
+  // 值被重置为 '' 时不会执行回调
+  if (!isContacts.value) {
     targetId.value = ''
   }
 

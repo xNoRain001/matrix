@@ -104,7 +104,7 @@ import {
   useUserStore,
   useWebRTCStore
 } from './store'
-import { computed, onMounted, watch } from 'vue'
+import { computed, watch } from 'vue'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import ModalLogout from './components/modal/ModalLogout.vue'
 import DrawerLogout from './components/drawer/DrawerLogout.vue'
@@ -167,7 +167,8 @@ const {
   contactList,
   contactProfileMap,
   hashToBlobURLMap,
-  indexMap
+  indexMap,
+  isReceivingOfflineMsgs
 } = storeToRefs(useRecentContactsStore())
 const { matchRes, matchType, hasMatchRes, offline, matching, noMatch } =
   storeToRefs(useMatchStore())
@@ -254,8 +255,8 @@ const router = useRouter()
 const constraints = {
   video: false,
   audio: {
-    echoCancellation: false, // 回声消除
-    noiseSuppression: false, // 降噪
+    echoCancellation: true, // 回声消除
+    noiseSuppression: true, // 降噪
     autoGainControl: true // 自动增益
   }
 }
@@ -659,6 +660,8 @@ const replaceImageOSSURLToURL = async (hash, messageRecord) => {
       }
     } else {
       const blob = await ossURLToBlob(messageRecord)
+      // tx 可能已经关闭，需要重新打开
+      const tx = db.transaction('files', 'readwrite')
       await tx.objectStore('files').put({ hash, blob })
       delete messageRecord.ossURL
       url = URL.createObjectURL(blob)
@@ -683,6 +686,11 @@ const replaceAudioOSSURLToURL = async (hash, messageRecord) => {
 }
 
 const onReceiveOfflineMsgs = async offlineMsgs => {
+  if (!offlineMsgs.length) {
+    isReceivingOfflineMsgs.value = false
+    return
+  }
+
   const grouped = mergeOfflineMsgs(offlineMsgs)
   const contacts = Object.keys(grouped)
   const _lastMsgMap = lastMsgMap.value
@@ -708,9 +716,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
 
       if (isImage) {
         url = await replaceImageOSSURLToURL(hash, messageRecord)
-      }
-
-      if (isAudio) {
+      } else if (isAudio) {
         url = await replaceAudioOSSURLToURL(hash, messageRecord)
       }
 
@@ -727,23 +733,14 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
       }
 
       messageRecord.id = useUUID()
-
       __lastMsgMap[id].sent = false
       __lastMsgMap[id].timestamp = messageRecord.timestamp
-
-      if (inView) {
-        useAddMessageRecordToView(label, messageRecord, messageList)
-      }
 
       await useAddMessageRecordToDB(
         userInfo.value.id,
         indexdbLabel,
         indexdbMessageRecord
       )
-    }
-
-    if (inView) {
-      ;(msgContainerRef.value as any).scrollToBottom()
     }
 
     const lastMsg = offlineMsgs[offlineMsgsLength - 1]
@@ -766,6 +763,10 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
       true,
       offlineMsgsLength
     )
+
+    if (i === l - 1) {
+      isReceivingOfflineMsgs.value = false
+    }
   }
 }
 
@@ -999,7 +1000,7 @@ const onOnline = (type, res) => {
   }
 }
 
-const initWebRTC = id => {
+const createSocket = id => {
   const socket = (globalSocket.value = io(
     import.meta.env.VITE_SOCKET_BASE_URL,
     {
@@ -1010,6 +1011,10 @@ const initWebRTC = id => {
     }
   ))
 
+  return socket
+}
+
+const initSocket = socket => {
   // 建立连接
   socket.on('connect', () => {})
   // 成功加入房间
@@ -1055,6 +1060,7 @@ const initWebRTC = id => {
   socket.on('refresh-notifications', onRefreshNotifications)
   // 在线状态
   socket.on('online', onOnline)
+  socket.emit('ready')
 }
 
 const initLastMsgs = async () => {
@@ -1082,32 +1088,32 @@ const initLastMsgs = async () => {
   unreadMsgCounter.value = _unreadMsgCounter
 }
 
-onMounted(() => {
-  watch(
-    id,
-    async id => {
-      if (id) {
-        // 先获取本地数据库中的数据
-        await initLastMsgs()
-        // 拉取离线数据后，更新本地数据库中的数据和内存中的数据
-        initWebRTC(id)
-      } else {
-        // 未登录或者登出
-        const socket = globalSocket.value
-        const pc = globalPC.value
+watch(
+  id,
+  async id => {
+    if (id) {
+      // 优先创建 socket
+      const socket = createSocket(id)
+      // 先获取本地数据库中的数据
+      await initLastMsgs()
+      // 拉取离线数据后，更新本地数据库中的数据和内存中的数据
+      initSocket(socket)
+    } else {
+      // 未登录或者登出
+      const socket = globalSocket.value
+      const pc = globalPC.value
 
-        if (pc) {
-          pc.close()
-          globalPC.value = null
-        }
-
-        socket && socket.disconnect()
-        globalSocket.value = null
+      if (pc) {
+        pc.close()
+        globalPC.value = null
       }
-    },
-    { immediate: true }
-  )
-})
+
+      socket && socket.disconnect()
+      globalSocket.value = null
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <style>

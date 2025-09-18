@@ -220,6 +220,8 @@ const useSendMsg = async (
       globalSocket
     )
   } catch {
+    throw Error()
+  } finally {
     // 发送失败也保存到本地
     await addMsgToDB(
       id,
@@ -236,7 +238,6 @@ const useSendMsg = async (
       indexMap,
       unreadMsgCounter
     )
-    throw Error()
   }
 }
 

@@ -3,9 +3,12 @@ const useRefreshOnline = (globalSocket, type, ids) => {
 
   socket.emit('online', type, ids)
 
-  const timer = setTimeout(() => {
-    socket.emit('online', type, ids)
-  }, 2000)
+  const timer = setInterval(
+    () => {
+      socket.emit('online', type, ids)
+    },
+    2 * 60 * 1000
+  )
 
   return timer
 }

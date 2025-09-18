@@ -9,7 +9,7 @@
     }"
   >
     <template #body>
-      <img :class="isMobile ? 'w-full' : 'h-full'" src="" />
+      <img :class="isMobile ? 'w-full' : 'h-full'" :src="url" />
     </template>
   </UModal>
 </template>

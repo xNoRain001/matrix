@@ -38,8 +38,9 @@ onMounted(async () => {
   if (!isOpen.value) {
     return router.replace('/')
   }
+
   timer = useRefreshOnline(globalSocket, 'matchTarget', [targetId.value])
 })
 
-onBeforeUnmount(() => clearTimeout(timer))
+onBeforeUnmount(() => clearInterval(timer))
 </script>

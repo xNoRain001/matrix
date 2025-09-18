@@ -130,6 +130,6 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   targetId.value = ''
-  clearTimeout(timer)
+  clearInterval(timer)
 })
 </script>

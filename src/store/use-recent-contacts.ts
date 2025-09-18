@@ -45,6 +45,7 @@ const useRecentContactsStore = defineStore('recentContactsStore', () => {
     skipUnshiftMessageRecord: ref(false),
     indexMap: ref({}),
     messageList: ref([]),
+    isReceivingOfflineMsgs: ref(true),
     lastFetchedId: ref(Infinity),
     hashToBlobURLMap: ref<Map<string, string>>(new Map()),
     lastMsgMap: ref<lastMsgMap>({}),
