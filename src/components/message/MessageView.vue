@@ -156,6 +156,7 @@ import { onBeforeUnmount, onMounted, ref, computed, watch } from 'vue'
 import type { message } from '@/types'
 import { voiceChatInviteToastPendingTime } from '@/const'
 import { useRoute } from 'vue-router'
+import { useThrottleFn } from '@vueuse/core'
 
 let receivingOfflineMsgsTimer = null
 let startTime = 0
@@ -277,25 +278,30 @@ const onTouchstart = e => {
   }, 200)
 }
 
-const onTouchmove = e => {
-  if (!recording.value) {
-    return
-  }
-
-  if (startY - e.touches[0].clientY > 100) {
-    if (!isCancelRecordTipShow.value) {
-      navigator.vibrate && navigator.vibrate(200)
+const onTouchmove = useThrottleFn(
+  e => {
+    if (!recording.value) {
+      return
     }
 
-    isCancelRecordTipShow.value = true
-  } else {
-    if (isCancelRecordTipShow.value) {
-      navigator.vibrate && navigator.vibrate(200)
-    }
+    if (startY - e.touches[0].clientY > 100) {
+      if (!isCancelRecordTipShow.value) {
+        navigator.vibrate && navigator.vibrate(200)
+      }
 
-    isCancelRecordTipShow.value = false
-  }
-}
+      isCancelRecordTipShow.value = true
+    } else {
+      if (isCancelRecordTipShow.value) {
+        navigator.vibrate && navigator.vibrate(200)
+      }
+
+      isCancelRecordTipShow.value = false
+    }
+  },
+  200,
+  true,
+  false
+)
 
 const onTouchend = () => {
   clearTimeout(recorderTimer)

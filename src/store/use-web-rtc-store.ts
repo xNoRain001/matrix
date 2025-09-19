@@ -14,8 +14,6 @@ const useWebRTCStore = defineStore('webRTCStore', () => ({
   isSpeakerOpen: ref(
     localStorage.getItem('isSpeakerOpen') === 'false' ? false : true
   )
-  // noMic: ref(false),
-  // noSpeaker: ref(false)
 }))
 
 export default useWebRTCStore

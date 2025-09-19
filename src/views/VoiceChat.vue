@@ -5,31 +5,25 @@
     title=" "
     description=" "
     v-model:open="isOpen"
+    :ui="{ content: 'flex-row' }"
   >
-    <template #content>
-      <!-- 规定时间内对方没接通时会清除 matchRes，因此需要使用到 v-if -->
+    <!-- 规定时间内对方没接通时会清除 matchRes，因此需要使用到 v-if -->
+    <template v-if="matchType === 'voice-chat' && matchRes.id" #content>
+      <ProfileSpace
+        v-if="!isMobile"
+        class="w-2/5"
+        :is-match="true"
+      ></ProfileSpace>
       <div
-        v-if="matchType === 'voice-chat' && matchRes.id"
-        :class="isMobile ? '' : 'flex'"
-        class="h-screen"
+        :class="isMobile ? 'w-full' : 'w-3/5'"
+        class="relative flex flex-col"
       >
-        <ProfileSpace
-          v-if="!isMobile"
-          class="w-2/5"
-          :is-match="true"
-        ></ProfileSpace>
-        <div
-          :class="isMobile ? 'h-full' : 'w-3/5'"
-          class="relative flex flex-col"
-        >
-          <MessageHeader
-            @close="isOpen = false"
-            :is-match="true"
-          ></MessageHeader>
-          <MessageVoice class="m-4 sm:m-6"></MessageVoice>
-        </div>
+        <MessageHeader @close="isOpen = false" :is-match="true"></MessageHeader>
+        <MessageVoice :is-match="true" class="m-4 sm:m-6"></MessageVoice>
       </div>
     </template>
+    <template #header></template>
+    <template #body></template>
   </UModal>
 </template>
 

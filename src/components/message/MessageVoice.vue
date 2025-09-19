@@ -1,8 +1,21 @@
 <template>
-  <div class="relative flex h-full items-center justify-center">
+  <div class="relative flex flex-1 items-center justify-center">
     <div class="absolute top-0 right-0">
+      <UPopover v-if="!isMobile">
+        <UButton icon="lucide:volume-2" variant="ghost" color="neutral" />
+        <template #content>
+          <USlider
+            @update:model-value="onUpdateVolume"
+            class="w-48"
+            v-model="volume"
+            tooltip
+          />
+        </template>
+      </UPopover>
+
       <UDropdownMenu
-        v-if="audioInputLabelsLength"
+        v-if="audioInputLabelsLength > 1"
+        class="mr-1.5"
         :disabled="!isMicOpen"
         :items="_micOptions"
         :ui="{
@@ -25,14 +38,14 @@
         </template>
       </UDropdownMenu>
       <UDropdownMenu
-        v-if="audioOutputLabelsLength"
+        v-if="audioOutputLabelsLength > 1"
         :disabled="!isSpeakerOpen"
         :items="_speakerOptions"
         :ui="{
           content: 'w-80'
         }"
       >
-        <UButton icon="lucide:volume-2" color="neutral" variant="ghost" />
+        <UButton icon="lucide:volume" color="neutral" variant="ghost" />
         <template #item="{ item: { label } }">
           <div
             class="flex w-full justify-between"
@@ -48,21 +61,17 @@
         </template>
       </UDropdownMenu>
     </div>
-    <div class="flex w-full flex-col justify-center">
-      <div class="text-center">
+    <div class="flex flex-1 flex-col items-center gap-4">
+      <UAvatar :alt="targetNickname[0]" class="size-24 text-5xl"></UAvatar>
+      <div>{{ targetNickname }}</div>
+      <div class="text-sm">
         {{ rtcConnected ? '通话中...' : '等待对方接通...' }}
       </div>
       <div
-        :class="
-          noMic && noSpeaker
-            ? 'grid-cols-1'
-            : noMic || noSpeaker
-              ? 'grid-cols-2'
-              : 'grid-cols-3'
-        "
-        class="mt-16 grid"
+        :class="isMobile ? '' : 'max-w-1/2'"
+        class="mt-4 grid w-full grid-cols-3"
       >
-        <div v-if="!noMic" class="flex flex-col items-center justify-center">
+        <div class="flex flex-col items-center justify-center">
           <UButton
             class="flex flex-col"
             @click="updateMicStatus"
@@ -86,10 +95,7 @@
           ></UButton>
           <div class="text-error mt-4 text-sm">取消</div>
         </div>
-        <div
-          v-if="!noSpeaker"
-          class="flex flex-col items-center justify-center"
-        >
+        <div class="flex flex-col items-center justify-center">
           <UButton
             class="flex flex-col"
             :icon="isSpeakerOpen ? 'lucide:volume-2' : 'lucide:volume-off'"
@@ -127,7 +133,11 @@ import {
   useWebRTCStore
 } from '@/store'
 import { useRoute, useRouter } from 'vue-router'
+import { useThrottleFn } from '@vueuse/core'
 
+const props = withDefaults(defineProps<{ isMatch?: boolean }>(), {
+  isMatch: false
+})
 const {
   roomId,
   isVoiceChatModalOpen,
@@ -147,10 +157,12 @@ const {
   lastMsgMap,
   indexMap,
   unreadMsgCounter,
-  msgContainerRef
+  msgContainerRef,
+  contactProfileMap
 } = storeToRefs(useRecentContactsStore())
 const { matchRes } = storeToRefs(useMatchStore())
-const { globalPC, globalSocket, userInfo } = storeToRefs(useUserStore())
+const { isMobile, globalPC, globalSocket, userInfo } =
+  storeToRefs(useUserStore())
 const audioInputs = await useGetAudioInputs()
 const audioInputLabels = audioInputs.map(
   (item, index) => item.label || `麦克风设备 ${index}`
@@ -161,27 +173,27 @@ const audioOutputLabels = audioOutputs.map(
 )
 const audioInputLabelsLength = audioInputLabels.length
 const audioOutputLabelsLength = audioOutputLabels.length
-const micLabel = ref(
-  audioInputLabelsLength ? audioInputLabels[0] : '未发现麦克风设备'
-)
-const micOptions = [
-  ...(audioInputLabelsLength ? audioInputLabels : ['未发现麦克风设备'])
-]
+const micLabel = ref(audioInputLabels[0])
+const micOptions = [...(audioInputLabelsLength ? audioInputLabels : [])]
 const _micOptions = micOptions.map(item => ({ label: item, icon: '' }))
-const speakerLabel = ref(
-  audioOutputLabelsLength ? audioOutputLabels[0] : '未发现扬声器设备'
-)
+const speakerLabel = ref(audioOutputLabels[0])
 const speakerOptions = reactive([
-  ...(audioOutputLabelsLength ? audioOutputLabels : ['未发现扬声器设备'])
+  ...(audioOutputLabelsLength ? audioOutputLabels : [])
 ])
 const _speakerOptions = speakerOptions.map(item => ({ label: item, icon: '' }))
-const volume = ref(1)
-const noMic = ref(!audioInputLabelsLength)
-const noSpeaker = ref(!audioOutputLabelsLength)
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 const isVoiceChat = computed(() => route.path === '/voice-chat')
+const voiceChatTargetId = useGetTargetIdByRoomId(roomId.value, userInfo)
+const targetNickname = computed(() =>
+  props.isMatch
+    ? matchRes.value.nickname
+    : lastMsgMap.value[voiceChatTargetId].profile.nickname ||
+      contactProfileMap.value[voiceChatTargetId].profile.nickname
+)
+const volume = ref(Number(localStorage.getItem('volume') || 100))
+remoteAudioRef.value.volume = Number((volume.value / 100).toFixed(2))
 
 // TODO: 里面的逻辑和 onBye 很相似，可以考虑合并
 const onCancel = () => {
@@ -252,16 +264,17 @@ const onCancel = () => {
 
 const updateSpeakerLabel = (label: string) => (speakerLabel.value = label)
 
-const updateSpeakerStatus = async () => {
+const updateSpeakerStatus = () => {
   const newValue = !isSpeakerOpen.value
-  remoteAudioRef.value.volume = newValue ? volume.value : 0
+  // 直接设置 volume 值为 1 或 0 会有兼容性问题，因此设置 muted 属性
+  remoteAudioRef.value.muted = newValue ? false : true
   isSpeakerOpen.value = newValue
   localStorage.setItem('isSpeakerOpen', String(newValue))
 }
 
 const updateMicLabel = label => (micLabel.value = label)
 
-const updateMicStatus = async () => {
+const updateMicStatus = () => {
   const newValue = !isMicOpen.value
 
   // 最先加入房间的人会比后加入的更晚完成 pc 初始化
@@ -276,7 +289,17 @@ const updateMicStatus = async () => {
   localStorage.setItem('isMicOpen', String(newValue))
 }
 
-watch(volume, v => (remoteAudioRef.value.volume = v))
+const onUpdateVolume = useThrottleFn(
+  v => {
+    const volume = Array.isArray(v) ? v[0] : v
+    const _volume = (volume / 100).toFixed(2)
+    remoteAudioRef.value.volume = Number(_volume)
+    localStorage.setItem('volume', _volume)
+  },
+  200,
+  true,
+  false
+)
 
 watch(speakerLabel, v => {
   const { deviceId } = audioOutputs.find(item => item.label === v)

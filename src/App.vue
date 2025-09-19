@@ -72,8 +72,9 @@
       <UModal
         fullscreen
         v-model:open="isVoiceChatModalOpen"
-        title=" "
+        title="语音通话"
         description=" "
+        :ui="{ body: 'flex' }"
       >
         <template #body>
           <MessageVoice></MessageVoice>
@@ -82,9 +83,21 @@
       <!-- 语音通话浮动按钮 -->
       <UButton
         v-if="roomId"
+        draggable="true"
+        @drag="onDrag"
+        @dragstart="onDragstart"
+        @dragover="onDragover"
+        @dragend="onSaveFloatingBtnPosition"
+        @touchstart="onTouchstart"
+        @touchmove="onTouchmove"
+        @touchend="onSaveFloatingBtnPosition"
         @click="isVoiceChatModalOpen = true"
         icon="lucide:phone"
-        class="absolute top-4 right-4"
+        class="absolute cursor-pointer"
+        :style="{
+          top: `${floatingBtnY}px`,
+          left: `${floatingBtnX}px`
+        }"
       ></UButton>
       <!-- 音频 -->
       <audio hidden ref="localAudioRef" muted></audio>
@@ -134,6 +147,7 @@ import { useRouter } from 'vue-router'
 import { voiceChatInviteToastExpireTime } from './const'
 import type { lastMsg, lastMsgMap } from './types'
 import ModalOffline from './components/modal/ModalOffline.vue'
+import { useThrottleFn } from '@vueuse/core'
 
 let voiceChatInviteToastId = null
 let matchTimer = null
@@ -145,7 +159,9 @@ let playBeep = true
 let firstConnectionSuccess = false
 let reconnectionAttempts = 0
 let isOfflineModalOpen = false
-const maxReconnectionAttempts = 5
+let floatingBtnStartX = 0
+let floatingBtnStartY = 0
+const maxReconnectionAttempts = 1
 const toast = useToast()
 const overlay = useOverlay()
 const logoutModal = overlay.create(ModalLogout)
@@ -294,6 +310,61 @@ const rtcConfiguration: RTCConfiguration = {
   iceCandidatePoolSize: 0 // 可选: 0~N，通常为0
 }
 const beepAudioRef = ref(null)
+const floatingBtnX = ref(Number(localStorage.getItem('floatingBtnX') || 40))
+const floatingBtnY = ref(Number(localStorage.getItem('floatingBtnY') || 40))
+
+const onDragstart = e => {
+  const { clientX, clientY, target } = e
+  const { left, top } = target.getBoundingClientRect()
+
+  floatingBtnStartX = clientX - left
+  floatingBtnStartY = clientY - top
+  e.dataTransfer.setData('text', '')
+  e.dataTransfer.effectAllowed = 'move'
+}
+
+const onDrag = useThrottleFn(
+  e => {
+    const { clientX, clientY } = e
+    floatingBtnX.value = clientX - floatingBtnStartX
+    floatingBtnY.value = clientY - floatingBtnStartY
+  },
+  50,
+  true,
+  false
+)
+
+const onDragover = e => e.preventDefault()
+
+const onSaveFloatingBtnPosition = () => {
+  localStorage.setItem('floatingBtnX', String(floatingBtnX.value))
+  localStorage.setItem('floatingBtnY', String(floatingBtnY.value))
+}
+
+const onTouchstart = e => {
+  e.preventDefault()
+  const {
+    target,
+    touches: [{ clientX, clientY }]
+  } = e
+  const { left, top } = target.getBoundingClientRect()
+
+  floatingBtnStartX = clientX - left
+  floatingBtnStartY = clientY - top
+}
+
+const onTouchmove = useThrottleFn(
+  e => {
+    e.preventDefault()
+
+    const { clientX, clientY } = e.touches[0]
+    floatingBtnX.value = clientX - floatingBtnStartX
+    floatingBtnY.value = clientY - floatingBtnStartY
+  },
+  50,
+  true,
+  false
+)
 
 const onReconnect = emit => {
   offlineModal.patch({
@@ -450,7 +521,7 @@ const initLocalMediaStream = async () => {
     isMicOpen.value
       ? useResumeMediaStreamTracks(localMediaStream.value)
       : usePauseMediaStreamTracks(localMediaStream.value)
-    remoteAudioRef.value.volume = isSpeakerOpen.value ? 1 : 0
+    remoteAudioRef.value.muted = isSpeakerOpen.value ? false : true
     // 绑定本地流
     useBindMediaStream(localAudioRef.value, _localMediaStream)
     useAddMediaStreamToPC(globalPC.value, _localMediaStream)
