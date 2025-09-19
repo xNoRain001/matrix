@@ -138,6 +138,8 @@
         <img
           src="https://picsum.photos/id/46/400"
           alt="Tailwind CSS"
+          :width="400"
+          :height="400"
           class="w-full"
         />
         <div class="flex items-center justify-between">

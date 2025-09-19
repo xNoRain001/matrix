@@ -184,6 +184,7 @@ import { useMatchStore, useUserStore, useWebRTCStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { createReusableTemplate } from '@vueuse/core'
 import { provinceCityMap } from '@/const'
+import { useIsDeviceOpen } from '@/hooks'
 
 let matchType = ''
 const [DefineFilterBodyTemplate, ReuseFilterBodyTemplate] =
@@ -232,8 +233,8 @@ const isUndefAge = computed(
   () => filter.value.age.min === Number.MAX_SAFE_INTEGER
 )
 const isUndefRegion = computed(() => filter.value.region === null)
-const province = ref(null)
-const city = ref(null)
+const province = ref(filter.value.region?.split(' - ')?.[0] || null)
+const city = ref(filter.value.region?.split(' - ')?.[1] || null)
 const sourceProvinceOptions = Object.keys(provinceCityMap)
 const provinceOptions = ref(sourceProvinceOptions)
 const cityOptions = ref(provinceCityMap[province.value] || [])
@@ -305,17 +306,23 @@ const rematch = () => {
   startMatch()
 }
 
-const onMatch = (_matchType, to) => {
+const onMatch = async (_matchType, to) => {
   if (to === '/') {
     return
   }
 
-  if (_matchType === 'voice-chat' && roomId.value) {
-    return toast.add({
-      title: '匹配失败，当前正在语音中',
-      color: 'error',
-      icon: 'lucide:annoyed'
-    })
+  if (_matchType === 'voice-chat') {
+    if (roomId.value) {
+      return toast.add({
+        title: '匹配失败，当前正在语音中',
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
+    }
+
+    if (!(await useIsDeviceOpen(toast, 'microphone', '麦克风'))) {
+      return
+    }
   }
 
   matchType = _matchType

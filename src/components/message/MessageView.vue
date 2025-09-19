@@ -8,7 +8,7 @@
       <div class="flex items-end gap-2">
         <UButton
           v-if="!recording && !isRecord"
-          @click="isRecord = !isRecord"
+          @click="onSpeak"
           variant="ghost"
           color="neutral"
           icon="lucide:mic"
@@ -143,7 +143,8 @@ import {
   useFormatTimeAgo,
   useGetDB,
   useGenHash,
-  useSendMsg
+  useSendMsg,
+  useIsDeviceOpen
 } from '@/hooks'
 import {
   useMatchStore,
@@ -171,7 +172,6 @@ const props = withDefaults(defineProps<{ isMatch?: boolean }>(), {
   isMatch: false
 })
 const emits = defineEmits(['close'])
-// 对方是否收到了文件元信息的标识
 const message = ref('')
 const {
   targetId,
@@ -208,6 +208,12 @@ const isContacts = computed(() => route.path === '/contacts')
 //     .then(res => res.blob())
 //     .then(blob => useExportFile(filename, blob))
 // }
+
+const onSpeak = async () => {
+  if (await useIsDeviceOpen(toast, 'microphone', '麦克风')) {
+    isRecord.value = !isRecord.value
+  }
+}
 
 const onSuccess = stream => {
   mediaRecorder = new MediaRecorder(stream)

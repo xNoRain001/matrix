@@ -1,4 +1,14 @@
-const useAddMessageRecordToView = (label, messageRecord, messageList) => {
+const useAddMessageRecordToView = (
+  inView,
+  label,
+  messageRecord,
+  messageList,
+  msgContainerRef
+) => {
+  if (!inView) {
+    return
+  }
+
   const _messageList = messageList.value
 
   if (label) {
@@ -6,6 +16,7 @@ const useAddMessageRecordToView = (label, messageRecord, messageList) => {
   }
 
   _messageList.push(messageRecord)
+  ;(msgContainerRef.value as any).scrollToBottom()
 }
 
 export default useAddMessageRecordToView

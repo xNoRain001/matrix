@@ -21,12 +21,12 @@ import useRefreshRoomInfo from './use-refresh-room-info'
 import useVisibilityChange from './use-visibility-change'
 import useGetMessages from './use-get-messages'
 import useGenRoomId from './use-gen-room-id'
-import useAddLastMsg from './use-add-last-msg'
+import useInitLastMsg from './use-init-last-msg'
 import useGetTargetIdByRoomId from './use-get-target-id-by-roomId'
 import useFormatTimeAgo from './use-format-time-ago'
 import useAddMessageRecordToDB from './use-add-message-record-to-db'
 import useAddMessageRecordToView from './use-add-message-record-to-view'
-import useUpdateLastMsg from './use-update-last-msg'
+import useUpdateLastMsgToView from './use-update-last-msg-to-view'
 import useRefreshContacts from './use-refresh-contacts'
 import useGenHash from './use-gen-hash'
 import useFixIndexedDB from './use-fix-indexed-db'
@@ -35,14 +35,20 @@ import useClearMessageRecord from './use-clear-message-record'
 import useDeleteContact from './use-delete-contact'
 import useAddContact from './use-add-contact'
 import useInitLabelAndSeparator from './use-init-label-and-separator'
-import useUUID from './use-uuid'
 import useRefreshOnline from './use-refresh-online'
 import useSendMsg from './use-send-msg'
+import useIsDeviceOpen from './use-is-device-open'
+import useUpdateLastMsgToDB from './use-update-last-msg-to-db'
+import useInitIndexedDBData from './use-init-indexed-db-data'
+import useAddPropsForMessageRecord from './use-add-props-for-message-record'
 
 export {
+  useAddPropsForMessageRecord,
+  useInitIndexedDBData,
+  useUpdateLastMsgToDB,
+  useIsDeviceOpen,
   useSendMsg,
   useRefreshOnline,
-  useUUID,
   useInitLabelAndSeparator,
   useAddContact,
   useDeleteContact,
@@ -53,10 +59,10 @@ export {
   useRefreshContacts,
   useAddMessageRecordToDB,
   useAddMessageRecordToView,
-  useUpdateLastMsg,
+  useUpdateLastMsgToView,
   useFormatTimeAgo,
   useGetTargetIdByRoomId,
-  useAddLastMsg,
+  useInitLastMsg,
   useGenRoomId,
   useGetMessages,
   useVisibilityChange,

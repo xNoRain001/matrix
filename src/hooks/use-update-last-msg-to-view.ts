@@ -1,8 +1,6 @@
 import useFormatTimeAgo from './use-format-time-ago'
-import useGetDB from './use-get-db'
 
-const useUpdateLastMsg = async (
-  id,
+const useUpdateLastMsgToView = (
   indexMap,
   lastMsgList,
   _lastMsgMap,
@@ -13,7 +11,6 @@ const useUpdateLastMsg = async (
   isOfflineMsg = false,
   offlineMsgLength = 0
 ) => {
-  const db = await useGetDB(id)
   const { contact: targetId, timestamp, content, sent } = messageRecord
   const item = _lastMsgMap[targetId]
 
@@ -66,7 +63,7 @@ const useUpdateLastMsg = async (
     }
   }
 
-  await db.put('lastMessages', JSON.parse(JSON.stringify(item)))
+  return item
 }
 
-export default useUpdateLastMsg
+export default useUpdateLastMsgToView

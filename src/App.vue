@@ -126,7 +126,7 @@ import ModalLogout from './components/modal/ModalLogout.vue'
 import DrawerLogout from './components/drawer/DrawerLogout.vue'
 import { io } from 'socket.io-client'
 import {
-  useAddLastMsg,
+  useInitLastMsg,
   useAddMediaStreamToPC,
   useBindMediaStream,
   useCloseMediaStreamTracks,
@@ -137,11 +137,13 @@ import {
   useResumeMediaStreamTracks,
   useAddMessageRecordToView,
   useAddMessageRecordToDB,
-  useUpdateLastMsg,
+  useUpdateLastMsgToDB,
   useRefreshContacts,
   useInitLabelAndSeparator,
-  useUUID,
-  useSendMsg
+  useSendMsg,
+  useUpdateLastMsgToView,
+  useAddPropsForMessageRecord,
+  useInitIndexedDBData
 } from './hooks'
 import { useRouter } from 'vue-router'
 import { voiceChatInviteToastExpireTime } from './const'
@@ -646,55 +648,38 @@ const onWebRTC = async (roomId, { description, candidate }) => {
   }
 }
 
+// 移除 ossURL
+const replaceOSSURLToURL = async (isImage, isAudio, hash, messageRecord) =>
+  isImage
+    ? await replaceImageOSSURLToURL(hash, messageRecord)
+    : isAudio
+      ? await replaceAudioOSSURLToURL(hash, messageRecord)
+      : ''
+
 const onReceiveMsg = async messageRecord => {
-  let url = ''
   const _lastMsgMap = lastMsgMap.value
   const { type, contact: id, hash } = messageRecord
   const isText = type === 'text'
   const isImage = type === 'image'
   const isAudio = type === 'audio'
   const inView = targetId.value === id && msgContainerRef.value
+  const url = await replaceOSSURLToURL(isImage, isAudio, hash, messageRecord)
   messageRecord.sent = false
   const label = useInitLabelAndSeparator(messageRecord, _lastMsgMap, id)
-
-  // 可能会移除 ossURL
-  if (isImage) {
-    url = await replaceImageOSSURLToURL(hash, messageRecord)
-  }
-
-  if (isAudio) {
-    url = await replaceAudioOSSURLToURL(hash, messageRecord)
-  }
-
-  const indexdbLabel = label ? { ...label } : null
-  const indexdbMessageRecord = { ...messageRecord }
-
-  // 不需要加 isImage 判断，因为就算是图片也依旧需要判断 url 是否有值，因此直接判断
-  // url 是否有值，如果 url 值为 ''，由 ossURL 接管
-  if (url) {
-    messageRecord.url = url
-  }
-
-  if (label) {
-    label.id = useUUID()
-  }
-
-  messageRecord.id = useUUID()
-
-  if (inView) {
-    useAddMessageRecordToView(label, messageRecord, messageList)
-    ;(msgContainerRef.value as any).scrollToBottom()
-  }
-
-  await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, id)
-  await useAddMessageRecordToDB(
-    userInfo.value.id,
-    indexdbLabel,
-    indexdbMessageRecord
+  const [indexdbLabel, indexdbMessageRecord] = useInitIndexedDBData(
+    label,
+    messageRecord
   )
-
-  useUpdateLastMsg(
-    userInfo.value.id,
+  useAddPropsForMessageRecord(messageRecord, label, url)
+  useAddMessageRecordToView(
+    inView,
+    label,
+    messageRecord,
+    messageList,
+    msgContainerRef
+  )
+  await useInitLastMsg(_lastMsgMap, lastMsgList, matchRes, id)
+  const item = useUpdateLastMsgToView(
     indexMap,
     lastMsgList,
     _lastMsgMap,
@@ -705,6 +690,8 @@ const onReceiveMsg = async messageRecord => {
     inView,
     unreadMsgCounter
   )
+  await useAddMessageRecordToDB(id, indexdbLabel, indexdbMessageRecord)
+  await useUpdateLastMsgToDB(id, item)
 
   if (!inView && config.value.beep) {
     if (playBeep) {
@@ -821,41 +808,26 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
     }
 
     for (let i = 0; i < offlineMsgsLength; i++) {
-      let url = ''
       const messageRecord = offlineMsgs[i]
       const { type, hash } = messageRecord
       const isImage = type === 'image'
       const isAudio = type === 'audio'
+      const url = await replaceOSSURLToURL(
+        isImage,
+        isAudio,
+        hash,
+        messageRecord
+      )
       messageRecord.sent = false
       const label = useInitLabelAndSeparator(messageRecord, _lastMsgMap, id)
-
-      if (isImage) {
-        url = await replaceImageOSSURLToURL(hash, messageRecord)
-      } else if (isAudio) {
-        url = await replaceAudioOSSURLToURL(hash, messageRecord)
-      }
-
-      const indexdbLabel = { ...label }
-      // 本地数据库中不需要保存临时的 url
-      const indexdbMessageRecord = { ...messageRecord, url: '' }
-
-      if (url) {
-        messageRecord.url = url
-      }
-
-      if (label) {
-        label.id = useUUID()
-      }
-
-      messageRecord.id = useUUID()
+      const [indexdbLabel, indexdbMessageRecord] = useInitIndexedDBData(
+        label,
+        messageRecord
+      )
+      useAddPropsForMessageRecord(messageRecord, label, url)
       __lastMsgMap[id].sent = false
       __lastMsgMap[id].timestamp = messageRecord.timestamp
-
-      await useAddMessageRecordToDB(
-        userInfo.value.id,
-        indexdbLabel,
-        indexdbMessageRecord
-      )
+      await useAddMessageRecordToDB(id, indexdbLabel, indexdbMessageRecord)
     }
 
     const lastMsg = offlineMsgs[offlineMsgsLength - 1]
@@ -863,9 +835,8 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
     const isText = type === 'text'
     const isImage = type === 'image'
 
-    await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, id)
-    await useUpdateLastMsg(
-      userInfo.value.id,
+    await useInitLastMsg(_lastMsgMap, lastMsgList, matchRes, id)
+    const item = useUpdateLastMsgToView(
       indexMap,
       lastMsgList,
       _lastMsgMap,
@@ -878,6 +849,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
       true,
       offlineMsgsLength
     )
+    await useUpdateLastMsgToDB(id, item)
 
     if (i === l - 1) {
       isReceivingOfflineMsgs.value = false
@@ -1085,7 +1057,7 @@ const onMatched = async data => {
     if (_matchType === 'voice-chat') {
       const _lastMsgMap = lastMsgMap.value
       const targetId = _matchRes.id
-      await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
+      await useInitLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
       const db = await useGetDB(id)
       await db.put(
         'lastMessages',

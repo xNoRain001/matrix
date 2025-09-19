@@ -1,11 +1,13 @@
 import useInitLabelAndSeparator from './use-init-label-and-separator'
-import useUUID from './use-uuid'
 import useAddMessageRecordToView from './use-add-message-record-to-view'
 import { uploadImage } from '@/apis/oss'
-import useAddLastMsg from './use-add-last-msg'
+import useInitLastMsg from './use-init-last-msg'
 import useAddMessageRecordToDB from './use-add-message-record-to-db'
-import useUpdateLastMsg from './use-update-last-msg'
+import useUpdateLastMsgToView from './use-update-last-msg-to-view'
 import type { message } from '@/types'
+import useUpdateLastMsgToDB from './use-update-last-msg-to-db'
+import useInitIndexedDBData from './use-init-indexed-db-data'
+import useAddPropsForMessageRecord from './use-add-props-for-message-record'
 
 const addMsgToView = (
   isText,
@@ -51,70 +53,26 @@ const addMsgToView = (
           ...common
         }
   const common2 = { sent: true, contact: targetId }
-  const messageRecord = isText
-    ? {
-        ...payload,
-        ...common2
-      }
-    : {
-        url,
-        ...payload,
-        ...common2
-      }
+  const messageRecord = {
+    ...payload,
+    ...common2
+  }
+
   const label = useInitLabelAndSeparator(messageRecord, _lastMsgMap, targetId)
-  const indexdbLabel = label ? { ...label } : null
-  const indexdbMessageRecord = isText
-    ? { ...messageRecord }
-    : // 本地数据库中不需要保存临时的 url
-      { ...messageRecord, url: '' }
-
-  if (label) {
-    label.id = useUUID()
-  }
-
-  messageRecord.id = useUUID()
-
-  if (inView) {
-    useAddMessageRecordToView(label, messageRecord, messageList)
-    ;(msgContainerRef.value as any).scrollToBottom()
-  }
+  const [indexdbLabel, indexdbMessageRecord] = useInitIndexedDBData(
+    label,
+    messageRecord
+  )
+  useAddPropsForMessageRecord(messageRecord, label, url)
+  useAddMessageRecordToView(
+    inView,
+    label,
+    messageRecord,
+    messageList,
+    msgContainerRef
+  )
 
   return [indexdbLabel, indexdbMessageRecord, payload, messageRecord]
-}
-
-export const addMsgToDB = async (
-  id,
-  indexdbLabel,
-  indexdbMessageRecord,
-  isText,
-  isImage,
-  messageRecord,
-  _lastMsgMap,
-  duration,
-  targetId,
-  lastMsgList,
-  matchRes,
-  indexMap,
-  unreadMsgCounter
-) => {
-  await useAddLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
-  await useAddMessageRecordToDB(id, indexdbLabel, indexdbMessageRecord)
-  useUpdateLastMsg(
-    id,
-    indexMap,
-    lastMsgList,
-    _lastMsgMap,
-    isText
-      ? messageRecord
-      : // messageRecord 被保存到了内存中，因此不能修改它
-        {
-          ...messageRecord,
-          content: isImage ? '[图片]' : `[语音] ${duration}''`
-        },
-    false,
-    true,
-    unreadMsgCounter
-  )
 }
 
 export const sendMsg = async (
@@ -191,6 +149,7 @@ const useSendMsg = async (
   const isImage = type === 'image'
   const { id } = userInfo.value
   const _lastMsgMap = lastMsgMap.value
+  // 优先在视图中显示消息
   const [indexdbLabel, indexdbMessageRecord, payload, messageRecord] =
     addMsgToView(
       isText,
@@ -208,7 +167,26 @@ const useSendMsg = async (
       msgContainerRef,
       inView
     )
+  // 初始化消息列表
+  await useInitLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
+  // 更新视图中最后一条消息记录
+  const item = useUpdateLastMsgToView(
+    indexMap,
+    lastMsgList,
+    _lastMsgMap,
+    isText
+      ? messageRecord
+      : // messageRecord 被保存到了内存中，因此不能修改它
+        {
+          ...messageRecord,
+          content: isImage ? '[图片]' : `[语音] ${duration}''`
+        },
+    false,
+    true,
+    unreadMsgCounter
+  )
   try {
+    // 发送消息
     await sendMsg(
       file,
       hash,
@@ -222,22 +200,9 @@ const useSendMsg = async (
   } catch {
     throw Error()
   } finally {
-    // 发送失败也保存到本地
-    await addMsgToDB(
-      id,
-      indexdbLabel,
-      indexdbMessageRecord,
-      isText,
-      isImage,
-      messageRecord,
-      _lastMsgMap,
-      duration,
-      targetId,
-      lastMsgList,
-      matchRes,
-      indexMap,
-      unreadMsgCounter
-    )
+    // 保存消息和最后一条消息到本地数据库，发送失败也保存
+    await useAddMessageRecordToDB(id, indexdbLabel, indexdbMessageRecord)
+    await useUpdateLastMsgToDB(id, item)
   }
 }
 
