@@ -89,6 +89,7 @@
       <!-- 音频 -->
       <audio hidden ref="localAudioRef" muted></audio>
       <audio hidden ref="remoteAudioRef" autoplay></audio>
+      <audio hidden ref="beepAudioRef" autoplay></audio>
     </UApp>
 
     <!-- 注册登录和重置密码等内容 -->
@@ -106,7 +107,7 @@ import {
   useUserStore,
   useWebRTCStore
 } from './store'
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import ModalLogout from './components/modal/ModalLogout.vue'
 import DrawerLogout from './components/drawer/DrawerLogout.vue'
@@ -144,7 +145,7 @@ let playBeep = true
 let firstConnectionSuccess = false
 let reconnectionAttempts = 0
 let isOfflineModalOpen = false
-const maxReconnectionAttempts = 1
+const maxReconnectionAttempts = 5
 const toast = useToast()
 const overlay = useOverlay()
 const logoutModal = overlay.create(ModalLogout)
@@ -292,11 +293,14 @@ const rtcConfiguration: RTCConfiguration = {
   rtcpMuxPolicy: 'require', // 可选: 'require'
   iceCandidatePoolSize: 0 // 可选: 0~N，通常为0
 }
+const beepAudioRef = ref(null)
 
 const onReconnect = emit => {
   offlineModal.patch({
     reconnecting: true
   })
+
+  // 重试次数耗尽后，必须重新创建 socket
   const socket = createSocket(id.value, emit)
   initSocket(socket)
 }
@@ -460,18 +464,24 @@ const initLocalMediaStream = async () => {
 const onConnect = emit => {
   if (!firstConnectionSuccess) {
     firstConnectionSuccess = true
+
+    // 在模态框内重连成功
+    if (isOfflineModalOpen) {
+      offlineModal.patch({
+        reconnecting: false
+      })
+      isOfflineModalOpen = false
+      emit && emit('close', false)
+      // 不需要在这里拉取离线信息，因为模态框内重连成功一定是执行了 onReconnect，内部
+      // 会拉取离线信息
+    }
+  } else {
+    // 未出现模态框的情况下重连成功，比如移动端将页面置于后台，但不关闭浏览器，过一段
+    // 时间返回后重连成功时会触发这里，只需要拉取离线信息
+    globalSocket.value.emit('ready')
   }
 
   reconnectionAttempts = 0
-
-  // 在模态框内成功连接
-  if (isOfflineModalOpen) {
-    offlineModal.patch({
-      reconnecting: false
-    })
-    isOfflineModalOpen = false
-    emit('close', false)
-  }
 }
 
 const onJoined = async (_roomId, _polite) => {
@@ -627,7 +637,8 @@ const onReceiveMsg = async messageRecord => {
 
   if (!inView && config.value.beep) {
     if (playBeep) {
-      const audio = new Audio('/audio/beep.mp3')
+      const audio = beepAudioRef.value
+      audio.src = '/audio/beep.mp3'
       audio.play()
       playBeep = false
       beepTimer = setTimeout(() => {
@@ -922,6 +933,10 @@ const onDisconnect = () => {
       icon: 'lucide:annoyed'
     })
   }
+
+  // 移动端将浏览器置于后台，几秒钟内返回，没有任何影响，但是如果在后台时间很长时，
+  // 回来时会马上断开 socket 连接，之后重连，网络没有问题就会重连成功，连接成功
+  // 回调中拉取离线消息，如果重连失败就会出现模态框
 }
 
 const onConnectError = () => {
@@ -937,7 +952,7 @@ const onConnectError = () => {
         : maxReconnectionAttempts + 1)
     ) {
       toast.add({
-        title: '重连失败，请检查网络后重试',
+        title: '重连失败，请检查网络后重试或刷新页面',
         color: 'error',
         icon: 'lucide:annoyed'
       })
@@ -1092,11 +1107,13 @@ const createSocket = (id, emit = null) => {
       }
     }
   ))
+
   // 连接成功
   socket.on('connect', () => onConnect(emit))
   // 断开连接
   socket.on('disconnect', onDisconnect)
-  // 连接成功后，断开连接，不会触发，只会在最开始建立连接失败时或者重连失败时触发
+  // 连接成功后，手动断开连接，不会触发，只会在最开始建立连接失败时或者连接成功后，连接
+  // 断开，进行重连失败时触发，移动端关闭浏览器后，再打开浏览器后也会触发这个回调
   socket.on('connect_error', onConnectError)
 
   return socket

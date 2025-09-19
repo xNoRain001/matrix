@@ -178,14 +178,12 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMatchStore, useUserStore, useWebRTCStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { createReusableTemplate } from '@vueuse/core'
 import { provinceCityMap } from '@/const'
-import ModalLogout from '@/components/modal/ModalLogout.vue'
-import ModalOffline from '@/components/modal/ModalOffline.vue'
 
 let matchType = ''
 const [DefineFilterBodyTemplate, ReuseFilterBodyTemplate] =

@@ -216,10 +216,10 @@ const onSuccess = stream => {
       isCancelRecordTipShow.value = false
     } else {
       const duration = Math.round((Date.now() - startTime) / 1000)
-      const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' })
-      const url = window.URL.createObjectURL(blob)
+      const blob = new Blob(chunks, { type: 'audio/mp3' })
+      const url = URL.createObjectURL(blob)
       try {
-        const hash = await useGenHash(blob, 'ogg')
+        const hash = await useGenHash(blob, 'mp3')
         await useSendMsg(
           'audio',
           null,
