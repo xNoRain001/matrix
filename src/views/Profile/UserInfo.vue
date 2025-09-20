@@ -7,57 +7,63 @@
       description=" "
     >
       <template #body>
-        <UPageCard variant="subtle" :ui="{ body: 'w-full' }">
-          <template #body>
+        <UPageCard
+          title="编辑个人资料"
+          description="这些信息将公开展示"
+          variant="naked"
+          orientation="horizontal"
+          class="mb-4"
+        ></UPageCard>
+        <UPageCard
+          variant="subtle"
+          :ui="{ container: 'divide-y divide-default' }"
+        >
+          <UFormField
+            label="头像"
+            class="flex items-center gap-2 pb-4"
+            @click="avatarRef.click()"
+            :ui="{ container: 'flex-1 flex items-center gap-2 justify-end' }"
+          >
+            <UAvatar
+              size="2xs"
+              :src="avatarURL"
+              :alt="userInfoForm.nickname[0]"
+            ></UAvatar>
+            <UIcon
+              name="lucide:chevron-right"
+              class="size-5 text-(--ui-text-dimmed)"
+            />
+          </UFormField>
+          <UFormField
+            v-for="{ label, click, key } in profileItems"
+            :key="key"
+            :label="label"
+            class="flex items-center gap-2 not-last:pb-4"
+            @click="click"
+            :ui="{ container: 'flex-1 flex items-center gap-2 justify-end' }"
+          >
             <div
-              @click="avatarRef.click()"
-              class="flex h-12 items-center justify-between"
+              class="max-w-60 overflow-hidden text-ellipsis whitespace-nowrap text-(--ui-text-dimmed)"
             >
-              <div>头像</div>
-              <div class="flex items-center gap-2">
-                <UAvatar
-                  :src="avatarURL"
-                  :alt="userInfoForm.nickname[0]"
-                  size="lg"
-                ></UAvatar>
-                <UIcon
-                  name="lucide:chevron-right"
-                  class="size-5 text-(--ui-text-dimmed)"
-                />
-              </div>
+              {{
+                key === 'gender'
+                  ? useTransformGender(userInfoForm[key])
+                  : key === 'birthday'
+                    ? date.toString()
+                    : userInfoForm[key]
+              }}
             </div>
-            <div
-              v-for="{ label, click, key } in profileItems"
-              @click="click"
-              class="flex h-12 items-center justify-between"
-            >
-              <div>{{ label }}</div>
-              <div class="flex items-center gap-2">
-                <div
-                  class="w-30 overflow-hidden text-right text-ellipsis whitespace-nowrap text-(--ui-text-dimmed)"
-                >
-                  {{
-                    key === 'gender'
-                      ? useTransformGender(userInfoForm[key])
-                      : key === 'birthday'
-                        ? date.toString()
-                        : userInfoForm[key]
-                  }}
-                </div>
-                <UIcon
-                  name="lucide:chevron-right"
-                  class="size-5 text-(--ui-text-dimmed)"
-                />
-              </div>
-            </div>
-          </template>
-          <template #footer>
-            <UButton
-              label="修改资料"
-              @click="onUpdateProfile"
-              loading-auto
-            ></UButton>
-          </template>
+            <UIcon
+              name="lucide:chevron-right"
+              class="size-5 text-(--ui-text-dimmed)"
+            />
+          </UFormField>
+          <UButton
+            label="修改资料"
+            class="w-fit"
+            @click="onUpdateProfile"
+            loading-auto
+          ></UButton>
         </UPageCard>
       </template>
     </USlideover>
@@ -139,7 +145,7 @@
         label="昵称"
         description="填写你的昵称"
         class="flex items-start justify-between gap-4"
-        :ui="{ container: 'w-2/3' }"
+        :ui="{ container: 'w-3/5' }"
       >
         <UInput class="w-full" v-model="userInfoForm.nickname" maxlength="30">
           <template v-if="userInfoForm.nickname" #trailing>
@@ -162,7 +168,7 @@
         label="性别"
         description="填写你的性别"
         class="flex items-start justify-between gap-4"
-        :ui="{ container: 'w-2/3' }"
+        :ui="{ container: 'w-3/5' }"
       >
         <USelect
           class="w-full"
@@ -176,7 +182,7 @@
         label="生日"
         description="填写你的生日"
         class="flex items-start justify-between gap-4"
-        :ui="{ container: 'w-2/3' }"
+        :ui="{ container: 'w-3/5' }"
       >
         <DatePicker v-model="date"></DatePicker>
       </UFormField>
@@ -186,7 +192,7 @@
         label="地区"
         description="填写你的地区"
         class="flex items-start justify-between gap-4"
-        :ui="{ container: 'w-2/3' }"
+        :ui="{ container: 'w-3/5' }"
       >
         <div class="flex gap-4">
           <USelect class="flex-1" v-model="province" :items="provinceOptions" />
@@ -217,14 +223,29 @@
         label="签名"
         description="用一句话表达自己的想法"
         class="flex items-start justify-between gap-4"
-        :ui="{ container: 'w-2/3' }"
+        :ui="{ container: 'w-3/5' }"
       >
         <UTextarea
           v-model="userInfoForm.bio"
           :rows="5"
           autoresize
           class="w-full"
-        />
+          maxlength="30"
+          :ui="{ trailing: 'flex items-end' }"
+        >
+          <template v-if="userInfoForm.bio" #trailing>
+            <div class="text-muted py-1.5 text-xs tabular-nums">
+              {{ userInfoForm.bio.length }}/30
+            </div>
+            <UButton
+              color="neutral"
+              variant="link"
+              size="sm"
+              icon="lucide:circle-x"
+              @click="userInfoForm.bio = ''"
+            />
+          </template>
+        </UTextarea>
       </UFormField>
     </UPageCard>
   </UForm>
@@ -311,6 +332,9 @@ const onFileChange = e => useUpdateOSS(e, 'avatar', userInfo, toast, avatarURL)
 const onUpdateProfile = async () => {
   const _userInfoForm = userInfoForm.value
   _userInfoForm.birthday = date.value.toString()
+  // TODO: 删除这行
+  // @ts-ignore
+  delete _userInfoForm.avatar
   const { nickname, gender, birthday, region } = _userInfoForm
   const {
     nickname: _nickname,

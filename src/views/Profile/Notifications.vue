@@ -21,7 +21,7 @@
     v-model:open="isNotificationSlideoverOpen"
     title="通知"
     description=" "
-    :ui="{ body: 'flex flex-col gap-4' }"
+    :ui="{ body: 'flex flex-col gap-4 sm:gap-6' }"
   >
     <template #body>
       <ReuseSlideoverBodyTemplate></ReuseSlideoverBodyTemplate>

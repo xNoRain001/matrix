@@ -5,13 +5,13 @@
 
       <UPageCard variant="subtle">
         <UFormField
-          v-for="{ name, label } in section.fields"
-          :key="name"
-          :name="name"
+          v-for="{ label } in section.fields"
+          :key="label"
           :label="label"
           class="flex items-center justify-between gap-2 not-last:pb-4"
+          @click="isDataManagerModalOpen = true"
         >
-          <USwitch v-model="state[name]" @update:model-value="onChange(name)" />
+          <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
         </UFormField>
       </UPageCard>
     </div>
@@ -31,7 +31,6 @@
   <UDrawer
     v-if="isMobile"
     v-model:open="isDataManagerModalOpen"
-    @close="state.a = false"
     title="修复聊天记录"
     description="这将清空所有聊天记录和聊天列表"
   >
@@ -48,9 +47,8 @@
   <UModal
     v-else
     v-model:open="isDataManagerModalOpen"
-    title="修复聊天记录"
-    description="这将清空所有聊天记录和聊天列表"
-    @after:leave="state.a = false"
+    title="清空聊天记录"
+    description="该操作将清空所有聊天记录和聊天列表"
   >
     <template #footer>
       <UButton
@@ -73,36 +71,24 @@ import { useFixIndexedDB } from '@/hooks'
 import { useUserStore } from '@/store'
 import { createReusableTemplate } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { reactive, ref } from 'vue'
+import { ref } from 'vue'
 
 const isDataManagerSlideoverOpen = defineModel<boolean>({ required: false })
 const isDataManagerModalOpen = ref(false)
 const [DefineSlideoverBodyTemplate, ReuseSlideoverBodyTemplate] =
   createReusableTemplate()
 const { isMobile, userInfo } = storeToRefs(useUserStore())
-const state = reactive<{ [key: string]: boolean }>({
-  a: false,
-  b: false
-})
 const sections = [
   {
     title: '聊天记录',
     fields: [
       {
-        name: 'a',
         label: '清空聊天记录'
       }
       // {
-      //   name: 'b',
       //   label: '清空缓存图片'
       // }
     ]
   }
 ]
-
-const onChange = name => {
-  if (state[name]) {
-    isDataManagerModalOpen.value = true
-  }
-}
 </script>

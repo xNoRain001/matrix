@@ -181,33 +181,35 @@
       description=" "
     >
       <template #body>
-        <div>
-          <UPageCard
-            v-for="items in cards"
-            variant="subtle"
-            class="mb-4"
-            :ui="{ container: 'gap-y-0 py-0 sm:py-0' }"
+        <UPageCard
+          v-for="items in cards"
+          variant="subtle"
+          class="mb-4"
+          :ui="{ container: 'divide-y divide-default' }"
+        >
+          <UFormField
+            v-for="{ label, icon, onSelect } in items"
+            :key="label"
+            class="flex items-center gap-2 not-last:pb-4"
+            @click="onSelect"
+            :ui="{ container: 'flex-1 flex items-center justify-end' }"
           >
-            <div
-              v-for="{ label, icon, onSelect } in items"
-              @click="onSelect"
-              class="flex h-12 items-center justify-between"
-            >
-              <div class="flex items-center gap-2">
+            <template #label>
+              <div class="flex gap-2">
                 <UIcon :name="icon" class="size-5" />
-                <div>{{ label }}</div>
+                {{ label }}
               </div>
-              <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
-            </div>
-          </UPageCard>
+            </template>
+            <UIcon name="lucide:chevron-right" class="size-5" />
+          </UFormField>
+        </UPageCard>
 
-          <UserInfo v-model="isUserInfoSlideoverOpen"></UserInfo>
-          <UpdatePassword
-            v-model="isUpdatePasswordSlideoverOpen"
-          ></UpdatePassword>
-          <Notifications v-model="isNotificationSlideoverOpen"></Notifications>
-          <DataManager v-model="isDataManagerSlideoverOpen"></DataManager>
-        </div>
+        <UserInfo v-model="isUserInfoSlideoverOpen"></UserInfo>
+        <UpdatePassword
+          v-model="isUpdatePasswordSlideoverOpen"
+        ></UpdatePassword>
+        <Notifications v-model="isNotificationSlideoverOpen"></Notifications>
+        <DataManager v-model="isDataManagerSlideoverOpen"></DataManager>
       </template>
     </USlideover>
     <!-- 空间动态详情 -->

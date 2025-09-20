@@ -1,10 +1,14 @@
 <template>
   <DefineSlideoverBodyTemplate>
-    <UPageCard variant="subtle">
+    <UPageCard
+      title="密码"
+      description="修改密码前需要确认你的旧密码"
+      variant="subtle"
+    >
       <UForm
+        class="flex max-w-xs flex-col gap-4"
         :schema="schema"
         :state="passwordForm"
-        class="space-y-4"
         @submit="onUpdatePassword"
       >
         <UFormField name="oldPassword">
@@ -89,23 +93,10 @@
             </template>
           </UInput>
         </UFormField>
-        <UButton loading-auto type="submit">修改密码</UButton>
+        <UButton class="w-fit" loading-auto type="submit">修改密码</UButton>
       </UForm>
     </UPageCard>
-  </DefineSlideoverBodyTemplate>
-  <USlideover
-    v-if="isMobile"
-    v-model:open="isUpdatePasswordSlideoverOpen"
-    title="修改密码"
-    description=" "
-  >
-    <template #body>
-      <ReuseSlideoverBodyTemplate></ReuseSlideoverBodyTemplate>
-    </template>
-  </USlideover>
-  <template v-else>
-    <ReuseSlideoverBodyTemplate></ReuseSlideoverBodyTemplate>
-    <UPageCard
+    <!-- <UPageCard
       title="账号"
       description="不再想使用我们的服务？您可以在此处删除您的帐户。此操作不可逆，与此帐户相关的所有信息都将被永久删除。"
       class="from-error/10 to-default bg-gradient-to-tl from-5%"
@@ -113,7 +104,21 @@
       <template #footer>
         <UButton label="注销账号" color="error" />
       </template>
-    </UPageCard>
+    </UPageCard> -->
+  </DefineSlideoverBodyTemplate>
+  <USlideover
+    v-if="isMobile"
+    v-model:open="isUpdatePasswordSlideoverOpen"
+    title="修改密码"
+    description=" "
+    :ui="{ body: 'flex flex-col gap-4 sm:gap-6' }"
+  >
+    <template #body>
+      <ReuseSlideoverBodyTemplate></ReuseSlideoverBodyTemplate>
+    </template>
+  </USlideover>
+  <template v-else>
+    <ReuseSlideoverBodyTemplate></ReuseSlideoverBodyTemplate>
   </template>
 </template>
 
