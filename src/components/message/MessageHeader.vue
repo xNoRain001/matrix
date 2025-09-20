@@ -154,9 +154,10 @@ const computeAge = v => {
     return '未知'
   }
 
-  const year = new Date().getFullYear()
-  const month = new Date().getMonth()
-  const day = new Date().getDate()
+  const date = new Date()
+  const year = date.getFullYear()
+  const month = date.getMonth()
+  const day = date.getDate()
   const _year = new Date(v).getFullYear()
   const _month = new Date(v).getMonth()
   const _day = new Date(v).getDate()

@@ -14,6 +14,7 @@ export type userInfo = {
   birthday: string
   region: string
   id: string
+  bio: string
   tokenVersion: number
 }
 

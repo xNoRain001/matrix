@@ -169,8 +169,15 @@ const overlay = useOverlay()
 const logoutModal = overlay.create(ModalLogout)
 const logoutDrawer = overlay.create(DrawerLogout)
 const offlineModal = overlay.create(ModalOffline)
-const { notifications, isMobile, globalSocket, globalPC, userInfo, config } =
-  storeToRefs(useUserStore())
+const {
+  avatarURL,
+  notifications,
+  isMobile,
+  globalSocket,
+  globalPC,
+  userInfo,
+  config
+} = storeToRefs(useUserStore())
 const {
   leaveRoomTimer,
   rtcConnected,
@@ -244,7 +251,7 @@ const navs = [
         },
         {
           label: '数据管理',
-          to: '/profile/fixer'
+          to: '/profile/data-manager'
         },
         {
           label: '登出',
@@ -1232,6 +1239,15 @@ const initLastMsgs = async () => {
   unreadMsgCounter.value = _unreadMsgCounter
 }
 
+const initAvatarURL = async () => {
+  const avatarBlob = (
+    await (await useGetDB(userInfo.value.id)).get('avatar', userInfo.value.id)
+  )?.blob
+  avatarURL.value = avatarBlob
+    ? URL.createObjectURL(avatarBlob)
+    : `${import.meta.env.VITE_OSS_BASE_URL}${userInfo.value.id}/avatar`
+}
+
 watch(
   id,
   async id => {
@@ -1240,6 +1256,7 @@ watch(
       const socket = createSocket(id)
       // 先获取本地数据库中的数据
       await initLastMsgs()
+      await initAvatarURL()
       // 拉取离线数据后，更新本地数据库中的数据和内存中的数据
       initSocket(socket)
     } else {

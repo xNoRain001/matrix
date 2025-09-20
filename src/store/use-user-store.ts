@@ -51,6 +51,7 @@ const useUserStore = defineStore('userStore', () => {
     globalPC: ref<RTCPeerConnection | null>(null),
     userInfo: ref<userInfo | null>(userInfo),
     config: ref<{ beep: boolean }>(_config),
+    avatarURL: ref(''),
     notifications: ref<
       {
         content: string

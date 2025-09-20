@@ -57,7 +57,7 @@ const links = [
     {
       icon: 'lucide:database',
       label: '数据管理',
-      to: '/profile/fixer'
+      to: '/profile/data-manager'
     }
   ],
   [

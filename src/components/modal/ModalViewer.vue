@@ -1,7 +1,7 @@
 <template>
   <UModal
-    dismissible
-    v-model:open="isViewerModalOpen"
+    fullscreen
+    :close="{ onClick: () => emit('close', false) }"
     title="预览"
     description=" "
     :ui="{
@@ -9,8 +9,12 @@
     }"
   >
     <template #body>
-      <img :class="isMobile ? 'w-full' : 'h-full'" :src="url" />
+      <img v-if="url" :class="isMobile ? 'w-full' : 'h-full'" :src="url" />
+      <UIcon v-else name="lucide:image-off" class="size-32"></UIcon>
     </template>
+    <!-- <template #footer>
+      <UButton label="下载" />
+    </template> -->
   </UModal>
 </template>
 
@@ -22,6 +26,6 @@ defineProps<{
   url: string
 }>()
 
+const emit = defineEmits<{ close: [boolean] }>()
 const { isMobile } = storeToRefs(useUserStore())
-const isViewerModalOpen = defineModel<boolean>()
 </script>

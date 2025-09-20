@@ -175,12 +175,6 @@
       ></ProfileSpace>
     </template>
   </USlideover>
-  <!-- 图片预览器 -->
-  <ModalViewer
-    fullscreen
-    v-model="isViewerModalOpen"
-    :url="viewerURL"
-  ></ModalViewer>
   <!-- 音频播放器 -->
   <audio @ended="onEnded" ref="audioRef" hidden></audio>
 </template>
@@ -193,6 +187,7 @@ import { useThrottleFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import ModalViewer from '../modal/ModalViewer.vue'
 
 let playingURL = ''
 const props = defineProps<{
@@ -212,8 +207,6 @@ const {
 } = storeToRefs(useRecentContactsStore())
 const route = useRoute()
 const isSpaceSlideoverOpen = ref(false)
-const isViewerModalOpen = ref(false)
-const viewerURL = ref('')
 const items = ref([])
 const search = ref('')
 const updateParts = ref({
@@ -250,6 +243,8 @@ const filteredItems = computed(() => {
 })
 const audioRef = ref(null)
 const toast = useToast()
+const overlay = useOverlay()
+const viewerModal = overlay.create(ModalViewer)
 
 const onResendMsg = messageRecord => {
   if (!messageRecord.resendArgs) {
@@ -330,8 +325,7 @@ const onClick = e => {
     target.children[0]?.getAttribute('data-type')
 
   if (type === 'image') {
-    isViewerModalOpen.value = true
-    viewerURL.value = target.src
+    viewerModal.open({ url: target.src })
   } else if (
     type &&
     // 如果 contacts 中点击用户打开的空间中打开了聊天界面，聊天界面中点击

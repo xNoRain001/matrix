@@ -51,14 +51,14 @@
       </UDashboardNavbar>
       <!-- 背景图片，由于移动端有 pb-16，所有高度全部使用 50vh，而不是 50% -->
       <div
-        @click="isSelf ? onUpdateSpaceBg() : useNoop()"
+        @click="viewerModal.open({ url: bgURL })"
         :class="[
           isSelf ? 'cursor-pointer' : '',
           bgURL ? 'bg-cover bg-center bg-no-repeat' : 'bg-default',
           isMatch ? '' : '-mt-16'
         ]"
         :style="bgURL ? { 'background-image': `url(${bgURL})` } : {}"
-        class="sticky -top-[calc(50vh-4rem)] z-10 h-[50vh]"
+        class="sticky -top-[calc(50vh-4rem)] z-10 h-[50vh] cursor-pointer"
       ></div>
       <!-- 个人资料卡片 -->
       <UPageCard
@@ -85,8 +85,8 @@
         </template>
         <template #header>
           <UAvatar
-            @click="isSelf ? onUpdateAvatar() : useNoop()"
-            class="absolute top-0 -translate-y-1/2"
+            @click="viewerModal.open({ url: avatarURL })"
+            class="absolute top-0 -translate-y-1/2 cursor-pointer"
             :class="isSelf ? 'cursor-pointer' : ''"
             :src="avatarURL"
             :alt="nickname"
@@ -94,7 +94,7 @@
           ></UAvatar>
           <UButton
             v-if="isSelf"
-            @click="onUpdateSpaceBg"
+            @click="spaceBgRef.click()"
             class="absolute top-4 right-4"
             icon="lucide:camera"
             variant="ghost"
@@ -151,17 +151,9 @@
       </UPageCard>
     </div>
 
-    <!-- 选择头像 -->
-    <input
-      @change="onChangeAvatar"
-      ref="avatarRef"
-      hidden
-      type="file"
-      accept="image/*"
-    />
     <!-- 选择背景图片 -->
     <input
-      @change="onChangeSpaceBg"
+      @change="onSpaceBgChange"
       ref="spaceBgRef"
       hidden
       type="file"
@@ -209,16 +201,12 @@
             </div>
           </UPageCard>
 
-          <MProfileUserInfo
-            v-model="isUserInfoSlideoverOpen"
-          ></MProfileUserInfo>
-          <MProfileUpdatePassword
+          <UserInfo v-model="isUserInfoSlideoverOpen"></UserInfo>
+          <UpdatePassword
             v-model="isUpdatePasswordSlideoverOpen"
-          ></MProfileUpdatePassword>
-          <MProfileNotifications
-            v-model="isNotificationSlideoverOpen"
-          ></MProfileNotifications>
-          <MPorfileFixer v-model="isFixerSlideoverOpen"></MPorfileFixer>
+          ></UpdatePassword>
+          <Notifications v-model="isNotificationSlideoverOpen"></Notifications>
+          <DataManager v-model="isDataManagerSlideoverOpen"></DataManager>
         </div>
       </template>
     </USlideover>
@@ -257,9 +245,13 @@ import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
 import DrawerLogout from '@/components/drawer/DrawerLogout.vue'
-import { useGenHash, useGetDB, useNoop } from '@/hooks'
-import { updateAvatar, updateSpaceBg } from '@/apis/oss'
+import { useGetDB, useUpdateOSS } from '@/hooks'
 import { useRoute } from 'vue-router'
+import ModalViewer from '../modal/ModalViewer.vue'
+import UserInfo from '@/views/Profile/UserInfo.vue'
+import UpdatePassword from '@/views/Profile/UpdatePassword.vue'
+import Notifications from '@/views/Profile/Notifications.vue'
+import DataManager from '@/views/Profile/DataManager.vue'
 
 const overlay = useOverlay()
 withDefaults(defineProps<{ isMatch?: boolean }>(), {
@@ -273,13 +265,16 @@ const logoutDrawer = overlay.create(DrawerLogout)
 const isUserInfoSlideoverOpen = ref(false)
 const isUpdatePasswordSlideoverOpen = ref(false)
 const isNotificationSlideoverOpen = ref(false)
-const isFixerSlideoverOpen = ref(false)
+const isDataManagerSlideoverOpen = ref(false)
 const isCardSlideoverOpen = ref(false)
 const spaceBgRef = ref(null)
-const avatarRef = ref(null)
 const toast = useToast()
 const { matchRes } = storeToRefs(useMatchStore())
-const { isMobile, userInfo } = storeToRefs(useUserStore())
+const {
+  isMobile,
+  userInfo,
+  avatarURL: _avatarURL
+} = storeToRefs(useUserStore())
 const { targetId, contactProfileMap, lastMsgMap } = storeToRefs(
   useRecentContactsStore()
 )
@@ -296,18 +291,18 @@ const cards = [
       onSelect: () => (isNotificationSlideoverOpen.value = true)
     }
   ],
-  [
-    {
-      icon: 'lucide:palette',
-      label: '重置主题',
-      onSelect: () => (isUserInfoSlideoverOpen.value = true)
-    }
-  ],
+  // [
+  //   {
+  //     icon: 'lucide:palette',
+  //     label: '重置主题',
+  //     onSelect: () => (isUserInfoSlideoverOpen.value = true)
+  //   }
+  // ],
   [
     {
       icon: 'lucide:database',
       label: '数据管理',
-      onSelect: () => (isFixerSlideoverOpen.value = true)
+      onSelect: () => (isDataManagerSlideoverOpen.value = true)
     },
     {
       icon: 'lucide:shield',
@@ -353,10 +348,6 @@ const bgBlob = isSelf
   ? (await (await useGetDB(userInfo.value.id)).get('bg', userInfo.value.id))
       ?.blob
   : null
-const avatarBlob = isSelf
-  ? (await (await useGetDB(userInfo.value.id)).get('avatar', userInfo.value.id))
-      ?.blob
-  : null
 const { VITE_OSS_BASE_URL } = import.meta.env
 const bgURL = ref(
   isSelf
@@ -367,70 +358,9 @@ const bgURL = ref(
     : `${VITE_OSS_BASE_URL}${targetId.value}/space-bg`
 )
 const avatarURL = ref(
-  isSelf
-    ? avatarBlob
-      ? URL.createObjectURL(avatarBlob)
-      : `${VITE_OSS_BASE_URL}${userInfo.value.id}/avatar`
-    : `${VITE_OSS_BASE_URL}${targetId.value}/avatar`
+  isSelf ? _avatarURL.value : `${VITE_OSS_BASE_URL}${targetId.value}/avatar`
 )
+const viewerModal = overlay.create(ModalViewer)
 
-const onUpdateSpaceBg = () => spaceBgRef.value.click()
-
-const onUpdateAvatar = () => avatarRef.value.click()
-
-const onChangeAvatar = async e => {
-  const input = e.target
-  const avatar = input.files[0]
-
-  if (avatar.size > 10 * 1024 * 1024) {
-    toast.add({
-      title: '发送失败，图片大小不能超过 10MB',
-      color: 'error',
-      icon: 'lucide:annoyed'
-    })
-    input.value = ''
-    return
-  }
-
-  try {
-    const hash = await useGenHash(avatar)
-    await updateAvatar(avatar, hash)
-    const db = await useGetDB(userInfo.value.id)
-    await db.put('avatar', { id: userInfo.value.id, blob: avatar })
-    avatarURL.value = URL.createObjectURL(avatar)
-    toast.add({ title: '更新头像成功', icon: 'lucide:smile' })
-  } catch (error) {
-    toast.add({ title: '更新头像失败', color: 'error', icon: 'lucide:annoyed' })
-  } finally {
-    input.value = ''
-  }
-}
-
-const onChangeSpaceBg = async e => {
-  const input = e.target
-  const bg = input.files[0]
-
-  if (bg.size > 10 * 1024 * 1024) {
-    toast.add({
-      title: '发送失败，图片大小不能超过 10MB',
-      color: 'error',
-      icon: 'lucide:annoyed'
-    })
-    input.value = ''
-    return
-  }
-
-  try {
-    const hash = await useGenHash(bg)
-    await updateSpaceBg(bg, hash)
-    const db = await useGetDB(userInfo.value.id)
-    await db.put('bg', { id: userInfo.value.id, blob: bg })
-    bgURL.value = URL.createObjectURL(bg)
-    toast.add({ title: '更新背景成功', icon: 'lucide:smile' })
-  } catch (error) {
-    toast.add({ title: '更新背景失败', color: 'error', icon: 'lucide:annoyed' })
-  } finally {
-    input.value = ''
-  }
-}
+const onSpaceBgChange = e => useUpdateOSS(e, 'bg', userInfo, toast, bgURL)
 </script>

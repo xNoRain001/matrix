@@ -1,5 +1,122 @@
 <template>
-  <UForm :state="userInfoForm">
+  <template v-if="isMobile">
+    <!-- 需要放在下面这些模态框之前才不会被覆盖 -->
+    <USlideover
+      v-model:open="isUserInfoSlideoverOpen"
+      title="个人资料"
+      description=" "
+    >
+      <template #body>
+        <UPageCard variant="subtle" :ui="{ body: 'w-full' }">
+          <template #body>
+            <div
+              @click="avatarRef.click()"
+              class="flex h-12 items-center justify-between"
+            >
+              <div>头像</div>
+              <div class="flex items-center gap-2">
+                <UAvatar
+                  :src="avatarURL"
+                  :alt="userInfoForm.nickname[0]"
+                  size="lg"
+                ></UAvatar>
+                <UIcon
+                  name="lucide:chevron-right"
+                  class="size-5 text-(--ui-text-dimmed)"
+                />
+              </div>
+            </div>
+            <div
+              v-for="{ label, click, key } in profileItems"
+              @click="click"
+              class="flex h-12 items-center justify-between"
+            >
+              <div>{{ label }}</div>
+              <div class="flex items-center gap-2">
+                <div
+                  class="w-30 overflow-hidden text-right text-ellipsis whitespace-nowrap text-(--ui-text-dimmed)"
+                >
+                  {{
+                    key === 'gender'
+                      ? useTransformGender(userInfoForm[key])
+                      : key === 'birthday'
+                        ? date.toString()
+                        : userInfoForm[key]
+                  }}
+                </div>
+                <UIcon
+                  name="lucide:chevron-right"
+                  class="size-5 text-(--ui-text-dimmed)"
+                />
+              </div>
+            </div>
+          </template>
+          <template #footer>
+            <UButton
+              label="修改资料"
+              @click="onUpdateProfile"
+              loading-auto
+            ></UButton>
+          </template>
+        </UPageCard>
+      </template>
+    </USlideover>
+
+    <UDrawer
+      v-model:open="isOpenNicknameDrawer"
+      title="修改昵称"
+      description=" "
+    >
+      <template #body>
+        <UFormField>
+          <UInput v-model="userInfoForm.nickname" class="w-full" maxlength="30">
+            <template v-if="userInfoForm.nickname" #trailing>
+              <div class="text-muted text-xs tabular-nums">
+                {{ userInfoForm.nickname.length }}/30
+              </div>
+              <UButton
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="lucide:circle-x"
+                @click="userInfoForm.nickname = ''"
+              />
+            </template>
+          </UInput>
+        </UFormField>
+      </template>
+    </UDrawer>
+
+    <UDrawer v-model:open="isOpenGenderDrawer" title="修改性别" description=" ">
+      <template #body>
+        <USelect
+          class="w-full"
+          v-model="userInfoForm.gender"
+          :items="genderOptions"
+        />
+      </template>
+    </UDrawer>
+
+    <UDrawer
+      v-model:open="isOpenBirthdayDrawer"
+      title="修改生日"
+      description=" "
+    >
+      <template #body>
+        <DatePicker v-model="date"></DatePicker>
+      </template>
+    </UDrawer>
+
+    <UDrawer v-model:open="isOpenRegionDrawer" title="修改地区" description=" ">
+      <template #body>
+        <div class="flex gap-2">
+          <USelect class="flex-1" v-model="province" :items="provinceOptions" />
+          <USelect class="flex-1" v-model="city" :items="cityOptions" />
+        </div>
+      </template>
+    </UDrawer>
+  </template>
+  <UForm v-else :state="userInfoForm">
     <UPageCard
       title="个人资料"
       description="这些信息将公开展示"
@@ -20,17 +137,20 @@
       <UFormField
         name="name"
         label="昵称"
-        description="修改昵称"
+        description="填写你的昵称"
         class="flex items-start justify-between gap-4"
+        :ui="{ container: 'w-2/3' }"
       >
-        <UInput class="w-60" v-model="userInfoForm.nickname" maxlength="30">
+        <UInput class="w-full" v-model="userInfoForm.nickname" maxlength="30">
           <template v-if="userInfoForm.nickname" #trailing>
-            {{ `${userInfoForm.nickname.length} / 30` }}
+            <div class="text-muted text-xs tabular-nums">
+              {{ userInfoForm.nickname.length }}/30
+            </div>
             <UButton
               color="neutral"
               variant="link"
-              icon="i-lucide-circle-x"
-              aria-label="Clear input"
+              size="sm"
+              icon="lucide:circle-x"
               @click="userInfoForm.nickname = ''"
             />
           </template>
@@ -40,11 +160,12 @@
       <UFormField
         name="email"
         label="性别"
-        description="修改性别"
+        description="填写你的性别"
         class="flex items-start justify-between gap-4"
+        :ui="{ container: 'w-2/3' }"
       >
         <USelect
-          class="w-60"
+          class="w-full"
           v-model="userInfoForm.gender"
           :items="genderOptions"
         />
@@ -53,96 +174,100 @@
       <UFormField
         name="username"
         label="生日"
-        description="修改生日"
+        description="填写你的生日"
         class="flex items-start justify-between gap-4"
+        :ui="{ container: 'w-2/3' }"
       >
-        <UInput
-          v-model="userInfoForm.birthday"
-          v-maska="'####/##/##'"
-          placeholder="YYYY/MM/DD"
-          icon="i-lucide-calendar"
-          class="w-60"
-        />
+        <DatePicker v-model="date"></DatePicker>
       </UFormField>
       <USeparator />
       <UFormField
         name="username"
         label="地区"
-        description="修改地区"
+        description="填写你的地区"
         class="flex items-start justify-between gap-4"
+        :ui="{ container: 'w-2/3' }"
       >
-        <div class="flex w-60 justify-between gap-4">
-          <USelectMenu
-            class="w-full"
-            v-model="province"
-            :items="provinceOptions"
-          />
-          <USelectMenu class="w-full" v-model="city" :items="cityOptions" />
+        <div class="flex gap-4">
+          <USelect class="flex-1" v-model="province" :items="provinceOptions" />
+          <USelect class="flex-1" v-model="city" :items="cityOptions" />
         </div>
       </UFormField>
-      <!-- <USeparator />
+      <USeparator />
       <UFormField
         name="avatar"
         label="头像"
-        description="修改头像，支持格式 JPG/PNG，最大尺寸为 1MB"
+        description="修改头像，图片最大尺寸为 10 MB"
         class="flex items-start justify-between gap-4"
       >
         <div class="flex items-center gap-3">
           <UAvatar
-            :src="userInfoForm.avatar"
-            :alt="userInfoForm.name"
+            @click="viewerModal.open({ url: avatarURL })"
+            class="cursor-pointer"
+            :src="avatarURL"
+            :alt="userInfoForm.nickname[0]"
             size="lg"
           />
-          <UButton label="选择" @click="onFileClick" />
-          <input
-            ref="fileRef"
-            type="file"
-            class="hidden"
-            accept=".jpg, .jpeg, .png"
-            @change="onFileChange"
-          />
+          <UButton label="选择" @click="avatarRef.click()" />
         </div>
       </UFormField>
       <USeparator />
       <UFormField
         name="bio"
         label="签名"
-        description="修改签名"
+        description="用一句话表达自己的想法"
         class="flex items-start justify-between gap-4"
+        :ui="{ container: 'w-2/3' }"
       >
         <UTextarea
           v-model="userInfoForm.bio"
           :rows="5"
           autoresize
-          class="w-60"
+          class="w-full"
         />
-      </UFormField> -->
+      </UFormField>
     </UPageCard>
   </UForm>
+
+  <!-- 选择头像 -->
+  <input
+    @change="onFileChange"
+    ref="avatarRef"
+    hidden
+    type="file"
+    accept="image/*"
+  />
 </template>
 
-<script setup lang="ts">
-import { ref } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useUserStore } from '@/store'
-import { watch } from 'vue'
+<script lang="ts" setup>
+import { updateProfile } from '@/apis/profile'
 import { provinceCityMap } from '@/const'
-import { updateProfile } from '@/apis/user'
-import { vMaska } from 'maska/vue'
+import { useTransformGender, useUpdateOSS } from '@/hooks'
+import { useUserStore } from '@/store'
+import { storeToRefs } from 'pinia'
+import { ref, shallowRef, watch } from 'vue'
+import { parseDate } from '@internationalized/date'
+import ModalViewer from '@/components/modal/ModalViewer.vue'
 
+const isUserInfoSlideoverOpen = defineModel<boolean>({ required: false })
 const toast = useToast()
-// const fileRef = ref<HTMLInputElement>()
-const { userInfo } = storeToRefs(useUserStore())
+const isOpenGenderDrawer = ref(false)
+const isOpenBirthdayDrawer = ref(false)
+const isOpenRegionDrawer = ref(false)
+const isOpenNicknameDrawer = ref(false)
+const { isMobile, userInfo, avatarURL } = storeToRefs(useUserStore())
 const userInfoForm = ref({ ...userInfo.value })
 const { region } = userInfo.value
-const [_province, _city] =
-  region === '未知' ? [null, null] : region.split(' - ')
+const [_province, _city] = region === '' ? [null, null] : region.split(' - ')
 const province = ref(_province)
 const city = ref(_city)
 const sourceProvinceOptions = Object.keys(provinceCityMap)
 const provinceOptions = ref(sourceProvinceOptions)
 const cityOptions = ref(provinceCityMap[_province] || [])
+const unknownGenderOption =
+  userInfo.value.gender === 'other' ? [{ label: '未知', value: 'other' }] : []
 const genderOptions = [
+  ...unknownGenderOption,
   {
     label: '男',
     value: 'male'
@@ -152,9 +277,40 @@ const genderOptions = [
     value: 'female'
   }
 ]
+const profileItems = [
+  {
+    label: '昵称',
+    key: 'nickname',
+    click: () => (isOpenNicknameDrawer.value = true)
+  },
+  {
+    label: '性别',
+    key: 'gender',
+    click: () => (isOpenGenderDrawer.value = true)
+  },
+  {
+    label: '生日',
+    key: 'birthday',
+    click: () => (isOpenBirthdayDrawer.value = true)
+  },
+  {
+    label: '地区',
+    key: 'region',
+    click: () => (isOpenRegionDrawer.value = true)
+  }
+]
+const date = shallowRef(
+  parseDate((userInfoForm.value.birthday || '2000-01-01').replace(/\//g, '-'))
+)
+const overlay = useOverlay()
+const viewerModal = overlay.create(ModalViewer)
+const avatarRef = ref(null)
+
+const onFileChange = e => useUpdateOSS(e, 'avatar', userInfo, toast, avatarURL)
 
 const onUpdateProfile = async () => {
   const _userInfoForm = userInfoForm.value
+  _userInfoForm.birthday = date.value.toString()
   const { nickname, gender, birthday, region } = _userInfoForm
   const {
     nickname: _nickname,
@@ -173,6 +329,11 @@ const onUpdateProfile = async () => {
       title: '修改资料成功',
       icon: 'lucide:smile'
     })
+
+    if (isMobile.value) {
+      isUserInfoSlideoverOpen.value = false
+    }
+
     return
   }
 
@@ -190,6 +351,10 @@ const onUpdateProfile = async () => {
       title: '修改资料成功',
       icon: 'lucide:smile'
     })
+
+    if (isMobile.value) {
+      isUserInfoSlideoverOpen.value = false
+    }
   } catch (error) {
     toast.add({
       title: error.message,
@@ -212,18 +377,4 @@ watch(city, v => {
     userInfoForm.value.region = `${province.value} - ${v}`
   }
 })
-
-// const onFileClick = () => {
-//   fileRef.value.click()
-// }
-
-// const onFileChange = (e: Event) => {
-//   const input = e.target as HTMLInputElement
-
-//   if (!input.files?.length) {
-//     return
-//   }
-
-//   userInfoForm.value.avatar = URL.createObjectURL(input.files[0])
-// }
 </script>

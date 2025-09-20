@@ -41,8 +41,10 @@ import useIsDeviceOpen from './use-is-device-open'
 import useUpdateLastMsgToDB from './use-update-last-msg-to-db'
 import useInitIndexedDBData from './use-init-indexed-db-data'
 import useAddPropsForMessageRecord from './use-add-props-for-message-record'
+import useUpdateOSS from './use-update-oss'
 
 export {
+  useUpdateOSS,
   useAddPropsForMessageRecord,
   useInitIndexedDBData,
   useUpdateLastMsgToDB,

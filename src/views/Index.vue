@@ -129,18 +129,18 @@
     </div>
     <div class="mt-4 flex items-center">
       <div>地区：</div>
-      <div class="ml-2 flex gap-2">
-        <USelectMenu
+      <div class="ml-2 flex flex-1 gap-2">
+        <USelect
           :color="province ? 'primary' : 'neutral'"
           :variant="province ? 'subtle' : 'outline'"
-          class="w-20 sm:w-30"
+          class="flex-1"
           v-model="province"
           :items="provinceOptions"
         />
-        <USelectMenu
+        <USelect
           :color="city ? 'primary' : 'neutral'"
           :variant="city ? 'subtle' : 'outline'"
-          class="w-20 sm:w-30"
+          class="flex-1"
           v-model="city"
           :items="cityOptions"
         />

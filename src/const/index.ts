@@ -6,6 +6,29 @@ export const received = '接收完成...'
 export const voiceChatInviteToastPendingTime = 15000 // 发起方持续 15 s
 export const voiceChatInviteToastExpireTime = 13000 // 接收方持续 13 s
 
+export const weekMap = {
+  Mon: '一',
+  Tue: '二',
+  Wed: '三',
+  Thu: '四',
+  Fri: '五',
+  Sat: '六',
+  Sun: '日'
+}
+export const monthMap = {
+  January: '1月',
+  February: '2月',
+  March: '3月',
+  April: '4月',
+  May: '5月',
+  June: '6月',
+  July: '7月',
+  August: '8月',
+  September: '9月',
+  October: '10月',
+  November: '11月',
+  December: '12月'
+}
 const radius = localStorage.getItem('nuxt-ui-radius')
 export const appConfig = {
   theme: {
