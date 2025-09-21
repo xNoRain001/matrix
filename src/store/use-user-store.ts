@@ -3,17 +3,10 @@ import { defineStore } from 'pinia'
 import type { Socket } from 'socket.io-client'
 import type { userInfo } from '@/types'
 import { useBreakpoints, breakpointsTailwind } from '@vueuse/core'
+import { useInitLocalStorate } from '@/hooks'
 
 const useUserStore = defineStore('userStore', () => {
   let userInfo = null
-  let _notifications = []
-  let _config = {
-    beep: true
-  }
-
-  try {
-    _notifications = JSON.parse(localStorage.getItem('notifications') || '[]')
-  } catch {}
 
   try {
     userInfo = JSON.parse(
@@ -36,12 +29,24 @@ const useUserStore = defineStore('userStore', () => {
     localStorage.removeItem('token')
   }
 
-  try {
-    _config = JSON.parse(
-      localStorage.getItem(`config-${userInfo?.id || ''}`) || '{}'
-    )
-  } catch {}
-
+  const _notifications = useInitLocalStorate('notifications', [])
+  const defaultConfig = {
+    notification: {
+      beep: true,
+      beepOption: 0,
+      vibration: false,
+      messageBanner: false
+    },
+    theme: {
+      sendBtn: false,
+      isChatBgOpen: false,
+      chatBg: ''
+    }
+  }
+  const _config = useInitLocalStorate(
+    `config-${userInfo?.id || ''}`,
+    defaultConfig
+  )
   const breakpoints = useBreakpoints(breakpointsTailwind)
   const isMobile = breakpoints.smaller('lg')
 
@@ -50,7 +55,7 @@ const useUserStore = defineStore('userStore', () => {
     globalSocket: ref<Socket | null>(null),
     globalPC: ref<RTCPeerConnection | null>(null),
     userInfo: ref<userInfo | null>(userInfo),
-    config: ref<{ beep: boolean }>(_config),
+    config: ref<typeof defaultConfig>(_config),
     avatarURL: ref(''),
     notifications: ref<
       {

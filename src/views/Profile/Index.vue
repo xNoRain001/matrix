@@ -45,22 +45,32 @@ const links = [
       to: '/profile/user-info'
     },
     {
-      icon: 'lucide:shield',
-      label: '修改密码',
-      to: '/profile/update-password'
-    },
-    {
       icon: 'lucide:bell',
       label: '通知',
       to: '/profile/notifications'
     },
     {
+      icon: 'lucide:palette',
+      label: '主题',
+      to: '/profile/theme'
+    },
+    {
       icon: 'lucide:database',
       label: '数据管理',
       to: '/profile/data-manager'
+    },
+    {
+      icon: 'lucide:shield',
+      label: '修改密码',
+      to: '/profile/update-password'
     }
   ],
   [
+    // {
+    //   label: '注销账号',
+    //   icon: 'lucide:ban',
+    //   to: '/profile/logoff'
+    // },
     {
       label: '登出',
       icon: 'lucide:log-out',

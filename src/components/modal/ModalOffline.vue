@@ -1,16 +1,14 @@
 <template>
   <UModal :dismissible="false" title="网络错误" description=" " :close="false">
     <template #footer>
-      <div class="flex gap-2">
-        <UButton
-          color="error"
-          label="重新连接"
-          :loading="reconnecting"
-          loading-icon="i-lucide-loader"
-          @click="onReconnect(emit)"
-        ></UButton>
-        <UButton label="刷新" class="justify-center" @click="onReload" />
-      </div>
+      <UButton
+        color="error"
+        label="重新连接"
+        :loading="reconnecting"
+        loading-icon="i-lucide-loader"
+        @click="onReconnect(emit)"
+      ></UButton>
+      <UButton label="刷新" class="justify-center" @click="onReload" />
     </template>
   </UModal>
 </template>

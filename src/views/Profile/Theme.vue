@@ -4,43 +4,27 @@
       <UPageCard :title="section.title" variant="naked" class="mb-4" />
 
       <UPageCard
-        v-if="index === 0"
         variant="subtle"
         :ui="{ container: 'divide-y divide-default' }"
       >
         <UFormField
-          v-for="{ name, label } in section.fields"
+          v-for="{ name, label, onSelect } in section.fields"
           :key="name"
           :name="name"
           :label="label"
           class="flex items-center justify-between gap-2 not-last:pb-4"
-        >
-          <USwitch
-            v-model="config.notification[name]"
-            @update:model-value="onChange"
-          />
-        </UFormField>
-      </UPageCard>
-      <UPageCard
-        v-else
-        variant="subtle"
-        :ui="{ container: 'divide-y divide-default' }"
-      >
-        <UFormField
-          v-for="({ name, label }, index) in section.fields"
-          :key="name"
-          :name="name"
-          :label="label"
-          class="flex items-center justify-between gap-2 not-last:pb-4"
+          @click="onSelect ? onSelect() : useNoop()"
         >
           <UIcon
-            :name="
-              config.notification.beepOption === index
-                ? 'lucide:circle-check'
-                : ''
-            "
-            class="text-primary size-5"
+            v-if="name === 'chatBg'"
+            name="lucide:chevron-right"
+            class="size-5"
           ></UIcon>
+          <USwitch
+            v-else
+            v-model="config.theme[name]"
+            @update:model-value="onChange"
+          />
         </UFormField>
       </UPageCard>
     </div>
@@ -48,7 +32,7 @@
   <USlideover
     v-if="isMobile"
     v-model:open="isNotificationSlideoverOpen"
-    title="通知"
+    title="主题"
     description=" "
     :ui="{ body: 'flex flex-col gap-4 sm:gap-6' }"
   >
@@ -57,12 +41,21 @@
     </template>
   </USlideover>
   <ReuseSlideoverBodyTemplate v-else></ReuseSlideoverBodyTemplate>
+  <input
+    @change="onUpdateChatBg"
+    ref="chatBgRef"
+    hidden
+    type="file"
+    accept="image/*"
+  />
 </template>
 
 <script setup lang="ts">
+import { useGetDB, useNoop } from '@/hooks'
 import { useUserStore } from '@/store'
 import { createReusableTemplate } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
+import { ref } from 'vue'
 
 const isNotificationSlideoverOpen = defineModel<boolean>({ required: false })
 const [DefineSlideoverBodyTemplate, ReuseSlideoverBodyTemplate] =
@@ -70,45 +63,50 @@ const [DefineSlideoverBodyTemplate, ReuseSlideoverBodyTemplate] =
 const { config, userInfo, isMobile } = storeToRefs(useUserStore())
 const sections = [
   {
-    title: '消息通知',
+    title: '背景',
     fields: [
-      {
-        name: 'beep',
-        label: '消息提示音'
-      }
       // {
-      //   name: 'vibration',
-      //   label: '震动'
+      //   name: 'sendBtn',
+      //   label: '独立的发送按钮',
+      //   description: '将键盘上的发送按钮替换为换行'
       // },
       // {
-      //   name: 'messageBanner',
-      //   label: '消息横幅'
-      // }
-    ]
-  },
-  {
-    title: '提示音',
-    fields: [
+      //   name: 'fontSize',
+      //   label: '字体大小'
+      // },
+      // {
+      //   name: 'i18n',
+      //   label: '多语言'
+      // },
       {
-        name: '0',
-        label: '提示音1'
+        name: 'isChatBgOpen',
+        label: '开启聊天背景'
       },
       {
-        name: '1',
-        label: '提示音2'
-      },
-      {
-        name: '2',
-        label: '提示音3'
+        name: 'chatBg',
+        label: '设置聊天背景',
+        onSelect: () => chatBgRef.value.click()
       }
     ]
   }
 ]
+const chatBgRef = ref(null)
+const toast = useToast()
 
 const onChange = async () => {
   localStorage.setItem(
     `config-${userInfo.value.id}`,
     JSON.stringify(config.value)
   )
+}
+
+const onUpdateChatBg = async e => {
+  const input = e.target
+  const file = input.files[0]
+  const db = await useGetDB(userInfo.value.id)
+  await db.put('chatBg', { id: userInfo.value.id, blob: file })
+  config.value.theme.chatBg = URL.createObjectURL(file)
+  input.value = ''
+  toast.add({ title: '更新聊天背景成功', icon: 'lucide:smile' })
 }
 </script>

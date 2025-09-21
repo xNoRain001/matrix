@@ -5,6 +5,8 @@
     :emit-update="true"
     ref="msgContainerRef"
     class="h-full p-4 sm:p-6"
+    :class="chatBg ? 'bg-cover bg-center bg-no-repeat' : ''"
+    :style="chatBg ? { 'background-image': `url(${chatBg})` } : {}"
     @update="onUpdate"
     @click="onClick"
     @scroll="onScroll"
@@ -193,7 +195,7 @@ let playingURL = ''
 const props = defineProps<{
   isMatch: boolean
 }>()
-const { isMobile, userInfo } = storeToRefs(useUserStore())
+const { config, isMobile, userInfo } = storeToRefs(useUserStore())
 const { matchRes } = storeToRefs(useMatchStore())
 const {
   targetId,
@@ -245,6 +247,10 @@ const audioRef = ref(null)
 const toast = useToast()
 const overlay = useOverlay()
 const viewerModal = overlay.create(ModalViewer)
+const chatBg = computed(() => {
+  const { isChatBgOpen, chatBg } = config.value.theme
+  return isChatBgOpen && chatBg
+})
 
 const onResendMsg = messageRecord => {
   if (!messageRecord.resendArgs) {

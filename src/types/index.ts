@@ -18,26 +18,6 @@ export type userInfo = {
   tokenVersion: number
 }
 
-export type lastMsg = {
-  id: string
-  profile: Omit<userInfo, 'tokenVersion' | 'id'>
-  timestamp: number
-  content: string
-  sent: boolean
-  unreadMsgs: number
-  timeAgo: string
-  online: boolean
-}
-
-export type lastMsgMap = Record<string, lastMsg>
-
-export type messageLabel = {
-  id?: string | number
-  contact: string
-  type: 'label'
-  timestamp: number
-}
-
 export type message = {
   id?: string | number
   type: 'text' | 'label' | 'image' | 'audio'
@@ -57,12 +37,3 @@ export type message = {
   error?: boolean
   resendArgs?: any[]
 }
-
-export type user = {
-  id: string
-  nickname: string
-  remark: string
-  status: 'normal' | 'blocked' | 'deleted'
-}
-
-export type users = user[]

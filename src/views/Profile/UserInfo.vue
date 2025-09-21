@@ -60,7 +60,7 @@
           </UFormField>
           <UButton
             label="修改资料"
-            class="w-fit"
+            class="flex justify-center"
             @click="onUpdateProfile"
             loading-auto
           ></UButton>
@@ -331,10 +331,17 @@ const onFileChange = e => useUpdateOSS(e, 'avatar', userInfo, toast, avatarURL)
 
 const onUpdateProfile = async () => {
   const _userInfoForm = userInfoForm.value
+
+  if (province.value && !city.value) {
+    province.value = null
+    _userInfoForm.region = ''
+  }
+
   _userInfoForm.birthday = date.value.toString()
   // TODO: 删除这行
   // @ts-ignore
   delete _userInfoForm.avatar
+  delete _userInfoForm.bio
   const { nickname, gender, birthday, region } = _userInfoForm
   const {
     nickname: _nickname,
@@ -389,10 +396,11 @@ const onUpdateProfile = async () => {
 }
 
 watch(province, v => {
-  cityOptions.value = provinceCityMap[v]
-  // 切换省份时清空市区
-  city.value = null // 赋值为 '' 会引起样式问题
-  userInfoForm.value.region = v
+  if (v) {
+    cityOptions.value = provinceCityMap[v]
+    // 切换省份时清空市区，赋值为 '' 可能会导致样式问题
+    city.value = null
+  }
 })
 
 watch(city, v => {

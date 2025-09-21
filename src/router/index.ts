@@ -44,6 +44,14 @@ const router = createRouter({
         {
           path: 'data-manager',
           component: () => import('@/views/Profile/DataManager.vue')
+        },
+        {
+          path: 'logoff',
+          component: () => import('@/views/Profile/Logoff.vue')
+        },
+        {
+          path: 'theme',
+          component: () => import('@/views/Profile/Theme.vue')
         }
       ]
     },

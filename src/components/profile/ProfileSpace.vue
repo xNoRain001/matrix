@@ -210,6 +210,8 @@
         ></UpdatePassword>
         <Notifications v-model="isNotificationSlideoverOpen"></Notifications>
         <DataManager v-model="isDataManagerSlideoverOpen"></DataManager>
+        <Logoff v-model="isLogoffSlideoverOpen"></Logoff>
+        <Theme v-model="isThemeSlideoverOpen"></Theme>
       </template>
     </USlideover>
     <!-- 空间动态详情 -->
@@ -246,7 +248,6 @@
 import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
-import DrawerLogout from '@/components/drawer/DrawerLogout.vue'
 import { useGetDB, useUpdateOSS } from '@/hooks'
 import { useRoute } from 'vue-router'
 import ModalViewer from '../modal/ModalViewer.vue'
@@ -254,6 +255,9 @@ import UserInfo from '@/views/Profile/UserInfo.vue'
 import UpdatePassword from '@/views/Profile/UpdatePassword.vue'
 import Notifications from '@/views/Profile/Notifications.vue'
 import DataManager from '@/views/Profile/DataManager.vue'
+import Logoff from '@/views/Profile/Logoff.vue'
+import Theme from '@/views/Profile/Theme.vue'
+import ModalLogout from '../modal/ModalLogout.vue'
 
 const overlay = useOverlay()
 withDefaults(defineProps<{ isMatch?: boolean }>(), {
@@ -263,12 +267,16 @@ const emits = defineEmits(['close'])
 const container = ref(null)
 const isMessageViewSlideoverOpen = ref(false)
 const isSettingSlideoverOpen = ref(false)
-const logoutDrawer = overlay.create(DrawerLogout)
 const isUserInfoSlideoverOpen = ref(false)
 const isUpdatePasswordSlideoverOpen = ref(false)
 const isNotificationSlideoverOpen = ref(false)
 const isDataManagerSlideoverOpen = ref(false)
 const isCardSlideoverOpen = ref(false)
+const isLogoffSlideoverOpen = ref(false)
+const isThemeSlideoverOpen = ref(false)
+const isFeedbackSlideoverOpen = ref(false)
+const isHelpAndSupportSlideoverOpen = ref(false)
+const isAboutSlideoverOpen = ref(false)
 const spaceBgRef = ref(null)
 const toast = useToast()
 const { matchRes } = storeToRefs(useMatchStore())
@@ -291,15 +299,13 @@ const cards = [
       icon: 'lucide:bell',
       label: '通知',
       onSelect: () => (isNotificationSlideoverOpen.value = true)
+    },
+    {
+      icon: 'lucide:palette',
+      label: '主题',
+      onSelect: () => (isThemeSlideoverOpen.value = true)
     }
   ],
-  // [
-  //   {
-  //     icon: 'lucide:palette',
-  //     label: '重置主题',
-  //     onSelect: () => (isUserInfoSlideoverOpen.value = true)
-  //   }
-  // ],
   [
     {
       icon: 'lucide:database',
@@ -314,9 +320,31 @@ const cards = [
   ],
   [
     {
+      icon: 'lucide:message-circle',
+      label: '反馈',
+      onSelect: () => (isFeedbackSlideoverOpen.value = true)
+    },
+    {
+      icon: 'lucide:circle-question-mark',
+      label: '帮助和支持',
+      onSelect: () => (isHelpAndSupportSlideoverOpen.value = true)
+    },
+    {
+      icon: 'lucide:info',
+      label: '关于',
+      onSelect: () => (isAboutSlideoverOpen.value = true)
+    }
+  ],
+  [
+    // {
+    //   icon: 'lucide:ban',
+    //   label: '注销账号',
+    //   onSelect: () => (isLogoffSlideoverOpen.value = true)
+    // },
+    {
       icon: 'lucide:log-out',
       label: '退出登录',
-      onSelect: () => logoutDrawer.open()
+      onSelect: () => logoutModal.open()
     }
   ]
 ]
@@ -363,6 +391,7 @@ const avatarURL = ref(
   isSelf ? _avatarURL.value : `${VITE_OSS_BASE_URL}${targetId.value}/avatar`
 )
 const viewerModal = overlay.create(ModalViewer)
+const logoutModal = overlay.create(ModalLogout)
 
 const onSpaceBgChange = e => useUpdateOSS(e, 'bg', userInfo, toast, bgURL)
 </script>

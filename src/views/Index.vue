@@ -232,9 +232,12 @@ const is30Plus = computed(() => filter.value.age.min === 30)
 const isUndefAge = computed(
   () => filter.value.age.min === Number.MAX_SAFE_INTEGER
 )
-const isUndefRegion = computed(() => filter.value.region === null)
-const province = ref(filter.value.region?.split(' - ')?.[0] || null)
-const city = ref(filter.value.region?.split(' - ')?.[1] || null)
+const isUndefRegion = computed(() => filter.value.region === '')
+const [_province, _city] = isUndefRegion.value
+  ? [null, null]
+  : filter.value.region.split(' - ')
+const province = ref(_province)
+const city = ref(_city)
 const sourceProvinceOptions = Object.keys(provinceCityMap)
 const provinceOptions = ref(sourceProvinceOptions)
 const cityOptions = ref(provinceCityMap[province.value] || [])
@@ -242,6 +245,11 @@ const cityOptions = ref(provinceCityMap[province.value] || [])
 const onUpdateFilter = async () => {
   try {
     isOpenFilterDrawer.value = false
+
+    if (province.value && !city.value) {
+      province.value = null
+    }
+
     localStorage.setItem(
       `filter-${userInfo.value.id}`,
       JSON.stringify(filter.value)
@@ -260,7 +268,7 @@ const onUpdateFilter = async () => {
 }
 
 const onSelectRegion = () => {
-  // selectedRegion.value = ''
+  filter.value.region = ''
   province.value = null
   city.value = null
 }
@@ -330,10 +338,11 @@ const onMatch = async (_matchType, to) => {
 }
 
 watch(province, v => {
-  cityOptions.value = provinceCityMap[v]
-  // 切换省份时清空市区
-  city.value = null // 赋值为 '' 会引起样式问题
-  filter.value.region = v
+  if (v) {
+    cityOptions.value = provinceCityMap[v]
+    // 切换省份时清空市区
+    city.value = null
+  }
 })
 
 watch(city, v => {

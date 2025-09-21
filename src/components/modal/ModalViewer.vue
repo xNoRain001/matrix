@@ -28,4 +28,10 @@ defineProps<{
 
 const emit = defineEmits<{ close: [boolean] }>()
 const { isMobile } = storeToRefs(useUserStore())
+
+// const onDownload = (url, filename) => {
+//   fetch(url)
+//     .then(res => res.blob())
+//     .then(blob => useExportFile(filename, blob))
+// }
 </script>

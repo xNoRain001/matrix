@@ -1,29 +1,17 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { lastMsgMap } from '@/types'
+import type { userInfo } from '@/types'
 import useUserStore from './use-user-store'
+import { useInitLocalStorate } from '@/hooks'
 
 const useRecentContactsStore = defineStore('recentContactsStore', () => {
-  let _contactList = []
-  let _contactNotifications = []
-  let _contactProfileMap = {}
   const id = useUserStore().userInfo?.id || ''
-
-  try {
-    _contactList = JSON.parse(localStorage.getItem(`contactList-${id}`) || '[]')
-  } catch {}
-
-  try {
-    _contactNotifications = JSON.parse(
-      localStorage.getItem(`contactNotifications-${id}`) || '[]'
-    )
-  } catch {}
-
-  try {
-    _contactProfileMap = JSON.parse(
-      localStorage.getItem(`contactProfileMap-${id}`) || '{}'
-    )
-  } catch {}
+  const _contactList = useInitLocalStorate(`contactList-${id}`, [])
+  const _contactNotifications = useInitLocalStorate(
+    `contactNotifications-${id}`,
+    []
+  )
+  const _contactProfileMap = useInitLocalStorate(`contactProfileMap-${id}`, {})
 
   return {
     contactNotifications: ref<
@@ -48,7 +36,21 @@ const useRecentContactsStore = defineStore('recentContactsStore', () => {
     isReceivingOfflineMsgs: ref(true),
     lastFetchedId: ref(Infinity),
     hashToBlobURLMap: ref<Map<string, string>>(new Map()),
-    lastMsgMap: ref<lastMsgMap>({}),
+    lastMsgMap: ref<
+      Record<
+        string,
+        {
+          id: string
+          profile: Omit<userInfo, 'tokenVersion' | 'id'>
+          timestamp: number
+          content: string
+          sent: boolean
+          unreadMsgs: number
+          timeAgo: string
+          online: boolean
+        }
+      >
+    >({}),
     lastMsgList: ref<string[]>([]),
     unreadMsgCounter: ref(0)
   }

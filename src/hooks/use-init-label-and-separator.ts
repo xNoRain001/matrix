@@ -1,12 +1,15 @@
-import type { messageLabel } from '@/types'
-
 const fiveMins = 5 * 1000 * 60
 
 const useInitLabelAndSeparator = (messageRecord, _lastMsgMap, targetId) => {
   const { timestamp, sent } = messageRecord
   const isOverFiveMins =
     timestamp - (_lastMsgMap[targetId]?.timestamp || 0) > fiveMins
-  const label: messageLabel = isOverFiveMins
+  const label: {
+    id?: string | number
+    contact: string
+    type: 'label'
+    timestamp: number
+  } = isOverFiveMins
     ? {
         contact: targetId,
         type: 'label',

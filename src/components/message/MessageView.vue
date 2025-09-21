@@ -42,7 +42,6 @@
           v-if="!recording && !isRecord"
           @keydown.enter.prevent="onSendMsg"
           @focus="onFocus"
-          enterkeyhint="send"
           class="grow"
           v-model="message"
           :rows="1"
@@ -202,12 +201,6 @@ const isRecord = ref(false)
 const recording = ref(false)
 const isCancelRecordTipShow = ref(false)
 const isContacts = computed(() => route.path === '/contacts')
-
-// const onDownload = (url, filename) => {
-//   fetch(url)
-//     .then(res => res.blob())
-//     .then(blob => useExportFile(filename, blob))
-// }
 
 const onSpeak = async () => {
   if (await useIsDeviceOpen(toast, 'microphone', '麦克风')) {

@@ -32,28 +32,28 @@ const addMsgToView = (
     receiver: targetId,
     timestamp
   }
-  const payload: message = isText
+  const payload = isText
     ? {
-        type: 'text',
+        type: 'text' as const,
         content: message,
         ...common
       }
     : isImage
       ? {
-          type: 'image',
+          type: 'image' as const,
           hash,
           width,
           height,
           ...common
         }
       : {
-          type: 'audio',
+          type: 'audio' as const,
           hash,
           duration,
           ...common
         }
   const common2 = { sent: true, contact: targetId }
-  const messageRecord = {
+  const messageRecord: message = {
     ...payload,
     ...common2
   }

@@ -102,7 +102,7 @@
       <!-- 音频 -->
       <audio hidden ref="localAudioRef" muted></audio>
       <audio hidden ref="remoteAudioRef" autoplay></audio>
-      <audio hidden ref="beepAudioRef" autoplay></audio>
+      <audio hidden ref="beepAudioRef" src="/audio/beep.mp3"></audio>
     </UApp>
 
     <!-- 注册登录和重置密码等内容 -->
@@ -120,10 +120,9 @@ import {
   useUserStore,
   useWebRTCStore
 } from './store'
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import ModalLogout from './components/modal/ModalLogout.vue'
-import DrawerLogout from './components/drawer/DrawerLogout.vue'
 import { io } from 'socket.io-client'
 import {
   useInitLastMsg,
@@ -147,9 +146,10 @@ import {
 } from './hooks'
 import { useRouter } from 'vue-router'
 import { voiceChatInviteToastExpireTime } from './const'
-import type { lastMsg, lastMsgMap } from './types'
 import ModalOffline from './components/modal/ModalOffline.vue'
 import { useThrottleFn } from '@vueuse/core'
+import ModalFeedback from './components/modal/ModalFeedback.vue'
+import type { message } from './types'
 
 let voiceChatInviteToastId = null
 let matchTimer = null
@@ -167,7 +167,7 @@ const maxReconnectionAttempts = 1
 const toast = useToast()
 const overlay = useOverlay()
 const logoutModal = overlay.create(ModalLogout)
-const logoutDrawer = overlay.create(DrawerLogout)
+const feedbackModal = overlay.create(ModalFeedback)
 const offlineModal = overlay.create(ModalOffline)
 const {
   avatarURL,
@@ -238,26 +238,32 @@ const navs = [
           exact: true
         },
         {
-          label: '修改资料',
+          label: '个人资料',
           to: '/profile/user-info'
-        },
-        {
-          label: '修改密码',
-          to: '/profile/update-password'
         },
         {
           label: '通知',
           to: '/profile/notifications'
         },
         {
+          label: '主题',
+          to: '/profile/theme'
+        },
+        {
           label: '数据管理',
           to: '/profile/data-manager'
         },
         {
+          label: '修改密码',
+          to: '/profile/update-password'
+        },
+        // {
+        //   label: '注销账号',
+        //   to: '/profile/logoff'
+        // },
+        {
           label: '登出',
-          onSelect: () => {
-            isMobile.value ? logoutDrawer.open() : logoutModal.open()
-          }
+          onSelect: () => logoutModal.open()
         }
       ]
     }
@@ -265,13 +271,18 @@ const navs = [
   [
     {
       label: '反馈',
-      icon: 'i-lucide-message-circle',
+      icon: 'lucide:message-circle',
+      onSelect: () => feedbackModal.open()
+    },
+    {
+      label: '帮助和支持',
+      icon: 'lucide:circle-question-mark',
       to: '',
       target: '_blank'
     },
     {
-      label: '帮助和支持',
-      icon: 'i-lucide-info',
+      label: '关于',
+      icon: 'lucide:info',
       to: '',
       target: '_blank'
     }
@@ -663,7 +674,7 @@ const replaceOSSURLToURL = async (isImage, isAudio, hash, messageRecord) =>
       ? await replaceAudioOSSURLToURL(hash, messageRecord)
       : ''
 
-const onReceiveMsg = async messageRecord => {
+const onReceiveMsg = async (messageRecord: message) => {
   const _lastMsgMap = lastMsgMap.value
   const { type, contact: id, hash } = messageRecord
   const isText = type === 'text'
@@ -700,11 +711,9 @@ const onReceiveMsg = async messageRecord => {
   await useAddMessageRecordToDB(id, indexdbLabel, indexdbMessageRecord)
   await useUpdateLastMsgToDB(id, item)
 
-  if (!inView && config.value.beep) {
+  if (!inView && config.value.notification.beep) {
     if (playBeep) {
-      const audio = beepAudioRef.value
-      audio.src = '/audio/beep.mp3'
-      audio.play()
+      beepAudioRef.value.play()
       playBeep = false
       beepTimer = setTimeout(() => {
         playBeep = true
@@ -1215,10 +1224,10 @@ const initSocket = socket => {
 }
 
 const initLastMsgs = async () => {
-  let _lastMsgMap: lastMsgMap = {}
+  let _lastMsgMap = {}
   let _unreadMsgCounter = 0
   const db = await useGetDB(userInfo.value.id)
-  const lastMsgs: lastMsg[] = (await db.getAll('lastMessages')).sort(
+  const lastMsgs = (await db.getAll('lastMessages')).sort(
     (a, b) => b.timestamp - a.timestamp
   )
   const _lastMsgList = []
@@ -1248,6 +1257,13 @@ const initAvatarURL = async () => {
     : `${import.meta.env.VITE_OSS_BASE_URL}${userInfo.value.id}/avatar`
 }
 
+const initChatBgURL = async () => {
+  const chatBgBlob = (
+    await (await useGetDB(userInfo.value.id)).get('chatBg', userInfo.value.id)
+  )?.blob
+  config.value.theme.chatBg = chatBgBlob ? URL.createObjectURL(chatBgBlob) : ''
+}
+
 watch(
   id,
   async id => {
@@ -1257,6 +1273,7 @@ watch(
       // 先获取本地数据库中的数据
       await initLastMsgs()
       await initAvatarURL()
+      await initChatBgURL()
       // 拉取离线数据后，更新本地数据库中的数据和内存中的数据
       initSocket(socket)
     } else {
@@ -1275,6 +1292,21 @@ watch(
   },
   { immediate: true }
 )
+
+const initBeep = () => {
+  // 用户发生交互行为时，播放音频并马上暂停，这样后续消息提示音才能自动播放
+  const onTouchstart = () => {
+    const audio = beepAudioRef.value
+    audio.play()
+    audio.pause()
+    window.removeEventListener('touchstart', onTouchstart)
+  }
+  window.addEventListener('touchstart', onTouchstart)
+}
+
+onMounted(() => {
+  initBeep()
+})
 </script>
 
 <style>

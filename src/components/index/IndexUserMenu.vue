@@ -44,7 +44,6 @@ import { computed, reactive, ref } from 'vue'
 import { appConfig as _appConfig } from '@/const'
 import { useUpdateTheme } from '@/hooks'
 import ModalLogout from '../modal/ModalLogout.vue'
-import DrawerLogout from '../drawer/DrawerLogout.vue'
 import colors from 'tailwindcss/colors'
 
 defineProps<{
@@ -52,10 +51,9 @@ defineProps<{
 }>()
 const overlay = useOverlay()
 const logoutModal = overlay.create(ModalLogout)
-const logoutDrawer = overlay.create(DrawerLogout)
 const { store } = useColorMode()
 const appConfig = reactive(_appConfig)
-const { isMobile, userInfo } = storeToRefs(useUserStore())
+const { userInfo } = storeToRefs(useUserStore())
 const user = ref({
   name: userInfo.value.nickname,
   avatar: {
@@ -186,9 +184,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
     {
       label: '登出',
       icon: 'i-lucide-log-out',
-      onSelect: () => {
-        isMobile.value ? logoutDrawer.open() : logoutModal.open()
-      }
+      onSelect: () => logoutModal.open()
     }
   ]
 ])

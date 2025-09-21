@@ -42,8 +42,10 @@ import useUpdateLastMsgToDB from './use-update-last-msg-to-db'
 import useInitIndexedDBData from './use-init-indexed-db-data'
 import useAddPropsForMessageRecord from './use-add-props-for-message-record'
 import useUpdateOSS from './use-update-oss'
+import useInitLocalStorate from './use-init-local-storage'
 
 export {
+  useInitLocalStorate,
   useUpdateOSS,
   useAddPropsForMessageRecord,
   useInitIndexedDBData,
