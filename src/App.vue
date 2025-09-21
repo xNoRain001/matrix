@@ -102,7 +102,7 @@
       <!-- 音频 -->
       <audio hidden ref="localAudioRef" muted></audio>
       <audio hidden ref="remoteAudioRef" autoplay></audio>
-      <audio hidden ref="beepAudioRef" src="/audio/beep.mp3"></audio>
+      <audio hidden ref="beepAudioRef"></audio>
     </UApp>
 
     <!-- 注册登录和重置密码等内容 -->
@@ -711,9 +711,16 @@ const onReceiveMsg = async (messageRecord: message) => {
   await useAddMessageRecordToDB(id, indexdbLabel, indexdbMessageRecord)
   await useUpdateLastMsgToDB(id, item)
 
-  if (!inView && config.value.notification.beep) {
+  const { isBeepOpen, beep } = config.value.notification
+  if (!inView && isBeepOpen) {
     if (playBeep) {
-      beepAudioRef.value.play()
+      const audio = beepAudioRef.value
+
+      if (!audio.src) {
+        audio.src = `/audio/${beep}.mp3`
+      }
+
+      audio.play()
       playBeep = false
       beepTimer = setTimeout(() => {
         playBeep = true
@@ -1296,9 +1303,7 @@ watch(
 const initBeep = () => {
   // 用户发生交互行为时，播放音频并马上暂停，这样后续消息提示音才能自动播放
   const onTouchstart = () => {
-    const audio = beepAudioRef.value
-    audio.play()
-    audio.pause()
+    beepAudioRef.value.play()
     window.removeEventListener('touchstart', onTouchstart)
   }
   window.addEventListener('touchstart', onTouchstart)

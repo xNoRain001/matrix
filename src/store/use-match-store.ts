@@ -8,10 +8,7 @@ const useMatchStore = defineStore('matchStore', () => {
   const id = useUserStore().userInfo?.id || ''
   const defaultFilter = {
     gender: 'other',
-    age: {
-      min: Number.MAX_SAFE_INTEGER,
-      max: Number.MAX_SAFE_INTEGER
-    },
+    age: 'other',
     region: ''
   }
   const _filter = useInitLocalStorate(`filter-${id}`, defaultFilter)

@@ -2,7 +2,6 @@
   <DefineSlideoverBodyTemplate>
     <div v-for="(section, index) in sections" :key="index">
       <UPageCard :title="section.title" variant="naked" class="mb-4" />
-
       <UPageCard
         v-if="index === 0"
         variant="subtle"
@@ -21,28 +20,15 @@
           />
         </UFormField>
       </UPageCard>
-      <UPageCard
+      <URadioGroup
         v-else
-        variant="subtle"
-        :ui="{ container: 'divide-y divide-default' }"
+        class="bg-elevated/50 rounded-xl"
+        @update:model-value="onUpateBeep"
+        variant="table"
+        :default-value="config.notification.beep"
+        :items="items"
       >
-        <UFormField
-          v-for="({ name, label }, index) in section.fields"
-          :key="name"
-          :name="name"
-          :label="label"
-          class="flex items-center justify-between gap-2 not-last:pb-4"
-        >
-          <UIcon
-            :name="
-              config.notification.beepOption === index
-                ? 'lucide:circle-check'
-                : ''
-            "
-            class="text-primary size-5"
-          ></UIcon>
-        </UFormField>
-      </UPageCard>
+      </URadioGroup>
     </div>
   </DefineSlideoverBodyTemplate>
   <USlideover
@@ -57,12 +43,15 @@
     </template>
   </USlideover>
   <ReuseSlideoverBodyTemplate v-else></ReuseSlideoverBodyTemplate>
+  <audio hidden ref="audioRef"></audio>
 </template>
 
 <script setup lang="ts">
 import { useUserStore } from '@/store'
 import { createReusableTemplate } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
+import type { RadioGroupItem } from '@nuxt/ui'
+import { ref } from 'vue'
 
 const isNotificationSlideoverOpen = defineModel<boolean>({ required: false })
 const [DefineSlideoverBodyTemplate, ReuseSlideoverBodyTemplate] =
@@ -73,7 +62,7 @@ const sections = [
     title: '消息通知',
     fields: [
       {
-        name: 'beep',
+        name: 'isBeepOpen',
         label: '消息提示音'
       }
       // {
@@ -90,22 +79,72 @@ const sections = [
     title: '提示音',
     fields: [
       {
-        name: '0',
-        label: '提示音1'
+        name: 'beep-1',
+        label: '声音1'
       },
       {
-        name: '1',
-        label: '提示音2'
+        name: 'beep-2',
+        label: '声音2'
       },
       {
-        name: '2',
-        label: '提示音3'
+        name: 'beep-3',
+        label: '声音3'
+      },
+      {
+        name: 'beep-4',
+        label: '声音4'
+      },
+      {
+        name: 'beep-5',
+        label: '声音5'
+      },
+      {
+        name: 'beep-6',
+        label: '声音6'
       }
     ]
   }
 ]
+const items = ref<RadioGroupItem[]>([
+  {
+    label: '声音 1',
+    value: 'beep-1'
+  },
+  {
+    label: '声音 2',
+    value: 'beep-2'
+  },
+  {
+    label: '声音 3',
+    value: 'beep-3'
+  },
+  {
+    label: '声音 4',
+    value: 'beep-4'
+  },
+  {
+    label: '声音 5',
+    value: 'beep-5'
+  },
+  {
+    label: '声音 6',
+    value: 'beep-6'
+  }
+])
+const audioRef = ref(null)
 
 const onChange = async () => {
+  localStorage.setItem(
+    `config-${userInfo.value.id}`,
+    JSON.stringify(config.value)
+  )
+}
+
+const onUpateBeep = v => {
+  const audio = audioRef.value
+  audio.src = `/audio/${v}.mp3`
+  audio.play()
+  config.value.notification.beep = v
   localStorage.setItem(
     `config-${userInfo.value.id}`,
     JSON.stringify(config.value)

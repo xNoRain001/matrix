@@ -70,72 +70,38 @@
   <DefineFilterBodyTemplate>
     <div class="flex items-center">
       <div>性别：</div>
-      <UButtonGroup class="ml-2">
-        <UButton
-          @click="onSelectGender('male')"
-          :color="isMale ? 'primary' : 'neutral'"
-          :variant="isMale ? 'solid' : 'outline'"
-          label="男"
-          class="font-semibold"
-        />
-        <UButton
-          @click="onSelectGender('female')"
-          :color="isFemale ? 'primary' : 'neutral'"
-          :variant="isFemale ? 'solid' : 'outline'"
-          label="女"
-          class="font-semibold"
-        />
-        <UButton
-          @click="onSelectGender('other')"
-          :color="isUndefGener ? 'primary' : 'neutral'"
-          :variant="isUndefGener ? 'solid' : 'outline'"
-          label="不限"
-          class="font-semibold"
-        />
-      </UButtonGroup>
+      <URadioGroup
+        orientation="horizontal"
+        variant="table"
+        indicator="hidden"
+        v-model="filter.gender"
+        :items="genderItems"
+        size="xs"
+      >
+      </URadioGroup>
     </div>
     <div class="mt-4 flex items-center">
       <div>年龄：</div>
-      <UButtonGroup class="ml-2">
-        <UButton
-          @click="onSelectAge(18, 24)"
-          :color="is18to24 ? 'primary' : 'neutral'"
-          :variant="is18to24 ? 'solid' : 'outline'"
-          label="18-24"
-          class="font-semibold"
-        />
-        <UButton
-          @click="onSelectAge(24, 30)"
-          :color="is24to30 ? 'primary' : 'neutral'"
-          :variant="is24to30 ? 'solid' : 'outline'"
-          label="24-30"
-          class="font-semibold"
-        />
-        <UButton
-          @click="onSelectAge(30)"
-          :color="is30Plus ? 'primary' : 'neutral'"
-          :variant="is30Plus ? 'solid' : 'outline'"
-          label="30+"
-          class="font-semibold"
-        />
-        <UButton
-          @click="onSelectAge(Number.MAX_SAFE_INTEGER)"
-          :color="isUndefAge ? 'primary' : 'neutral'"
-          :variant="isUndefAge ? 'solid' : 'outline'"
-          label="不限"
-          class="font-semibold"
-        />
-      </UButtonGroup>
+      <URadioGroup
+        orientation="horizontal"
+        variant="table"
+        indicator="hidden"
+        v-model="filter.age"
+        :items="ageItems"
+        size="xs"
+      >
+      </URadioGroup>
     </div>
     <div class="mt-4 flex items-center">
       <div>地区：</div>
-      <div class="ml-2 flex flex-1 gap-2">
+      <div class="flex flex-1 gap-2">
         <USelect
           :color="province ? 'primary' : 'neutral'"
           :variant="province ? 'subtle' : 'outline'"
           class="flex-1"
           v-model="province"
           :items="provinceOptions"
+          size="lg"
         />
         <USelect
           :color="city ? 'primary' : 'neutral'"
@@ -149,7 +115,6 @@
           :color="isUndefRegion ? 'primary' : 'neutral'"
           :variant="isUndefRegion ? 'solid' : 'outline'"
           label="不限"
-          class="font-semibold"
         />
       </div>
     </div>
@@ -219,19 +184,6 @@ const { roomId } = storeToRefs(useWebRTCStore())
 const toast = useToast()
 const route = useRoute()
 const showCards = computed(() => route.path === '/')
-const isMale = computed(() => filter.value.gender === 'male')
-const isFemale = computed(() => filter.value.gender === 'female')
-const isUndefGener = computed(() => filter.value.gender === 'other')
-const is18to24 = computed(
-  () => filter.value.age.min === 18 && filter.value.age.max === 24
-)
-const is24to30 = computed(
-  () => filter.value.age.min === 24 && filter.value.age.max === 30
-)
-const is30Plus = computed(() => filter.value.age.min === 30)
-const isUndefAge = computed(
-  () => filter.value.age.min === Number.MAX_SAFE_INTEGER
-)
 const isUndefRegion = computed(() => filter.value.region === '')
 const [_province, _city] = isUndefRegion.value
   ? [null, null]
@@ -241,6 +193,38 @@ const city = ref(_city)
 const sourceProvinceOptions = Object.keys(provinceCityMap)
 const provinceOptions = ref(sourceProvinceOptions)
 const cityOptions = ref(provinceCityMap[province.value] || [])
+const genderItems = ref([
+  {
+    label: '男',
+    value: 'male'
+  },
+  {
+    label: '女',
+    value: 'female'
+  },
+  {
+    label: '不限',
+    value: 'other'
+  }
+])
+const ageItems = ref([
+  {
+    label: '18-24',
+    value: '18-24'
+  },
+  {
+    label: '24-30',
+    value: '24-30'
+  },
+  {
+    label: '30+',
+    value: '30+'
+  },
+  {
+    label: '不限',
+    value: 'other'
+  }
+])
 
 const onUpdateFilter = async () => {
   try {
@@ -271,19 +255,6 @@ const onSelectRegion = () => {
   filter.value.region = ''
   province.value = null
   city.value = null
-}
-
-const onSelectAge = (min: number, max?: number) => {
-  const _filter = filter.value
-  _filter.age.min = min
-
-  if (max) {
-    _filter.age.max = max
-  }
-}
-
-const onSelectGender = gender => {
-  filter.value.gender = gender
 }
 
 const afterLeave = () => {

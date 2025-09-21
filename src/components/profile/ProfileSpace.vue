@@ -184,7 +184,7 @@
         <UPageCard
           v-for="items in cards"
           variant="subtle"
-          class="mb-4"
+          class="not-last:mb-4"
           :ui="{ container: 'divide-y divide-default' }"
         >
           <UFormField
@@ -203,17 +203,17 @@
             <UIcon name="lucide:chevron-right" class="size-5" />
           </UFormField>
         </UPageCard>
-
-        <UserInfo v-model="isUserInfoSlideoverOpen"></UserInfo>
-        <UpdatePassword
-          v-model="isUpdatePasswordSlideoverOpen"
-        ></UpdatePassword>
-        <Notifications v-model="isNotificationSlideoverOpen"></Notifications>
-        <DataManager v-model="isDataManagerSlideoverOpen"></DataManager>
-        <Logoff v-model="isLogoffSlideoverOpen"></Logoff>
-        <Theme v-model="isThemeSlideoverOpen"></Theme>
       </template>
     </USlideover>
+    <!-- 移动端二级设置界面，不放入 body 中，因为会导致 not-last:mb-4 失效 -->
+    <template v-if="isMobile && isSelf">
+      <UserInfo v-model="isUserInfoSlideoverOpen"></UserInfo>
+      <UpdatePassword v-model="isUpdatePasswordSlideoverOpen"></UpdatePassword>
+      <Notifications v-model="isNotificationSlideoverOpen"></Notifications>
+      <DataManager v-model="isDataManagerSlideoverOpen"></DataManager>
+      <Logoff v-model="isLogoffSlideoverOpen"></Logoff>
+      <Theme v-model="isThemeSlideoverOpen"></Theme>
+    </template>
     <!-- 空间动态详情 -->
     <USlideover
       :dismissible="!isMobile && isMatch ? false : true"
@@ -258,6 +258,7 @@ import DataManager from '@/views/Profile/DataManager.vue'
 import Logoff from '@/views/Profile/Logoff.vue'
 import Theme from '@/views/Profile/Theme.vue'
 import ModalLogout from '../modal/ModalLogout.vue'
+import ModalFeedback from '../modal/ModalFeedback.vue'
 
 const overlay = useOverlay()
 withDefaults(defineProps<{ isMatch?: boolean }>(), {
@@ -274,7 +275,6 @@ const isDataManagerSlideoverOpen = ref(false)
 const isCardSlideoverOpen = ref(false)
 const isLogoffSlideoverOpen = ref(false)
 const isThemeSlideoverOpen = ref(false)
-const isFeedbackSlideoverOpen = ref(false)
 const isHelpAndSupportSlideoverOpen = ref(false)
 const isAboutSlideoverOpen = ref(false)
 const spaceBgRef = ref(null)
@@ -322,7 +322,7 @@ const cards = [
     {
       icon: 'lucide:message-circle',
       label: '反馈',
-      onSelect: () => (isFeedbackSlideoverOpen.value = true)
+      onSelect: () => feedbackModal.open()
     },
     {
       icon: 'lucide:circle-question-mark',
@@ -392,6 +392,7 @@ const avatarURL = ref(
 )
 const viewerModal = overlay.create(ModalViewer)
 const logoutModal = overlay.create(ModalLogout)
+const feedbackModal = overlay.create(ModalFeedback)
 
 const onSpaceBgChange = e => useUpdateOSS(e, 'bg', userInfo, toast, bgURL)
 </script>
