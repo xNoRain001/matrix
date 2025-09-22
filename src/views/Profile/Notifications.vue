@@ -22,12 +22,25 @@
       </UPageCard>
       <URadioGroup
         v-else
-        class="bg-elevated/50 rounded-xl"
         @update:model-value="onUpateBeep"
         variant="table"
         :default-value="config.notification.beep"
+        indicator="hidden"
         :items="items"
+        :ui="{
+          item: 'bg-elevated/50  has-data-[state=checked]:bg-elevated'
+        }"
       >
+        <template #label="{ item: { label, value } }">
+          <div class="flex items-center justify-between">
+            {{ label }}
+            <UIcon
+              v-if="value === config.notification.beep"
+              name="lucide:circle-check"
+              class="text-primary size-5"
+            ></UIcon>
+          </div>
+        </template>
       </URadioGroup>
     </div>
   </DefineSlideoverBodyTemplate>

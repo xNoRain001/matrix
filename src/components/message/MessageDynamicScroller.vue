@@ -132,7 +132,15 @@
               class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2 text-sm"
             >
               {{ item.duration }}''
-              <UIcon name="lucide:audio-lines" class="size-6"></UIcon>
+              <UIcon
+                :name="
+                  playingURL === item.url
+                    ? 'lucide:volume-2'
+                    : 'lucide:audio-lines'
+                "
+                :class="playingURL === item.url ? 'rotate-180' : ''"
+                class="size-6"
+              ></UIcon>
             </div>
             <div v-else class="rounded-xl bg-(--ui-bg-muted) px-4 py-2 text-sm">
               [音频已失效]
@@ -158,7 +166,14 @@
               class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2 text-sm"
             >
               {{ item.duration }}''
-              <UIcon name="lucide:audio-lines" class="size-6"></UIcon>
+              <UIcon
+                :name="
+                  playingURL === item.url
+                    ? 'lucide:volume-2'
+                    : 'lucide:audio-lines'
+                "
+                class="size-6"
+              ></UIcon>
             </div>
             <div v-else class="rounded-xl bg-(--ui-bg-muted) px-4 py-2 text-sm">
               [音频已失效]
@@ -191,7 +206,7 @@ import { computed, onBeforeUnmount, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import ModalViewer from '../modal/ModalViewer.vue'
 
-let playingURL = ''
+const playingURL = ref('')
 const props = defineProps<{
   isMatch: boolean
 }>()
@@ -265,18 +280,18 @@ const onResendMsg = messageRecord => {
   }
 }
 
-const onEnded = () => (playingURL = '')
+const onEnded = () => (playingURL.value = '')
 
 const onPlayAudio = url => {
   const audio = audioRef.value
 
-  if (playingURL === url) {
+  if (playingURL.value === url) {
     // 未播放完成时点击相同的音频，停止播放
-    playingURL = ''
+    playingURL.value = ''
     audio.pause()
     audio.currentTime = 0
   } else {
-    playingURL = url
+    playingURL.value = url
     audio.src = url
     audio.play()
   }

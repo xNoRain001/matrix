@@ -157,6 +157,7 @@ import type { message } from '@/types'
 import { voiceChatInviteToastPendingTime } from '@/const'
 import { useRoute } from 'vue-router'
 import { useThrottleFn } from '@vueuse/core'
+import ModalVoiceChat from '../modal/ModalVoiceChat.vue'
 
 let receivingOfflineMsgsTimer = null
 let startTime = 0
@@ -185,7 +186,7 @@ const {
   indexMap,
   isReceivingOfflineMsgs
 } = storeToRefs(useRecentContactsStore())
-const { isVoiceChatModalOpen, roomId, leaveRoomTimer, isVoiceChatMatch } =
+const { roomId, leaveRoomTimer, isVoiceChatMatch } =
   storeToRefs(useWebRTCStore())
 const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
 const { matchRes } = storeToRefs(useMatchStore())
@@ -201,6 +202,8 @@ const isRecord = ref(false)
 const recording = ref(false)
 const isCancelRecordTipShow = ref(false)
 const isContacts = computed(() => route.path === '/contacts')
+const overlay = useOverlay()
+const voiceChatModal = overlay.create(ModalVoiceChat)
 
 const onSpeak = async () => {
   if (await useIsDeviceOpen(toast, 'microphone', '麦克风')) {
@@ -335,7 +338,7 @@ const onCall = () => {
   )
   leaveRoomTimer.value = setTimeout(() => {
     globalSocket.value.emit('leave', roomId.value)
-    isVoiceChatModalOpen.value = false
+    voiceChatModal.close()
     roomId.value = ''
     clearTimeout(leaveRoomTimer.value)
     toast.add({

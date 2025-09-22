@@ -76,8 +76,19 @@
         indicator="hidden"
         v-model="filter.gender"
         :items="genderItems"
-        size="xs"
+        :ui="{
+          item: 'bg-elevated/50 py-2 has-data-[state=checked]:bg-primary'
+        }"
       >
+        <template #label="{ item: { label, value } }">
+          <div
+            :class="
+              value === filter.gender ? 'text-inverted' : 'text-highlighted'
+            "
+          >
+            {{ label }}
+          </div>
+        </template>
       </URadioGroup>
     </div>
     <div class="mt-4 flex items-center">
@@ -88,8 +99,17 @@
         indicator="hidden"
         v-model="filter.age"
         :items="ageItems"
-        size="xs"
+        :ui="{
+          item: 'bg-elevated/50 py-2 has-data-[state=checked]:bg-primary'
+        }"
       >
+        <template #label="{ item: { label, value } }">
+          <div
+            :class="value === filter.age ? 'text-inverted' : 'text-highlighted'"
+          >
+            {{ label }}
+          </div>
+        </template>
       </URadioGroup>
     </div>
     <div class="mt-4 flex items-center">
@@ -99,6 +119,7 @@
           :color="province ? 'primary' : 'neutral'"
           :variant="province ? 'subtle' : 'outline'"
           class="flex-1"
+          :class="province ? 'bg-elevated/50' : ''"
           v-model="province"
           :items="provinceOptions"
           size="lg"
@@ -107,6 +128,7 @@
           :color="city ? 'primary' : 'neutral'"
           :variant="city ? 'subtle' : 'outline'"
           class="flex-1"
+          :class="city ? 'bg-elevated/50' : ''"
           v-model="city"
           :items="cityOptions"
         />

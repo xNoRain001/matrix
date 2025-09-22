@@ -135,12 +135,15 @@ import {
 import { useRoute, useRouter } from 'vue-router'
 import { useThrottleFn } from '@vueuse/core'
 
-const props = withDefaults(defineProps<{ isMatch?: boolean }>(), {
-  isMatch: false
-})
+const props = withDefaults(
+  defineProps<{ isMatch?: boolean; close?: () => void }>(),
+  {
+    isMatch: false,
+    close: () => {}
+  }
+)
 const {
   roomId,
-  isVoiceChatModalOpen,
   rtcConnected,
   leaveRoomTimer,
   isVoiceChatMatch,
@@ -233,7 +236,9 @@ const onCancel = () => {
     router.replace('/')
   }
 
-  isVoiceChatModalOpen.value = false
+  // 由于当前组件是 Modal 的子组件，因此在这里调用 Modal 的 close 是不会关闭 Modal
+  // 的，需要将 Modal 的关闭事件传递进来
+  props.close()
 
   // 语音匹配挂断时不进行通知
   // TODO: 处理匹配结果是好友的情况

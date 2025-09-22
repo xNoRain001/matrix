@@ -68,18 +68,6 @@
 
       <!-- 需要提前获取到断网重连时 icon，否则断网时，icon 加载不出来 -->
       <UIcon hidden name="i-lucide-loader"></UIcon>
-      <!-- 语音聊天 -->
-      <UModal
-        fullscreen
-        v-model:open="isVoiceChatModalOpen"
-        title="语音通话"
-        description=" "
-        :ui="{ body: 'flex' }"
-      >
-        <template #body>
-          <MessageVoice></MessageVoice>
-        </template>
-      </UModal>
       <!-- 语音通话浮动按钮 -->
       <UButton
         v-if="roomId"
@@ -91,7 +79,11 @@
         @touchstart="onTouchstart"
         @touchmove="onTouchmove"
         @touchend="onSaveFloatingBtnPosition"
-        @click="isVoiceChatModalOpen = true"
+        @click="
+          () => {
+            voiceChatModal.open()
+          }
+        "
         icon="lucide:phone"
         class="absolute cursor-pointer"
         :style="{
@@ -150,6 +142,7 @@ import ModalOffline from './components/modal/ModalOffline.vue'
 import { useThrottleFn } from '@vueuse/core'
 import ModalFeedback from './components/modal/ModalFeedback.vue'
 import type { message } from './types'
+import ModalVoiceChat from './components/modal/ModalVoiceChat.vue'
 
 let voiceChatInviteToastId = null
 let matchTimer = null
@@ -181,7 +174,6 @@ const {
 const {
   leaveRoomTimer,
   rtcConnected,
-  isVoiceChatModalOpen,
   isVoiceChatMatch,
   roomId,
   localAudioRef,
@@ -332,6 +324,7 @@ const rtcConfiguration: RTCConfiguration = {
 const beepAudioRef = ref(null)
 const floatingBtnX = ref(Number(localStorage.getItem('floatingBtnX') || 40))
 const floatingBtnY = ref(Number(localStorage.getItem('floatingBtnY') || 40))
+const voiceChatModal = overlay.create(ModalVoiceChat)
 
 const onDragstart = e => {
   const { clientX, clientY, target } = e
@@ -578,8 +571,8 @@ const onConnect = emit => {
 const onJoined = async (_roomId, _polite) => {
   roomId.value = _roomId
 
-  if (!isVoiceChatMatch.value) {
-    isVoiceChatModalOpen.value = true
+  if (!voiceChatModal.isOpen) {
+    voiceChatModal.open()
   } else if (_polite) {
     // 处理匹配语音通话时其中一方刷新页面后，能够恢复通话
     // 先进来的一方，规定时间内无法等到对方加入，判断为对方离开了房间
@@ -712,12 +705,15 @@ const onReceiveMsg = async (messageRecord: message) => {
   await useUpdateLastMsgToDB(id, item)
 
   const { isBeepOpen, beep } = config.value.notification
+
   if (!inView && isBeepOpen) {
     if (playBeep) {
       const audio = beepAudioRef.value
+      const src = `/audio/${beep}.mp3`
 
-      if (!audio.src) {
-        audio.src = `/audio/${beep}.mp3`
+      // 可能会切换提示音
+      if (audio.src !== src) {
+        audio.src = src
       }
 
       audio.play()
@@ -968,7 +964,7 @@ const onInviteWebRTC = (roomId, nickname) => {
 
 const onInviteWebRTCFailed = msg => {
   roomId.value = ''
-  isVoiceChatModalOpen.value = false
+  voiceChatModal.close()
   clearTimeout(leaveRoomTimer.value)
   toast.add({
     title: msg,
@@ -979,7 +975,7 @@ const onInviteWebRTCFailed = msg => {
 
 const onRefuseWebRTC = () => {
   globalSocket.value.emit('leave', roomId.value)
-  isVoiceChatModalOpen.value = false
+  voiceChatModal.close()
   roomId.value = ''
   clearTimeout(leaveRoomTimer.value)
   toast.add({
@@ -1112,7 +1108,7 @@ const onBye = _roomId => {
     router.replace('/')
   }
 
-  isVoiceChatModalOpen.value = false
+  voiceChatModal.close()
 }
 
 const onCancelWebRTC = () => {
