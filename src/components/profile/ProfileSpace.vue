@@ -259,6 +259,8 @@ import Logoff from '@/views/Profile/Logoff.vue'
 import Theme from '@/views/Profile/Theme.vue'
 import ModalLogout from '../modal/ModalLogout.vue'
 import ModalFeedback from '../modal/ModalFeedback.vue'
+import ModalHelpAndSupport from '../modal/ModalHelpAndSupport.vue'
+import ModalAbout from '../modal/ModalAbout.vue'
 
 const overlay = useOverlay()
 withDefaults(defineProps<{ isMatch?: boolean }>(), {
@@ -327,12 +329,12 @@ const cards = [
     {
       icon: 'lucide:circle-question-mark',
       label: '帮助和支持',
-      onSelect: () => (isHelpAndSupportSlideoverOpen.value = true)
+      onSelect: () => helpAndSupportModal.open()
     },
     {
       icon: 'lucide:info',
       label: '关于',
-      onSelect: () => (isAboutSlideoverOpen.value = true)
+      onSelect: () => aboutModal.open()
     }
   ],
   [
@@ -393,6 +395,8 @@ const avatarURL = ref(
 const viewerModal = overlay.create(ModalViewer)
 const logoutModal = overlay.create(ModalLogout)
 const feedbackModal = overlay.create(ModalFeedback)
+const helpAndSupportModal = overlay.create(ModalHelpAndSupport)
+const aboutModal = overlay.create(ModalAbout)
 
 const onSpaceBgChange = e => useUpdateOSS(e, 'bg', userInfo, toast, bgURL)
 </script>

@@ -320,14 +320,34 @@ const profileItems = [
     click: () => (isOpenRegionDrawer.value = true)
   }
 ]
+// TODO: 删除正则
 const date = shallowRef(
-  parseDate((userInfoForm.value.birthday || '2000-01-01').replace(/\//g, '-'))
+  userInfoForm.value.birthday
+    ? parseDate(userInfoForm.value.birthday.replace(/\//g, '-'))
+    : null
 )
 const overlay = useOverlay()
 const viewerModal = overlay.create(ModalViewer)
 const avatarRef = ref(null)
 
 const onFileChange = e => useUpdateOSS(e, 'avatar', userInfo, toast, avatarURL)
+
+const getUserInfoDiff = (userInfo, _userInfoForm) => {
+  const _userInfo = userInfo.value
+  const keys = Object.keys(_userInfoForm)
+  const res = {}
+
+  for (let i = 0, l = keys.length; i < l; i++) {
+    const key = keys[i]
+    const value = _userInfoForm[key]
+
+    if (value !== _userInfo[key]) {
+      res[key] = value
+    }
+  }
+
+  return res
+}
 
 const onUpdateProfile = async () => {
   const _userInfoForm = userInfoForm.value
@@ -337,25 +357,22 @@ const onUpdateProfile = async () => {
     _userInfoForm.region = ''
   }
 
-  _userInfoForm.birthday = date.value.toString()
-  // TODO: 删除这行
-  // @ts-ignore
-  delete _userInfoForm.avatar
-  delete _userInfoForm.bio
-  const { nickname, gender, birthday, region } = _userInfoForm
-  const {
-    nickname: _nickname,
-    gender: _gender,
-    birthday: _birthday,
-    region: _region
-  } = userInfo.value
+  const _date = date.value
 
-  if (
-    nickname === _nickname &&
-    gender === _gender &&
-    birthday === _birthday &&
-    region === _region
-  ) {
+  if (_date) {
+    const __date = _date.toString()
+
+    if (__date !== _userInfoForm.birthday) {
+      _userInfoForm.birthday = __date
+    }
+  } else if (_userInfoForm.birthday) {
+    // 在原本有日期的情况下取消选择了当前日期，那就将日期值设为 ''
+    _userInfoForm.birthday = ''
+  }
+
+  const diff = getUserInfoDiff(userInfo, _userInfoForm)
+
+  if (!Object.keys(diff).length) {
     toast.add({
       title: '修改资料成功',
       icon: 'lucide:smile'
@@ -368,14 +385,10 @@ const onUpdateProfile = async () => {
     return
   }
 
-  const __userInfoForm = JSON.parse(JSON.stringify(_userInfoForm))
-  delete __userInfoForm.id
-  delete __userInfoForm.tokenVersion
-
   try {
     const {
       data: { token, userInfo: _userInfo }
-    } = await updateProfile(__userInfoForm)
+    } = await updateProfile(diff)
     localStorage.setItem('token', token)
     userInfo.value = _userInfo
     toast.add({

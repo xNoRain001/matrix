@@ -1,9 +1,10 @@
 <template>
-  <UDrawer
+  <USlideover
     v-if="isMobile"
     :close="{ onClick: () => emit('close', false) }"
     :title="title"
     :description="description"
+    :ui="{ body: 'flex-none' }"
   >
     <template #body>
       <UTextarea
@@ -38,7 +39,7 @@
       />
       <UButton label="提交" class="justify-center" @click="onFeedback" />
     </template>
-  </UDrawer>
+  </USlideover>
   <UModal
     v-else
     :close="{ onClick: () => emit('close', false) }"
@@ -82,6 +83,7 @@
 </template>
 
 <script setup lang="ts">
+import { postFeedback } from '@/apis/feedback'
 import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
@@ -91,16 +93,30 @@ const content = ref(localStorage.getItem('feedbackDraft') || '')
 const { isMobile } = storeToRefs(useUserStore())
 const title = '反馈'
 const description = ' '
+const toast = useToast()
 
 const onDraft = () => {
   if (content.value) {
     localStorage.setItem('feedbackDraft', content.value)
-    emit('close', true)
   }
+  emit('close', true)
 }
 
-const onFeedback = () => {
-  localStorage.removeItem('feedbackDraft')
-  emit('close', true)
+const onFeedback = async () => {
+  const _content = content.value
+
+  if (_content.length === 0) {
+    toast.add({ title: '无效内容', color: 'error', icon: 'lucide:annoyed' })
+    return
+  }
+
+  try {
+    await postFeedback(_content)
+    toast.add({ title: '提交成功', icon: 'lucide:smile' })
+    localStorage.removeItem('feedbackDraft')
+    emit('close', true)
+  } catch (error) {
+    toast.add({ title: '提交失败', color: 'error', icon: 'lucide:annoyed' })
+  }
 }
 </script>

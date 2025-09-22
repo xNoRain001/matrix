@@ -143,6 +143,8 @@ import { useThrottleFn } from '@vueuse/core'
 import ModalFeedback from './components/modal/ModalFeedback.vue'
 import type { message } from './types'
 import ModalVoiceChat from './components/modal/ModalVoiceChat.vue'
+import ModalHelpAndSupport from './components/modal/ModalHelpAndSupport.vue'
+import ModalAbout from './components/modal/ModalAbout.vue'
 
 let voiceChatInviteToastId = null
 let matchTimer = null
@@ -269,14 +271,12 @@ const navs = [
     {
       label: '帮助和支持',
       icon: 'lucide:circle-question-mark',
-      to: '',
-      target: '_blank'
+      onSelect: () => helpAndSupportModal.open()
     },
     {
       label: '关于',
       icon: 'lucide:info',
-      to: '',
-      target: '_blank'
+      onSelect: () => abouttModal.open()
     }
   ]
 ] satisfies NavigationMenuItem[][]
@@ -325,6 +325,8 @@ const beepAudioRef = ref(null)
 const floatingBtnX = ref(Number(localStorage.getItem('floatingBtnX') || 40))
 const floatingBtnY = ref(Number(localStorage.getItem('floatingBtnY') || 40))
 const voiceChatModal = overlay.create(ModalVoiceChat)
+const helpAndSupportModal = overlay.create(ModalHelpAndSupport)
+const abouttModal = overlay.create(ModalAbout)
 
 const onDragstart = e => {
   const { clientX, clientY, target } = e

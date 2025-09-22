@@ -12,6 +12,7 @@
     <template #content>
       <UCalendar
         v-model="date"
+        :defaultPlaceholder="defaultPlaceholder"
         :min-value="minDate"
         :max-value="maxDate"
         class="p-2"
@@ -34,6 +35,7 @@ import { monthMap, weekMap } from '@/const'
 import { parseDate, CalendarDate } from '@internationalized/date'
 
 const date = defineModel() as any
+const defaultPlaceholder = date.value ? date.value : parseDate('2000-01-01')
 const minDate = parseDate('1970-01-01')
 const now = new Date()
 const maxDate = new CalendarDate(
