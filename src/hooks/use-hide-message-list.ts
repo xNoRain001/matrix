@@ -15,10 +15,10 @@ const useHideMessageList = async (
   const store = transaction.objectStore('lastMessages')
   await store.delete(targetId)
   const _lastMsgList = lastMsgList.value
-  const index = _lastMsgList.findIndex(id => id === targetId)
   const _indexMap = indexMap.value
   const _lastMsgMap = lastMsgMap.value
   const unreadMsgs = _lastMsgMap[targetId].unreadMsgs || 0
+  const index = _indexMap[targetId]
 
   _lastMsgList.splice(index, 1)
 

@@ -24,7 +24,7 @@ const useUpdateLastMsgToView = (
 
   if (!item.pin) {
     if (_indexMap[targetId] === undefined) {
-      // 列表中的新对象，由于先添加视图，因此它在 lastMsgList 中的索引是 0
+      // 列表中的新对象，由于会先初始化 last msg，因此它在 lastMsgList 中的索引是 0
       for (let i = 1; i < _lastMsgList.length; i++) {
         // 每一项的索引进行自增
         _indexMap[_lastMsgList[i]]++

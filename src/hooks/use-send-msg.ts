@@ -10,7 +10,8 @@ import useInitIndexedDBData from './use-init-indexed-db-data'
 import useAddPropsForMessageRecord from './use-add-props-for-message-record'
 
 const addMsgToView = (
-  isText,
+  type,
+  isNotMedia,
   isImage,
   id,
   message,
@@ -32,10 +33,10 @@ const addMsgToView = (
     receiver: targetId,
     timestamp
   }
-  const payload = isText
+  const payload = isNotMedia
     ? {
-        type: 'text' as const,
-        content: message,
+        type,
+        content: message, // TODO: tip 是没有 content 内容的，可以不添加该字段
         ...common
       }
     : isImage
@@ -79,14 +80,14 @@ export const sendMsg = async (
   file,
   hash,
   payload,
-  isText,
+  isNotMedia,
   indexdbMessageRecord,
   messageRecord,
   _lastMsgMap,
   globalSocket,
   resend = false
 ) => {
-  if (!isText) {
+  if (!isNotMedia) {
     try {
       const { data } = await uploadImage(file, hash)
       payload.ossURL = `${import.meta.env.VITE_OSS_BASE_URL}${data}`
@@ -105,7 +106,7 @@ export const sendMsg = async (
           file,
           hash,
           payload,
-          isText,
+          isNotMedia,
           indexdbMessageRecord,
           messageRecord,
           _lastMsgMap,
@@ -145,14 +146,15 @@ const useSendMsg = async (
   msgContainerRef,
   inView
 ) => {
-  const isText = type === 'text'
+  const isNotMedia = type !== 'image' && type !== 'audio'
   const isImage = type === 'image'
   const { id } = userInfo.value
   const _lastMsgMap = lastMsgMap.value
   // 优先在视图中显示消息
   const [indexdbLabel, indexdbMessageRecord, payload, messageRecord] =
     addMsgToView(
-      isText,
+      type,
+      isNotMedia,
       isImage,
       id,
       message,
@@ -174,7 +176,7 @@ const useSendMsg = async (
     indexMap,
     lastMsgList,
     _lastMsgMap,
-    isText
+    isNotMedia
       ? messageRecord
       : // messageRecord 被保存到了内存中，因此不能修改它
         {
@@ -191,7 +193,7 @@ const useSendMsg = async (
       file,
       hash,
       payload,
-      isText,
+      isNotMedia,
       indexdbMessageRecord,
       messageRecord,
       _lastMsgMap,

@@ -83,8 +83,12 @@
               :height="item.height"
               :src="item.url"
             />
-            <div v-else class="rounded-xl bg-(--ui-bg-muted) px-4 py-2 text-sm">
-              [图片已失效]
+            <div
+              v-else
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
+            >
+              <UIcon name="lucide:image-off" class="size-5"></UIcon>
+              图片已失效
             </div>
             <UAvatar
               v-if="item.separator"
@@ -109,8 +113,12 @@
               :height="item.height"
               :src="item.url"
             />
-            <div v-else class="rounded-xl bg-(--ui-bg-muted) px-4 py-2 text-sm">
-              [图片已失效]
+            <div
+              v-else
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
+            >
+              <UIcon name="lucide:image-off" class="size-5"></UIcon>
+              图片已失效
             </div>
           </div>
         </template>
@@ -129,7 +137,7 @@
             <div
               v-if="item.url"
               @click="onPlayAudio(item.url)"
-              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2 text-sm"
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
             >
               {{ item.duration }}''
               <UIcon
@@ -139,11 +147,15 @@
                     : 'lucide:audio-lines'
                 "
                 :class="playingURL === item.url ? 'rotate-180' : ''"
-                class="size-6"
+                class="size-5"
               ></UIcon>
             </div>
-            <div v-else class="rounded-xl bg-(--ui-bg-muted) px-4 py-2 text-sm">
-              [音频已失效]
+            <div
+              v-else
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
+            >
+              <UIcon name="lucide:volume-off" class="size-5"></UIcon>
+              音频已失效
             </div>
             <UAvatar
               v-if="item.separator"
@@ -163,20 +175,194 @@
             <div
               v-if="item.url"
               @click="onPlayAudio(item.url)"
-              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2 text-sm"
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
             >
-              {{ item.duration }}''
               <UIcon
                 :name="
                   playingURL === item.url
                     ? 'lucide:volume-2'
                     : 'lucide:audio-lines'
                 "
-                class="size-6"
+                class="size-5"
               ></UIcon>
+              {{ item.duration }}''
             </div>
-            <div v-else class="rounded-xl bg-(--ui-bg-muted) px-4 py-2 text-sm">
-              [音频已失效]
+            <div
+              v-else
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
+            >
+              <UIcon name="lucide:volume-off" class="size-5"></UIcon>
+              音频已失效
+            </div>
+          </div>
+        </template>
+        <template v-else-if="item.type === 'voiceChatCallTip'">
+          <div
+            v-if="item.sent"
+            class="flex items-center justify-end gap-3 pb-1"
+          >
+            <div
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
+            >
+              <UIcon name="lucide:phone" class="size-5"></UIcon>
+              发起了语音通话
+            </div>
+            <UAvatar
+              v-if="item.separator"
+              :alt="userInfo.nickname[0] || ''"
+              size="xl"
+            />
+            <div v-else class="w-10"></div>
+          </div>
+          <div v-else class="flex items-center gap-3 pb-1">
+            <UAvatar
+              data-type="avatar"
+              v-if="item.separator"
+              :alt="targetNickname"
+              size="xl"
+            />
+            <div v-else class="w-10"></div>
+            <div
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
+            >
+              <UIcon name="lucide:phone" class="size-5"></UIcon>
+              发起了语音通话
+            </div>
+          </div>
+        </template>
+        <template v-else-if="item.type === 'voiceChatCallOffTip'">
+          <div
+            v-if="item.sent"
+            class="flex items-center justify-end gap-3 pb-1"
+          >
+            <div
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
+            >
+              <UIcon name="lucide:phone-missed" class="size-5"></UIcon>
+              结束了语音通话
+            </div>
+            <UAvatar
+              v-if="item.separator"
+              :alt="userInfo.nickname[0] || ''"
+              size="xl"
+            />
+            <div v-else class="w-10"></div>
+          </div>
+          <div v-else class="flex items-center gap-3 pb-1">
+            <UAvatar
+              data-type="avatar"
+              v-if="item.separator"
+              :alt="targetNickname"
+              size="xl"
+            />
+            <div v-else class="w-10"></div>
+            <div
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
+            >
+              <UIcon name="lucide:phone-missed" class="size-5"></UIcon>
+              结束了语音通话
+            </div>
+          </div>
+        </template>
+        <template v-else-if="item.type === 'voiceChatRefuseTip'">
+          <div
+            v-if="item.sent"
+            class="flex items-center justify-end gap-3 pb-1"
+          >
+            <div
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
+            >
+              <UIcon name="lucide:phone-missed" class="size-5"></UIcon>
+              拒绝了语音通话
+            </div>
+            <UAvatar
+              v-if="item.separator"
+              :alt="userInfo.nickname[0] || ''"
+              size="xl"
+            />
+            <div v-else class="w-10"></div>
+          </div>
+          <div v-else class="flex items-center gap-3 pb-1">
+            <UAvatar
+              data-type="avatar"
+              v-if="item.separator"
+              :alt="targetNickname"
+              size="xl"
+            />
+            <div v-else class="w-10"></div>
+            <div
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
+            >
+              <UIcon name="lucide:phone-missed" class="size-5"></UIcon>
+              拒绝了语音通话
+            </div>
+          </div>
+        </template>
+        <template v-else-if="item.type === 'voiceChatAgreeTip'">
+          <div
+            v-if="item.sent"
+            class="flex items-center justify-end gap-3 pb-1"
+          >
+            <div
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
+            >
+              <UIcon name="lucide:phone-missed" class="size-5"></UIcon>
+              同意了语音通话
+            </div>
+            <UAvatar
+              v-if="item.separator"
+              :alt="userInfo.nickname[0] || ''"
+              size="xl"
+            />
+            <div v-else class="w-10"></div>
+          </div>
+          <div v-else class="flex items-center gap-3 pb-1">
+            <UAvatar
+              data-type="avatar"
+              v-if="item.separator"
+              :alt="targetNickname"
+              size="xl"
+            />
+            <div v-else class="w-10"></div>
+            <div
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
+            >
+              <UIcon name="lucide:phone" class="size-5"></UIcon>
+              同意了语音通话
+            </div>
+          </div>
+        </template>
+        <template v-else-if="item.type === 'voiceChatAgreeButNoPermissionTip'">
+          <div
+            v-if="item.sent"
+            class="flex items-center justify-end gap-3 pb-1"
+          >
+            <div
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
+            >
+              <UIcon name="lucide:phone-missed" class="size-5"></UIcon>
+              权限不足
+            </div>
+            <UAvatar
+              v-if="item.separator"
+              :alt="userInfo.nickname[0] || ''"
+              size="xl"
+            />
+            <div v-else class="w-10"></div>
+          </div>
+          <div v-else class="flex items-center gap-3 pb-1">
+            <UAvatar
+              data-type="avatar"
+              v-if="item.separator"
+              :alt="targetNickname"
+              size="xl"
+            />
+            <div v-else class="w-10"></div>
+            <div
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
+            >
+              <UIcon name="lucide:phone-missed" class="size-5"></UIcon>
+              权限不足
             </div>
           </div>
         </template>

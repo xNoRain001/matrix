@@ -314,13 +314,17 @@ const onTouchend = () => {
   }
 }
 
-const onCall = () => {
+const onCall = async () => {
   if (roomId.value) {
     toast.add({
       title: '当前正在语音中',
       color: 'error',
       icon: 'lucide:annoyed'
     })
+    return
+  }
+
+  if (!(await useIsDeviceOpen(toast, 'microphone', '麦克风'))) {
     return
   }
 
@@ -350,8 +354,8 @@ const onCall = () => {
   // 发起语音、对方同意、对方拒绝、对方未接通前发起方挂断、接通后任意一方挂断，只有
   // 这些情况下会在聊天记录中出现
   useSendMsg(
-    'text',
-    '发起了语音通话',
+    'voiceChatCallTip',
+    '[语音通话]',
     null,
     null,
     null,

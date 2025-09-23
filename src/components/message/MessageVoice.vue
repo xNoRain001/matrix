@@ -244,8 +244,8 @@ const onCancel = () => {
   // TODO: 处理匹配结果是好友的情况
   if (matchRes.value.id !== _targetId) {
     useSendMsg(
-      'text',
-      '结束了语音通话',
+      'voiceChatCallOffTip',
+      '[语音通话]',
       null,
       null,
       null,

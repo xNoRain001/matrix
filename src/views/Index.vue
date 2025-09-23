@@ -68,78 +68,83 @@
   <UIcon hidden name="lucide:wifi-off"></UIcon>
 
   <DefineFilterBodyTemplate>
-    <div class="flex items-center">
-      <div>性别：</div>
-      <URadioGroup
-        orientation="horizontal"
-        variant="table"
-        indicator="hidden"
-        v-model="filter.gender"
-        :items="genderItems"
-        :ui="{
-          item: 'bg-elevated/50 py-2 has-data-[state=checked]:bg-primary'
-        }"
-      >
-        <template #label="{ item: { label, value } }">
-          <div
-            :class="
-              value === filter.gender ? 'text-inverted' : 'text-highlighted'
-            "
+    <UTabs :items="items" v-model="active" :ui="{ content: 'mt-4' }">
+      <template #common>
+        <div class="flex items-center">
+          <div>性别：</div>
+          <URadioGroup
+            orientation="horizontal"
+            variant="table"
+            indicator="hidden"
+            v-model="filter.gender"
+            :items="genderItems"
+            :ui="{
+              item: 'bg-elevated/50 py-2 has-data-[state=checked]:bg-primary'
+            }"
           >
-            {{ label }}
-          </div>
-        </template>
-      </URadioGroup>
-    </div>
-    <div class="mt-4 flex items-center">
-      <div>年龄：</div>
-      <URadioGroup
-        orientation="horizontal"
-        variant="table"
-        indicator="hidden"
-        v-model="filter.age"
-        :items="ageItems"
-        :ui="{
-          item: 'bg-elevated/50 py-2 has-data-[state=checked]:bg-primary'
-        }"
-      >
-        <template #label="{ item: { label, value } }">
-          <div
-            :class="value === filter.age ? 'text-inverted' : 'text-highlighted'"
+            <template #label="{ item: { label, value } }">
+              <div
+                :class="
+                  value === filter.gender ? 'text-inverted' : 'text-highlighted'
+                "
+              >
+                {{ label }}
+              </div>
+            </template>
+          </URadioGroup>
+        </div>
+        <div class="mt-4 flex items-center">
+          <div>年龄：</div>
+          <URadioGroup
+            orientation="horizontal"
+            variant="table"
+            indicator="hidden"
+            v-model="filter.age"
+            :items="ageItems"
+            :ui="{
+              item: 'bg-elevated/50 py-2 has-data-[state=checked]:bg-primary'
+            }"
           >
-            {{ label }}
-          </div>
-        </template>
-      </URadioGroup>
-    </div>
-    <div class="mt-4 flex items-center">
-      <div>地区：</div>
-      <div class="flex flex-1 gap-2">
-        <USelect
-          :color="province ? 'primary' : 'neutral'"
-          :variant="province ? 'subtle' : 'outline'"
-          class="flex-1"
-          :class="province ? 'bg-elevated/50' : ''"
-          v-model="province"
-          :items="provinceOptions"
-          size="lg"
-        />
-        <USelect
-          :color="city ? 'primary' : 'neutral'"
-          :variant="city ? 'subtle' : 'outline'"
-          class="flex-1"
-          :class="city ? 'bg-elevated/50' : ''"
-          v-model="city"
-          :items="cityOptions"
-        />
-        <UButton
-          @click="onSelectRegion"
-          :color="isUndefRegion ? 'primary' : 'neutral'"
-          :variant="isUndefRegion ? 'solid' : 'outline'"
-          label="不限"
-        />
-      </div>
-    </div>
+            <template #label="{ item: { label, value } }">
+              <div
+                :class="
+                  value === filter.age ? 'text-inverted' : 'text-highlighted'
+                "
+              >
+                {{ label }}
+              </div>
+            </template>
+          </URadioGroup>
+        </div>
+        <div class="mt-4 flex items-center">
+          <div>地区：</div>
+          <div class="flex flex-1 gap-2">
+            <USelect
+              :color="province ? 'primary' : 'neutral'"
+              :variant="province ? 'subtle' : 'outline'"
+              class="flex-1"
+              :class="province ? 'bg-elevated/50' : ''"
+              v-model="province"
+              :items="provinceOptions"
+              size="lg"
+            />
+            <USelect
+              :color="city ? 'primary' : 'neutral'"
+              :variant="city ? 'subtle' : 'outline'"
+              class="flex-1"
+              :class="city ? 'bg-elevated/50' : ''"
+              v-model="city"
+              :items="cityOptions"
+            />
+            <UButton
+              @click="onSelectRegion"
+              :color="isUndefRegion ? 'primary' : 'neutral'"
+              :variant="isUndefRegion ? 'solid' : 'outline'"
+              label="不限"
+            />
+          </div></div
+      ></template>
+    </UTabs>
     <UButton
       loading-auto
       @click="onUpdateFilter"
@@ -247,6 +252,34 @@ const ageItems = ref([
     value: 'other'
   }
 ])
+const active = ref('common')
+const items = [
+  {
+    label: '常规',
+    slot: 'common' as const,
+    value: 'common'
+  },
+  {
+    label: '高校',
+    slot: 'college' as const,
+    value: 'college'
+  },
+  {
+    label: '游戏',
+    slot: 'game' as const,
+    value: 'game'
+  },
+  {
+    label: '电影',
+    slot: 'movie' as const,
+    value: 'movie'
+  },
+  {
+    label: '书籍',
+    slot: 'book' as const,
+    value: 'book'
+  }
+]
 
 const onUpdateFilter = async () => {
   try {

@@ -71,19 +71,12 @@
       <!-- 语音通话浮动按钮 -->
       <UButton
         v-if="roomId"
-        draggable="true"
-        @drag="onDrag"
-        @dragstart="onDragstart"
-        @dragover="onDragover"
-        @dragend="onSaveFloatingBtnPosition"
+        @mousedown="onMousedown"
+        @mouseup="onMouseup"
         @touchstart="onTouchstart"
-        @touchmove="onTouchmove"
+        @touchmove.prevent="onTouchmove"
         @touchend="onSaveFloatingBtnPosition"
-        @click="
-          () => {
-            voiceChatModal.open()
-          }
-        "
+        @click="!moving && voiceChatModal.open()"
         icon="lucide:phone"
         class="absolute cursor-pointer"
         :style="{
@@ -134,7 +127,8 @@ import {
   useSendMsg,
   useUpdateLastMsgToView,
   useAddPropsForMessageRecord,
-  useInitIndexedDBData
+  useInitIndexedDBData,
+  useIsDeviceOpen
 } from './hooks'
 import { useRouter } from 'vue-router'
 import { voiceChatInviteToastExpireTime } from './const'
@@ -158,6 +152,7 @@ let reconnectionAttempts = 0
 let isOfflineModalOpen = false
 let floatingBtnStartX = 0
 let floatingBtnStartY = 0
+let moving = false
 const maxReconnectionAttempts = 1
 const toast = useToast()
 const overlay = useOverlay()
@@ -328,18 +323,19 @@ const voiceChatModal = overlay.create(ModalVoiceChat)
 const helpAndSupportModal = overlay.create(ModalHelpAndSupport)
 const abouttModal = overlay.create(ModalAbout)
 
-const onDragstart = e => {
+const onMousedown = e => {
+  moving = false
   const { clientX, clientY, target } = e
   const { left, top } = target.getBoundingClientRect()
 
   floatingBtnStartX = clientX - left
   floatingBtnStartY = clientY - top
-  e.dataTransfer.setData('text', '')
-  e.dataTransfer.effectAllowed = 'move'
+  document.addEventListener('mousemove', onMousemove)
 }
 
-const onDrag = useThrottleFn(
+const onMousemove = useThrottleFn(
   e => {
+    moving = true
     const { clientX, clientY } = e
     floatingBtnX.value = clientX - floatingBtnStartX
     floatingBtnY.value = clientY - floatingBtnStartY
@@ -349,7 +345,10 @@ const onDrag = useThrottleFn(
   false
 )
 
-const onDragover = e => e.preventDefault()
+const onMouseup = () => {
+  document.removeEventListener('mousemove', onMousemove)
+  onSaveFloatingBtnPosition()
+}
 
 const onSaveFloatingBtnPosition = () => {
   localStorage.setItem('floatingBtnX', String(floatingBtnX.value))
@@ -357,7 +356,6 @@ const onSaveFloatingBtnPosition = () => {
 }
 
 const onTouchstart = e => {
-  e.preventDefault()
   const {
     target,
     touches: [{ clientX, clientY }]
@@ -370,8 +368,6 @@ const onTouchstart = e => {
 
 const onTouchmove = useThrottleFn(
   e => {
-    e.preventDefault()
-
     const { clientX, clientY } = e.touches[0]
     floatingBtnX.value = clientX - floatingBtnStartX
     floatingBtnY.value = clientY - floatingBtnStartY
@@ -672,7 +668,7 @@ const replaceOSSURLToURL = async (isImage, isAudio, hash, messageRecord) =>
 const onReceiveMsg = async (messageRecord: message) => {
   const _lastMsgMap = lastMsgMap.value
   const { type, contact: id, hash } = messageRecord
-  const isText = type === 'text'
+  const isNotMedia = type !== 'image' && type !== 'audio'
   const isImage = type === 'image'
   const isAudio = type === 'audio'
   const inView = targetId.value === id && msgContainerRef.value
@@ -696,7 +692,7 @@ const onReceiveMsg = async (messageRecord: message) => {
     indexMap,
     lastMsgList,
     _lastMsgMap,
-    isText
+    isNotMedia
       ? messageRecord
       : { ...messageRecord, content: isImage ? '[图片]' : '[语音]' },
     true,
@@ -853,7 +849,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
 
     const lastMsg = offlineMsgs[offlineMsgsLength - 1]
     const { type, duration } = lastMsg
-    const isText = type === 'text'
+    const isNotMedia = type !== 'image' && type !== 'audio'
     const isImage = type === 'image'
 
     await useInitLastMsg(_lastMsgMap, lastMsgList, matchRes, id)
@@ -861,7 +857,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
       indexMap,
       lastMsgList,
       _lastMsgMap,
-      isText
+      isNotMedia
         ? lastMsg
         : { ...lastMsg, content: isImage ? '[图片]' : `[语音] ${duration}''` },
       true,
@@ -878,17 +874,24 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
   }
 }
 
-const acceptWebRTC = (roomId, now, isAccept: boolean) => {
+const acceptWebRTC = async (roomId, now, isAccept: boolean) => {
   // 由于鼠标悬浮在 toast 上时会暂停进度，因此需要判断是否超出时间
   if (Date.now() - now <= voiceChatInviteToastExpireTime) {
     const socket = globalSocket.value
     const _targetId = useGetTargetIdByRoomId(roomId, userInfo)
 
     if (isAccept) {
-      socket.emit('agree-unidirectional-web-rtc', roomId, _targetId)
+      const isMicOpen = await useIsDeviceOpen(toast, 'microphone', '麦克风')
+
+      if (isMicOpen) {
+        socket.emit('agree-unidirectional-web-rtc', roomId, _targetId)
+      } else {
+        socket.emit('agree-unidirectional-web-rtc-but-no-permission', _targetId)
+      }
+
       useSendMsg(
-        'text',
-        '同意了语音通话',
+        isMicOpen ? 'voiceChatAgreeTip' : 'voiceChatAgreeButNoPermissionTip',
+        '[语音通话]',
         null,
         null,
         null,
@@ -910,8 +913,8 @@ const acceptWebRTC = (roomId, now, isAccept: boolean) => {
     } else {
       socket.emit('refuse-web-rtc', roomId)
       useSendMsg(
-        'text',
-        '拒绝了语音通话',
+        'voiceChatRefuseTip',
+        '[语音通话]',
         null,
         null,
         null,
@@ -1161,6 +1164,17 @@ const onOnline = (type, res) => {
   }
 }
 
+const onAgreeWebRTCButNoPermission = () => {
+  voiceChatModal.close()
+  roomId.value = ''
+  clearTimeout(leaveRoomTimer.value)
+  toast.add({
+    title: '对方同意了语音请求，但是未开启麦克风权限',
+    color: 'error',
+    icon: 'lucide:annoyed'
+  })
+}
+
 const createSocket = (id, emit = null) => {
   const socket = (globalSocket.value = io(
     import.meta.env.VITE_SOCKET_BASE_URL,
@@ -1215,6 +1229,11 @@ const initSocket = socket => {
   // 邀请对方进行 web rtc，对方同意了，但是在你之前，对方刚刚同意了别人的请求，已经
   // 进入别人的房间了
   socket.on('other-web-rtc', onOtherWebRTC)
+  // 邀请对方进行 web rtc，对方同意了，但是对方没有开启麦克风权限
+  socket.on(
+    'agree-unidirectional-web-rtc-but-no-permission',
+    onAgreeWebRTCButNoPermission
+  )
   // 匹配成功
   socket.on('matched', onMatched)
   // 对方结束了 web rtc
@@ -1299,6 +1318,10 @@ watch(
 )
 
 const initBeep = () => {
+  if (!isMobile.value) {
+    return
+  }
+
   // 用户发生交互行为时，播放音频并马上暂停，这样后续消息提示音才能自动播放
   const onTouchstart = () => {
     beepAudioRef.value.play()
