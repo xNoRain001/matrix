@@ -42,6 +42,7 @@
           v-if="!recording && !isRecord"
           @keydown.enter.prevent="onSendMsg"
           @focus="onFocus"
+          enterkeyhint="send"
           class="grow"
           v-model="message"
           :rows="1"
@@ -157,7 +158,7 @@ import type { message } from '@/types'
 import { voiceChatInviteToastPendingTime } from '@/const'
 import { useRoute } from 'vue-router'
 import { useThrottleFn } from '@vueuse/core'
-import ModalVoiceChat from '../modal/ModalVoiceChat.vue'
+import OverlayVoiceChat from '@/components/overlay/OverlayVoiceChat.vue'
 
 let receivingOfflineMsgsTimer = null
 let startTime = 0
@@ -203,7 +204,7 @@ const recording = ref(false)
 const isCancelRecordTipShow = ref(false)
 const isContacts = computed(() => route.path === '/contacts')
 const overlay = useOverlay()
-const voiceChatModal = overlay.create(ModalVoiceChat)
+const voiceChatOverlay = overlay.create(OverlayVoiceChat)
 
 const onSpeak = async () => {
   if (await useIsDeviceOpen(toast, 'microphone', '麦克风')) {
@@ -342,7 +343,7 @@ const onCall = async () => {
   )
   leaveRoomTimer.value = setTimeout(() => {
     globalSocket.value.emit('leave', roomId.value)
-    voiceChatModal.close()
+    voiceChatOverlay.close()
     roomId.value = ''
     clearTimeout(leaveRoomTimer.value)
     toast.add({

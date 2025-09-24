@@ -50,25 +50,16 @@
   >
     <UIcon name="lucide:message-circle-more" class="text-dimmed size-32" />
   </div>
-
-  <USlideover
-    v-if="isMobile"
-    v-model:open="isOpenSlideover"
-    title=" "
-    description=" "
-  >
-    <template #content>
-      <MessageView v-if="targetId" @close="isOpenSlideover = false" />
-    </template>
-  </USlideover>
 </template>
 
 <script setup lang="ts">
 import { getProfiles } from '@/apis/profile'
+import OverlayMessageView from '@/components/overlay/OverlayMessageView.vue'
 import { useGetDB, useRefreshOnline } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { onMounted, computed, onBeforeUnmount } from 'vue'
+import { watch } from 'vue'
+import { onMounted, onBeforeUnmount } from 'vue'
 
 // const tabItems = [
 //   {
@@ -87,14 +78,18 @@ const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
 const { unreadMsgCounter, targetId, lastMsgMap, lastMsgList } = storeToRefs(
   useRecentContactsStore()
 )
-const isOpenSlideover = computed({
-  get() {
-    return Boolean(targetId.value)
-  },
-  set(v) {
-    if (!v) {
-      targetId.value = ''
-    }
+const overlay = useOverlay()
+const messageViewOverlay = overlay.create(OverlayMessageView)
+
+watch(targetId, v => {
+  if (!isMobile.value) {
+    return
+  }
+
+  if (v) {
+    messageViewOverlay.open()
+  } else {
+    messageViewOverlay.close()
   }
 })
 

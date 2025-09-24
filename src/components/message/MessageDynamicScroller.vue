@@ -306,7 +306,7 @@
             <div
               class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
             >
-              <UIcon name="lucide:phone-missed" class="size-5"></UIcon>
+              <UIcon name="lucide:phone" class="size-5"></UIcon>
               同意了语音通话
             </div>
             <UAvatar
@@ -366,18 +366,43 @@
             </div>
           </div>
         </template>
+        <template v-else-if="item.type === 'contactAgreeTip'">
+          <div
+            v-if="item.sent"
+            class="flex items-center justify-end gap-3 pb-1"
+          >
+            <div
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
+            >
+              <UIcon name="lucide:smile" class="size-5"></UIcon>
+              同意了你的好友请求
+            </div>
+            <UAvatar
+              v-if="item.separator"
+              :alt="userInfo.nickname[0] || ''"
+              size="xl"
+            />
+            <div v-else class="w-10"></div>
+          </div>
+          <div v-else class="flex items-center gap-3 pb-1">
+            <UAvatar
+              data-type="avatar"
+              v-if="item.separator"
+              :alt="targetNickname"
+              size="xl"
+            />
+            <div v-else class="w-10"></div>
+            <div
+              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
+            >
+              <UIcon name="lucide:smile" class="size-5"></UIcon>
+              同意了你的好友请求
+            </div>
+          </div>
+        </template>
       </DynamicScrollerItem>
     </template>
   </DynamicScroller>
-  <!-- 移动端匹配或聊天列表点击对方头像进入的空间 -->
-  <USlideover v-model:open="isSpaceSlideoverOpen" title=" " description=" ">
-    <template #content>
-      <ProfileSpace
-        v-if="isSpaceSlideoverOpen"
-        @close="isSpaceSlideoverOpen = false"
-      ></ProfileSpace>
-    </template>
-  </USlideover>
   <!-- 音频播放器 -->
   <audio @ended="onEnded" ref="audioRef" hidden></audio>
 </template>
@@ -390,7 +415,8 @@ import { useThrottleFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import ModalViewer from '../modal/ModalViewer.vue'
+import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
+import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 
 const playingURL = ref('')
 const props = defineProps<{
@@ -409,7 +435,6 @@ const {
   skipUnshiftMessageRecord
 } = storeToRefs(useRecentContactsStore())
 const route = useRoute()
-const isSpaceSlideoverOpen = ref(false)
 const items = ref([])
 const search = ref('')
 const updateParts = ref({
@@ -447,7 +472,8 @@ const filteredItems = computed(() => {
 const audioRef = ref(null)
 const toast = useToast()
 const overlay = useOverlay()
-const viewerModal = overlay.create(ModalViewer)
+const viewerOverlay = overlay.create(OverlayViewer)
+const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 const chatBg = computed(() => {
   const { isChatBgOpen, chatBg } = config.value.theme
   return isChatBgOpen && chatBg
@@ -532,7 +558,7 @@ const onClick = e => {
     target.children[0]?.getAttribute('data-type')
 
   if (type === 'image') {
-    viewerModal.open({ url: target.src })
+    viewerOverlay.open({ url: target.src })
   } else if (
     type &&
     // 如果 contacts 中点击用户打开的空间中打开了聊天界面，聊天界面中点击
@@ -541,7 +567,7 @@ const onClick = e => {
     // PC 端的匹配聊天界面中点击对方头像不显示对方空间
     !(props.isMatch && !isMobile.value)
   ) {
-    isSpaceSlideoverOpen.value = true
+    profileSpaceOverlay.open()
   }
 }
 

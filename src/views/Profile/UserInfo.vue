@@ -208,7 +208,7 @@
       >
         <div class="flex items-center gap-3">
           <UAvatar
-            @click="viewerModal.open({ url: avatarURL })"
+            @click="viewerOverlay.open({ url: avatarURL })"
             class="cursor-pointer"
             :src="avatarURL"
             :alt="userInfoForm.nickname[0]"
@@ -268,7 +268,7 @@ import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref, shallowRef, watch } from 'vue'
 import { parseDate } from '@internationalized/date'
-import ModalViewer from '@/components/modal/ModalViewer.vue'
+import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
 
 const isUserInfoSlideoverOpen = defineModel<boolean>({ required: false })
 const toast = useToast()
@@ -327,7 +327,7 @@ const date = shallowRef(
     : null
 )
 const overlay = useOverlay()
-const viewerModal = overlay.create(ModalViewer)
+const viewerOverlay = overlay.create(OverlayViewer)
 const avatarRef = ref(null)
 
 const onFileChange = e => useUpdateOSS(e, 'avatar', userInfo, toast, avatarURL)

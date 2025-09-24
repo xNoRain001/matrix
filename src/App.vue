@@ -76,8 +76,9 @@
         @touchstart="onTouchstart"
         @touchmove.prevent="onTouchmove"
         @touchend="onSaveFloatingBtnPosition"
-        @click="!moving && voiceChatModal.open()"
+        @click="!moving && voiceChatOverlay.open()"
         icon="lucide:phone"
+        size="xl"
         class="absolute cursor-pointer"
         :style="{
           top: `${floatingBtnY}px`,
@@ -107,7 +108,7 @@ import {
 } from './store'
 import { computed, onMounted, ref, watch } from 'vue'
 import type { NavigationMenuItem } from '@nuxt/ui'
-import ModalLogout from './components/modal/ModalLogout.vue'
+import OverlayLogout from './components/overlay/OverlayLogout.vue'
 import { io } from 'socket.io-client'
 import {
   useInitLastMsg,
@@ -132,13 +133,13 @@ import {
 } from './hooks'
 import { useRouter } from 'vue-router'
 import { voiceChatInviteToastExpireTime } from './const'
-import ModalOffline from './components/modal/ModalOffline.vue'
+import OverlayOffline from './components/overlay/OverlayOffline.vue'
 import { useThrottleFn } from '@vueuse/core'
-import ModalFeedback from './components/modal/ModalFeedback.vue'
+import OverlayFeedback from './components/overlay/OverlayFeedback.vue'
 import type { message } from './types'
-import ModalVoiceChat from './components/modal/ModalVoiceChat.vue'
-import ModalHelpAndSupport from './components/modal/ModalHelpAndSupport.vue'
-import ModalAbout from './components/modal/ModalAbout.vue'
+import OverlayVoiceChat from './components/overlay/OverlayVoiceChat.vue'
+import OverlayHelpAndSupport from './components/overlay/OverlayHelpAndSupport.vue'
+import OverlayAbout from './components/overlay/OverlayAbout.vue'
 
 let voiceChatInviteToastId = null
 let matchTimer = null
@@ -153,12 +154,14 @@ let isOfflineModalOpen = false
 let floatingBtnStartX = 0
 let floatingBtnStartY = 0
 let moving = false
+let floatingBtnMaxX = 0
+let floatingBtnMaxY = 0
 const maxReconnectionAttempts = 1
 const toast = useToast()
 const overlay = useOverlay()
-const logoutModal = overlay.create(ModalLogout)
-const feedbackModal = overlay.create(ModalFeedback)
-const offlineModal = overlay.create(ModalOffline)
+const logoutOverlay = overlay.create(OverlayLogout)
+const feedbackOverlay = overlay.create(OverlayFeedback)
+const offlineOverlay = overlay.create(OverlayOffline)
 const {
   avatarURL,
   notifications,
@@ -252,7 +255,7 @@ const navs = [
         // },
         {
           label: '登出',
-          onSelect: () => logoutModal.open()
+          onSelect: () => logoutOverlay.open()
         }
       ]
     }
@@ -261,17 +264,17 @@ const navs = [
     {
       label: '反馈',
       icon: 'lucide:message-circle',
-      onSelect: () => feedbackModal.open()
+      onSelect: () => feedbackOverlay.open()
     },
     {
       label: '帮助和支持',
       icon: 'lucide:circle-question-mark',
-      onSelect: () => helpAndSupportModal.open()
+      onSelect: () => helpAndSupportOverlay.open()
     },
     {
       label: '关于',
       icon: 'lucide:info',
-      onSelect: () => abouttModal.open()
+      onSelect: () => abouttOverlay.open()
     }
   ]
 ] satisfies NavigationMenuItem[][]
@@ -319,17 +322,35 @@ const rtcConfiguration: RTCConfiguration = {
 const beepAudioRef = ref(null)
 const floatingBtnX = ref(Number(localStorage.getItem('floatingBtnX') || 40))
 const floatingBtnY = ref(Number(localStorage.getItem('floatingBtnY') || 40))
-const voiceChatModal = overlay.create(ModalVoiceChat)
-const helpAndSupportModal = overlay.create(ModalHelpAndSupport)
-const abouttModal = overlay.create(ModalAbout)
+const voiceChatOverlay = overlay.create(OverlayVoiceChat)
+const helpAndSupportOverlay = overlay.create(OverlayHelpAndSupport)
+const abouttOverlay = overlay.create(OverlayAbout)
 
-const onMousedown = e => {
-  moving = false
-  const { clientX, clientY, target } = e
-  const { left, top } = target.getBoundingClientRect()
+const initFloatingBtnPosition = (currentTarget, clientX, clientY) => {
+  const { left, top, width, height } = currentTarget.getBoundingClientRect()
+  const { clientWidth, clientHeight } = document.documentElement
 
   floatingBtnStartX = clientX - left
   floatingBtnStartY = clientY - top
+  floatingBtnMaxX = clientWidth - width
+  floatingBtnMaxY = clientHeight - height
+}
+
+const updateFloatingBtnPosition = (clientX, clientY) => {
+  floatingBtnX.value = Math.min(
+    Math.max(clientX - floatingBtnStartX, 0),
+    floatingBtnMaxX
+  )
+  floatingBtnY.value = Math.min(
+    Math.max(clientY - floatingBtnStartY, 0),
+    floatingBtnMaxY
+  )
+}
+
+const onMousedown = e => {
+  moving = false
+  const { clientX, clientY, currentTarget } = e
+  initFloatingBtnPosition(currentTarget, clientX, clientY)
   document.addEventListener('mousemove', onMousemove)
 }
 
@@ -337,8 +358,7 @@ const onMousemove = useThrottleFn(
   e => {
     moving = true
     const { clientX, clientY } = e
-    floatingBtnX.value = clientX - floatingBtnStartX
-    floatingBtnY.value = clientY - floatingBtnStartY
+    updateFloatingBtnPosition(clientX, clientY)
   },
   50,
   true,
@@ -357,20 +377,16 @@ const onSaveFloatingBtnPosition = () => {
 
 const onTouchstart = e => {
   const {
-    target,
+    currentTarget,
     touches: [{ clientX, clientY }]
   } = e
-  const { left, top } = target.getBoundingClientRect()
-
-  floatingBtnStartX = clientX - left
-  floatingBtnStartY = clientY - top
+  initFloatingBtnPosition(currentTarget, clientX, clientY)
 }
 
 const onTouchmove = useThrottleFn(
   e => {
     const { clientX, clientY } = e.touches[0]
-    floatingBtnX.value = clientX - floatingBtnStartX
-    floatingBtnY.value = clientY - floatingBtnStartY
+    updateFloatingBtnPosition(clientX, clientY)
   },
   50,
   true,
@@ -378,7 +394,7 @@ const onTouchmove = useThrottleFn(
 )
 
 const onReconnect = emit => {
-  offlineModal.patch({
+  offlineOverlay.patch({
     reconnecting: true
   })
 
@@ -549,7 +565,7 @@ const onConnect = emit => {
 
     // 在模态框内重连成功
     if (isOfflineModalOpen) {
-      offlineModal.patch({
+      offlineOverlay.patch({
         reconnecting: false
       })
       isOfflineModalOpen = false
@@ -569,8 +585,8 @@ const onConnect = emit => {
 const onJoined = async (_roomId, _polite) => {
   roomId.value = _roomId
 
-  if (!voiceChatModal.isOpen) {
-    voiceChatModal.open()
+  if (!voiceChatOverlay.isOpen) {
+    voiceChatOverlay.open()
   } else if (_polite) {
     // 处理匹配语音通话时其中一方刷新页面后，能够恢复通话
     // 先进来的一方，规定时间内无法等到对方加入，判断为对方离开了房间
@@ -768,40 +784,48 @@ const replaceImageOSSURLToURL = async (hash, messageRecord) => {
     delete messageRecord.ossURL
     url = blobURL
   } else {
-    const db = await useGetDB(userInfo.value.id)
-    const tx = db.transaction('files', 'readwrite')
-    const record = await tx.objectStore('files').get(hash)
-    if (record) {
-      delete messageRecord.ossURL
-      url = URL.createObjectURL(record.blob)
-      if (_hashToBlobURLMap.size < 100) {
-        _hashToBlobURLMap.set(hash, url)
-      }
-    } else {
-      const blob = await ossURLToBlob(messageRecord)
-      // tx 可能已经关闭，需要重新打开
+    try {
+      const db = await useGetDB(userInfo.value.id)
       const tx = db.transaction('files', 'readwrite')
-      await tx.objectStore('files').put({ hash, blob })
-      delete messageRecord.ossURL
-      url = URL.createObjectURL(blob)
-      if (_hashToBlobURLMap.size < 100) {
-        _hashToBlobURLMap.set(hash, url)
+      const record = await tx.objectStore('files').get(hash)
+      if (record) {
+        delete messageRecord.ossURL
+        url = URL.createObjectURL(record.blob)
+        if (_hashToBlobURLMap.size < 100) {
+          _hashToBlobURLMap.set(hash, url)
+        }
+      } else {
+        const blob = await ossURLToBlob(messageRecord)
+        // tx 可能已经关闭，需要重新打开
+        const tx = db.transaction('files', 'readwrite')
+        await tx.objectStore('files').put({ hash, blob })
+        delete messageRecord.ossURL
+        url = URL.createObjectURL(blob)
+        if (_hashToBlobURLMap.size < 100) {
+          _hashToBlobURLMap.set(hash, url)
+        }
       }
-    }
-    await tx.done
+      await tx.done
+    } catch {}
   }
 
   return url
 }
 
 const replaceAudioOSSURLToURL = async (hash, messageRecord) => {
-  const blob = await ossURLToBlob(messageRecord)
-  const db = await useGetDB(userInfo.value.id)
-  const tx = db.transaction('files', 'readwrite')
-  await tx.objectStore('files').put({ hash, blob })
-  await tx.done
-  delete messageRecord.ossURL
-  return URL.createObjectURL(blob)
+  let url = ''
+
+  try {
+    const blob = await ossURLToBlob(messageRecord)
+    const db = await useGetDB(userInfo.value.id)
+    const tx = db.transaction('files', 'readwrite')
+    await tx.objectStore('files').put({ hash, blob })
+    await tx.done
+    delete messageRecord.ossURL
+    url = URL.createObjectURL(blob)
+  } catch {}
+
+  return url
 }
 
 const onReceiveOfflineMsgs = async offlineMsgs => {
@@ -969,7 +993,7 @@ const onInviteWebRTC = (roomId, nickname) => {
 
 const onInviteWebRTCFailed = msg => {
   roomId.value = ''
-  voiceChatModal.close()
+  voiceChatOverlay.close()
   clearTimeout(leaveRoomTimer.value)
   toast.add({
     title: msg,
@@ -980,7 +1004,7 @@ const onInviteWebRTCFailed = msg => {
 
 const onRefuseWebRTC = () => {
   globalSocket.value.emit('leave', roomId.value)
-  voiceChatModal.close()
+  voiceChatOverlay.close()
   roomId.value = ''
   clearTimeout(leaveRoomTimer.value)
   toast.add({
@@ -1025,7 +1049,7 @@ const onConnectError = () => {
       })
       // 在断网模态框中的重连失败，取消 loading 状态，让用户再次点击
 
-      offlineModal.patch({
+      offlineOverlay.patch({
         reconnecting: false
       })
       firstConnectionSuccess = false
@@ -1048,7 +1072,7 @@ const onConnectError = () => {
     // 同时需要重置尝试次数
     reconnectionAttempts = 0
     firstConnectionSuccess = false
-    offlineModal.open({
+    offlineOverlay.open({
       reconnecting: false,
       onReconnect
     })
@@ -1113,7 +1137,7 @@ const onBye = _roomId => {
     router.replace('/')
   }
 
-  voiceChatModal.close()
+  voiceChatOverlay.close()
 }
 
 const onCancelWebRTC = () => {
@@ -1165,7 +1189,7 @@ const onOnline = (type, res) => {
 }
 
 const onAgreeWebRTCButNoPermission = () => {
-  voiceChatModal.close()
+  voiceChatOverlay.close()
   roomId.value = ''
   clearTimeout(leaveRoomTimer.value)
   toast.add({

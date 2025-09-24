@@ -13,7 +13,7 @@
         :key="id"
         class="text-toned hover:border-primary hover:bg-primary/5 flex cursor-pointer items-center gap-4 border-l-2 border-(--ui-bg) p-4 text-base transition-colors sm:px-6"
       >
-        <UAvatar :text="profile.nickname[0]" size="3xl" />
+        <UAvatar @click="onClick(id)" :text="profile.nickname[0]" size="3xl" />
         <div class="flex flex-1 flex-col gap-y-2 text-sm">
           <div class="flex items-center justify-between">
             <span class="text-highlighted line-clamp-1 max-w-1/2 font-medium">
@@ -60,16 +60,33 @@
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { useRecentContactsStore, useUserStore } from '@/store'
-import { useFormatTimeAgo } from '@/hooks'
+import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
+import { useFormatTimeAgo, useSendMsg } from '@/hooks'
 import { agreeCandidate, refuseCandidate } from '@/apis/contact'
+import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
 
 const isNotificationsSlideoverOpen = defineModel<boolean>()
 const { userInfo, globalSocket } = storeToRefs(useUserStore())
-const { contactNotifications, contactList, contactProfileMap } = storeToRefs(
-  useRecentContactsStore()
-)
+const { matchRes } = storeToRefs(useMatchStore())
+const {
+  contactNotifications,
+  contactList,
+  contactProfileMap,
+  messageList,
+  lastMsgList,
+  lastMsgMap,
+  indexMap,
+  unreadMsgCounter,
+  msgContainerRef
+} = storeToRefs(useRecentContactsStore())
 const toast = useToast()
+const overlay = useOverlay()
+const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
+
+const onClick = id => {
+  id
+  profileSpaceOverlay.open()
+}
 
 const onDelete = index => {
   const _contactNotifications = contactNotifications.value
@@ -164,6 +181,27 @@ const onAgree = async (targetId, targetProfile) => {
       JSON.stringify(_contactProfileMap)
     )
     globalSocket.value.emit('agree-contact', targetId, notification, contact)
+    useSendMsg(
+      'contactAgreeTip',
+      '同意了你的好友请求',
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      targetId,
+      userInfo,
+      globalSocket,
+      messageList,
+      lastMsgList,
+      lastMsgMap,
+      matchRes,
+      indexMap,
+      unreadMsgCounter,
+      msgContainerRef,
+      false
+    )
   } catch (error) {
     toast.add({
       title: error.message,

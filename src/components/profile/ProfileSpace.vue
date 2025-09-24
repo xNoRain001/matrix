@@ -51,7 +51,7 @@
       </UDashboardNavbar>
       <!-- 背景图片，由于移动端有 pb-16，所有高度全部使用 50vh，而不是 50% -->
       <div
-        @click="viewerModal.open({ url: bgURL })"
+        @click="viewerOverlay.open({ url: bgURL })"
         :class="[
           isSelf ? 'cursor-pointer' : '',
           bgURL ? 'bg-cover bg-center bg-no-repeat' : 'bg-default',
@@ -77,7 +77,7 @@
             ></UButton>
             <UButton
               v-if="!isSelf && !inView"
-              @click="isMessageViewSlideoverOpen = true"
+              @click="messageViewOverlay.open()"
               icon="lucide:message-circle-more"
               label="聊天"
             ></UButton>
@@ -85,7 +85,7 @@
         </template>
         <template #header>
           <UAvatar
-            @click="viewerModal.open({ url: avatarURL })"
+            @click="viewerOverlay.open({ url: avatarURL })"
             class="absolute top-0 -translate-y-1/2 cursor-pointer"
             :class="isSelf ? 'cursor-pointer' : ''"
             :src="avatarURL"
@@ -159,20 +159,6 @@
       type="file"
       accept="image/*"
     />
-    <!-- 聊天界面 -->
-    <USlideover
-      v-if="!isSelf"
-      v-model:open="isMessageViewSlideoverOpen"
-      title=" "
-      description=" "
-    >
-      <template #content>
-        <MessageView
-          v-if="targetId"
-          @close="isMessageViewSlideoverOpen = false"
-        />
-      </template>
-    </USlideover>
     <!-- 移动端设置界面 -->
     <USlideover
       v-if="isMobile && isSelf"
@@ -205,7 +191,7 @@
         </UPageCard>
       </template>
     </USlideover>
-    <!-- 移动端二级设置界面，不放入 body 中，因为会导致 not-last:mb-4 失效 -->
+    <!-- 移动端二级设置界面，不放入 slider 的 body 中，因为会导致 not-last:mb-4 失效 -->
     <template v-if="isMobile && isSelf">
       <UserInfo v-model="isUserInfoSlideoverOpen"></UserInfo>
       <UpdatePassword v-model="isUpdatePasswordSlideoverOpen"></UpdatePassword>
@@ -250,17 +236,18 @@ import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
 import { useGetDB, useUpdateOSS } from '@/hooks'
 import { useRoute } from 'vue-router'
-import ModalViewer from '../modal/ModalViewer.vue'
+import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
 import UserInfo from '@/views/Profile/UserInfo.vue'
 import UpdatePassword from '@/views/Profile/UpdatePassword.vue'
 import Notifications from '@/views/Profile/Notifications.vue'
 import DataManager from '@/views/Profile/DataManager.vue'
 import Logoff from '@/views/Profile/Logoff.vue'
 import Theme from '@/views/Profile/Theme.vue'
-import ModalLogout from '../modal/ModalLogout.vue'
-import ModalFeedback from '../modal/ModalFeedback.vue'
-import ModalHelpAndSupport from '../modal/ModalHelpAndSupport.vue'
-import ModalAbout from '../modal/ModalAbout.vue'
+import OverlayLogout from '@/components/overlay/OverlayLogout.vue'
+import OverlayFeedback from '@/components/overlay/OverlayFeedback.vue'
+import OverlayHelpAndSupport from '@/components/overlay/OverlayHelpAndSupport.vue'
+import OverlayAbout from '@/components/overlay/OverlayAbout.vue'
+import OverlayMessageView from '@/components/overlay/OverlayMessageView.vue'
 
 const overlay = useOverlay()
 withDefaults(defineProps<{ isMatch?: boolean }>(), {
@@ -268,7 +255,6 @@ withDefaults(defineProps<{ isMatch?: boolean }>(), {
 })
 const emits = defineEmits(['close'])
 const container = ref(null)
-const isMessageViewSlideoverOpen = ref(false)
 const isSettingSlideoverOpen = ref(false)
 const isUserInfoSlideoverOpen = ref(false)
 const isUpdatePasswordSlideoverOpen = ref(false)
@@ -322,17 +308,17 @@ const cards = [
     {
       icon: 'lucide:message-circle',
       label: '反馈',
-      onSelect: () => feedbackModal.open()
+      onSelect: () => feedbackOverlay.open()
     },
     {
       icon: 'lucide:circle-question-mark',
       label: '帮助和支持',
-      onSelect: () => helpAndSupportModal.open()
+      onSelect: () => helpAndSupportOverlay.open()
     },
     {
       icon: 'lucide:info',
       label: '关于',
-      onSelect: () => aboutModal.open()
+      onSelect: () => aboutOverlay.open()
     }
   ],
   [
@@ -344,7 +330,7 @@ const cards = [
     {
       icon: 'lucide:log-out',
       label: '退出登录',
-      onSelect: () => logoutModal.open()
+      onSelect: () => logoutOverlay.open()
     }
   ]
 ]
@@ -390,11 +376,12 @@ const bgURL = ref(
 const avatarURL = ref(
   isSelf ? _avatarURL.value : `${VITE_OSS_BASE_URL}${targetId.value}/avatar`
 )
-const viewerModal = overlay.create(ModalViewer)
-const logoutModal = overlay.create(ModalLogout)
-const feedbackModal = overlay.create(ModalFeedback)
-const helpAndSupportModal = overlay.create(ModalHelpAndSupport)
-const aboutModal = overlay.create(ModalAbout)
+const viewerOverlay = overlay.create(OverlayViewer)
+const logoutOverlay = overlay.create(OverlayLogout)
+const feedbackOverlay = overlay.create(OverlayFeedback)
+const helpAndSupportOverlay = overlay.create(OverlayHelpAndSupport)
+const aboutOverlay = overlay.create(OverlayAbout)
+const messageViewOverlay = overlay.create(OverlayMessageView)
 
 const onSpaceBgChange = e => useUpdateOSS(e, 'bg', userInfo, toast, bgURL)
 </script>

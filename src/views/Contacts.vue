@@ -58,27 +58,15 @@
 
   <!-- 好友申请通知 -->
   <ContactNotificationsSlideover v-model="isNotificationsSlideoverOpen" />
-
-  <!-- 移动端点击用户进入的个人空间 -->
-  <!-- class="max-w-none" 实现平板全屏 -->
-  <USlideover
-    v-if="isMobile"
-    v-model:open="isOpenSlideover"
-    title=" "
-    description=" "
-  >
-    <template #content>
-      <ProfileSpace v-if="targetId" @close="targetId = ''"></ProfileSpace>
-    </template>
-  </USlideover>
 </template>
 
 <script setup lang="ts">
 import { getContacts } from '@/apis/contact'
+import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 import { useRefreshContacts, useRefreshOnline } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { onMounted, ref, computed, onBeforeUnmount } from 'vue'
+import { onMounted, ref, onBeforeUnmount, watch } from 'vue'
 
 let timer = null
 const toast = useToast()
@@ -86,14 +74,18 @@ const isNotificationsSlideoverOpen = ref(false)
 const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
 const { targetId, contactList, contactProfileMap, contactNotifications } =
   storeToRefs(useRecentContactsStore())
-const isOpenSlideover = computed({
-  get() {
-    return Boolean(targetId.value)
-  },
-  set(value: boolean) {
-    if (!value) {
-      targetId.value = ''
-    }
+const overlay = useOverlay()
+const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
+
+watch(targetId, v => {
+  if (!isMobile.value) {
+    return
+  }
+
+  if (v) {
+    profileSpaceOverlay.open()
+  } else {
+    profileSpaceOverlay.close()
   }
 })
 

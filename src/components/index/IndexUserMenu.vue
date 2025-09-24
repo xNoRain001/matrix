@@ -43,14 +43,14 @@ import { storeToRefs } from 'pinia'
 import { computed, reactive, ref } from 'vue'
 import { appConfig as _appConfig } from '@/const'
 import { useUpdateTheme } from '@/hooks'
-import ModalLogout from '../modal/ModalLogout.vue'
+import OverlayLogout from '../overlay/OverlayLogout.vue'
 import colors from 'tailwindcss/colors'
 
 defineProps<{
   collapsed?: boolean
 }>()
 const overlay = useOverlay()
-const logoutModal = overlay.create(ModalLogout)
+const logoutOverlay = overlay.create(OverlayLogout)
 const { store } = useColorMode()
 const appConfig = reactive(_appConfig)
 const { userInfo } = storeToRefs(useUserStore())
@@ -184,7 +184,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
     {
       label: '登出',
       icon: 'i-lucide-log-out',
-      onSelect: () => logoutModal.open()
+      onSelect: () => logoutOverlay.open()
     }
   ]
 ])

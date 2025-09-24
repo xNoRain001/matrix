@@ -26,10 +26,10 @@
 import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import type { NavigationMenuItem } from '@nuxt/ui'
-import ModalLogout from '@/components/modal/ModalLogout.vue'
+import OverlayLogout from '@/components/overlay/OverlayLogout.vue'
 
 const overlay = useOverlay()
-const logoutModal = overlay.create(ModalLogout)
+const logoutOverlay = overlay.create(OverlayLogout)
 const { isMobile } = storeToRefs(useUserStore())
 const links = [
   [
@@ -74,7 +74,7 @@ const links = [
     {
       label: '登出',
       icon: 'lucide:log-out',
-      onSelect: () => logoutModal.open()
+      onSelect: () => logoutOverlay.open()
     }
   ]
 ] satisfies NavigationMenuItem[][]
