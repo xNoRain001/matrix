@@ -233,7 +233,7 @@
 <script lang="ts" setup>
 import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useGetDB, useUpdateOSS } from '@/hooks'
 import { useRoute } from 'vue-router'
 import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
@@ -384,4 +384,12 @@ const aboutOverlay = overlay.create(OverlayAbout)
 const messageViewOverlay = overlay.create(OverlayMessageView)
 
 const onSpaceBgChange = e => useUpdateOSS(e, 'bg', userInfo, toast, bgURL)
+
+watch(targetId, v => {
+  // PC 端 contact 页面允许无缝切换空间操作，需要更新头像和背景
+  if (v && isContacts.value && !isMobile.value) {
+    bgURL.value = `${VITE_OSS_BASE_URL}${v}/space-bg`
+    avatarURL.value = `${VITE_OSS_BASE_URL}${v}/avatar`
+  }
+})
 </script>

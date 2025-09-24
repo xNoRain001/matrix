@@ -12,14 +12,15 @@ const useDeleteContact = async (
   try {
     await deleteCandidate(targetId)
     toast.add({ title: '删除好友成功', icon: 'lucide:smile' })
-    const { id, nickname } = userInfo.value
+    const { id } = userInfo.value
+    const profile = JSON.parse(JSON.stringify(userInfo.value))
+    delete profile.id
+    delete profile.tokenVersion
     const notification = {
       id,
       content: '将你从好友列表中移除了',
       createdAt: Date.now(),
-      profile: {
-        nickname
-      }
+      profile
     }
     const _contactList = contactList.value
     const _contactProfileMap = contactProfileMap.value

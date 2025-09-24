@@ -76,16 +76,6 @@
       </div>
     </template>
   </UCollapsible>
-
-  <!-- 移动端匹配或聊天列表点击对方头像进入的空间 -->
-  <USlideover v-model:open="isSpaceSlideoverOpen" title=" " description=" ">
-    <template #content>
-      <ProfileSpace
-        v-if="isSpaceSlideoverOpen"
-        @close="isSpaceSlideoverOpen = false"
-      ></ProfileSpace>
-    </template>
-  </USlideover>
 </template>
 
 <script setup lang="ts">
@@ -94,6 +84,7 @@ import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
 
 const props = withDefaults(defineProps<{ isMatch?: boolean }>(), {
   isMatch: false
@@ -104,7 +95,6 @@ const { isMobile, userInfo } = storeToRefs(useUserStore())
 const { targetId, lastMsgMap, contactProfileMap, unreadMsgCounter } =
   storeToRefs(useRecentContactsStore())
 const { matchRes } = storeToRefs(useMatchStore())
-const isSpaceSlideoverOpen = ref(false)
 const route = useRoute()
 const isMessage = computed(() => route.path === '/message')
 const targetNickname = computed(() =>
@@ -142,10 +132,12 @@ const isOnline = computed(() =>
       ? lastMsgMap.value[targetId.value].online
       : contactProfileMap.value[targetId.value].online
 )
+const overlay = useOverlay()
+const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 
 const toSpace = () => {
   if (route.path !== '/contacts' && !(props.isMatch && !isMobile.value)) {
-    isSpaceSlideoverOpen.value = true
+    profileSpaceOverlay.open()
   }
 }
 

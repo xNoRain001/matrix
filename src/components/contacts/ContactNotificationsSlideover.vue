@@ -63,7 +63,6 @@ import { storeToRefs } from 'pinia'
 import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
 import { useFormatTimeAgo, useSendMsg } from '@/hooks'
 import { agreeCandidate, refuseCandidate } from '@/apis/contact'
-import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
 
 const isNotificationsSlideoverOpen = defineModel<boolean>()
 const { userInfo, globalSocket } = storeToRefs(useUserStore())
@@ -77,15 +76,14 @@ const {
   lastMsgMap,
   indexMap,
   unreadMsgCounter,
-  msgContainerRef
+  msgContainerRef,
+  targetId
 } = storeToRefs(useRecentContactsStore())
 const toast = useToast()
-const overlay = useOverlay()
-const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 
 const onClick = id => {
-  id
-  profileSpaceOverlay.open()
+  isNotificationsSlideoverOpen.value = false
+  targetId.value = id
 }
 
 const onDelete = index => {
@@ -107,14 +105,15 @@ const onRefuse = async targetId => {
       `contactNotifications-${userInfo.value.id}`,
       JSON.stringify(contactNotifications.value)
     )
-    const { id, nickname } = userInfo.value
+    const { id } = userInfo.value
+    const profile = JSON.parse(JSON.stringify(userInfo.value))
+    delete profile.id
+    delete profile.tokenVersion
     const notification = {
       id,
       content: '拒绝了你的好友请求',
       createdAt: Date.now(),
-      profile: {
-        nickname
-      }
+      profile
     }
     globalSocket.value.emit('refuse-contact', targetId, notification)
   } catch (error) {
@@ -133,7 +132,7 @@ const onAgree = async (targetId, targetProfile) => {
     contactNotifications.value = contactNotifications.value.filter(
       item => item.id !== targetId
     )
-    const { id, nickname, gender, region, birthday } = userInfo.value
+    const { id } = userInfo.value
 
     localStorage.setItem(
       `contactNotifications-${id}`,
@@ -145,15 +144,13 @@ const onAgree = async (targetId, targetProfile) => {
       return
     }
 
+    const profile = JSON.parse(JSON.stringify(userInfo.value))
+    delete profile.id
+    delete profile.tokenVersion
     const common = {
       id,
       createdAt: Date.now(),
-      profile: {
-        nickname,
-        gender,
-        region,
-        birthday
-      }
+      profile
     }
     const notification = {
       content: '同意了你的好友请求',
