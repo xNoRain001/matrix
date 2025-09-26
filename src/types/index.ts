@@ -40,3 +40,17 @@ export type message = {
   error?: boolean
   resendArgs?: any[]
 }
+
+export type post = {
+  _id: string
+  commentCount: number
+  comments: []
+  content: {
+    text?: string
+    media: string[]
+  }
+  createdAt: number
+  updateAt?: number
+  likes: number
+  unlikes: number
+}

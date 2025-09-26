@@ -1,6 +1,6 @@
 <template>
   <USlideover
-    title="发布"
+    :title="post ? '编辑' : '发布'"
     description=" "
     :ui="{
       footer: 'justify-between flex-row'
@@ -38,15 +38,66 @@
         <UButton variant="ghost" icon="lucide:smile"></UButton>
       </div>
       <div>
-        <UButton label="草稿箱"></UButton>
-        <UButton label="发布" class="ml-2"></UButton>
+        <UButton v-if="!post" label="草稿箱" @click="onDraft"></UButton>
+        <UButton
+          :disabled="!content.length"
+          :label="post ? '更新' : '发布'"
+          class="ml-2"
+          @click="post ? onUpdatePost() : onPublishPost()"
+        ></UButton>
       </div>
     </template>
   </USlideover>
 </template>
 
 <script lang="ts" setup>
+import { publishPost, updatePost } from '@/apis/post'
+import { useUserStore } from '@/store'
+import type { post } from '@/types'
+import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 
-const content = ref('')
+const props = withDefaults(defineProps<{ post?: post; index?: number }>(), {
+  post: null,
+  index: null
+})
+const content = ref(
+  props.post ? props.post.content.text : localStorage.getItem('postDraft') || ''
+)
+const toast = useToast()
+const emit = defineEmits<{ close: [boolean] }>()
+const { posts } = storeToRefs(useUserStore())
+
+const onDraft = () => {
+  localStorage.setItem('postDraft', content.value)
+  toast.add({ title: '已保存到草稿', icon: 'lucide:smile' })
+  emit('close', true)
+}
+
+const onPublishPost = async () => {
+  try {
+    const { data: post } = await publishPost(content.value)
+    toast.add({ title: '发布成功', icon: 'lucide:smile' })
+    localStorage.removeItem('postDraft')
+    content.value = ''
+    posts.value.unshift(post)
+    emit('close', true)
+  } catch (error) {
+    toast.add({ title: '发布失败', color: 'error', icon: 'lucide:annoyed' })
+  }
+}
+
+const onUpdatePost = async () => {
+  try {
+    const _content = content.value
+    const { data: latestContent } = await updatePost(props.post._id, _content)
+    toast.add({ title: '更新成功', icon: 'lucide:smile' })
+    content.value = ''
+    posts.value[props.index].content = latestContent
+    posts.value[props.index].updateAt = Date.now()
+    emit('close', true)
+  } catch (error) {
+    toast.add({ title: '更新失败', color: 'error', icon: 'lucide:annoyed' })
+  }
+}
 </script>

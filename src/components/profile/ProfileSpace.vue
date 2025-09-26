@@ -180,7 +180,6 @@ import OverlayFeedback from '@/components/overlay/OverlayFeedback.vue'
 import OverlayHelpAndSupport from '@/components/overlay/OverlayHelpAndSupport.vue'
 import OverlayAbout from '@/components/overlay/OverlayAbout.vue'
 import OverlayMessageView from '@/components/overlay/OverlayMessageView.vue'
-import type { userInfo } from '@/types'
 import OverlayPulishPost from '../overlay/OverlayPulishPost.vue'
 
 const overlay = useOverlay()
