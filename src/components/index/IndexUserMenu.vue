@@ -55,10 +55,10 @@ const { store } = useColorMode()
 const appConfig = reactive(_appConfig)
 const { userInfo } = storeToRefs(useUserStore())
 const user = ref({
-  name: userInfo.value.nickname,
+  name: userInfo.value.profile.nickname,
   avatar: {
     // src: 'https://github.com/benjamincanac.png',
-    alt: userInfo.value.nickname
+    alt: userInfo.value.profile.nickname
   }
 })
 const items = computed<DropdownMenuItem[][]>(() => [

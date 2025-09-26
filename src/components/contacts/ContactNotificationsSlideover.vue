@@ -13,7 +13,11 @@
         :key="id"
         class="text-toned hover:border-primary hover:bg-primary/5 flex cursor-pointer items-center gap-4 border-l-2 border-(--ui-bg) p-4 text-base transition-colors sm:px-6"
       >
-        <UAvatar @click="onClick(id)" :text="profile.nickname[0]" size="3xl" />
+        <UAvatar
+          @click="onClick(id, profile)"
+          :text="profile.nickname[0]"
+          size="3xl"
+        />
         <div class="flex flex-1 flex-col gap-y-2 text-sm">
           <div class="flex items-center justify-between">
             <span class="text-highlighted line-clamp-1 max-w-1/2 font-medium">
@@ -77,13 +81,15 @@ const {
   indexMap,
   unreadMsgCounter,
   msgContainerRef,
-  targetId
+  targetId,
+  targetProfile
 } = storeToRefs(useRecentContactsStore())
 const toast = useToast()
 
-const onClick = id => {
+const onClick = (id, profile) => {
   isNotificationsSlideoverOpen.value = false
   targetId.value = id
+  targetProfile.value = profile
 }
 
 const onDelete = index => {
@@ -101,14 +107,11 @@ const onRefuse = async targetId => {
     contactNotifications.value = contactNotifications.value.filter(
       item => item.id !== targetId
     )
+    const { id, profile } = userInfo.value
     localStorage.setItem(
-      `contactNotifications-${userInfo.value.id}`,
+      `contactNotifications-${id}`,
       JSON.stringify(contactNotifications.value)
     )
-    const { id } = userInfo.value
-    const profile = JSON.parse(JSON.stringify(userInfo.value))
-    delete profile.id
-    delete profile.tokenVersion
     const notification = {
       id,
       content: '拒绝了你的好友请求',
@@ -132,7 +135,7 @@ const onAgree = async (targetId, targetProfile) => {
     contactNotifications.value = contactNotifications.value.filter(
       item => item.id !== targetId
     )
-    const { id } = userInfo.value
+    const { id, profile } = userInfo.value
 
     localStorage.setItem(
       `contactNotifications-${id}`,
@@ -144,9 +147,6 @@ const onAgree = async (targetId, targetProfile) => {
       return
     }
 
-    const profile = JSON.parse(JSON.stringify(userInfo.value))
-    delete profile.id
-    delete profile.tokenVersion
     const common = {
       id,
       createdAt: Date.now(),

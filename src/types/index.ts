@@ -9,13 +9,16 @@ declare module 'axios' {
 }
 
 export type userInfo = {
-  nickname: string
-  gender: 'male' | 'female' | 'other'
-  birthday: string
-  region: string
   id: string
-  bio: string
+  email: string
   tokenVersion: number
+  profile: {
+    nickname: string
+    gender: 'male' | 'female' | 'other'
+    birthday: string
+    region: string
+    bio: string
+  }
 }
 
 export type message = {

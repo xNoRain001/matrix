@@ -20,15 +20,14 @@ const useRecentContactsStore = defineStore('recentContactsStore', () => {
         createdAt: number
         id: string
         type: string
-        profile: {
-          nickname: string
-        }
+        profile: userInfo['profile']
       }[]
     >(_contactNotifications), // 好友申请通知
     contactList: ref(_contactList),
     contactProfileMap: ref(_contactProfileMap),
     msgContainerRef: ref<HTMLElement | null>(null), // 聊天记录容器
     targetId: ref(''), // 当前聊天对象或者联系人的 id
+    targetProfile: ref<userInfo['profile']>(null), // 当前聊天对象或者联系人的 profile
     pinId: ref(''), // 置顶对象的 id
     skipUnshiftMessageRecord: ref(false),
     indexMap: ref({}),
@@ -41,7 +40,7 @@ const useRecentContactsStore = defineStore('recentContactsStore', () => {
         string,
         {
           id: string
-          profile: Omit<userInfo, 'tokenVersion' | 'id'>
+          profile: userInfo['profile']
           timestamp: number
           content: string
           sent: boolean

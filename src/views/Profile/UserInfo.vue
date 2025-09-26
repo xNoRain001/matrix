@@ -5,14 +5,35 @@
       v-model:open="isUserInfoSlideoverOpen"
       title="个人资料"
       description=" "
+      :ui="{ body: 'flex flex-col gap-4 sm:gap-6' }"
     >
       <template #body>
+        <UPageCard
+          title="注册资料"
+          description="这些信息仅你可见"
+          variant="naked"
+          orientation="horizontal"
+        >
+        </UPageCard>
+        <UPageCard variant="subtle">
+          <UFormField
+            label="邮箱"
+            class="flex items-center gap-2 not-last:pb-4"
+            :ui="{ container: 'flex-1 flex items-center gap-2 justify-end' }"
+          >
+            <div
+              class="max-w-60 overflow-hidden text-ellipsis whitespace-nowrap text-(--ui-text-dimmed)"
+            >
+              {{ userInfo.email }}
+            </div>
+          </UFormField>
+        </UPageCard>
+
         <UPageCard
           title="编辑个人资料"
           description="这些信息将公开展示"
           variant="naked"
           orientation="horizontal"
-          class="mb-4"
         ></UPageCard>
         <UPageCard
           variant="subtle"
@@ -27,7 +48,7 @@
             <UAvatar
               size="2xs"
               :src="avatarURL"
-              :alt="userInfoForm.nickname[0]"
+              :alt="profileForm.nickname[0]"
             ></UAvatar>
             <UIcon
               name="lucide:chevron-right"
@@ -47,10 +68,8 @@
             >
               {{
                 key === 'gender'
-                  ? useTransformGender(userInfoForm[key])
-                  : key === 'birthday'
-                    ? date.toString()
-                    : userInfoForm[key]
+                  ? useTransformGender(profileForm[key])
+                  : profileForm[key]
               }}
             </div>
             <UIcon
@@ -75,17 +94,17 @@
     >
       <template #body>
         <UFormField>
-          <UInput v-model="userInfoForm.nickname" class="w-full" maxlength="30">
-            <template v-if="userInfoForm.nickname" #trailing>
+          <UInput v-model="profileForm.nickname" class="w-full" maxlength="30">
+            <template v-if="profileForm.nickname" #trailing>
               <div class="text-muted text-xs tabular-nums">
-                {{ userInfoForm.nickname.length }}/30
+                {{ profileForm.nickname.length }}/30
               </div>
               <UButton
                 color="neutral"
                 variant="link"
                 size="sm"
                 icon="lucide:circle-x"
-                @click="userInfoForm.nickname = ''"
+                @click="profileForm.nickname = ''"
               />
             </template>
           </UInput>
@@ -97,7 +116,7 @@
       <template #body>
         <USelect
           class="w-full"
-          v-model="userInfoForm.gender"
+          v-model="profileForm.gender"
           :items="genderOptions"
         />
       </template>
@@ -122,133 +141,159 @@
       </template>
     </UDrawer>
   </template>
-  <UForm v-else :state="userInfoForm">
-    <UPageCard
-      title="个人资料"
-      description="这些信息将公开展示"
-      variant="naked"
-      orientation="horizontal"
-      class="mb-4"
-    >
-      <UButton
-        form="settings"
-        label="保存"
-        type="submit"
-        class="w-fit lg:ms-auto"
-        @click="onUpdateProfile"
-      />
-    </UPageCard>
-
-    <UPageCard variant="subtle">
-      <UFormField
-        name="name"
-        label="昵称"
-        description="填写你的昵称"
-        class="flex items-start justify-between gap-4"
-        :ui="{ container: 'w-3/5' }"
+  <template v-else>
+    <UForm>
+      <UPageCard
+        title="注册资料"
+        description="这些信息仅你可见"
+        variant="naked"
+        orientation="horizontal"
+        class="mb-4"
       >
-        <UInput class="w-full" v-model="userInfoForm.nickname" maxlength="30">
-          <template v-if="userInfoForm.nickname" #trailing>
-            <div class="text-muted text-xs tabular-nums">
-              {{ userInfoForm.nickname.length }}/30
-            </div>
-            <UButton
-              color="neutral"
-              variant="link"
-              size="sm"
-              icon="lucide:circle-x"
-              @click="userInfoForm.nickname = ''"
-            />
-          </template>
-        </UInput>
-      </UFormField>
-      <USeparator />
-      <UFormField
-        name="email"
-        label="性别"
-        description="填写你的性别"
-        class="flex items-start justify-between gap-4"
-        :ui="{ container: 'w-3/5' }"
-      >
-        <USelect
-          class="w-full"
-          v-model="userInfoForm.gender"
-          :items="genderOptions"
-        />
-      </UFormField>
-      <USeparator />
-      <UFormField
-        name="username"
-        label="生日"
-        description="填写你的生日"
-        class="flex items-start justify-between gap-4"
-        :ui="{ container: 'w-3/5' }"
-      >
-        <DatePicker v-model="date"></DatePicker>
-      </UFormField>
-      <USeparator />
-      <UFormField
-        name="username"
-        label="地区"
-        description="填写你的地区"
-        class="flex items-start justify-between gap-4"
-        :ui="{ container: 'w-3/5' }"
-      >
-        <div class="flex gap-4">
-          <USelect class="flex-1" v-model="province" :items="provinceOptions" />
-          <USelect class="flex-1" v-model="city" :items="cityOptions" />
-        </div>
-      </UFormField>
-      <USeparator />
-      <UFormField
-        name="avatar"
-        label="头像"
-        description="修改头像，图片最大尺寸为 10 MB"
-        class="flex items-start justify-between gap-4"
-      >
-        <div class="flex items-center gap-3">
-          <UAvatar
-            @click="viewerOverlay.open({ url: avatarURL })"
-            class="cursor-pointer"
-            :src="avatarURL"
-            :alt="userInfoForm.nickname[0]"
-            size="lg"
-          />
-          <UButton label="选择" @click="avatarRef.click()" />
-        </div>
-      </UFormField>
-      <USeparator />
-      <UFormField
-        name="bio"
-        label="签名"
-        description="用一句话表达自己的想法"
-        class="flex items-start justify-between gap-4"
-        :ui="{ container: 'w-3/5' }"
-      >
-        <UTextarea
-          v-model="userInfoForm.bio"
-          :rows="5"
-          autoresize
-          class="w-full"
-          maxlength="30"
-          :ui="{ trailing: 'flex items-end' }"
+      </UPageCard>
+      <UPageCard variant="subtle">
+        <UFormField
+          label="邮箱"
+          description="注册时的邮箱"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
         >
-          <template v-if="userInfoForm.bio" #trailing>
-            <div class="text-muted py-1.5 text-xs tabular-nums">
-              {{ userInfoForm.bio.length }}/30
-            </div>
-            <UButton
-              color="neutral"
-              variant="link"
-              size="sm"
-              icon="lucide:circle-x"
-              @click="userInfoForm.bio = ''"
+          <UInput disabled class="w-full" v-model="userInfo.email"></UInput>
+        </UFormField>
+      </UPageCard>
+    </UForm>
+
+    <UForm :state="profileForm">
+      <UPageCard
+        title="个人资料"
+        description="这些信息将公开展示"
+        variant="naked"
+        orientation="horizontal"
+        class="mb-4"
+      >
+        <UButton
+          form="settings"
+          label="保存"
+          type="submit"
+          class="w-fit lg:ms-auto"
+          @click="onUpdateProfile"
+        />
+      </UPageCard>
+      <UPageCard variant="subtle">
+        <UFormField
+          name="name"
+          label="昵称"
+          description="填写你的昵称"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
+        >
+          <UInput class="w-full" v-model="profileForm.nickname" maxlength="30">
+            <template v-if="profileForm.nickname" #trailing>
+              <div class="text-muted text-xs tabular-nums">
+                {{ profileForm.nickname.length }}/30
+              </div>
+              <UButton
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="lucide:circle-x"
+                @click="profileForm.nickname = ''"
+              />
+            </template>
+          </UInput>
+        </UFormField>
+        <USeparator />
+        <UFormField
+          name="email"
+          label="性别"
+          description="填写你的性别"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
+        >
+          <USelect
+            class="w-full"
+            v-model="profileForm.gender"
+            :items="genderOptions"
+          />
+        </UFormField>
+        <USeparator />
+        <UFormField
+          name="username"
+          label="生日"
+          description="填写你的生日"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
+        >
+          <DatePicker v-model="date"></DatePicker>
+        </UFormField>
+        <USeparator />
+        <UFormField
+          name="username"
+          label="地区"
+          description="填写你的地区"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
+        >
+          <div class="flex gap-4">
+            <USelect
+              class="flex-1"
+              v-model="province"
+              :items="provinceOptions"
             />
-          </template>
-        </UTextarea>
-      </UFormField>
-    </UPageCard>
-  </UForm>
+            <USelect class="flex-1" v-model="city" :items="cityOptions" />
+          </div>
+        </UFormField>
+        <USeparator />
+        <UFormField
+          name="avatar"
+          label="头像"
+          description="修改头像，图片最大尺寸为 10 MB"
+          class="flex items-start justify-between gap-4"
+        >
+          <div class="flex items-center gap-3">
+            <UAvatar
+              @click="viewerOverlay.open({ urls: [avatarURL] })"
+              class="cursor-pointer"
+              :src="avatarURL"
+              :alt="profileForm.nickname[0]"
+              size="lg"
+            />
+            <UButton label="选择" @click="avatarRef.click()" />
+          </div>
+        </UFormField>
+        <USeparator />
+        <UFormField
+          name="bio"
+          label="签名"
+          description="用一句话表达自己的想法"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
+        >
+          <UTextarea
+            v-model="profileForm.bio"
+            :rows="5"
+            autoresize
+            class="w-full"
+            maxlength="30"
+            :ui="{ trailing: 'flex items-end' }"
+          >
+            <template v-if="profileForm.bio" #trailing>
+              <div class="text-muted py-1.5 text-xs tabular-nums">
+                {{ profileForm.bio.length }}/30
+              </div>
+              <UButton
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="lucide:circle-x"
+                @click="profileForm.bio = ''"
+              />
+            </template>
+          </UTextarea>
+        </UFormField>
+      </UPageCard>
+    </UForm>
+  </template>
 
   <!-- 选择头像 -->
   <input
@@ -277,8 +322,8 @@ const isOpenBirthdayDrawer = ref(false)
 const isOpenRegionDrawer = ref(false)
 const isOpenNicknameDrawer = ref(false)
 const { isMobile, userInfo, avatarURL } = storeToRefs(useUserStore())
-const userInfoForm = ref({ ...userInfo.value })
-const { region } = userInfo.value
+const profileForm = ref({ ...userInfo.value.profile })
+const { region } = userInfo.value.profile
 const [_province, _city] = region === '' ? [null, null] : region.split(' - ')
 const province = ref(_province)
 const city = ref(_city)
@@ -286,7 +331,9 @@ const sourceProvinceOptions = Object.keys(provinceCityMap)
 const provinceOptions = ref(sourceProvinceOptions)
 const cityOptions = ref(provinceCityMap[_province] || [])
 const unknownGenderOption =
-  userInfo.value.gender === 'other' ? [{ label: '未知', value: 'other' }] : []
+  userInfo.value.profile.gender === 'other'
+    ? [{ label: '未知', value: 'other' }]
+    : []
 const genderOptions = [
   ...unknownGenderOption,
   {
@@ -322,8 +369,8 @@ const profileItems = [
 ]
 // TODO: 删除正则
 const date = shallowRef(
-  userInfoForm.value.birthday
-    ? parseDate(userInfoForm.value.birthday.replace(/\//g, '-'))
+  profileForm.value.birthday
+    ? parseDate(profileForm.value.birthday.replace(/\//g, '-'))
     : null
 )
 const overlay = useOverlay()
@@ -332,14 +379,14 @@ const avatarRef = ref(null)
 
 const onFileChange = e => useUpdateOSS(e, 'avatar', userInfo, toast, avatarURL)
 
-const getUserInfoDiff = (userInfo, _userInfoForm) => {
+const getUserInfoDiff = (userInfo, _profileForm) => {
   const _userInfo = userInfo.value
-  const keys = Object.keys(_userInfoForm)
+  const keys = Object.keys(_profileForm)
   const res = {}
 
   for (let i = 0, l = keys.length; i < l; i++) {
     const key = keys[i]
-    const value = _userInfoForm[key]
+    const value = _profileForm[key]
 
     if (value !== _userInfo[key]) {
       res[key] = value
@@ -350,11 +397,11 @@ const getUserInfoDiff = (userInfo, _userInfoForm) => {
 }
 
 const onUpdateProfile = async () => {
-  const _userInfoForm = userInfoForm.value
+  const _profileForm = profileForm.value
 
   if (province.value && !city.value) {
     province.value = null
-    _userInfoForm.region = ''
+    _profileForm.region = ''
   }
 
   const _date = date.value
@@ -362,15 +409,15 @@ const onUpdateProfile = async () => {
   if (_date) {
     const __date = _date.toString()
 
-    if (__date !== _userInfoForm.birthday) {
-      _userInfoForm.birthday = __date
+    if (__date !== _profileForm.birthday) {
+      _profileForm.birthday = __date
     }
-  } else if (_userInfoForm.birthday) {
+  } else if (_profileForm.birthday) {
     // 在原本有日期的情况下取消选择了当前日期，那就将日期值设为 ''
-    _userInfoForm.birthday = ''
+    _profileForm.birthday = ''
   }
 
-  const diff = getUserInfoDiff(userInfo, _userInfoForm)
+  const diff = getUserInfoDiff(userInfo, _profileForm)
 
   if (!Object.keys(diff).length) {
     toast.add({
@@ -419,7 +466,7 @@ watch(province, v => {
 watch(city, v => {
   // 切换省份时清空市区，此时值是空字符串
   if (v) {
-    userInfoForm.value.region = `${province.value} - ${v}`
+    profileForm.value.region = `${province.value} - ${v}`
   }
 })
 </script>

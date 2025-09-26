@@ -4,9 +4,9 @@
       <UUser
         @click="toSpace"
         class="absolute left-1/2 -translate-x-1/2"
-        :name="targetNickname"
+        :name="targetProfile.nickname"
         :avatar="{
-          alt: targetNickname[0]
+          alt: targetProfile.nickname[0]
         }"
         :chip="{
           color: isOnline ? 'primary' : 'error'
@@ -42,8 +42,8 @@
     <template #content>
       <div class="p-4">
         <UAvatarGroup size="3xl" @click="toSpace">
-          <UAvatar :alt="userInfo.nickname[0]" />
-          <UAvatar :alt="targetNickname[0]" />
+          <UAvatar :alt="userInfo.profile.nickname[0]" />
+          <UAvatar :alt="targetProfile.nickname[0]" />
         </UAvatarGroup>
 
         <div class="mt-4 flex flex-col gap-2 text-sm">
@@ -51,7 +51,7 @@
             <UIcon name="lucide:user-round" class="text-primary size-5"></UIcon>
             <p class="text-muted">
               性别：<span class="text-highlighted">{{
-                useTransformGender(targetGender)
+                useTransformGender(targetProfile.gender)
               }}</span>
             </p>
           </div>
@@ -62,14 +62,16 @@
             ></UIcon>
             <p class="text-muted">
               年龄：<span class="text-highlighted">{{
-                computeAge(targetBirthday)
+                computeAge(targetProfile.birthday)
               }}</span>
             </p>
           </div>
           <div class="flex items-center gap-2">
             <UIcon name="lucide:activity" class="text-primary size-5"></UIcon>
             <p class="text-muted">
-              地区：<span class="text-highlighted">{{ targetRegion }}</span>
+              地区：<span class="text-highlighted">{{
+                targetProfile.region
+              }}</span>
             </p>
           </div>
         </div>
@@ -92,39 +94,16 @@ const props = withDefaults(defineProps<{ isMatch?: boolean }>(), {
 const emits = defineEmits(['close'])
 const open = ref(props.isMatch ? true : false)
 const { isMobile, userInfo } = storeToRefs(useUserStore())
-const { targetId, lastMsgMap, contactProfileMap, unreadMsgCounter } =
-  storeToRefs(useRecentContactsStore())
+const {
+  targetId,
+  targetProfile,
+  lastMsgMap,
+  contactProfileMap,
+  unreadMsgCounter
+} = storeToRefs(useRecentContactsStore())
 const { matchRes } = storeToRefs(useMatchStore())
 const route = useRoute()
 const isMessage = computed(() => route.path === '/message')
-const targetNickname = computed(() =>
-  props.isMatch
-    ? matchRes.value.nickname
-    : isMessage.value
-      ? lastMsgMap.value[targetId.value].profile.nickname
-      : contactProfileMap.value[targetId.value].profile.nickname
-)
-const targetRegion = computed(() =>
-  props.isMatch
-    ? matchRes.value.region
-    : isMessage.value
-      ? lastMsgMap.value[targetId.value].profile.region
-      : contactProfileMap.value[targetId.value].profile.region
-)
-const targetBirthday = computed(() =>
-  props.isMatch
-    ? matchRes.value.birthday
-    : isMessage.value
-      ? lastMsgMap.value[targetId.value].profile.birthday
-      : contactProfileMap.value[targetId.value].profile.birthday
-)
-const targetGender = computed(() =>
-  props.isMatch
-    ? matchRes.value.gender
-    : isMessage.value
-      ? lastMsgMap.value[targetId.value].profile.gender
-      : contactProfileMap.value[targetId.value].profile.gender
-)
 const isOnline = computed(() =>
   props.isMatch
     ? matchRes.value.online

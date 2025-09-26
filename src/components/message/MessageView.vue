@@ -338,7 +338,7 @@ const onCall = async () => {
   globalSocket.value.emit(
     'unidirectional-web-rtc',
     _roomId,
-    userInfo.value.nickname,
+    userInfo.value.profile.nickname,
     _targetId
   )
   leaveRoomTimer.value = setTimeout(() => {

@@ -10,7 +10,7 @@
     <template #content>
       <ProfileSpace
         v-if="!isMobile"
-        class="w-2/5"
+        class="!w-2/5"
         :is-match="true"
       ></ProfileSpace>
       <MessageView v-if="targetId" @close="isOpen = false" :is-match="true" />
@@ -29,10 +29,14 @@ let timer = null
 const router = useRouter()
 const { isMobile, globalSocket } = storeToRefs(useUserStore())
 const { matchRes, matchType } = storeToRefs(useMatchStore())
-const { targetId } = storeToRefs(useRecentContactsStore())
+const { targetId, targetProfile } = storeToRefs(useRecentContactsStore())
 const isOpen = ref(Boolean(matchType.value === 'chat' && matchRes.value))
 
-targetId.value = matchType.value === 'chat' ? matchRes.value.id : ''
+if (isOpen.value) {
+  const { id, profile } = matchRes.value
+  targetId.value = id
+  targetProfile.value = profile
+}
 
 onMounted(async () => {
   if (!isOpen.value) {

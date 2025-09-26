@@ -35,7 +35,7 @@
                 ? 'border-primary bg-primary/10 text-highlighted'
                 : 'hover:border-primary hover:bg-primary/5 text-toned border-(--ui-bg)'
             ]"
-            @click="targetId = id"
+            @click="onClick(id)"
           >
             <UChip
               inset
@@ -89,6 +89,7 @@ const {
   lastMsgMap,
   lastMsgList,
   targetId,
+  targetProfile,
   messageList,
   lastFetchedId,
   contactProfileMap,
@@ -129,6 +130,11 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
     }
   ]
 ])
+
+const onClick = id => {
+  targetId.value = id
+  targetProfile.value = lastMsgMap.value[id].profile
+}
 
 const onContextmenu = id => (contextmenuId = id)
 
@@ -173,22 +179,32 @@ const onHideMessageList = id =>
 defineShortcuts({
   arrowdown: () => {
     const _lastMsgList = lastMsgList.value
+    const _lastMsgMap = lastMsgMap.value
     const index = _lastMsgList.findIndex(id => id === targetId.value)
 
     if (index === -1) {
-      targetId.value = _lastMsgList[0]
+      const _targetId = _lastMsgList[0]
+      targetId.value = _targetId
+      targetProfile.value = _lastMsgMap[_targetId].profile
     } else if (index < _lastMsgList.length - 1) {
-      targetId.value = _lastMsgList[index + 1]
+      const _targetId = _lastMsgList[index + 1]
+      targetId.value = _targetId
+      targetProfile.value = _lastMsgMap[_targetId].profile
     }
   },
   arrowup: () => {
     const _lastMsgList = lastMsgList.value
+    const _lastMsgMap = lastMsgMap.value
     const index = _lastMsgList.findIndex(id => id === targetId.value)
 
     if (index === -1) {
-      targetId.value = _lastMsgList[_lastMsgList.length - 1]
+      const _targetId = _lastMsgList[_lastMsgList.length - 1]
+      targetId.value = _targetId
+      targetProfile.value = _lastMsgMap[_targetId].profile
     } else if (index > 0) {
-      targetId.value = _lastMsgList[index - 1]
+      const _targetId = _lastMsgList[index - 1]
+      targetId.value = _targetId
+      targetProfile.value = _lastMsgMap[_targetId].profile
     }
   }
 })

@@ -63,9 +63,7 @@ const useUserStore = defineStore('userStore', () => {
         createdAt: number
         id: string
         type: string
-        profile: {
-          nickname: string
-        }
+        profile: userInfo['profile']
       }[]
     >(_notifications)
   }

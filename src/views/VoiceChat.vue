@@ -11,7 +11,7 @@
     <template v-if="matchType === 'voice-chat' && matchRes.id" #content>
       <ProfileSpace
         v-if="!isMobile"
-        class="w-2/5"
+        class="!w-2/5"
         :is-match="true"
       ></ProfileSpace>
       <div
@@ -44,10 +44,14 @@ const router = useRouter()
 const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
 const { matchRes, matchType } = storeToRefs(useMatchStore())
 const { roomId, isVoiceChatMatch } = storeToRefs(useWebRTCStore())
-const { targetId } = storeToRefs(useRecentContactsStore())
+const { targetId, targetProfile } = storeToRefs(useRecentContactsStore())
 const isOpen = ref(Boolean(matchType.value === 'voice-chat' && matchRes.value))
 
-targetId.value = matchType.value === 'voice-chat' ? matchRes.value.id : ''
+if (isOpen.value) {
+  const { id, profile } = matchRes.value
+  targetId.value = id
+  targetProfile.value = profile
+}
 
 onMounted(async () => {
   if (!isOpen.value) {

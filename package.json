@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@internationalized/date": "^3.9.0",
-    "@nuxt/ui-pro": "^3.3.2",
+    "@nuxt/ui": "^4.0.0",
     "@tailwindcss/vite": "^4.1.7",
     "@vueuse/components": "^13.6.0",
     "@vueuse/core": "^13.6.0",

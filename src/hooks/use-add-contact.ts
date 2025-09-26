@@ -5,10 +5,7 @@ const useAddContact = async (userInfo, targetId, globalSocket, toast) => {
     const _targetId = targetId.value
     await addCandidate(_targetId)
     toast.add({ title: '已向对方发送好友申请', icon: 'lucide:smile' })
-    const { id } = userInfo.value
-    const profile = JSON.parse(JSON.stringify(userInfo.value))
-    delete profile.id
-    delete profile.tokenVersion
+    const { id, profile } = userInfo.value
     const notification = {
       id,
       content: '请求添加你为好友',

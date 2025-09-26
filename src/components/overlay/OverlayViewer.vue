@@ -9,8 +9,11 @@
     }"
   >
     <template #body>
-      <img v-if="url" :class="isMobile ? 'w-full' : 'h-full'" :src="url" />
-      <UIcon v-else name="lucide:image-off" class="size-32"></UIcon>
+      <Carousel
+        :items="urls"
+        :active-index="_activeIndex"
+        :viewer="true"
+      ></Carousel>
     </template>
     <!-- <template #footer>
       <UButton label="下载" />
@@ -19,15 +22,19 @@
 </template>
 
 <script lang="ts" setup>
-import { useUserStore } from '@/store'
-import { storeToRefs } from 'pinia'
+import { ref } from 'vue'
 
-defineProps<{
-  url: string
-}>()
-
+const props = withDefaults(
+  defineProps<{
+    urls: string[]
+    activeIndex?: number
+  }>(),
+  {
+    activeIndex: 0
+  }
+)
 const emit = defineEmits<{ close: [boolean] }>()
-const { isMobile } = storeToRefs(useUserStore())
+const _activeIndex = ref(props.activeIndex)
 
 // const onDownload = (url, filename) => {
 //   fetch(url)

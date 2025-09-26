@@ -28,7 +28,7 @@
                 ? 'border-primary bg-primary/10 text-highlighted'
                 : 'hover:border-primary hover:bg-primary/5 text-toned border-(--ui-bg)'
             ]"
-            @click="targetId = id"
+            @click="onClick(id)"
           >
             <UChip
               inset
@@ -57,7 +57,7 @@ import { useDeleteContact } from '@/hooks'
 
 let contextmenuId = ''
 const { userInfo, globalSocket } = storeToRefs(useUserStore())
-const { targetId, contactList, contactProfileMap } = storeToRefs(
+const { targetId, targetProfile, contactList, contactProfileMap } = storeToRefs(
   useRecentContactsStore()
 )
 const toast = useToast()
@@ -80,6 +80,11 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
   ]
 ])
 
+const onClick = id => {
+  targetId.value = id
+  targetProfile.value = contactProfileMap.value[id].profile
+}
+
 const onDeleteContact = id =>
   useDeleteContact(
     userInfo,
@@ -96,22 +101,32 @@ const onContextmenu = id => (contextmenuId = id)
 defineShortcuts({
   arrowdown: () => {
     const _contactList = contactList.value
+    const _contactProfileMap = contactProfileMap.value
     const index = _contactList.findIndex(id => id === targetId.value)
 
     if (index === -1) {
-      targetId.value = _contactList[0]
+      const _targetId = _contactList[0]
+      targetId.value = _targetId
+      targetProfile.value = _contactProfileMap[_targetId]
     } else if (index < _contactList.length - 1) {
-      targetId.value = _contactList[index + 1]
+      const _targetId = _contactList[index + 1]
+      targetId.value = _contactList
+      targetProfile.value = _contactProfileMap[_targetId]
     }
   },
   arrowup: () => {
     const _contactList = contactList.value
+    const _contactProfileMap = contactProfileMap.value
     const index = _contactList.findIndex(id => id === targetId.value)
 
     if (index === -1) {
-      targetId.value = _contactList[_contactList.length - 1]
+      const _targetId = _contactList[_contactList.length - 1]
+      targetId.value = _targetId
+      targetProfile.value = _contactProfileMap[_targetId].profile
     } else if (index > 0) {
-      targetId.value = _contactList[index - 1]
+      const _targetId = _contactList[index - 1]
+      targetId.value = _targetId
+      targetProfile.value = _contactProfileMap[_targetId].profile
     }
   }
 })

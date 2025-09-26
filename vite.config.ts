@@ -2,14 +2,14 @@ import { resolve } from 'path'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
-import uiPro from '@nuxt/ui-pro/vite'
+import ui from '@nuxt/ui/vite'
 import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
-    uiPro(),
+    ui(),
     tailwindcss(),
     visualizer({
       open: false, // 自动打开分析页面

@@ -10,7 +10,7 @@
   >
     <template #content>
       <ProfileSpace
-        class="w-1/2"
+        class="!w-1/2"
         @close="router.replace('/profile/user-info')"
       ></ProfileSpace>
     </template>

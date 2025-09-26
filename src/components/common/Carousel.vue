@@ -1,0 +1,86 @@
+<template>
+  <div class="w-fit">
+    <UCarousel
+      ref="carousel"
+      v-slot="{ item, index }"
+      :arrows="viewer"
+      :items="items"
+      :prev="{ onClick: onClickPrev }"
+      :next="{ onClick: onClickNext }"
+      class=""
+      :class="
+        viewer
+          ? isMobile
+            ? 'w-[calc(100vw-2rem)]'
+            : 'w-[calc(100vh-11rem)]'
+          : 'w-xs'
+      "
+      @select="onSelect"
+    >
+      <img
+        @click="viewerOverlay.open({ urls: items, activeIndex: index })"
+        :src="item"
+        class="rounded-lg"
+        :class="
+          viewer
+            ? isMobile
+              ? 'mx-auto max-h-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)]'
+              : 'mx-auto max-h-[calc(100vh-11rem)] max-w-[calc(100vh-11rem)]'
+            : 'max-h-80 max-w-80'
+        "
+      />
+    </UCarousel>
+    <div
+      :class="viewer ? 'mx-auto' : ''"
+      class="flex max-w-xs justify-between gap-1 pt-4"
+    >
+      <div
+        v-for="(item, index) in items"
+        :key="index"
+        class="opacity-25 transition-opacity hover:opacity-100"
+        :class="{ 'opacity-100': activeIndex === index }"
+        @click="select(index)"
+      >
+        <img :src="item" class="size-11 rounded-lg" />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script lang="ts" setup>
+import { onMounted, ref, useTemplateRef } from 'vue'
+import OverlayViewer from '../overlay/OverlayViewer.vue'
+import { storeToRefs } from 'pinia'
+import { useUserStore } from '@/store'
+
+const props = withDefaults(
+  defineProps<{ items: string[]; activeIndex: number; viewer?: boolean }>(),
+  {
+    viewer: false
+  }
+)
+const overlay = useOverlay()
+const carousel = useTemplateRef('carousel')
+const _activeIndex = ref(props.activeIndex)
+const viewerOverlay = overlay.create(OverlayViewer)
+const { isMobile } = storeToRefs(useUserStore())
+
+const onClickPrev = () => {
+  _activeIndex.value--
+}
+
+const onClickNext = () => {
+  _activeIndex.value++
+}
+
+const onSelect = (index: number) => {
+  _activeIndex.value = index
+}
+
+const select = (index: number) => {
+  _activeIndex.value = index
+  carousel.value?.emblaApi?.scrollTo(index)
+}
+
+onMounted(() => carousel.value?.emblaApi?.scrollTo(_activeIndex.value))
+</script>

@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen">
+  <div class="h-screen w-full">
     <div ref="container" class="relative h-full overflow-y-auto">
       <!-- 顶部导航 -->
       <UDashboardNavbar
@@ -36,6 +36,7 @@
             icon="lucide:plus"
             variant="ghost"
             color="neutral"
+            @click="publishPostOverlay.open()"
           />
           <UButton
             v-if="isSelf && isMobile"
@@ -51,7 +52,7 @@
       </UDashboardNavbar>
       <!-- 背景图片，由于移动端有 pb-16，所有高度全部使用 50vh，而不是 50% -->
       <div
-        @click="viewerOverlay.open({ url: bgURL })"
+        @click="viewerOverlay.open({ urls: [bgURL] })"
         :class="[
           isSelf ? 'cursor-pointer' : '',
           bgURL ? 'bg-cover bg-center bg-no-repeat' : 'bg-default',
@@ -63,13 +64,13 @@
       <!-- 个人资料卡片 -->
       <UPageCard
         class="absolute top-[50vh] right-4 left-4 z-20 -translate-y-[calc(100%+1rem)] sm:right-6 sm:left-6 sm:-translate-y-[calc(100%+1.5rem)]"
-        :title="nickname"
-        description="Nuxt UI v3 integrates with latest Tailwind CSS v4, bringing significant improvements."
+        :title="targetProfile.nickname"
+        :description="targetProfile.bio"
         variant="soft"
       >
         <template #title>
           <div class="flex items-center gap-2">
-            {{ nickname }}
+            {{ targetProfile.nickname }}
             <UButton
               v-if="!isSelf && Boolean(contactProfileMap[targetId])"
               icon="lucide:user-round-pen"
@@ -85,11 +86,11 @@
         </template>
         <template #header>
           <UAvatar
-            @click="viewerOverlay.open({ url: avatarURL })"
+            @click="viewerOverlay.open({ urls: [avatarURL] })"
             class="absolute top-0 -translate-y-1/2 cursor-pointer"
             :class="isSelf ? 'cursor-pointer' : ''"
             :src="avatarURL"
-            :alt="nickname"
+            :alt="targetProfile.nickname"
             size="3xl"
           ></UAvatar>
           <UButton
@@ -106,49 +107,7 @@
         <UTabs v-model="activeTab" :items="tabItems" :content="false" />
       </div>
       <!-- 动态 -->
-      <UPageCard
-        @click="isCardSlideoverOpen = true"
-        variant="soft"
-        class="border-b-muted cursor-pointer rounded-none border-b"
-      >
-        <p class="text-highlighted">
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Architecto
-          reiciendis exercitationem aperiam natus, pariatur eos iste repellat ab
-          inventore eius harum consequatur necessitatibus libero officiis
-          soluta, autem ea tenetur assumenda!
-        </p>
-        <div class="flex items-center justify-between">
-          <p class="text-muted text-sm">
-            {{ new Date(Date.now()).toLocaleString('zh-CN') }}
-          </p>
-          <UButton variant="ghost" icon="lucide:ellipsis"></UButton>
-        </div>
-      </UPageCard>
-      <UPageCard
-        @click="isCardSlideoverOpen = true"
-        v-for="i in 3"
-        :key="i"
-        variant="soft"
-        class="border-b-muted cursor-pointer rounded-none border-b"
-      >
-        <p class="text-highlighted">
-          Lorem ipsum dolor sit, amet consectetur adipisicing elit. Saepe
-          facilis
-        </p>
-        <img
-          src="https://picsum.photos/id/46/400"
-          alt="Tailwind CSS"
-          :width="400"
-          :height="400"
-          class="w-full"
-        />
-        <div class="flex items-center justify-between">
-          <p class="text-muted text-sm">
-            {{ new Date(Date.now()).toLocaleString('zh-CN') }}
-          </p>
-          <UButton variant="ghost" icon="lucide:ellipsis"></UButton>
-        </div>
-      </UPageCard>
+      <ProfileSpacePosts :is-match="isMatch"></ProfileSpacePosts>
     </div>
 
     <!-- 选择背景图片 -->
@@ -200,38 +159,11 @@
       <Logoff v-model="isLogoffSlideoverOpen"></Logoff>
       <Theme v-model="isThemeSlideoverOpen"></Theme>
     </template>
-    <!-- 空间动态详情 -->
-    <USlideover
-      :dismissible="!isMobile && isMatch ? false : true"
-      :overlay="!isMobile && isMatch ? false : true"
-      :side="!isMobile && isMatch ? 'left' : 'right'"
-      v-model:open="isCardSlideoverOpen"
-      :class="!isMobile && isMatch ? 'max-w-2/5' : ''"
-      title="详情"
-      description=" "
-    >
-      <template #body>
-        <UPageCard @click="isCardSlideoverOpen = true" variant="soft">
-          <p class="text-highlighted">
-            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Architecto
-            reiciendis exercitationem aperiam natus, pariatur eos iste repellat
-            ab inventore eius harum consequatur necessitatibus libero officiis
-            soluta, autem ea tenetur assumenda!
-          </p>
-          <div class="flex items-center justify-between">
-            <p class="text-muted text-sm">
-              {{ new Date(Date.now()).toLocaleString('zh-CN') }}
-            </p>
-            <UButton variant="ghost" icon="lucide:ellipsis"></UButton>
-          </div>
-        </UPageCard>
-      </template>
-    </USlideover>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
+import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { useGetDB, useUpdateOSS } from '@/hooks'
@@ -248,6 +180,8 @@ import OverlayFeedback from '@/components/overlay/OverlayFeedback.vue'
 import OverlayHelpAndSupport from '@/components/overlay/OverlayHelpAndSupport.vue'
 import OverlayAbout from '@/components/overlay/OverlayAbout.vue'
 import OverlayMessageView from '@/components/overlay/OverlayMessageView.vue'
+import type { userInfo } from '@/types'
+import OverlayPulishPost from '../overlay/OverlayPulishPost.vue'
 
 const overlay = useOverlay()
 withDefaults(defineProps<{ isMatch?: boolean }>(), {
@@ -260,18 +194,16 @@ const isUserInfoSlideoverOpen = ref(false)
 const isUpdatePasswordSlideoverOpen = ref(false)
 const isNotificationSlideoverOpen = ref(false)
 const isDataManagerSlideoverOpen = ref(false)
-const isCardSlideoverOpen = ref(false)
 const isLogoffSlideoverOpen = ref(false)
 const isThemeSlideoverOpen = ref(false)
 const spaceBgRef = ref(null)
 const toast = useToast()
-const { matchRes } = storeToRefs(useMatchStore())
 const {
   isMobile,
   userInfo,
   avatarURL: _avatarURL
 } = storeToRefs(useUserStore())
-const { targetId, contactProfileMap, lastMsgMap } = storeToRefs(
+const { targetId, targetProfile, contactProfileMap } = storeToRefs(
   useRecentContactsStore()
 )
 const cards = [
@@ -346,6 +278,9 @@ const tabItems = [
 ]
 const activeTab = ref('my')
 const isSelf = !targetId.value
+if (isSelf) {
+  targetProfile.value = userInfo.value.profile
+}
 const route = useRoute()
 const isContacts = computed(() => route.path === '/contacts')
 // 在聊天界面中打开对方空间或匹配到对方显示的空间不需要显示聊天按钮
@@ -353,13 +288,6 @@ const inView = computed(() => {
   const { path } = route
   return path === '/message' || path === '/chat' || path === '/voice-chat'
 })
-const nickname = computed(() =>
-  isSelf
-    ? userInfo.value.nickname
-    : contactProfileMap.value[targetId.value]?.profile?.nickname ||
-      lastMsgMap.value[targetId.value]?.profile?.nickname ||
-      matchRes.value.nickname
-)
 const bgBlob = isSelf
   ? (await (await useGetDB(userInfo.value.id)).get('bg', userInfo.value.id))
       ?.blob
@@ -382,6 +310,7 @@ const feedbackOverlay = overlay.create(OverlayFeedback)
 const helpAndSupportOverlay = overlay.create(OverlayHelpAndSupport)
 const aboutOverlay = overlay.create(OverlayAbout)
 const messageViewOverlay = overlay.create(OverlayMessageView)
+const publishPostOverlay = overlay.create(OverlayPulishPost)
 
 const onSpaceBgChange = e => useUpdateOSS(e, 'bg', userInfo, toast, bgURL)
 

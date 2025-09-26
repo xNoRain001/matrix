@@ -191,7 +191,7 @@ const isVoiceChat = computed(() => route.path === '/voice-chat')
 const voiceChatTargetId = useGetTargetIdByRoomId(roomId.value, userInfo)
 const targetNickname = computed(() =>
   props.isMatch
-    ? matchRes.value.nickname
+    ? matchRes.value.profile.nickname
     : lastMsgMap.value[voiceChatTargetId].profile.nickname ||
       contactProfileMap.value[voiceChatTargetId].profile.nickname
 )

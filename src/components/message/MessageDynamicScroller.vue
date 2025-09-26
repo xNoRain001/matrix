@@ -44,7 +44,7 @@
             </div>
             <UAvatar
               v-if="item.separator"
-              :alt="userInfo.nickname[0] || ''"
+              :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -53,7 +53,7 @@
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
-              :alt="targetNickname"
+              :alt="targetProfile.nickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -92,7 +92,7 @@
             </div>
             <UAvatar
               v-if="item.separator"
-              :alt="userInfo.nickname[0] || ''"
+              :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -101,7 +101,7 @@
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
-              :alt="targetNickname"
+              :alt="targetProfile.nickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -159,7 +159,7 @@
             </div>
             <UAvatar
               v-if="item.separator"
-              :alt="userInfo.nickname[0] || ''"
+              :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -168,7 +168,7 @@
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
-              :alt="targetNickname"
+              :alt="targetProfile.nickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -209,7 +209,7 @@
             </div>
             <UAvatar
               v-if="item.separator"
-              :alt="userInfo.nickname[0] || ''"
+              :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -218,7 +218,7 @@
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
-              :alt="targetNickname"
+              :alt="targetProfile.nickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -243,7 +243,7 @@
             </div>
             <UAvatar
               v-if="item.separator"
-              :alt="userInfo.nickname[0] || ''"
+              :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -252,7 +252,7 @@
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
-              :alt="targetNickname"
+              :alt="targetProfile.nickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -277,7 +277,7 @@
             </div>
             <UAvatar
               v-if="item.separator"
-              :alt="userInfo.nickname[0] || ''"
+              :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -286,7 +286,7 @@
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
-              :alt="targetNickname"
+              :alt="targetProfile.nickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -311,7 +311,7 @@
             </div>
             <UAvatar
               v-if="item.separator"
-              :alt="userInfo.nickname[0] || ''"
+              :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -320,7 +320,7 @@
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
-              :alt="targetNickname"
+              :alt="targetProfile.nickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -345,7 +345,7 @@
             </div>
             <UAvatar
               v-if="item.separator"
-              :alt="userInfo.nickname[0] || ''"
+              :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -354,7 +354,7 @@
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
-              :alt="targetNickname"
+              :alt="targetProfile.nickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -379,7 +379,7 @@
             </div>
             <UAvatar
               v-if="item.separator"
-              :alt="userInfo.nickname[0] || ''"
+              :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -388,7 +388,7 @@
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
-              :alt="targetNickname"
+              :alt="targetProfile.nickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -410,7 +410,7 @@
 <script lang="ts" setup>
 import { useGetMessages } from '@/hooks'
 import { sendMsg } from '@/hooks/use-send-msg'
-import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
+import { useRecentContactsStore, useUserStore } from '@/store'
 import { useThrottleFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, onBeforeUnmount, ref } from 'vue'
@@ -423,11 +423,10 @@ const props = defineProps<{
   isMatch: boolean
 }>()
 const { config, isMobile, userInfo } = storeToRefs(useUserStore())
-const { matchRes } = storeToRefs(useMatchStore())
 const {
   targetId,
+  targetProfile,
   lastMsgMap,
-  contactProfileMap,
   hashToBlobURLMap,
   msgContainerRef,
   messageList,
@@ -443,14 +442,6 @@ const updateParts = ref({
   visibleStartIdx: 0,
   visibleEndIdx: 0
 })
-const isMessage = computed(() => route.path === '/message')
-const targetNickname = computed(() =>
-  props.isMatch
-    ? matchRes.value.nickname[0]
-    : isMessage.value
-      ? lastMsgMap.value[targetId.value].profile.nickname[0]
-      : contactProfileMap.value[targetId.value].profile.nickname[0]
-)
 const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
   // year: 'numeric',
   // month: 'long',
@@ -558,7 +549,7 @@ const onClick = e => {
     target.children[0]?.getAttribute('data-type')
 
   if (type === 'image') {
-    viewerOverlay.open({ url: target.src })
+    viewerOverlay.open({ urls: [target.src] })
   } else if (
     type &&
     // 如果 contacts 中点击用户打开的空间中打开了聊天界面，聊天界面中点击

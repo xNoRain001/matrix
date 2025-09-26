@@ -5,7 +5,7 @@
     </template>
 
     <template #right>
-      <UButton
+      <!-- <UButton
         color="neutral"
         variant="ghost"
         square
@@ -14,7 +14,14 @@
         <UChip :show="Boolean(notifications.length)" color="error" inset>
           <UIcon name="i-lucide-bell" class="text-primary size-5 shrink-0" />
         </UChip>
-      </UButton>
+      </UButton> -->
+      <UButton
+        @click="isFilterOverlayOpen = true"
+        icon="lucide:filter"
+        color="neutral"
+        variant="ghost"
+        :ui="{ leadingIcon: 'text-primary', label: 'font-semibold' }"
+      ></UButton>
       <IndexThemePicker></IndexThemePicker>
       <UButton
         @click="startViewTransition"
@@ -31,11 +38,10 @@
 </template>
 
 <script lang="ts" setup>
-import { useUserStore } from '@/store'
 import { useColorMode } from '@vueuse/core'
-import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
 
+const isFilterOverlayOpen = defineModel<boolean>()
 const { store } = useColorMode()
 const getNextTheme = () =>
   store.value === 'auto'
@@ -47,7 +53,6 @@ const getNextTheme = () =>
       : 'dark'
 const nextTheme = ref<'light' | 'dark' | 'auto'>(getNextTheme())
 const isNotificationsSlideoverOpen = ref(false)
-const { notifications } = storeToRefs(useUserStore())
 
 const switchTheme = () => (store.value = nextTheme.value)
 
