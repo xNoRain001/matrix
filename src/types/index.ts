@@ -18,6 +18,7 @@ export type userInfo = {
     birthday: string
     region: string
     bio: string
+    role: 'standard'
   }
 }
 
@@ -43,6 +44,7 @@ export type message = {
 
 export type post = {
   _id: string
+  user: string
   commentCount: number
   comments: []
   content: {
@@ -52,5 +54,28 @@ export type post = {
   createdAt: number
   updateAt?: number
   likes: number
+  liked: boolean
   unlikes: number
+}
+
+export type comment = {
+  owner?: string
+  user: string
+  content: {
+    text?: string
+    media?: string[]
+  }
+  createdAt: number
+  updateAt?: number
+  likes: number
+  liked: boolean
+  profile: userInfo['profile']
+  replyTargetProfile?: { nickname: string }
+  replyCount: number
+  visibleReplyCount: number
+  page: number
+  _id: string
+  replyComments: (Omit<comment, 'replyCount' | 'replyComments'> & {
+    parentId: string
+  })[]
 }

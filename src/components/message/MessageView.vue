@@ -212,72 +212,77 @@ const onSpeak = async () => {
   }
 }
 
-const onSuccess = stream => {
-  mediaRecorder = new MediaRecorder(stream)
-  mediaRecorder.start()
-  mediaRecorder.onstop = async () => {
-    if (isCancelRecordTipShow.value) {
-      isCancelRecordTipShow.value = false
-    } else {
-      const duration = Math.round((Date.now() - startTime) / 1000)
-      const blob = new Blob(chunks, { type: 'audio/mp3' })
-      const url = URL.createObjectURL(blob)
-      try {
-        const hash = await useGenHash(blob, 'mp3')
-        await useSendMsg(
-          'audio',
-          null,
-          hash,
-          blob,
-          null,
-          null,
-          url,
-          duration,
-          targetId.value,
-          userInfo,
-          globalSocket,
-          messageList,
-          lastMsgList,
-          lastMsgMap,
-          matchRes,
-          indexMap,
-          unreadMsgCounter,
-          msgContainerRef,
-          true
-        )
-        const db = await useGetDB(userInfo.value.id)
-        const tx = db.transaction('files', 'readwrite')
-        // 音频肯定不会重复，因此不需要判断本地数据库中是否存在该 hash
-        await tx.objectStore('files').put({ hash, blob })
-        await tx.done
-      } catch {
-        toast.add({ title: '发送失败', color: 'error', icon: 'lucide:annoyed' })
+const initMediaRecorder = async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia(constraints)
+    mediaRecorder = new MediaRecorder(stream)
+    mediaRecorder.start()
+    mediaRecorder.ondataavailable = ({ data }) => chunks.push(data)
+    mediaRecorder.onstop = async () => {
+      if (isCancelRecordTipShow.value) {
+        isCancelRecordTipShow.value = false
+      } else {
+        const duration = Math.round((Date.now() - startTime) / 1000)
+        const blob = new Blob(chunks, { type: 'audio/mp3' })
+        const url = URL.createObjectURL(blob)
+        try {
+          const hash = await useGenHash(blob, 'mp3')
+          await useSendMsg(
+            'audio',
+            null,
+            hash,
+            blob,
+            null,
+            null,
+            url,
+            duration,
+            targetId.value,
+            userInfo,
+            globalSocket,
+            messageList,
+            lastMsgList,
+            lastMsgMap,
+            matchRes,
+            indexMap,
+            unreadMsgCounter,
+            msgContainerRef,
+            true
+          )
+          const db = await useGetDB(userInfo.value.id)
+          const tx = db.transaction('files', 'readwrite')
+          // 音频肯定不会重复，因此不需要判断本地数据库中是否存在该 hash
+          await tx.objectStore('files').put({ hash, blob })
+          await tx.done
+        } catch {
+          toast.add({
+            title: '发送失败',
+            color: 'error',
+            icon: 'lucide:annoyed'
+          })
+        }
       }
+
+      chunks = []
+      // 关闭麦克风
+      stream.getTracks().forEach(track => track.stop())
     }
-
-    chunks = []
-    // 关闭麦克风
-    stream.getTracks().forEach(track => track.stop())
+  } catch {
+    toast.add({
+      title: '请开启麦克风权限',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
   }
-  mediaRecorder.ondataavailable = ({ data }) => chunks.push(data)
-}
-
-const onError = () => {
-  toast.add({
-    title: '请开启麦克风权限',
-    color: 'error',
-    icon: 'lucide:annoyed'
-  })
 }
 
 const onTouchstart = e => {
   startY = e.touches[0].clientY
 
-  recorderTimer = setTimeout(() => {
+  recorderTimer = setTimeout(async () => {
     recording.value = true
     startTime = Date.now()
     navigator.vibrate && navigator.vibrate(200)
-    navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError)
+    initMediaRecorder()
   }, 200)
 }
 

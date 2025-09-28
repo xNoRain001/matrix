@@ -51,16 +51,13 @@
 </template>
 
 <script lang="ts" setup>
-import { publishPost, updatePost } from '@/apis/post'
+import { publishPostAPI, updatePostAPI } from '@/apis/post'
 import { useUserStore } from '@/store'
 import type { post } from '@/types'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 
-const props = withDefaults(defineProps<{ post?: post; index?: number }>(), {
-  post: null,
-  index: null
-})
+const props = defineProps<{ post?: post; index?: number }>()
 const content = ref(
   props.post ? props.post.content.text : localStorage.getItem('postDraft') || ''
 )
@@ -76,7 +73,7 @@ const onDraft = () => {
 
 const onPublishPost = async () => {
   try {
-    const { data: post } = await publishPost(content.value)
+    const { data: post } = await publishPostAPI(content.value)
     toast.add({ title: '发布成功', icon: 'lucide:smile' })
     localStorage.removeItem('postDraft')
     content.value = ''
@@ -90,7 +87,10 @@ const onPublishPost = async () => {
 const onUpdatePost = async () => {
   try {
     const _content = content.value
-    const { data: latestContent } = await updatePost(props.post._id, _content)
+    const { data: latestContent } = await updatePostAPI(
+      props.post._id,
+      _content
+    )
     toast.add({ title: '更新成功', icon: 'lucide:smile' })
     content.value = ''
     posts.value[props.index].content = latestContent

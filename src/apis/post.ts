@@ -2,22 +2,22 @@ import HTTP from './http'
 
 const prefix = '/post'
 
-export const publishPost = async content =>
+export const publishPostAPI = async content =>
   HTTP.request(`${prefix}`, {
     method: 'POST',
     data: { content }
   })
 
-export const getPosts = async targetId =>
+export const getPostsAPI = async targetId =>
   HTTP.request(`${prefix}?targetId=${targetId}`)
 
-export const deletePost = async postId =>
+export const deletePostAPI = async postId =>
   HTTP.request(`${prefix}?postId=${postId}`, {
     method: 'DELETE'
   })
 
-export const updatePost = async (postId, content) =>
-  HTTP.request(`${prefix}/update`, {
-    method: 'POST',
+export const updatePostAPI = async (postId, content) =>
+  HTTP.request(`${prefix}`, {
+    method: 'PATCH',
     data: { postId, content }
   })

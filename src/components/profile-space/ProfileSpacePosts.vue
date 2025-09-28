@@ -2,12 +2,26 @@
   <UPageList v-if="posts.length" divide>
     <UPageCard
       v-for="(
-        { _id, content: { text, media }, createdAt, likes, commentCount }, index
+        {
+          _id,
+          content: { text, media },
+          createdAt,
+          likes,
+          commentCount,
+          liked
+        },
+        index
       ) in posts"
       :key="_id"
       variant="soft"
       class="cursor-pointer"
-      @click="postDetailOverlay.open({ isMatch })"
+      @click="
+        postDetailOverlay.open({
+          isMatch,
+          postId: _id,
+          postIndex: index
+        })
+      "
     >
       <p class="text-highlighted">
         {{ text }}
@@ -25,12 +39,13 @@
         <div>
           <UButton
             variant="ghost"
-            icon="lucide:message-circle"
+            icon="lucide:message-circle-more"
             :label="String(commentCount || '')"
             @click.stop="onComment(_id, index)"
           ></UButton>
           <UButton
             variant="ghost"
+            :color="liked ? 'secondary' : 'primary'"
             icon="lucide:heart"
             :label="String(likes || '')"
             @click.stop="onLike(_id, index)"
@@ -81,12 +96,13 @@
 import { useFormatTimeAgo, useNoop } from '@/hooks'
 import OverlayPostDetail from '../overlay/OverlayPostDetail.vue'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { deletePost, getPosts } from '@/apis/post'
+import { deletePostAPI, getPostsAPI } from '@/apis/post'
 import { storeToRefs } from 'pinia'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import OverlayPulishPost from '../overlay/OverlayPulishPost.vue'
+import { likeAPI } from '@/apis/like'
 
-defineProps<{ isMatch?: boolean }>()
+const props = defineProps<{ isMatch?: boolean }>()
 const overlay = useOverlay()
 const { isMobile } = storeToRefs(useUserStore())
 const postDetailOverlay = overlay.create(OverlayPostDetail)
@@ -124,7 +140,7 @@ const toast = useToast()
 
 const onDeletePost = async () => {
   try {
-    await deletePost(activePostId.value)
+    await deletePostAPI(activePostId.value)
     posts.value.splice(activePostIndex.value, 1)
 
     if (isMobile.value) {
@@ -160,14 +176,30 @@ const onOpenEdieMenu = (postId, index) => {
   }
 }
 
-const onComment = (postId, index) => {
-  postId
-  posts.value[index].commentCount++
+const onComment = (postId, postIndex) => {
+  activePostId.value = postId
+  activePostIndex.value = postIndex
+  postDetailOverlay.open({
+    isMatch: props.isMatch,
+    postId,
+    postIndex
+  })
 }
 
-const onLike = (postId, index) => {
-  postId
-  posts.value[index].likes++
+const onLike = async (postId, index) => {
+  try {
+    const { data: isLike } = await likeAPI(postId, 'post')
+
+    if (isLike) {
+      posts.value[index].liked = true
+      posts.value[index].likes++
+    } else {
+      posts.value[index].liked = false
+      posts.value[index].likes--
+    }
+  } catch (error) {
+    toast.add({ title: '操作失败', color: 'error', icon: 'lucide:annoyed' })
+  }
 }
 
 watch(targetId, async v => {
@@ -176,13 +208,13 @@ watch(targetId, async v => {
   }
 
   if (v) {
-    posts.value = (await getPosts(targetId.value)).data
+    posts.value = (await getPostsAPI(targetId.value)).data
   }
 })
 
 onMounted(async () => {
   posts.value = (
-    await getPosts(isSelf ? userInfo.value.id : targetId.value)
+    await getPostsAPI(isSelf ? userInfo.value.id : targetId.value)
   ).data
 })
 

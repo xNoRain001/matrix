@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { Socket } from 'socket.io-client'
-import type { post, userInfo } from '@/types'
+import type { comment, post, userInfo } from '@/types'
 import { useBreakpoints, breakpointsTailwind } from '@vueuse/core'
 import { useInitLocalStorate } from '@/hooks'
 
@@ -58,6 +58,8 @@ const useUserStore = defineStore('userStore', () => {
     config: ref<typeof defaultConfig>(_config),
     avatarURL: ref(''),
     posts: ref<post[]>([]),
+    comments: ref<comment[]>([]),
+    isCommentCollapsibleOpenMap: ref({}),
     notifications: ref<
       {
         content: string

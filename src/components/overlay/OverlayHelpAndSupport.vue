@@ -35,7 +35,8 @@ const items = ref<AccordionItem[]>([
   {
     label: '如何开启麦克风权限',
     icon: 'lucide:mic',
-    content: '点击地址栏左侧的图标，开启麦克风权限'
+    content:
+      '点击地址栏左侧的图标，开启麦克风权限，如果开启麦克风权限后说话依然没有声音，检查系统中是否将输入设备设置了静音'
   }
 ])
 </script>
