@@ -57,9 +57,6 @@ const useUserStore = defineStore('userStore', () => {
     userInfo: ref<userInfo | null>(userInfo),
     config: ref<typeof defaultConfig>(_config),
     avatarURL: ref(''),
-    posts: ref<post[]>([]),
-    comments: ref<comment[]>([]),
-    isCommentCollapsibleOpenMap: ref({}),
     notifications: ref<
       {
         content: string

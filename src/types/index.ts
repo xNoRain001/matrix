@@ -46,7 +46,7 @@ export type post = {
   _id: string
   user: string
   commentCount: number
-  comments: []
+  comments: comment[]
   content: {
     text?: string
     media: string[]

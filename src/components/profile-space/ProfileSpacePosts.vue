@@ -15,13 +15,8 @@
       :key="_id"
       variant="soft"
       class="cursor-pointer"
-      @click="
-        postDetailOverlay.open({
-          isMatch,
-          postId: _id,
-          postIndex: index
-        })
-      "
+      :ui="{ container: 'gap-y-2' }"
+      @click="onComment(_id, index)"
     >
       <p class="text-highlighted">
         {{ text }}
@@ -48,68 +43,79 @@
             :color="liked ? 'secondary' : 'primary'"
             icon="lucide:heart"
             :label="String(likes || '')"
-            @click.stop="onLike(_id, index)"
+            @click.stop="useLike(toast, posts[index], _id, 'post')"
           ></UButton>
           <template v-if="isSelf">
             <UButton
               v-if="isMobile"
               variant="ghost"
               icon="lucide:ellipsis"
-              @click.stop="onOpenEdieMenu(_id, index)"
+              @click.stop="onOpenDropdownMenu(_id, index)"
             ></UButton>
-            <UDropdownMenu v-else :items="dropdownMenuitems">
+            <UDropdownMenu v-else :items="dropdownMenuItems">
               <UButton
                 variant="ghost"
                 icon="lucide:ellipsis"
-                @click.stop="onOpenEdieMenu(_id, index)"
+                @click.stop="onOpenDropdownMenu(_id, index)"
               ></UButton>
             </UDropdownMenu>
           </template>
         </div>
       </div>
     </UPageCard>
+    <UDrawer
+      v-model:open="isEditMenuDrawerOpen"
+      :handle="false"
+      title="操作"
+      description=" "
+    >
+      <template #footer>
+        <UButton
+          label="编辑"
+          @click="onEditPost"
+          class="justify-center"
+        ></UButton>
+        <UButton
+          label="删除"
+          @click="onDeletePost"
+          class="justify-center"
+          color="error"
+        ></UButton>
+      </template>
+    </UDrawer>
   </UPageList>
-  <!-- TODO: 空内容 -->
-  <UDrawer
-    v-model:open="isEditMenuDrawerOpen"
-    :handle="false"
-    title="操作"
-    description=" "
-  >
-    <template #footer>
-      <UButton
-        label="编辑"
-        @click="onEditPost"
-        class="justify-center"
-      ></UButton>
-      <UButton
-        label="删除"
-        @click="onDeletePost"
-        class="justify-center"
-        color="error"
-      ></UButton>
-    </template>
-  </UDrawer>
+  <div v-else class="mt-4 flex justify-center sm:mt-6">
+    <UButton
+      variant="ghost"
+      class="flex flex-col"
+      icon="lucide:coffee"
+      label="空空如也..."
+    ></UButton>
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { useFormatTimeAgo, useNoop } from '@/hooks'
+import { useFormatTimeAgo, useLike, useNoop } from '@/hooks'
 import OverlayPostDetail from '../overlay/OverlayPostDetail.vue'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { deletePostAPI, getPostsAPI } from '@/apis/post'
 import { storeToRefs } from 'pinia'
-import { useRecentContactsStore, useUserStore } from '@/store'
-import OverlayPulishPost from '../overlay/OverlayPulishPost.vue'
-import { likeAPI } from '@/apis/like'
+import { usePostStore, useRecentContactsStore, useUserStore } from '@/store'
+import OverlayPublisher from '../overlay/OverlayPublisher.vue'
 
 const props = defineProps<{ isMatch?: boolean }>()
 const overlay = useOverlay()
 const { isMobile } = storeToRefs(useUserStore())
 const postDetailOverlay = overlay.create(OverlayPostDetail)
-const publishPostOverlay = overlay.create(OverlayPulishPost)
-const { userInfo, posts } = storeToRefs(useUserStore())
+const publisherOverlay = overlay.create(OverlayPublisher)
+const { userInfo } = storeToRefs(useUserStore())
 const { targetId } = storeToRefs(useRecentContactsStore())
+const { posts, activePost, activePostId, activePostIndex } =
+  storeToRefs(usePostStore())
 const items = [
+  'https://picsum.photos/640/640?random=1',
+  'https://picsum.photos/640/640?random=1',
+  'https://picsum.photos/640/640?random=1',
   'https://picsum.photos/640/640?random=1',
   'https://picsum.photos/640/320?random=2',
   'https://picsum.photos/640/640?random=3',
@@ -117,9 +123,10 @@ const items = [
   'https://picsum.photos/640/640?random=5',
   'https://picsum.photos/320/640?random=6'
 ]
-const isEditMenuDrawerOpen = ref(false)
 const isSelf = !targetId.value
-const dropdownMenuitems = [
+const toast = useToast()
+const isEditMenuDrawerOpen = ref(false)
+const dropdownMenuItems = [
   [
     {
       label: '编辑',
@@ -134,9 +141,15 @@ const dropdownMenuitems = [
     }
   ]
 ]
-const activePostId = ref('')
-const activePostIndex = ref(0)
-const toast = useToast()
+
+const onEditPost = () => {
+  activePost.value = posts.value[activePostIndex.value]
+  publisherOverlay.open({ action: 'updatePost' })
+
+  if (isMobile.value) {
+    isEditMenuDrawerOpen.value = false
+  }
+}
 
 const onDeletePost = async () => {
   try {
@@ -155,21 +168,9 @@ const onDeletePost = async () => {
   }
 }
 
-const onEditPost = async () => {
-  const _activePostIndex = activePostIndex.value
-  publishPostOverlay.open({
-    post: posts.value[_activePostIndex],
-    index: _activePostIndex
-  })
-
-  if (isMobile.value) {
-    isEditMenuDrawerOpen.value = false
-  }
-}
-
-const onOpenEdieMenu = (postId, index) => {
+const onOpenDropdownMenu = (postId, postIndex) => {
   activePostId.value = postId
-  activePostIndex.value = index
+  activePostIndex.value = postIndex
 
   if (isMobile.value) {
     isEditMenuDrawerOpen.value = true
@@ -179,27 +180,10 @@ const onOpenEdieMenu = (postId, index) => {
 const onComment = (postId, postIndex) => {
   activePostId.value = postId
   activePostIndex.value = postIndex
+  activePost.value = posts.value[postIndex]
   postDetailOverlay.open({
-    isMatch: props.isMatch,
-    postId,
-    postIndex
+    isMatch: props.isMatch
   })
-}
-
-const onLike = async (postId, index) => {
-  try {
-    const { data: isLike } = await likeAPI(postId, 'post')
-
-    if (isLike) {
-      posts.value[index].liked = true
-      posts.value[index].likes++
-    } else {
-      posts.value[index].liked = false
-      posts.value[index].likes--
-    }
-  } catch (error) {
-    toast.add({ title: '操作失败', color: 'error', icon: 'lucide:annoyed' })
-  }
 }
 
 watch(targetId, async v => {

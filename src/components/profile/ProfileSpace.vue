@@ -33,16 +33,20 @@
           />
           <UButton
             v-if="isSelf"
+            icon="lucide:bell"
+            variant="ghost"
+            @click="postNotificationOverlay.open()"
+          />
+          <UButton
+            v-if="isSelf"
             icon="lucide:plus"
             variant="ghost"
-            color="neutral"
-            @click="publishPostOverlay.open()"
+            @click="publisherOverlay.open({ action: 'post' })"
           />
           <UButton
             v-if="isSelf && isMobile"
             icon="lucide:settings"
             variant="ghost"
-            color="neutral"
             @click="isSettingSlideoverOpen = true"
           />
           <ContactDropdownMenu
@@ -176,11 +180,11 @@ import DataManager from '@/views/Profile/DataManager.vue'
 import Logoff from '@/views/Profile/Logoff.vue'
 import Theme from '@/views/Profile/Theme.vue'
 import OverlayLogout from '@/components/overlay/OverlayLogout.vue'
-import OverlayFeedback from '@/components/overlay/OverlayFeedback.vue'
+import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
 import OverlayHelpAndSupport from '@/components/overlay/OverlayHelpAndSupport.vue'
 import OverlayAbout from '@/components/overlay/OverlayAbout.vue'
 import OverlayMessageView from '@/components/overlay/OverlayMessageView.vue'
-import OverlayPulishPost from '../overlay/OverlayPulishPost.vue'
+import OverlayPostNotification from '../overlay/OverlayPostNotification.vue'
 
 const overlay = useOverlay()
 withDefaults(defineProps<{ isMatch?: boolean }>(), {
@@ -239,7 +243,7 @@ const cards = [
     {
       icon: 'lucide:message-circle',
       label: '反馈',
-      onSelect: () => feedbackOverlay.open()
+      onSelect: () => publisherOverlay.open({ action: 'feedback' })
     },
     {
       icon: 'lucide:circle-question-mark',
@@ -305,11 +309,11 @@ const avatarURL = ref(
 )
 const viewerOverlay = overlay.create(OverlayViewer)
 const logoutOverlay = overlay.create(OverlayLogout)
-const feedbackOverlay = overlay.create(OverlayFeedback)
+const publisherOverlay = overlay.create(OverlayPublisher)
 const helpAndSupportOverlay = overlay.create(OverlayHelpAndSupport)
 const aboutOverlay = overlay.create(OverlayAbout)
 const messageViewOverlay = overlay.create(OverlayMessageView)
-const publishPostOverlay = overlay.create(OverlayPulishPost)
+const postNotificationOverlay = overlay.create(OverlayPostNotification)
 
 const onSpaceBgChange = e => useUpdateOSS(e, 'bg', userInfo, toast, bgURL)
 

@@ -135,7 +135,7 @@ import { useRouter } from 'vue-router'
 import { voiceChatInviteToastExpireTime } from './const'
 import OverlayOffline from './components/overlay/OverlayOffline.vue'
 import { useThrottleFn } from '@vueuse/core'
-import OverlayFeedback from './components/overlay/OverlayFeedback.vue'
+import OverlayPublisher from './components/overlay/OverlayPublisher.vue'
 import type { message } from './types'
 import OverlayVoiceChat from './components/overlay/OverlayVoiceChat.vue'
 import OverlayHelpAndSupport from './components/overlay/OverlayHelpAndSupport.vue'
@@ -160,7 +160,7 @@ const maxReconnectionAttempts = 1
 const toast = useToast()
 const overlay = useOverlay()
 const logoutOverlay = overlay.create(OverlayLogout)
-const feedbackOverlay = overlay.create(OverlayFeedback)
+const publisherOverlay = overlay.create(OverlayPublisher)
 const offlineOverlay = overlay.create(OverlayOffline)
 const {
   avatarURL,
@@ -264,7 +264,7 @@ const navs = [
     {
       label: '反馈',
       icon: 'lucide:message-circle',
-      onSelect: () => feedbackOverlay.open()
+      onSelect: () => publisherOverlay.open({ action: 'feedback' })
     },
     {
       label: '帮助和支持',

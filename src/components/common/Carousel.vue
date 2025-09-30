@@ -11,9 +11,9 @@
       :class="
         viewer
           ? isMobile
-            ? 'w-[calc(100vw-2rem)]'
+            ? 'w-[calc(100vw-2rem)] sm:w-[calc(100vh-11rem)]'
             : 'w-[calc(100vh-11rem)]'
-          : 'w-xs'
+          : 'w-full max-w-xs'
       "
       @select="onSelect"
     >
@@ -24,20 +24,20 @@
         :class="
           viewer
             ? isMobile
-              ? 'mx-auto max-h-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)]'
+              ? 'mx-auto max-h-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] sm:max-h-[calc(100vh-11rem)] sm:max-w-[calc(100vh-11rem)]'
               : 'mx-auto max-h-[calc(100vh-11rem)] max-w-[calc(100vh-11rem)]'
-            : 'max-h-80 max-w-80'
+            : 'size-full max-h-80 max-w-80'
         "
       />
     </UCarousel>
     <div
       :class="viewer ? 'mx-auto' : ''"
-      class="flex max-w-xs justify-between gap-1 pt-4"
+      class="flex w-full max-w-xs gap-1 overflow-auto pt-4 sm:max-w-md"
     >
       <div
         v-for="(item, index) in items"
         :key="index"
-        class="opacity-25 transition-opacity hover:opacity-100"
+        class="shrink-0 opacity-25 transition-opacity hover:opacity-100"
         :class="{ 'opacity-100': activeIndex === index }"
         @click="select(index)"
       >
