@@ -42,15 +42,17 @@ export type message = {
   resendArgs?: any[]
 }
 
+export type content = {
+  text?: string
+  images: { url: string; width: number; height: number; blob?: File }[]
+}
+
 export type post = {
   _id: string
   user: string
   commentCount: number
   comments: comment[]
-  content: {
-    text?: string
-    media: string[]
-  }
+  content: content
   createdAt: number
   updateAt?: number
   likes: number
@@ -61,10 +63,7 @@ export type post = {
 export type comment = {
   owner?: string
   user: string
-  content: {
-    text?: string
-    media?: string[]
-  }
+  content: content
   createdAt: number
   updateAt?: number
   likes: number

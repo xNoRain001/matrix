@@ -4,7 +4,7 @@
       v-for="(
         {
           _id,
-          content: { text, media },
+          content: { text, images },
           createdAt,
           likes,
           commentCount,
@@ -22,9 +22,9 @@
         {{ text }}
       </p>
       <Carousel
-        v-if="media.length"
+        v-if="images.length"
         @click.stop="useNoop"
-        :items="items"
+        :items="images"
         :active-index="0"
       ></Carousel>
       <div class="flex items-center justify-between">
@@ -95,7 +95,13 @@
 </template>
 
 <script lang="ts" setup>
-import { useFormatTimeAgo, useLike, useNoop } from '@/hooks'
+import {
+  useFormatTimeAgo,
+  useGetDB,
+  useLike,
+  useNoop,
+  useURLToBlob
+} from '@/hooks'
 import OverlayPostDetail from '../overlay/OverlayPostDetail.vue'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { deletePostAPI, getPostsAPI } from '@/apis/post'
@@ -112,17 +118,6 @@ const { userInfo } = storeToRefs(useUserStore())
 const { targetId } = storeToRefs(useRecentContactsStore())
 const { posts, activePost, activePostId, activePostIndex } =
   storeToRefs(usePostStore())
-const items = [
-  'https://picsum.photos/640/640?random=1',
-  'https://picsum.photos/640/640?random=1',
-  'https://picsum.photos/640/640?random=1',
-  'https://picsum.photos/640/640?random=1',
-  'https://picsum.photos/640/320?random=2',
-  'https://picsum.photos/640/640?random=3',
-  'https://picsum.photos/640/320?random=4',
-  'https://picsum.photos/640/640?random=5',
-  'https://picsum.photos/320/640?random=6'
-]
 const isSelf = !targetId.value
 const toast = useToast()
 const isEditMenuDrawerOpen = ref(false)
@@ -141,6 +136,7 @@ const dropdownMenuItems = [
     }
   ]
 ]
+const { VITE_OSS_BASE_URL } = import.meta.env
 
 const onEditPost = () => {
   activePost.value = posts.value[activePostIndex.value]
@@ -196,10 +192,85 @@ watch(targetId, async v => {
   }
 })
 
+const getLocalPosts = async () => {
+  const posts = []
+  const db = await useGetDB(userInfo.value.id)
+  const transaction = db.transaction('posts', 'readonly')
+  const store = transaction.objectStore('posts')
+  let cursor = await store.openCursor(
+    IDBKeyRange.bound(0, Number.MAX_SAFE_INTEGER, false, true),
+    'prev'
+  )
+
+  // 已经获取了所有
+  if (!cursor) {
+    return posts
+  }
+
+  let counter = 0
+  while (cursor && counter < 20) {
+    const { images } = cursor.value.content
+
+    for (let i = 0, l = images.length; i < l; i++) {
+      const image = images[i]
+      image.url = URL.createObjectURL(image.blob)
+    }
+
+    posts.push(cursor.value)
+    counter++
+    cursor = await cursor.continue()
+  }
+
+  return posts
+}
+
+const initPosts = async () => {
+  const { data } = await getPostsAPI(userInfo.value.id)
+  const _data = JSON.parse(JSON.stringify(data))
+
+  for (let i = 0, l = data.length; i < l; i++) {
+    const { images } = data[i].content
+    const { images: _images } = _data[i].content
+
+    for (let i = 0, l = images.length; i < l; i++) {
+      const image = images[i]
+      const _image = _images[i]
+      const blob = await useURLToBlob(VITE_OSS_BASE_URL + image.url)
+      image.url = URL.createObjectURL(blob)
+      image.blob = blob
+      delete _image.url
+      _image.blob = blob
+    }
+
+    delete _data[i].commentCount
+    delete _data[i].likes
+  }
+
+  const db = await useGetDB(userInfo.value.id)
+  const tx = db.transaction('posts', 'readwrite')
+  const store = tx.objectStore('posts')
+
+  for (let i = 0, l = _data.length; i < l; i++) {
+    await store.add(_data[i])
+  }
+
+  await tx.done
+
+  return data
+}
+
 onMounted(async () => {
-  posts.value = (
-    await getPostsAPI(isSelf ? userInfo.value.id : targetId.value)
-  ).data
+  if (isSelf) {
+    const localPosts = await getLocalPosts()
+
+    if (localPosts.length) {
+      posts.value = localPosts
+    } else {
+      posts.value = await initPosts()
+    }
+  } else {
+    posts.value = (await getPostsAPI(targetId.value)).data
+  }
 })
 
 onBeforeUnmount(() => (posts.value = []))

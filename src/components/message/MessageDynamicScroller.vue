@@ -549,7 +549,8 @@ const onClick = e => {
     target.children[0]?.getAttribute('data-type')
 
   if (type === 'image') {
-    viewerOverlay.open({ urls: [target.src] })
+    const { src, width, height } = target
+    viewerOverlay.open({ urls: [{ url: src, width, height }] })
   } else if (
     type &&
     // 如果 contacts 中点击用户打开的空间中打开了聊天界面，聊天界面中点击

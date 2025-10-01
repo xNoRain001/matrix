@@ -44,8 +44,10 @@ import useAddPropsForMessageRecord from './use-add-props-for-message-record'
 import useUpdateOSS from './use-update-oss'
 import useInitLocalStorate from './use-init-local-storage'
 import useLike from './use-like'
+import useURLToBlob from './use-url-to-blob'
 
 export {
+  useURLToBlob,
   useLike,
   useInitLocalStorate,
   useUpdateOSS,

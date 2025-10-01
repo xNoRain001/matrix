@@ -252,7 +252,7 @@
         >
           <div class="flex items-center gap-3">
             <UAvatar
-              @click="viewerOverlay.open({ urls: [avatarURL] })"
+              @click="viewerOverlay.open({ urls: [{ url: avatarURL }] })"
               class="cursor-pointer"
               :src="avatarURL"
               :alt="profileForm.nickname[0]"

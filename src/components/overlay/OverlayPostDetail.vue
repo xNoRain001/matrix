@@ -18,9 +18,8 @@
           {{ activePost.content.text }}
         </p>
         <Carousel
-          v-if="activePost.content.media.length"
-          @click.stop="useNoop"
-          :items="[]"
+          v-if="activePost.content.images.length"
+          :items="activePost.content.images"
           :active-index="0"
         ></Carousel>
         <div class="flex items-center justify-between">
@@ -110,6 +109,16 @@
               </template>
               <template #description>
                 <div class="text-base">{{ content.text }}</div>
+                <div
+                  v-if="content.images.length"
+                  @click="viewerOverlay.open({ urls: content.images })"
+                >
+                  <img
+                    class="size-11"
+                    v-for="image in content.images"
+                    :src="VITE_OSS_BASE_URL + image.url"
+                  />
+                </div>
                 <div class="flex items-center justify-between">
                   <p class="text-toned items-center">
                     <span>{{ useFormatTimeAgo(createdAt) }} · 广东</span>
@@ -138,7 +147,7 @@
                         v-if="isMobile"
                         variant="ghost"
                         icon="lucide:ellipsis"
-                        @click.stop="
+                        @click="
                           onOpenDropdownMenu(
                             owner === userInfo.id,
                             _id,
@@ -151,7 +160,7 @@
                         <UButton
                           variant="ghost"
                           icon="lucide:ellipsis"
-                          @click.stop="
+                          @click="
                             onOpenDropdownMenu(
                               owner === userInfo.id,
                               _id,
@@ -215,6 +224,24 @@
                           </template>
                           <template #description>
                             <div class="text-base">{{ content.text }}</div>
+                            <div
+                              v-if="
+                                replyComments[replyIndex].content.images.length
+                              "
+                            >
+                              <img
+                                class="size-11"
+                                @click="
+                                  viewerOverlay.open({
+                                    urls: replyComments[replyIndex].content
+                                      .images
+                                  })
+                                "
+                                v-for="image in replyComments[replyIndex]
+                                  .content.images"
+                                :src="VITE_OSS_BASE_URL + image.url"
+                              />
+                            </div>
                             <div class="flex items-center justify-between">
                               <p class="text-toned">
                                 <span
@@ -268,7 +295,7 @@
                                     v-if="isMobile"
                                     variant="ghost"
                                     icon="lucide:ellipsis"
-                                    @click.stop="
+                                    @click="
                                       onOpenReplyDropdownMenu(
                                         user === userInfo.id,
                                         replyId,
@@ -285,7 +312,7 @@
                                     <UButton
                                       variant="ghost"
                                       icon="lucide:ellipsis"
-                                      @click.stop="
+                                      @click="
                                         onOpenReplyDropdownMenu(
                                           user === userInfo.id,
                                           replyId,
@@ -415,7 +442,7 @@ import { usePostStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import OverlayPublisher from './OverlayPublisher.vue'
-import { useFormatTimeAgo, useLike, useNoop } from '@/hooks'
+import { useFormatTimeAgo, useLike } from '@/hooks'
 import { getPostLikesAPI } from '@/apis/like'
 import {
   deleteCommentAPI,
@@ -424,8 +451,10 @@ import {
   getCommentsAPI
 } from '@/apis/comment'
 import type { userInfo } from '@/types'
+import OverlayViewer from './OverlayViewer.vue'
 
 defineProps<{ isMatch: boolean }>()
+const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const {
   comments,
@@ -442,6 +471,7 @@ const {
 } = storeToRefs(usePostStore())
 const overlay = useOverlay()
 const publisherOverlay = overlay.create(OverlayPublisher)
+const viewerOverlay = overlay.create(OverlayViewer)
 const likes = ref<
   { createdAt: number; user: string; profile: userInfo['profile'] }[]
 >([])

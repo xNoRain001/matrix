@@ -2,10 +2,13 @@ import HTTP from './http'
 
 const prefix = '/post'
 
-export const publishPostAPI = async content =>
+export const publishPostAPI = async data =>
   HTTP.request(`${prefix}`, {
+    data,
     method: 'POST',
-    data: { content }
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
   })
 
 export const getPostsAPI = async targetId =>
@@ -16,8 +19,11 @@ export const deletePostAPI = async postId =>
     method: 'DELETE'
   })
 
-export const updatePostAPI = async (postId, content) =>
+export const updatePostAPI = async data =>
   HTTP.request(`${prefix}`, {
+    data,
     method: 'PATCH',
-    data: { postId, content }
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
   })

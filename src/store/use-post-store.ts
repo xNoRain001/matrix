@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { post, comment } from '@/types'
+import type { post, comment, content } from '@/types'
 
 const usePostStore = defineStore('postStore', () => ({
   posts: ref<post[]>([]),
@@ -14,8 +14,8 @@ const usePostStore = defineStore('postStore', () => ({
   activePostIndex: ref(0),
   activeReplyId: ref(''),
   activeReplyIndex: ref(0),
-  activeCommentContent: ref<{ text: string; media: string[] }>(null),
-  activeReplyContent: ref<{ text: string; media: string[] }>(null)
+  activeCommentContent: ref<content>(null),
+  activeReplyContent: ref<content>(null)
 }))
 
 export default usePostStore

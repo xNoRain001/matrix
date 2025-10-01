@@ -56,7 +56,7 @@
       </UDashboardNavbar>
       <!-- 背景图片，由于移动端有 pb-16，所有高度全部使用 50vh，而不是 50% -->
       <div
-        @click="viewerOverlay.open({ urls: [bgURL] })"
+        @click="viewerOverlay.open({ urls: [{ url: bgURL }] })"
         :class="[
           isSelf ? 'cursor-pointer' : '',
           bgURL ? 'bg-cover bg-center bg-no-repeat' : 'bg-default',
@@ -90,7 +90,7 @@
         </template>
         <template #header>
           <UAvatar
-            @click="viewerOverlay.open({ urls: [avatarURL] })"
+            @click="viewerOverlay.open({ urls: [{ url: avatarURL }] })"
             class="absolute top-0 -translate-y-1/2 cursor-pointer"
             :class="isSelf ? 'cursor-pointer' : ''"
             :src="avatarURL"

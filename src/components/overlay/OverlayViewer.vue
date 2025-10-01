@@ -26,7 +26,7 @@ import { ref } from 'vue'
 
 const props = withDefaults(
   defineProps<{
-    urls: string[]
+    urls: { url: string; width?: number; height?: number }[]
     activeIndex?: number
   }>(),
   {

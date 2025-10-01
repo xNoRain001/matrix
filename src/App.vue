@@ -129,7 +129,8 @@ import {
   useUpdateLastMsgToView,
   useAddPropsForMessageRecord,
   useInitIndexedDBData,
-  useIsDeviceOpen
+  useIsDeviceOpen,
+  useURLToBlob
 } from './hooks'
 import { useRouter } from 'vue-router'
 import { voiceChatInviteToastExpireTime } from './const'
@@ -769,12 +770,6 @@ const mergeOfflineMsgs = offlineMsgs => {
   return grouped
 }
 
-const ossURLToBlob = async messageRecord => {
-  const response = await fetch(messageRecord.ossURL)
-  const arrayBuffer = await response.arrayBuffer()
-  return new Blob([arrayBuffer])
-}
-
 const replaceImageOSSURLToURL = async (hash, messageRecord) => {
   let url = ''
   const _hashToBlobURLMap = hashToBlobURLMap.value
@@ -795,7 +790,7 @@ const replaceImageOSSURLToURL = async (hash, messageRecord) => {
           _hashToBlobURLMap.set(hash, url)
         }
       } else {
-        const blob = await ossURLToBlob(messageRecord)
+        const blob = await useURLToBlob(messageRecord.ossURL)
         // tx 可能已经关闭，需要重新打开
         const tx = db.transaction('files', 'readwrite')
         await tx.objectStore('files').put({ hash, blob })
@@ -816,7 +811,7 @@ const replaceAudioOSSURLToURL = async (hash, messageRecord) => {
   let url = ''
 
   try {
-    const blob = await ossURLToBlob(messageRecord)
+    const blob = await useURLToBlob(messageRecord.ossURL)
     const db = await useGetDB(userInfo.value.id)
     const tx = db.transaction('files', 'readwrite')
     await tx.objectStore('files').put({ hash, blob })
@@ -1354,7 +1349,7 @@ const initBeep = () => {
   window.addEventListener('touchstart', onTouchstart)
 }
 
-onMounted(() => {
+onMounted(async () => {
   initBeep()
 })
 </script>

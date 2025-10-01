@@ -112,14 +112,12 @@ const afterLeave = () => {
 
 const startMatch = () => {
   matching.value = true
-  const _userInfo = userInfo.value
-  delete _userInfo.tokenVersion
   const socket = globalSocket.value
   const _filter = filter.value
   socket.emit(
     'join-match',
     matchType,
-    _userInfo,
+    userInfo.value.profile,
     _filter[`${_filter.activeTab}Form`]
   )
   socket.emit('start-match', matchType)

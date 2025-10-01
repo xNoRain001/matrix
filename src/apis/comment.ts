@@ -5,16 +5,22 @@ const prefix = '/comment'
 export const getCommentsAPI = async postId =>
   HTTP.request(`${prefix}?postId=${postId}`)
 
-export const publishCommentAPI = async (postId, content) =>
+export const publishCommentAPI = async data =>
   HTTP.request(`${prefix}`, {
+    data,
     method: 'POST',
-    data: { postId, content }
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
   })
 
-export const updateCommentAPI = async (commentId, content) =>
+export const updateCommentAPI = async data =>
   HTTP.request(`${prefix}/`, {
+    data,
     method: 'PATCH',
-    data: { commentId, content }
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
   })
 
 export const deleteCommentAPI = async commentId =>
@@ -22,17 +28,13 @@ export const deleteCommentAPI = async commentId =>
     method: 'DELETE'
   })
 
-export const replyAPI = async (
-  owner,
-  postId,
-  commentId,
-  replyTarget,
-  replyId,
-  content
-) =>
+export const replyAPI = async data =>
   HTTP.request(`${prefix}/reply`, {
+    data,
     method: 'POST',
-    data: { owner, postId, commentId, replyTarget, replyId, content }
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
   })
 
 export const getRepliesAPI = async (commendId, page, lastId) =>

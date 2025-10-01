@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { Socket } from 'socket.io-client'
-import type { comment, post, userInfo } from '@/types'
+import type { userInfo } from '@/types'
 import { useBreakpoints, breakpointsTailwind } from '@vueuse/core'
 import { useInitLocalStorate } from '@/hooks'
 
