@@ -1,5 +1,5 @@
 <template>
-  <UPageList v-if="posts.length" divide>
+  <UPageList v-if="postMap[targetId]?.posts?.length">
     <UPageCard
       v-for="(
         {
@@ -11,7 +11,7 @@
           liked
         },
         index
-      ) in posts"
+      ) in postMap[targetId].posts"
       :key="_id"
       variant="soft"
       class="cursor-pointer"
@@ -43,7 +43,7 @@
             :color="liked ? 'secondary' : 'primary'"
             icon="lucide:heart"
             :label="String(likes || '')"
-            @click.stop="useLike(toast, posts[index], _id, 'post')"
+            @click.stop="useLike(toast, postMap[targetId][index], _id, 'post')"
           ></UButton>
           <template v-if="isSelf">
             <UButton
@@ -103,22 +103,20 @@ import {
   useURLToBlob
 } from '@/hooks'
 import OverlayPostDetail from '../overlay/OverlayPostDetail.vue'
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { deletePostAPI, getPostsAPI } from '@/apis/post'
 import { storeToRefs } from 'pinia'
-import { usePostStore, useRecentContactsStore, useUserStore } from '@/store'
+import { usePostStore, useUserStore } from '@/store'
 import OverlayPublisher from '../overlay/OverlayPublisher.vue'
 
-const props = defineProps<{ isMatch?: boolean }>()
+const props = defineProps<{ isMatch?: boolean; targetId: string }>()
 const overlay = useOverlay()
 const { isMobile } = storeToRefs(useUserStore())
 const postDetailOverlay = overlay.create(OverlayPostDetail)
 const publisherOverlay = overlay.create(OverlayPublisher)
 const { userInfo } = storeToRefs(useUserStore())
-const { targetId } = storeToRefs(useRecentContactsStore())
-const { posts, activePost, activePostId, activePostIndex } =
-  storeToRefs(usePostStore())
-const isSelf = !targetId.value
+const { postMap } = storeToRefs(usePostStore())
+const isSelf = props.targetId === userInfo.value.id
 const toast = useToast()
 const isEditMenuDrawerOpen = ref(false)
 const dropdownMenuItems = [
@@ -139,8 +137,11 @@ const dropdownMenuItems = [
 const { VITE_OSS_BASE_URL } = import.meta.env
 
 const onEditPost = () => {
-  activePost.value = posts.value[activePostIndex.value]
-  publisherOverlay.open({ action: 'updatePost' })
+  postMap.value[props.targetId].activePost =
+    postMap.value[props.targetId].posts[
+      postMap.value[props.targetId].activePostIndex
+    ]
+  publisherOverlay.open({ action: 'updatePost', targetId: props.targetId })
 
   if (isMobile.value) {
     isEditMenuDrawerOpen.value = false
@@ -149,8 +150,12 @@ const onEditPost = () => {
 
 const onDeletePost = async () => {
   try {
-    await deletePostAPI(activePostId.value)
-    posts.value.splice(activePostIndex.value, 1)
+    await deletePostAPI(postMap.value[props.targetId].activePostId)
+    postMap.value[props.targetId].posts.splice(
+      postMap.value[props.targetId].activePostIndex,
+      1
+    )
+    // TODO: 更新数据库
 
     if (isMobile.value) {
       isEditMenuDrawerOpen.value = false
@@ -165,8 +170,8 @@ const onDeletePost = async () => {
 }
 
 const onOpenDropdownMenu = (postId, postIndex) => {
-  activePostId.value = postId
-  activePostIndex.value = postIndex
+  postMap.value[props.targetId].activePostId = postId
+  postMap.value[props.targetId].activePostIndex = postIndex
 
   if (isMobile.value) {
     isEditMenuDrawerOpen.value = true
@@ -174,23 +179,27 @@ const onOpenDropdownMenu = (postId, postIndex) => {
 }
 
 const onComment = (postId, postIndex) => {
-  activePostId.value = postId
-  activePostIndex.value = postIndex
-  activePost.value = posts.value[postIndex]
+  postMap.value[props.targetId].activePostId = postId
+  postMap.value[props.targetId].activePostIndex = postIndex
+  postMap.value[props.targetId].activePost =
+    postMap.value[props.targetId].posts[postIndex]
   postDetailOverlay.open({
-    isMatch: props.isMatch
+    targetId: props.targetId
   })
 }
 
-watch(targetId, async v => {
-  if (!isMobile.value) {
-    return
-  }
+watch(
+  () => props.targetId,
+  async v => {
+    if (!isMobile.value) {
+      return
+    }
 
-  if (v) {
-    posts.value = (await getPostsAPI(targetId.value)).data
+    if (v) {
+      postMap.value[props.targetId].posts = (await getPostsAPI(v)).data
+    }
   }
-})
+)
 
 const getLocalPosts = async () => {
   const posts = []
@@ -260,18 +269,22 @@ const initPosts = async () => {
 }
 
 onMounted(async () => {
+  postMap.value[props.targetId] = {} as any
+  postMap.value[props.targetId].posts =
+    postMap.value[props.targetId]?.posts || []
+
   if (isSelf) {
     const localPosts = await getLocalPosts()
 
     if (localPosts.length) {
-      posts.value = localPosts
+      postMap.value[props.targetId].posts = localPosts
     } else {
-      posts.value = await initPosts()
+      postMap.value[props.targetId].posts = await initPosts()
     }
   } else {
-    posts.value = (await getPostsAPI(targetId.value)).data
+    postMap.value[props.targetId].posts = (
+      await getPostsAPI(props.targetId)
+    ).data
   }
 })
-
-onBeforeUnmount(() => (posts.value = []))
 </script>

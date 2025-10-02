@@ -1,8 +1,17 @@
 <template>
   <UDashboardPanel id="message-2">
-    <MessageHeader @close="emits('close')" :is-match="isMatch"></MessageHeader>
+    <MessageHeader
+      @close="emits('close')"
+      :is-match="isMatch"
+      :target-id="targetId"
+      :target-profile="targetProfile"
+    ></MessageHeader>
     <!-- 聊天内容 -->
-    <MessageDynamicScroller :is-match="isMatch"></MessageDynamicScroller>
+    <MessageDynamicScroller
+      :is-match="isMatch"
+      :target-id="targetId"
+      :target-profile="targetProfile"
+    ></MessageDynamicScroller>
     <!-- 移动端输入框 -->
     <div class="relative p-4" v-if="isMobile">
       <div class="flex items-end gap-2">
@@ -148,13 +157,21 @@ import {
 } from '@/hooks'
 import {
   useMatchStore,
+  usePostStore,
   useRecentContactsStore,
   useUserStore,
   useWebRTCStore
 } from '@/store'
 import { storeToRefs } from 'pinia'
-import { onBeforeUnmount, onMounted, ref, computed, watch } from 'vue'
-import type { message } from '@/types'
+import {
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  computed,
+  watch,
+  onBeforeMount
+} from 'vue'
+import type { message, userInfo } from '@/types'
 import { voiceChatInviteToastPendingTime } from '@/const'
 import { useRoute } from 'vue-router'
 import { useThrottleFn } from '@vueuse/core'
@@ -169,13 +186,22 @@ let timer = null
 let chunks = []
 let mediaRecorder = null
 const constraints = { audio: true }
-const props = withDefaults(defineProps<{ isMatch?: boolean }>(), {
-  isMatch: false
-})
+const props = withDefaults(
+  defineProps<{
+    isMatch?: boolean
+    targetId: string
+    targetProfile: userInfo['profile']
+  }>(),
+  {
+    isMatch: false
+  }
+)
 const emits = defineEmits(['close'])
 const message = ref('')
 const {
-  targetId,
+  activeTargetId,
+  activeTargetProfile,
+  activeTargetIds,
   msgContainerRef,
   unreadMsgCounter,
   messageList,
@@ -187,10 +213,16 @@ const {
   indexMap,
   isReceivingOfflineMsgs
 } = storeToRefs(useRecentContactsStore())
-const { roomId, leaveRoomTimer, isVoiceChatMatch } =
-  storeToRefs(useWebRTCStore())
+const {
+  roomId,
+  leaveRoomTimer,
+  isVoiceChatMatch,
+  webRTCTargetId,
+  webRTCTargetProfile
+} = storeToRefs(useWebRTCStore())
 const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
 const { matchRes } = storeToRefs(useMatchStore())
+const { postMap } = storeToRefs(usePostStore())
 const toast = useToast()
 const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent)
 const inputRef = ref<HTMLInputElement | null>(null)
@@ -205,6 +237,7 @@ const isCancelRecordTipShow = ref(false)
 const isContacts = computed(() => route.path === '/contacts')
 const overlay = useOverlay()
 const voiceChatOverlay = overlay.create(OverlayVoiceChat)
+const prevRoute = route.path
 
 const onSpeak = async () => {
   if (await useIsDeviceOpen(toast, 'microphone', '麦克风')) {
@@ -236,7 +269,7 @@ const initMediaRecorder = async () => {
             null,
             url,
             duration,
-            targetId.value,
+            props.targetId,
             userInfo,
             globalSocket,
             messageList,
@@ -335,7 +368,9 @@ const onCall = async () => {
   }
 
   isVoiceChatMatch.value = false
-  const _targetId = targetId.value
+  const _targetId = props.targetId
+  webRTCTargetId.value = _targetId
+  webRTCTargetProfile.value = props.targetProfile
 
   // 不在这里更新 roomId.value，因为要先确保对方能通话时才会显示语音浮动按钮，
   // 因此在 onJoin 中更新 roomId.value
@@ -343,7 +378,7 @@ const onCall = async () => {
   globalSocket.value.emit(
     'unidirectional-web-rtc',
     _roomId,
-    userInfo.value.profile.nickname,
+    userInfo.value.profile,
     _targetId
   )
   leaveRoomTimer.value = setTimeout(() => {
@@ -368,7 +403,7 @@ const onCall = async () => {
     null,
     null,
     null,
-    targetId.value,
+    props.targetId,
     userInfo,
     globalSocket,
     messageList,
@@ -436,7 +471,7 @@ const onInputChange = async () => {
         height,
         url,
         null,
-        targetId.value,
+        props.targetId,
         userInfo,
         globalSocket,
         messageList,
@@ -517,7 +552,7 @@ const onSendMsg = async () => {
       null,
       null,
       null,
-      targetId.value,
+      props.targetId,
       userInfo,
       globalSocket,
       messageList,
@@ -553,7 +588,7 @@ const removeVisualViewportListeners = () => {
 }
 
 const updateTimeAgo = () => {
-  const item = lastMsgMap.value[targetId.value]
+  const item = lastMsgMap.value[props.targetId]
 
   if (item) {
     if (item.timestamp) {
@@ -576,7 +611,7 @@ const resetUnreadMsgs = async targetId => {
 }
 
 const initMessages = async () => {
-  const _targetId = targetId.value
+  const _targetId = props.targetId
   await useGetMessages(
     userInfo.value.id,
     hashToBlobURLMap,
@@ -604,7 +639,7 @@ const initMessagesInMatch = async () => {
 props.isMatch
   ? initMessagesInMatch()
   : watch(
-      targetId,
+      activeTargetId,
       async v => {
         if (v) {
           // PC 端可能不关闭聊天界面点击其他用户列表的情况，如果不先重置 messageList 会
@@ -643,6 +678,13 @@ onMounted(() => {
   addVisualViewportListeners()
 })
 
+onBeforeMount(() => {
+  // 先显示聊天界面时
+  if (!activeTargetIds.value.size) {
+    activeTargetIds.value.add(props.targetId)
+  }
+})
+
 onBeforeUnmount(() => {
   removeVisualViewportListeners()
 
@@ -650,15 +692,16 @@ onBeforeUnmount(() => {
     clearInterval(timer)
   }
 
-  // 组件销毁时重置相关值，这样其它地方就不用处理了，处于 contacts 下的聊天界面关闭
-  // 时不重置 targetId，否则会造成空间也被关闭，在空间关闭时重置 targetId，由于组件
-  // 上有基于 props.targetId 的 v-if，因此重置逻辑不能写在 watch 里，targetId
-  // 值被重置为 '' 时不会执行回调
-  if (!isContacts.value) {
-    targetId.value = ''
-  }
-
   messageList.value = []
   lastFetchedId.value = Infinity
+
+  // 处理 message 页面未关闭聊天界面切换到其他页面和通过空间打开聊天界面后，关闭聊天
+  // 界面时不关闭空间
+  if (activeTargetIds.value.size === 1 && prevRoute === '/message') {
+    activeTargetIds.value.delete(props.targetId)
+    delete postMap.value[props.targetId]
+    activeTargetId.value = ''
+    activeTargetProfile.value = null
+  }
 })
 </script>

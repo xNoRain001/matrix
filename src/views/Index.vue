@@ -116,8 +116,11 @@ const startMatch = () => {
   const _filter = filter.value
   socket.emit(
     'join-match',
-    matchType,
-    userInfo.value.profile,
+    {
+      type: matchType,
+      id: userInfo.value.id,
+      profile: userInfo.value.profile
+    },
     _filter[`${_filter.activeTab}Form`]
   )
   socket.emit('start-match', matchType)

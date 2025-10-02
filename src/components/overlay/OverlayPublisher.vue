@@ -195,24 +195,13 @@ const props = defineProps<{
     | 'reply'
     | 'updateReply'
     | 'feedback'
+  targetId?: string
   owner?: string
   replyTarget?: string
   replyTargetNickname?: string
 }>()
 const { VITE_OSS_BASE_URL } = import.meta.env
-const {
-  posts,
-  comments,
-  isCommentCollapsibleOpenMap,
-  activePost,
-  activeCommentContent,
-  activeCommentId,
-  activeCommentIndex,
-  activePostId,
-  activeReplyId,
-  activeReplyIndex,
-  activeReplyContent
-} = storeToRefs(usePostStore())
+const { postMap } = storeToRefs(usePostStore())
 const { action } = props
 const isPost = action === 'post'
 const isComment = action === 'comment'
@@ -225,23 +214,27 @@ const payload = reactive({
   text: isPost
     ? localStorage.getItem('postDraft') || ''
     : isUpdatePost
-      ? activePost.value.content.text
+      ? postMap.value[props.targetId].activePost.content.text
       : isComment || isReply
         ? ''
         : isUpdateComment
-          ? activeCommentContent.value.text
+          ? postMap.value[props.targetId].activeCommentContent.text
           : isUpdateReply
-            ? activeReplyContent.value.text
+            ? postMap.value[props.targetId].activeReplyContent.text
             : localStorage.getItem('feedbackDraft') || '',
   images: isUpdatePost
-    ? activePost.value.content.images.map(item => item.blob)
+    ? postMap.value[props.targetId].activePost.content.images.map(
+        item => item.blob
+      )
     : isUpdateComment
-      ? comments.value[activeCommentIndex.value].content.images.map(
-          item => (VITE_OSS_BASE_URL + item.url) as any
-        )
+      ? postMap.value[props.targetId].comments[
+          postMap.value[props.targetId].activeCommentIndex
+        ].content.images.map(item => (VITE_OSS_BASE_URL + item.url) as any)
       : isUpdateReply
-        ? comments.value[activeCommentIndex.value].replyComments[
-            activeReplyIndex.value
+        ? postMap.value[props.targetId].comments[
+            postMap.value[props.targetId].activeCommentIndex
+          ].replyComments[
+            postMap.value[props.targetId].activeReplyIndex
           ].content.images.map(item => (VITE_OSS_BASE_URL + item.url) as any)
         : []
 })
@@ -409,7 +402,7 @@ const onPublishPost = async () => {
       delete _image.url
       _image.blob = file
     }
-    posts.value.unshift(post)
+    postMap.value[props.targetId].posts.unshift(post)
     delete _post.commentCount
     delete _post.likes
     const db = await useGetDB(userInfo.value.id)
@@ -417,7 +410,7 @@ const onPublishPost = async () => {
     payload.text = ''
     payload.images = []
     emit('close', true)
-  } catch (error) {
+  } catch {
     toast.add({ title: '发布失败', color: 'error', icon: 'lucide:annoyed' })
   }
 }
@@ -425,14 +418,14 @@ const onPublishPost = async () => {
 const onUpdatePost = async () => {
   try {
     const formdata = await transformPayloadToFormdata()
-    formdata.append('postId', activePostId.value)
+    formdata.append('postId', postMap.value[props.targetId].activePostId)
     const { data: latestContent } = await updatePostAPI(formdata)
     const _latestContent = JSON.parse(JSON.stringify(latestContent))
     toast.add({ title: '更新成功', icon: 'lucide:smile' })
     const { images } = latestContent
     const { images: _images } = _latestContent
     const { images: __images } = payload
-    const _activePost = activePost.value
+    const _activePost = postMap.value[props.targetId].activePost
     for (let i = 0, l = images.length; i < l; i++) {
       const image = images[i]
       const _image = _images[i]
@@ -459,13 +452,14 @@ const onUpdatePost = async () => {
 const onUpdateReply = async () => {
   try {
     const formdata = await transformPayloadToFormdata()
-    formdata.append('commentId', activeReplyId.value)
+    formdata.append('commentId', postMap.value[props.targetId].activeReplyId)
     const newContent = (await updateCommentAPI(formdata)).data
     payload.text = ''
     payload.images = []
-    comments.value[activeCommentIndex.value].replyComments[
-      activeReplyIndex.value
-    ].content = newContent
+    postMap.value[props.targetId].comments[
+      postMap.value[props.targetId].activeCommentIndex
+    ].replyComments[postMap.value[props.targetId].activeReplyIndex].content =
+      newContent
     emit('close', true)
   } catch {
     toast.add({ title: '操作失败', color: 'error', icon: 'lucide:annoyed' })
@@ -475,18 +469,24 @@ const onUpdateReply = async () => {
 const onReply = async () => {
   try {
     const formdata = await transformPayloadToFormdata()
-    const _activeCommentId = activeCommentId.value
+    const _activeCommentId = postMap.value[props.targetId].activeCommentId
     formdata.append('owner', props.owner)
-    formdata.append('postId', activePostId.value)
+    formdata.append('postId', postMap.value[props.targetId].activePostId)
     formdata.append('commentId', _activeCommentId)
     formdata.append('replyTarget', props.replyTarget || '')
-    formdata.append('replyId', activeReplyId.value || '')
+    formdata.append(
+      'replyId',
+      postMap.value[props.targetId].activeReplyId || ''
+    )
     const newComment = (await replyAPI(formdata)).data
     payload.text = ''
     payload.images = []
     newComment.profile = userInfo.value.profile
-    activePost.value.commentCount++
-    const comment = comments.value[activeCommentIndex.value]
+    postMap.value[props.targetId].activePost.commentCount++
+    const comment =
+      postMap.value[props.targetId].comments[
+        postMap.value[props.targetId].activeCommentIndex
+      ]
     comment.replyCount++
 
     if (props.replyTarget) {
@@ -497,7 +497,11 @@ const onReply = async () => {
 
     // 如果当前展开了回复，可见数量需要自增，因为当前可能展开了所有评论，而新增评论
     // 后如果不自增，会出现展开更多按钮
-    if (isCommentCollapsibleOpenMap.value[_activeCommentId]) {
+    if (
+      postMap.value[props.targetId].isCommentCollapsibleOpenMap[
+        _activeCommentId
+      ]
+    ) {
       comment.visibleReplyCount++
     }
 
@@ -510,12 +514,15 @@ const onReply = async () => {
 const onUpdateComment = async () => {
   try {
     const formdata = await transformPayloadToFormdata()
-    formdata.append('commentId', activeCommentId.value)
+    formdata.append('commentId', postMap.value[props.targetId].activeCommentId)
     const newComment = (await updateCommentAPI(formdata)).data
     payload.text = ''
     payload.images = []
     newComment.profile = userInfo.value.profile
-    const comment = comments.value[activeCommentIndex.value]
+    const comment =
+      postMap.value[props.targetId].comments[
+        postMap.value[props.targetId].activeCommentIndex
+      ]
     comment.content = newComment
     comment.updateAt = Date.now()
     emit('close', true)
@@ -527,17 +534,18 @@ const onUpdateComment = async () => {
 const onPublishComment = async () => {
   try {
     const formdata = await transformPayloadToFormdata()
-    formdata.append('postId', activePostId.value)
+    formdata.append('postId', postMap.value[props.targetId].activePostId)
     const newComment = (await publishCommentAPI(formdata)).data
     payload.text = ''
     payload.images = []
-    activePost.value.commentCount++
+    postMap.value[props.targetId].activePost.commentCount++
     newComment.page = 0
     newComment.visibleReplyCount = 0
     newComment.replyComments = []
     newComment.profile = userInfo.value.profile
-    isCommentCollapsibleOpenMap.value[newComment._id] = false
-    comments.value.unshift(newComment)
+    postMap.value[props.targetId].isCommentCollapsibleOpenMap[newComment._id] =
+      false
+    postMap.value[props.targetId].comments.unshift(newComment)
     emit('close', true)
   } catch {
     toast.add({ title: '操作失败', color: 'error', icon: 'lucide:annoyed' })

@@ -9,7 +9,7 @@
           alt: targetProfile.nickname[0]
         }"
         :chip="{
-          color: isOnline ? 'primary' : 'error'
+          // color: targetProfile.online ? 'primary' : 'error'
         }"
       />
     </template>
@@ -34,7 +34,11 @@
         variant="ghost"
         @click="open = !open"
       />
-      <MessageDropdownMenu :is-match="isMatch"></MessageDropdownMenu>
+      <MessageDropdownMenu
+        :is-match="isMatch"
+        :target-id="targetId"
+        :target-profile="targetProfile"
+      ></MessageDropdownMenu>
     </template>
   </UDashboardNavbar>
 
@@ -82,41 +86,37 @@
 
 <script setup lang="ts">
 import { useTransformGender } from '@/hooks'
-import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
+import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
+import type { userInfo } from '@/types'
 
-const props = withDefaults(defineProps<{ isMatch?: boolean }>(), {
-  isMatch: false
-})
+const props = withDefaults(
+  defineProps<{
+    isMatch?: boolean
+    targetId: string
+    targetProfile: userInfo['profile']
+  }>(),
+  {
+    isMatch: false
+  }
+)
 const emits = defineEmits(['close'])
 const open = ref(props.isMatch ? true : false)
 const { isMobile, userInfo } = storeToRefs(useUserStore())
-const {
-  targetId,
-  targetProfile,
-  lastMsgMap,
-  contactProfileMap,
-  unreadMsgCounter
-} = storeToRefs(useRecentContactsStore())
-const { matchRes } = storeToRefs(useMatchStore())
+const { unreadMsgCounter } = storeToRefs(useRecentContactsStore())
 const route = useRoute()
-const isMessage = computed(() => route.path === '/message')
-const isOnline = computed(() =>
-  props.isMatch
-    ? matchRes.value.online
-    : isMessage.value
-      ? lastMsgMap.value[targetId.value].online
-      : contactProfileMap.value[targetId.value].online
-)
 const overlay = useOverlay()
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 
 const toSpace = () => {
   if (route.path !== '/contacts' && !(props.isMatch && !isMobile.value)) {
-    profileSpaceOverlay.open()
+    profileSpaceOverlay.open({
+      targetId: props.targetId,
+      targetProfile: props.targetProfile
+    })
   }
 }
 

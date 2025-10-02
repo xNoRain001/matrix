@@ -181,12 +181,14 @@ const {
   remoteAudioRef,
   localMediaStream,
   isMicOpen,
-  isSpeakerOpen
+  isSpeakerOpen,
+  webRTCTargetId,
+  webRTCTargetProfile
 } = storeToRefs(useWebRTCStore())
 const {
   msgContainerRef,
   unreadMsgCounter,
-  targetId,
+  activeTargetId,
   messageList,
   lastMsgMap,
   lastMsgList,
@@ -197,7 +199,7 @@ const {
   indexMap,
   isReceivingOfflineMsgs
 } = storeToRefs(useRecentContactsStore())
-const { matchRes, matchType, hasMatchRes, offline, matching, noMatch } =
+const { matchRes, hasMatchRes, offline, matching, noMatch } =
   storeToRefs(useMatchStore())
 const navs = [
   [
@@ -595,11 +597,9 @@ const onJoined = async (_roomId, _polite) => {
       globalSocket.value.emit('leave', roomId.value)
       roomId.value = ''
       clearTimeout(leaveRoomTimer.value)
-      matchType.value = ''
       matchRes.value = null
       const { id } = userInfo.value
       localStorage.removeItem(`matchRes-${id}`)
-      localStorage.removeItem(`matchType-${id}`)
       toast.add({
         title: '对方已离开房间',
         color: 'error',
@@ -688,7 +688,7 @@ const onReceiveMsg = async (messageRecord: message) => {
   const isNotMedia = type !== 'image' && type !== 'audio'
   const isImage = type === 'image'
   const isAudio = type === 'audio'
-  const inView = targetId.value === id && msgContainerRef.value
+  const inView = activeTargetId.value === id && msgContainerRef.value
   const url = await replaceOSSURLToURL(isImage, isAudio, hash, messageRecord)
   messageRecord.sent = false
   const label = useInitLabelAndSeparator(messageRecord, _lastMsgMap, id)
@@ -838,7 +838,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
     const offlineMsgs = grouped[id]
     const offlineMsgsLength = offlineMsgs.length
     // 接收离线消息时可能处于匹配聊天界面中，需要更新视图
-    const inView = targetId.value === id && msgContainerRef.value
+    const inView = activeTargetId.value === id && msgContainerRef.value
     const __lastMsgMap: Record<string, { sent: boolean; timestamp: number }> = {
       [id]: (_lastMsgMap[id] as any) || {}
     }
@@ -893,7 +893,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
   }
 }
 
-const acceptWebRTC = async (roomId, now, isAccept: boolean) => {
+const acceptWebRTC = async (targetProfile, roomId, now, isAccept: boolean) => {
   // 由于鼠标悬浮在 toast 上时会暂停进度，因此需要判断是否超出时间
   if (Date.now() - now <= voiceChatInviteToastExpireTime) {
     const socket = globalSocket.value
@@ -901,6 +901,8 @@ const acceptWebRTC = async (roomId, now, isAccept: boolean) => {
 
     if (isAccept) {
       const isMicOpen = await useIsDeviceOpen(toast, 'microphone', '麦克风')
+      webRTCTargetId.value = _targetId
+      webRTCTargetProfile.value = targetProfile
 
       if (isMicOpen) {
         socket.emit('agree-unidirectional-web-rtc', roomId, _targetId)
@@ -927,7 +929,7 @@ const acceptWebRTC = async (roomId, now, isAccept: boolean) => {
         indexMap,
         unreadMsgCounter,
         msgContainerRef,
-        _targetId === targetId.value && msgContainerRef.value
+        _targetId === activeTargetId.value && msgContainerRef.value
       )
     } else {
       socket.emit('refuse-web-rtc', roomId)
@@ -950,7 +952,7 @@ const acceptWebRTC = async (roomId, now, isAccept: boolean) => {
         indexMap,
         unreadMsgCounter,
         msgContainerRef,
-        _targetId === targetId.value && msgContainerRef.value
+        _targetId === activeTargetId.value && msgContainerRef.value
       )
     }
   } else {
@@ -958,15 +960,15 @@ const acceptWebRTC = async (roomId, now, isAccept: boolean) => {
   }
 }
 
-const onInviteWebRTC = (roomId, nickname) => {
+const onInviteWebRTC = (roomId, targetProfile) => {
   const now = Date.now()
 
   voiceChatInviteToastId = toast.add({
     close: false,
-    title: nickname,
+    title: targetProfile.nickname,
     description: '邀请你语音通话',
     avatar: {
-      alt: nickname[0]
+      alt: targetProfile.nickname[0]
     },
     duration: voiceChatInviteToastExpireTime,
     actions: [
@@ -974,13 +976,13 @@ const onInviteWebRTC = (roomId, nickname) => {
         icon: 'lucide:phone-off',
         label: '拒绝',
         color: 'error',
-        onClick: () => acceptWebRTC(roomId, now, false)
+        onClick: () => acceptWebRTC(targetProfile, roomId, now, false)
       },
       {
         icon: 'lucide:phone',
         label: '同意',
         color: 'primary',
-        onClick: () => acceptWebRTC(roomId, now, true)
+        onClick: () => acceptWebRTC(targetProfile, roomId, now, true)
       }
     ]
   }).id
@@ -1075,7 +1077,7 @@ const onConnectError = () => {
 }
 
 const onMatched = async data => {
-  const { status, matchType: _matchType, matchRes: _matchRes } = data
+  const { status, matchRes: _matchRes } = data
 
   if (status === 'fail') {
     noMatch.value = true
@@ -1089,15 +1091,13 @@ const onMatched = async data => {
     // 可能出现未匹配到对方，等待再次匹配的过程中被别人给匹配到了
     clearTimeout(matchTimer)
     hasMatchRes.value = true
-    matchType.value = _matchType
     matchRes.value = _matchRes
     const { id } = userInfo.value
-    localStorage.setItem(`matchType-${id}`, _matchType)
     localStorage.setItem(`matchRes-${id}`, JSON.stringify(_matchRes))
     matching.value = false
 
     // TODO: 处理匹配结果是好友的情况
-    if (_matchType === 'voice-chat') {
+    if (_matchRes.type === 'voice-chat') {
       const _lastMsgMap = lastMsgMap.value
       const targetId = _matchRes.id
       await useInitLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
@@ -1108,7 +1108,7 @@ const onMatched = async data => {
       )
     }
 
-    router.replace(`/${_matchType}`)
+    router.replace(`/${_matchRes.type}`)
   }
 }
 

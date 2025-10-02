@@ -46,11 +46,13 @@
   </UDashboardPanel>
 
   <ProfileSpace
-    v-if="!isMobile && targetId"
-    @close="targetId = ''"
+    v-if="!isMobile && activeTargetId"
+    @close="activeTargetId = ''"
+    :target-id="activeTargetId"
+    :target-profile="activeTargetProfile"
   ></ProfileSpace>
   <div
-    v-if="!isMobile && !targetId"
+    v-if="!isMobile && !activeTargetId"
     class="flex flex-1 items-center justify-center"
   >
     <UIcon name="lucide:user-round" class="text-dimmed size-32" />
@@ -62,32 +64,23 @@
 
 <script setup lang="ts">
 import { getContacts } from '@/apis/contact'
-import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 import { useRefreshContacts, useRefreshOnline } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
+import type { userInfo } from '@/types'
 import { storeToRefs } from 'pinia'
-import { onMounted, ref, onBeforeUnmount, watch } from 'vue'
+import { onMounted, ref, onBeforeUnmount } from 'vue'
 
 let timer = null
 const toast = useToast()
 const isNotificationsSlideoverOpen = ref(false)
 const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
-const { targetId, contactList, contactProfileMap, contactNotifications } =
-  storeToRefs(useRecentContactsStore())
-const overlay = useOverlay()
-const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
-
-watch(targetId, v => {
-  if (!isMobile.value) {
-    return
-  }
-
-  if (v) {
-    profileSpaceOverlay.open()
-  } else {
-    profileSpaceOverlay.close()
-  }
-})
+const {
+  activeTargetId,
+  activeTargetProfile,
+  contactList,
+  contactProfileMap,
+  contactNotifications
+} = storeToRefs(useRecentContactsStore())
 
 const initContactList = async () => {
   const now = Date.now()
@@ -121,7 +114,6 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  targetId.value = ''
   clearInterval(timer)
 })
 </script>

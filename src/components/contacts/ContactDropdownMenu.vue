@@ -10,19 +10,19 @@ import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 
+const props = defineProps<{ targetId: string }>()
 const toast = useToast()
-const { contactProfileMap, contactList, targetId } = storeToRefs(
-  useRecentContactsStore()
-)
+const { activeTargetId, activeTargetProfile, contactProfileMap, contactList } =
+  storeToRefs(useRecentContactsStore())
 const { globalSocket, userInfo } = storeToRefs(useUserStore())
 const isFriend = computed(() =>
-  Boolean(contactProfileMap.value[targetId.value])
+  Boolean(contactProfileMap.value[props.targetId])
 )
 const addContact = [
   {
     label: '添加好友',
     icon: 'lucide:circle-plus',
-    onSelect: () => useAddContact(userInfo, targetId, globalSocket, toast)
+    onSelect: () => useAddContact(userInfo, props.targetId, globalSocket, toast)
   }
 ]
 const deleteContact = [
@@ -32,12 +32,13 @@ const deleteContact = [
     onSelect: () =>
       useDeleteContact(
         userInfo,
-        targetId.value,
+        props.targetId,
         contactList,
         contactProfileMap,
         globalSocket,
         toast,
-        targetId
+        activeTargetId,
+        activeTargetProfile
       )
   }
 ]

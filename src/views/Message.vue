@@ -30,7 +30,7 @@
       </template>
     </UDashboardNavbar>
 
-    <MessageList v-if="lastMsgList.length" v-model="targetId" />
+    <MessageList v-if="lastMsgList.length" />
     <div
       v-if="isMobile && !lastMsgList.length"
       class="flex flex-1 items-center justify-center"
@@ -41,11 +41,13 @@
 
   <!-- 由于并不依赖模态框，因此需要手动修改 targetId -->
   <MessageView
-    v-if="!isMobile && targetId"
-    @close="targetId = ''"
+    v-if="!isMobile && activeTargetId"
+    @close="activeTargetId = ''"
+    :target-id="activeTargetId"
+    :target-profile="activeTargetProfile"
   ></MessageView>
   <div
-    v-if="!isMobile && !targetId"
+    v-if="!isMobile && !activeTargetId"
     class="flex flex-1 items-center justify-center"
   >
     <UIcon name="lucide:message-circle-more" class="text-dimmed size-32" />
@@ -54,11 +56,9 @@
 
 <script setup lang="ts">
 import { getProfiles } from '@/apis/profile'
-import OverlayMessageView from '@/components/overlay/OverlayMessageView.vue'
 import { useGetDB, useRefreshOnline } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { watch } from 'vue'
 import { onMounted, onBeforeUnmount } from 'vue'
 
 // const tabItems = [
@@ -75,23 +75,13 @@ import { onMounted, onBeforeUnmount } from 'vue'
 let timer = null
 const toast = useToast()
 const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
-const { unreadMsgCounter, targetId, lastMsgMap, lastMsgList } = storeToRefs(
-  useRecentContactsStore()
-)
-const overlay = useOverlay()
-const messageViewOverlay = overlay.create(OverlayMessageView)
-
-watch(targetId, v => {
-  if (!isMobile.value) {
-    return
-  }
-
-  if (v) {
-    messageViewOverlay.open()
-  } else {
-    messageViewOverlay.close()
-  }
-})
+const {
+  unreadMsgCounter,
+  activeTargetId,
+  activeTargetProfile,
+  lastMsgMap,
+  lastMsgList
+} = storeToRefs(useRecentContactsStore())
 
 const onResetMsgCounter = async () => {
   const _lastMsgMap = lastMsgMap.value
@@ -162,7 +152,6 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  targetId.value = ''
   clearInterval(timer)
 })
 </script>

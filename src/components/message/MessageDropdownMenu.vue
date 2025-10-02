@@ -12,27 +12,35 @@ import {
 } from '@/hooks'
 import useDeleteMessageList from '@/hooks/use-delete-message-list'
 import { useRecentContactsStore, useUserStore } from '@/store'
+import type { userInfo } from '@/types'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
-const props = withDefaults(defineProps<{ isMatch?: boolean }>(), {
-  isMatch: false
-})
+const props = withDefaults(
+  defineProps<{
+    isMatch?: boolean
+    targetId: string
+    targetProfile: userInfo['profile']
+  }>(),
+  {
+    isMatch: false
+  }
+)
 const toast = useToast()
 const {
+  activeTargetId,
   contactProfileMap,
   lastMsgMap,
   lastMsgList,
   messageList,
   lastFetchedId,
-  targetId,
   indexMap,
   unreadMsgCounter
 } = storeToRefs(useRecentContactsStore())
 const { globalSocket, userInfo } = storeToRefs(useUserStore())
 const isFriend = computed(() =>
-  Boolean(contactProfileMap.value[targetId.value])
+  Boolean(contactProfileMap.value[props.targetId])
 )
 const route = useRoute()
 const isContacts = computed(() => route.path === '/contacts')
@@ -40,7 +48,7 @@ const deleteList = {
   label: '删除列表',
   icon: 'lucide:circle-x',
   onSelect: () => {
-    const _targetId = targetId.value
+    const _targetId = props.targetId
     useDeleteMessageList(
       userInfo,
       _targetId,
@@ -49,7 +57,7 @@ const deleteList = {
       lastMsgList,
       lastMsgMap,
       messageList,
-      targetId,
+      activeTargetId,
       lastFetchedId
     )
   }
@@ -60,10 +68,10 @@ const deleteMessageRecord = {
   onSelect: () => {
     useClearMessageRecord(
       userInfo,
-      targetId.value,
+      props.targetId,
       messageList,
       lastMsgMap,
-      targetId,
+      activeTargetId,
       lastFetchedId
     )
   }
@@ -71,7 +79,7 @@ const deleteMessageRecord = {
 const addContact = {
   label: '添加好友',
   icon: 'lucide:circle-plus',
-  onSelect: () => useAddContact(userInfo, targetId, globalSocket, toast)
+  onSelect: () => useAddContact(userInfo, props.targetId, globalSocket, toast)
 }
 const dropdownItems = computed(() =>
   isFriend.value
@@ -85,7 +93,7 @@ const dropdownItems = computed(() =>
               label: '隐藏列表',
               icon: 'lucide:eye-off',
               onSelect: () => {
-                const _targetId = targetId.value
+                const _targetId = props.targetId
                 useHideMessageList(
                   userInfo,
                   _targetId,
@@ -93,7 +101,7 @@ const dropdownItems = computed(() =>
                   indexMap,
                   lastMsgList,
                   lastMsgMap,
-                  targetId
+                  activeTargetId
                 )
               }
             },

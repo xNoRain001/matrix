@@ -41,7 +41,7 @@
             v-if="isSelf"
             icon="lucide:plus"
             variant="ghost"
-            @click="publisherOverlay.open({ action: 'post' })"
+            @click="publisherOverlay.open({ action: 'post', targetId })"
           />
           <UButton
             v-if="isSelf && isMobile"
@@ -51,6 +51,7 @@
           />
           <ContactDropdownMenu
             v-if="!isSelf && isContacts"
+            :target-id="targetId"
           ></ContactDropdownMenu>
         </template>
       </UDashboardNavbar>
@@ -82,7 +83,7 @@
             ></UButton>
             <UButton
               v-if="!isSelf && !inView"
-              @click="messageViewOverlay.open()"
+              @click="messageViewOverlay.open({ targetId, targetProfile })"
               icon="lucide:message-circle-more"
               label="聊天"
             ></UButton>
@@ -111,7 +112,10 @@
         <UTabs v-model="activeTab" :items="tabItems" :content="false" />
       </div>
       <!-- 动态 -->
-      <ProfileSpacePosts :is-match="isMatch"></ProfileSpacePosts>
+      <ProfileSpacePosts
+        :is-match="isMatch"
+        :target-id="targetId"
+      ></ProfileSpacePosts>
     </div>
 
     <!-- 选择背景图片 -->
@@ -167,9 +171,9 @@
 </template>
 
 <script lang="ts" setup>
-import { useRecentContactsStore, useUserStore } from '@/store'
+import { usePostStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeMount, onBeforeUnmount, ref, watch } from 'vue'
 import { useGetDB, useUpdateOSS } from '@/hooks'
 import { useRoute } from 'vue-router'
 import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
@@ -185,11 +189,19 @@ import OverlayHelpAndSupport from '@/components/overlay/OverlayHelpAndSupport.vu
 import OverlayAbout from '@/components/overlay/OverlayAbout.vue'
 import OverlayMessageView from '@/components/overlay/OverlayMessageView.vue'
 import OverlayPostNotification from '../overlay/OverlayPostNotification.vue'
+import type { userInfo } from '@/types'
 
 const overlay = useOverlay()
-withDefaults(defineProps<{ isMatch?: boolean }>(), {
-  isMatch: false
-})
+const props = withDefaults(
+  defineProps<{
+    isMatch?: boolean
+    targetId: string
+    targetProfile: userInfo['profile']
+  }>(),
+  {
+    isMatch: false
+  }
+)
 const emits = defineEmits(['close'])
 const container = ref(null)
 const isSettingSlideoverOpen = ref(false)
@@ -206,9 +218,13 @@ const {
   userInfo,
   avatarURL: _avatarURL
 } = storeToRefs(useUserStore())
-const { targetId, targetProfile, contactProfileMap } = storeToRefs(
-  useRecentContactsStore()
-)
+const {
+  activeTargetIds,
+  contactProfileMap,
+  activeTargetId,
+  activeTargetProfile
+} = storeToRefs(useRecentContactsStore())
+const { postMap } = storeToRefs(usePostStore())
 const cards = [
   [
     {
@@ -280,10 +296,7 @@ const tabItems = [
   }
 ]
 const activeTab = ref('my')
-const isSelf = !targetId.value
-if (isSelf) {
-  targetProfile.value = userInfo.value.profile
-}
+const isSelf = props.targetId === userInfo.value.id
 const route = useRoute()
 const isContacts = computed(() => route.path === '/contacts')
 // 在聊天界面中打开对方空间或匹配到对方显示的空间不需要显示聊天按钮
@@ -302,10 +315,10 @@ const bgURL = ref(
       ? URL.createObjectURL(bgBlob)
       : // 本地数据库中删除了但 OSS 中还存在，TODO: 重新保存到本地数据库
         `${VITE_OSS_BASE_URL}${userInfo.value.id}/space-bg`
-    : `${VITE_OSS_BASE_URL}${targetId.value}/space-bg`
+    : `${VITE_OSS_BASE_URL}${props.targetId}/space-bg`
 )
 const avatarURL = ref(
-  isSelf ? _avatarURL.value : `${VITE_OSS_BASE_URL}${targetId.value}/avatar`
+  isSelf ? _avatarURL.value : `${VITE_OSS_BASE_URL}${props.targetId}/avatar`
 )
 const viewerOverlay = overlay.create(OverlayViewer)
 const logoutOverlay = overlay.create(OverlayLogout)
@@ -314,14 +327,57 @@ const helpAndSupportOverlay = overlay.create(OverlayHelpAndSupport)
 const aboutOverlay = overlay.create(OverlayAbout)
 const messageViewOverlay = overlay.create(OverlayMessageView)
 const postNotificationOverlay = overlay.create(OverlayPostNotification)
+const prevRoute = route.path
 
 const onSpaceBgChange = e => useUpdateOSS(e, 'bg', userInfo, toast, bgURL)
 
-watch(targetId, v => {
-  // PC 端 contact 页面允许无缝切换空间操作，需要更新头像和背景
-  if (v && isContacts.value && !isMobile.value) {
-    bgURL.value = `${VITE_OSS_BASE_URL}${v}/space-bg`
-    avatarURL.value = `${VITE_OSS_BASE_URL}${v}/avatar`
+watch(
+  () => props.targetId,
+  v => {
+    // PC 端 contact 页面允许无缝切换空间操作，需要更新头像和背景
+    if (v && isContacts.value && !isMobile.value) {
+      bgURL.value = `${VITE_OSS_BASE_URL}${v}/space-bg`
+      avatarURL.value = `${VITE_OSS_BASE_URL}${v}/avatar`
+    }
+  }
+)
+
+onBeforeMount(() => {
+  activeTargetIds.value.add(props.targetId)
+})
+
+onBeforeUnmount(() => {
+  if (
+    !activeTargetIds.value.size ||
+    // 页面只打开了一个空间时，关闭空间时不需要重置数据，否则会将聊天界面也关闭
+    (activeTargetIds.value.size === 1 &&
+      (prevRoute === '/message' ||
+        // PC 端聊天匹配可以在这里处理，但语音匹配不可以，同时移动端聊天和语音都不可以，
+        //  虽然不会关闭聊天界面，但是需要的数据被重置了，因此在匹配页面销毁时
+        // 进行处理
+        prevRoute === '/chat' ||
+        prevRoute === '/voice-chat'))
+  ) {
+    return
+  }
+
+  // 匹配时离开页面会同时触发空间和聊天视图的销毁行为，选择在这里更新，因为语音匹配
+  // 没有聊天视图
+
+  activeTargetIds.value.delete(props.targetId)
+  delete postMap.value[props.targetId]
+
+  if (activeTargetIds.value.size === 0) {
+    // PC 端可能直接从好友界面切换到其他页面，此时 activeTargetIds 的数量可能为 0，也
+    // 可能为 1，取决于当前有没有打开空间，contact 销毁前触发这里，此时
+    // activeTargetIds 的数量一定为 0，如果销毁前打开了空间，再回来时由于
+    // activeTargetId 并没有重置，会有异常，需要重置 activeContactId，可以在
+    // contact 的 onBeforeUnmount 中重置，但由于相关操作都在这里，因此在这里重置
+
+    // 手动关闭空间，PC 端直接在 close 事件中重置了 activeContactId，移动端需要
+    // 手动修改，同时要考虑 PC 端切换到其他页面，因此不需要 isMobile 条件
+    activeTargetId.value = ''
+    activeTargetProfile.value = null
   }
 })
 </script>

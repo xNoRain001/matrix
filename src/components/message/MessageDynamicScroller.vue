@@ -417,15 +417,16 @@ import { computed, onBeforeUnmount, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
 import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
+import type { userInfo } from '@/types'
 
 const playingURL = ref('')
 const props = defineProps<{
   isMatch: boolean
+  targetId: string
+  targetProfile: userInfo['profile']
 }>()
 const { config, isMobile, userInfo } = storeToRefs(useUserStore())
 const {
-  targetId,
-  targetProfile,
   lastMsgMap,
   hashToBlobURLMap,
   msgContainerRef,
@@ -512,7 +513,7 @@ const onScroll = useThrottleFn(
         hashToBlobURLMap,
         messageList,
         lastFetchedId,
-        targetId.value,
+        props.targetId,
         true
       )
 
@@ -559,7 +560,10 @@ const onClick = e => {
     // PC 端的匹配聊天界面中点击对方头像不显示对方空间
     !(props.isMatch && !isMobile.value)
   ) {
-    profileSpaceOverlay.open()
+    profileSpaceOverlay.open({
+      targetId: props.targetId,
+      targetProfile: props.targetProfile
+    })
   }
 }
 

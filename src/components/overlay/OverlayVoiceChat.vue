@@ -7,11 +7,19 @@
     :ui="{ body: 'flex' }"
   >
     <template #body>
-      <MessageVoice :close="() => emit('close', false)"></MessageVoice>
+      <MessageVoice
+        :close="() => emit('close', false)"
+        :target-id="webRTCTargetId"
+        :target-profile="webRTCTargetProfile"
+      ></MessageVoice>
     </template>
   </UModal>
 </template>
 
 <script lang="ts" setup>
+import { useWebRTCStore } from '@/store'
+import { storeToRefs } from 'pinia'
+
 const emit = defineEmits<{ close: [boolean] }>()
+const { webRTCTargetId, webRTCTargetProfile } = storeToRefs(useWebRTCStore())
 </script>

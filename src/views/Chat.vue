@@ -8,12 +8,19 @@
     :ui="{ content: 'flex-row' }"
   >
     <template #content>
+      <MessageView
+        @close="isOpen = false"
+        :is-match="true"
+        :target-id="activeTargetId"
+        :target-profile="activeTargetProfile"
+      />
       <ProfileSpace
         v-if="!isMobile"
-        class="!w-2/5"
+        class="max-w-md"
         :is-match="true"
+        :target-id="activeTargetId"
+        :target-profile="activeTargetProfile"
       ></ProfileSpace>
-      <MessageView v-if="targetId" @close="isOpen = false" :is-match="true" />
     </template>
   </UModal>
 </template>
@@ -21,30 +28,45 @@
 <script lang="ts" setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
+import {
+  useMatchStore,
+  usePostStore,
+  useRecentContactsStore,
+  useUserStore
+} from '@/store'
 import { storeToRefs } from 'pinia'
 import { useRefreshOnline } from '@/hooks'
 
 let timer = null
 const router = useRouter()
 const { isMobile, globalSocket } = storeToRefs(useUserStore())
-const { matchRes, matchType } = storeToRefs(useMatchStore())
-const { targetId, targetProfile } = storeToRefs(useRecentContactsStore())
-const isOpen = ref(Boolean(matchType.value === 'chat' && matchRes.value))
+const { matchRes } = storeToRefs(useMatchStore())
+const { activeTargetIds, activeTargetId, activeTargetProfile } = storeToRefs(
+  useRecentContactsStore()
+)
+const { postMap } = storeToRefs(usePostStore())
+const isOpen = ref(
+  Boolean(matchRes.value.type === 'chat' && matchRes.value.profile)
+)
 
 if (isOpen.value) {
   const { id, profile } = matchRes.value
-  targetId.value = id
-  targetProfile.value = profile
+  activeTargetId.value = id
+  activeTargetProfile.value = profile
+} else {
+  await router.replace('/')
 }
 
 onMounted(async () => {
-  if (!isOpen.value) {
-    return router.replace('/')
-  }
-
-  timer = useRefreshOnline(globalSocket, 'matchTarget', [targetId.value])
+  timer = useRefreshOnline(globalSocket, 'matchTarget', [activeTargetId.value])
 })
 
-onBeforeUnmount(() => clearInterval(timer))
+onBeforeUnmount(() => {
+  clearInterval(timer)
+
+  activeTargetIds.value.delete(activeTargetId.value)
+  delete postMap.value[activeTargetId.value]
+  activeTargetId.value = ''
+  activeTargetProfile.value = null
+})
 </script>

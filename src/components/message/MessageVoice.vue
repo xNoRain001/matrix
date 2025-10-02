@@ -62,8 +62,11 @@
       </UDropdownMenu>
     </div>
     <div class="flex flex-1 flex-col items-center gap-4">
-      <UAvatar :alt="targetNickname[0]" class="size-24 text-5xl"></UAvatar>
-      <div>{{ targetNickname }}</div>
+      <UAvatar
+        :alt="targetProfile.nickname[0]"
+        class="size-24 text-5xl"
+      ></UAvatar>
+      <div>{{ targetProfile.nickname }}</div>
       <div class="text-sm">
         {{ rtcConnected ? '通话中...' : '等待对方接通...' }}
       </div>
@@ -134,9 +137,15 @@ import {
 } from '@/store'
 import { useRoute, useRouter } from 'vue-router'
 import { useThrottleFn } from '@vueuse/core'
+import type { userInfo } from '@/types'
 
 const props = withDefaults(
-  defineProps<{ isMatch?: boolean; close?: () => void }>(),
+  defineProps<{
+    isMatch?: boolean
+    close?: () => void
+    targetId: string
+    targetProfile: userInfo['profile']
+  }>(),
   {
     isMatch: false,
     close: () => {}
@@ -154,14 +163,12 @@ const {
   isSpeakerOpen
 } = storeToRefs(useWebRTCStore())
 const {
-  targetId,
   messageList,
   lastMsgList,
   lastMsgMap,
   indexMap,
   unreadMsgCounter,
-  msgContainerRef,
-  contactProfileMap
+  msgContainerRef
 } = storeToRefs(useRecentContactsStore())
 const { matchRes } = storeToRefs(useMatchStore())
 const { isMobile, globalPC, globalSocket, userInfo } =
@@ -188,14 +195,9 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 const isVoiceChat = computed(() => route.path === '/voice-chat')
-const voiceChatTargetId = useGetTargetIdByRoomId(roomId.value, userInfo)
-const targetNickname = computed(() =>
-  props.isMatch
-    ? matchRes.value.profile.nickname
-    : lastMsgMap.value[voiceChatTargetId].profile.nickname ||
-      contactProfileMap.value[voiceChatTargetId].profile.nickname
+const volume = ref(
+  Math.floor(Number(localStorage.getItem('volume')) * 100) || 100
 )
-const volume = ref(Number(localStorage.getItem('volume') || 100))
 remoteAudioRef.value.volume = Number((volume.value / 100).toFixed(2))
 
 // TODO: 里面的逻辑和 onBye 很相似，可以考虑合并
@@ -242,7 +244,7 @@ const onCancel = () => {
 
   // 语音匹配挂断时不进行通知
   // TODO: 处理匹配结果是好友的情况
-  if (matchRes.value.id !== _targetId) {
+  if (matchRes.value?.id !== _targetId) {
     useSendMsg(
       'voiceChatCallOffTip',
       '[语音通话]',
@@ -262,7 +264,7 @@ const onCancel = () => {
       indexMap,
       unreadMsgCounter,
       msgContainerRef,
-      _targetId === targetId.value && msgContainerRef.value
+      _targetId === props.targetId && msgContainerRef.value
     )
   }
 }

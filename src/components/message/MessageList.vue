@@ -6,7 +6,11 @@
     }"
   >
     <div class="divide-default divide-y overflow-y-auto">
-      <div v-for="id in lastMsgList" :key="id" @contextmenu="onContextmenu(id)">
+      <div
+        v-for="id in lastMsgList"
+        :key="id"
+        @contextmenu="contextmenuId = id"
+      >
         <SlideItem>
           <template #right>
             <div class="flex flex-1 text-sm font-semibold">
@@ -31,7 +35,7 @@
           <div
             class="flex w-full cursor-pointer items-center gap-4 border-l-2 p-4 text-sm transition-colors sm:px-6"
             :class="[
-              targetId === id
+              activeTargetId === id
                 ? 'border-primary bg-primary/10 text-highlighted'
                 : 'hover:border-primary hover:bg-primary/5 text-toned border-(--ui-bg)'
             ]"
@@ -78,18 +82,20 @@
 import { useFormatTimeAgo, useHideMessageList } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { ref, onBeforeUnmount, onMounted } from 'vue'
+import { ref, onBeforeUnmount, onMounted, watch } from 'vue'
 import type { ContextMenuItem } from '@nuxt/ui'
 import useDeleteMessageList from '@/hooks/use-delete-message-list'
+import OverlayMessageView from '../overlay/OverlayMessageView.vue'
 
 let timer = null
 let contextmenuId = ''
-const { userInfo } = storeToRefs(useUserStore())
+const { isMobile, userInfo } = storeToRefs(useUserStore())
 const {
   lastMsgMap,
   lastMsgList,
-  targetId,
-  targetProfile,
+  activeTargetId,
+  activeTargetProfile,
+  activeTargetIds,
   messageList,
   lastFetchedId,
   contactProfileMap,
@@ -109,7 +115,7 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
           indexMap,
           lastMsgList,
           lastMsgMap,
-          targetId
+          activeTargetId
         )
     },
     {
@@ -124,19 +130,28 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
           lastMsgList,
           lastMsgMap,
           messageList,
-          targetId,
+          activeTargetId,
           lastFetchedId
         )
     }
   ]
 ])
+const overlay = useOverlay()
+const messageViewOverlay = overlay.create(OverlayMessageView)
 
 const onClick = id => {
-  targetId.value = id
-  targetProfile.value = lastMsgMap.value[id].profile
-}
+  if (activeTargetId.value === id) {
+    return
+  }
 
-const onContextmenu = id => (contextmenuId = id)
+  activeTargetId.value = id
+  activeTargetProfile.value = lastMsgMap.value[id].profile
+
+  if (!isMobile.value && activeTargetIds.value.size) {
+    activeTargetIds.value.clear()
+    activeTargetIds.value.add(id)
+  }
+}
 
 const updateTimeAgo = () => {
   const _lastMsgList = lastMsgList.value
@@ -161,7 +176,7 @@ const onDeleteMessageList = id =>
     lastMsgList,
     lastMsgMap,
     messageList,
-    targetId,
+    activeTargetId,
     lastFetchedId
   )
 
@@ -173,38 +188,53 @@ const onHideMessageList = id =>
     indexMap,
     lastMsgList,
     lastMsgMap,
-    targetId
+    activeTargetId
   )
+
+watch(activeTargetId, v => {
+  if (!isMobile.value) {
+    return
+  }
+
+  if (v) {
+    messageViewOverlay.open({
+      targetId: activeTargetId.value,
+      targetProfile: activeTargetProfile.value
+    })
+  } else {
+    messageViewOverlay.close()
+  }
+})
 
 defineShortcuts({
   arrowdown: () => {
     const _lastMsgList = lastMsgList.value
     const _lastMsgMap = lastMsgMap.value
-    const index = _lastMsgList.findIndex(id => id === targetId.value)
+    const index = _lastMsgList.findIndex(id => id === activeTargetId.value)
 
     if (index === -1) {
       const _targetId = _lastMsgList[0]
-      targetId.value = _targetId
-      targetProfile.value = _lastMsgMap[_targetId].profile
+      activeTargetId.value = _targetId
+      activeTargetProfile.value = _lastMsgMap[_targetId].profile
     } else if (index < _lastMsgList.length - 1) {
       const _targetId = _lastMsgList[index + 1]
-      targetId.value = _targetId
-      targetProfile.value = _lastMsgMap[_targetId].profile
+      activeTargetId.value = _targetId
+      activeTargetProfile.value = _lastMsgMap[_targetId].profile
     }
   },
   arrowup: () => {
     const _lastMsgList = lastMsgList.value
     const _lastMsgMap = lastMsgMap.value
-    const index = _lastMsgList.findIndex(id => id === targetId.value)
+    const index = _lastMsgList.findIndex(id => id === activeTargetId.value)
 
     if (index === -1) {
       const _targetId = _lastMsgList[_lastMsgList.length - 1]
-      targetId.value = _targetId
-      targetProfile.value = _lastMsgMap[_targetId].profile
+      activeTargetId.value = _targetId
+      activeTargetProfile.value = _lastMsgMap[_targetId].profile
     } else if (index > 0) {
       const _targetId = _lastMsgList[index - 1]
-      targetId.value = _targetId
-      targetProfile.value = _lastMsgMap[_targetId].profile
+      activeTargetId.value = _targetId
+      activeTargetProfile.value = _lastMsgMap[_targetId].profile
     }
   }
 })

@@ -27,9 +27,12 @@ const useMatchStore = defineStore('matchStore', () => {
     hasMatchRes: ref(false), // 最终有匹配结果时值为 true
     noMatch: ref(false), // 暂时没有匹配结果时值为 true
     filter: ref<typeof defaultFilter>(_filter),
-    matchType: ref(localStorage.getItem(`matchType-${id}`) || ''), // 匹配类型
     matchRes: ref<
-      (Omit<userInfo, 'tokenVersion'> & { online: boolean }) | null
+      | (Omit<userInfo, 'tokenVersion' | 'email'> & {
+          type: 'chat' | 'voice-chat'
+          online: boolean
+        })
+      | null
     >(JSON.parse(localStorage.getItem(`matchRes-${id}`)) || null) // 匹配结果
   }
 })

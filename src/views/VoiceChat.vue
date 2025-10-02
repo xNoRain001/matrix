@@ -8,22 +8,29 @@
     :ui="{ content: 'flex-row' }"
   >
     <!-- 规定时间内对方没接通时会清除 matchRes，因此需要使用到 v-if -->
-    <template v-if="matchType === 'voice-chat' && matchRes.id" #content>
+    <template v-if="isOpen" #content>
+      <div class="relative flex w-full flex-col">
+        <MessageHeader
+          @close="isOpen = false"
+          :is-match="true"
+          :target-id="activeTargetId"
+          :target-profile="activeTargetProfile"
+        ></MessageHeader>
+        <MessageVoice
+          :is-match="true"
+          :target-id="activeTargetId"
+          :target-profile="activeTargetProfile"
+          class="m-4 sm:m-6"
+        ></MessageVoice>
+      </div>
       <ProfileSpace
         v-if="!isMobile"
-        class="!w-2/5"
+        class="max-w-md"
         :is-match="true"
+        :target-id="activeTargetId"
+        :target-profile="activeTargetProfile"
       ></ProfileSpace>
-      <div
-        :class="isMobile ? 'w-full' : 'w-3/5'"
-        class="relative flex flex-col"
-      >
-        <MessageHeader @close="isOpen = false" :is-match="true"></MessageHeader>
-        <MessageVoice :is-match="true" class="m-4 sm:m-6"></MessageVoice>
-      </div>
     </template>
-    <template #header></template>
-    <template #body></template>
   </UModal>
 </template>
 
@@ -32,6 +39,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   useMatchStore,
+  usePostStore,
   useRecentContactsStore,
   useUserStore,
   useWebRTCStore
@@ -42,33 +50,42 @@ import { useGenRoomId, useRefreshOnline } from '@/hooks'
 let timer = null
 const router = useRouter()
 const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
-const { matchRes, matchType } = storeToRefs(useMatchStore())
-const { roomId, isVoiceChatMatch } = storeToRefs(useWebRTCStore())
-const { targetId, targetProfile } = storeToRefs(useRecentContactsStore())
-const isOpen = ref(Boolean(matchType.value === 'voice-chat' && matchRes.value))
+const { matchRes } = storeToRefs(useMatchStore())
+const { activeTargetIds, activeTargetId, activeTargetProfile } = storeToRefs(
+  useRecentContactsStore()
+)
+const { postMap } = storeToRefs(usePostStore())
+const { roomId, isVoiceChatMatch, webRTCTargetId, webRTCTargetProfile } =
+  storeToRefs(useWebRTCStore())
+const isOpen = ref(
+  Boolean(matchRes.value.type === 'voice-chat' && matchRes.value.profile)
+)
 
 if (isOpen.value) {
   const { id, profile } = matchRes.value
-  targetId.value = id
-  targetProfile.value = profile
+  activeTargetId.value = id
+  activeTargetProfile.value = profile
+  webRTCTargetId.value = id
+  webRTCTargetProfile.value = profile
+} else {
+  await router.replace('/')
 }
 
 onMounted(async () => {
-  if (!isOpen.value) {
-    return router.replace('/')
-  }
-
   isVoiceChatMatch.value = true
   const _roomId = (roomId.value = useGenRoomId(
     userInfo.value.id,
     matchRes.value.id
   ))
   globalSocket.value.emit('bidirectional-web-rtc', _roomId)
-  timer = useRefreshOnline(globalSocket, 'matchTarget', [targetId.value])
+  timer = useRefreshOnline(globalSocket, 'matchTarget', [activeTargetId.value])
 })
 
 onBeforeUnmount(() => {
-  targetId.value = ''
+  activeTargetIds.value.delete(activeTargetId.value)
+  delete postMap.value[activeTargetId.value]
+  activeTargetId.value = ''
+  activeTargetProfile.value = null
   clearInterval(timer)
 })
 </script>

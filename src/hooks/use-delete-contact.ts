@@ -7,7 +7,8 @@ const useDeleteContact = async (
   contactProfileMap,
   globalSocket,
   toast,
-  _targetId
+  activeTargetId,
+  activeTargetProfile
 ) => {
   try {
     await deleteCandidate(targetId)
@@ -34,8 +35,9 @@ const useDeleteContact = async (
     }
     globalSocket.value.emit('delete-contact', targetId, notification)
 
-    if (targetId === _targetId.value) {
-      _targetId.value = ''
+    if (targetId === activeTargetId.value) {
+      activeTargetId.value = ''
+      activeTargetProfile.value = null
     }
   } catch (error) {
     toast.add({

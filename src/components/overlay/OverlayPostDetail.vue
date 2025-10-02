@@ -1,9 +1,5 @@
 <template>
   <USlideover
-    :dismissible="!isMobile && isMatch ? false : true"
-    :overlay="!isMobile && isMatch ? false : true"
-    :side="!isMobile && isMatch ? 'left' : 'right'"
-    :class="!isMobile && isMatch ? 'max-w-2/5' : ''"
     title="详情"
     description=" "
     :ui="{ body: 'gap-4 md:gap-6 flex flex-col' }"
@@ -15,35 +11,44 @@
         :ui="{ container: 'gap-y-2' }"
       >
         <p class="text-highlighted">
-          {{ activePost.content.text }}
+          {{ postMap[targetId].activePost.content.text }}
         </p>
         <Carousel
-          v-if="activePost.content.images.length"
-          :items="activePost.content.images"
+          v-if="postMap[targetId].activePost.content.images.length"
+          :items="postMap[targetId].activePost.content.images"
           :active-index="0"
         ></Carousel>
         <div class="flex items-center justify-between">
           <p class="text-toned text-sm">
-            {{ useFormatTimeAgo(activePost.createdAt) }}
+            {{ useFormatTimeAgo(postMap[targetId].activePost.createdAt) }}
           </p>
           <div>
             <UButton
               variant="ghost"
               icon="lucide:message-circle-more"
-              :label="String(activePost.commentCount || '')"
+              :label="String(postMap[targetId].activePost.commentCount || '')"
             ></UButton>
             <UButton
               variant="ghost"
-              :color="activePost.liked ? 'secondary' : 'primary'"
+              :color="
+                postMap[targetId].activePost.liked ? 'secondary' : 'primary'
+              "
               icon="lucide:heart"
-              :label="String(activePost.likes || '')"
-              @click="useLike(toast, activePost, activePostId, 'post')"
+              :label="String(postMap[targetId].activePost.likes || '')"
+              @click="
+                useLike(
+                  toast,
+                  postMap[targetId].activePost,
+                  postMap[targetId].activePostId,
+                  'post'
+                )
+              "
             ></UButton>
           </div>
         </div>
       </UPageCard>
       <div
-        v-if="activePost.user === userInfo.id"
+        v-if="postMap[targetId].activePost.user === userInfo.id"
         class="flex items-center justify-between"
       >
         <UTabs
@@ -71,7 +76,7 @@
       </div>
       <div v-if="activeTab === 'comment'">
         <UPageCard
-          v-if="comments.length"
+          v-if="postMap[targetId].comments?.length"
           v-for="(
             {
               _id,
@@ -86,7 +91,7 @@
               visibleReplyCount
             },
             index
-          ) in comments"
+          ) in postMap[targetId].comments"
           :key="_id"
           variant="soft"
           class="not-last:mb-2"
@@ -94,7 +99,6 @@
         >
           <template #body>
             <UUser
-              :avatar="{ alt: profile.nickname[0] }"
               size="xl"
               :ui="{
                 root: 'items-start',
@@ -103,9 +107,22 @@
                 description: 'text-highlighted flex flex-col justify-between'
               }"
             >
+              <template #avatar>
+                <div
+                  @click="onAccessSpace(owner, profile)"
+                  class="text-muted bg-elevated flex size-10 items-center justify-center rounded-full text-xl font-medium"
+                >
+                  {{ profile.nickname[0] }}
+                </div>
+              </template>
               <template #name>
-                <span>{{ profile.nickname }}</span>
-                <UBadge v-if="activePost.user === owner" label="作者"></UBadge>
+                <span @click="onAccessSpace(owner, profile)">{{
+                  profile.nickname
+                }}</span>
+                <UBadge
+                  v-if="postMap[targetId].activePost.user === owner"
+                  label="作者"
+                ></UBadge>
               </template>
               <template #description>
                 <div class="text-base">{{ content.text }}</div>
@@ -132,7 +149,14 @@
                       :color="liked ? 'secondary' : 'primary'"
                       icon="lucide:heart"
                       :label="String(likes || '')"
-                      @click="useLike(toast, comments[index], _id, 'comment')"
+                      @click="
+                        useLike(
+                          toast,
+                          postMap[targetId].comments[index],
+                          _id,
+                          'comment'
+                        )
+                      "
                     ></UButton>
                     <UButton
                       variant="ghost"
@@ -140,7 +164,8 @@
                     ></UButton>
                     <template
                       v-if="
-                        owner === userInfo.id || activePost.user === userInfo.id
+                        owner === userInfo.id ||
+                        postMap[targetId].activePost.user === userInfo.id
                       "
                     >
                       <UButton
@@ -175,7 +200,9 @@
                 </div>
                 <UCollapsible
                   v-if="replyCount"
-                  v-model:open="isCommentCollapsibleOpenMap[_id]"
+                  v-model:open="
+                    postMap[targetId].isCommentCollapsibleOpenMap[_id]
+                  "
                 >
                   <template #content>
                     <UPageCard
@@ -211,10 +238,20 @@
                             avatar: 'size-5 text-xs'
                           }"
                         >
+                          <template #avatar>
+                            <div
+                              @click="onAccessSpace(user, profile)"
+                              class="text-muted bg-elevated flex size-5 items-center justify-center rounded-full text-xs font-medium"
+                            >
+                              {{ profile.nickname[0] }}
+                            </div>
+                          </template>
                           <template #name>
-                            <span>{{ profile.nickname }}</span>
+                            <span @click="onAccessSpace(user, profile)">{{
+                              profile.nickname
+                            }}</span>
                             <UBadge
-                              v-if="activePost.user === user"
+                              v-if="postMap[targetId].activePost.user === user"
                               label="作者"
                             ></UBadge>
                             <template v-if="replyTargetProfile">
@@ -274,7 +311,8 @@
                                   @click="
                                     useLike(
                                       toast,
-                                      comments[index].replyComments[replyIndex],
+                                      postMap[targetId].comments[index]
+                                        .replyComments[replyIndex],
                                       replyId,
                                       'comment'
                                     )
@@ -287,7 +325,8 @@
                                 <template
                                   v-if="
                                     user === userInfo.id ||
-                                    activePost.user === userInfo.id ||
+                                    postMap[targetId].activePost.user ===
+                                      userInfo.id ||
                                     replyOwner === userInfo.id
                                   "
                                 >
@@ -335,13 +374,13 @@
                 <UButton
                   v-if="replyCount && visibleReplyCount < replyCount"
                   @click="onLoadReplies(_id, index, visibleReplyCount)"
-                  :label="`—— 展开${isCommentCollapsibleOpenMap[_id] ? '更多' : ` ${replyCount} 条回复`}`"
+                  :label="`—— 展开${postMap[targetId].isCommentCollapsibleOpenMap[_id] ? '更多' : ` ${replyCount} 条回复`}`"
                   color="neutral"
                   variant="ghost"
                   trailing-icon="i-lucide-chevron-down"
                 />
                 <UButton
-                  v-if="isCommentCollapsibleOpenMap[_id]"
+                  v-if="postMap[targetId].isCommentCollapsibleOpenMap[_id]"
                   @click="onCollipse(_id, index)"
                   label="收起"
                   color="neutral"
@@ -428,7 +467,8 @@
         autoresize
         @click="
           publisherOverlay.open({
-            action: 'comment'
+            action: 'comment',
+            targetId
           })
         "
       >
@@ -438,7 +478,7 @@
 </template>
 
 <script lang="ts" setup>
-import { usePostStore, useUserStore } from '@/store'
+import { usePostStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import OverlayPublisher from './OverlayPublisher.vue'
@@ -452,26 +492,17 @@ import {
 } from '@/apis/comment'
 import type { userInfo } from '@/types'
 import OverlayViewer from './OverlayViewer.vue'
+import OverlayProfileSpace from './OverlayProfileSpace.vue'
 
-defineProps<{ isMatch: boolean }>()
+const props = defineProps<{ targetId: string }>()
 const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile, userInfo } = storeToRefs(useUserStore())
-const {
-  comments,
-  isCommentCollapsibleOpenMap,
-  canEdit,
-  activePost,
-  activeCommentContent,
-  activeCommentId,
-  activeCommentIndex,
-  activePostId,
-  activeReplyId,
-  activeReplyIndex,
-  activeReplyContent
-} = storeToRefs(usePostStore())
+const { postMap } = storeToRefs(usePostStore())
+const { activeTargetIds } = storeToRefs(useRecentContactsStore())
 const overlay = useOverlay()
 const publisherOverlay = overlay.create(OverlayPublisher)
 const viewerOverlay = overlay.create(OverlayViewer)
+const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 const likes = ref<
   { createdAt: number; user: string; profile: userInfo['profile'] }[]
 >([])
@@ -507,7 +538,7 @@ const dropdownMenuItems = computed(() => {
     color: 'error',
     onSelect: () => onDeleteComment()
   }
-  return canEdit.value
+  return postMap.value[props.targetId].canEdit
     ? [
         [
           {
@@ -527,7 +558,7 @@ const replydropdownMenuItems = computed(() => {
     color: 'error',
     onSelect: () => onDeleteReply()
   }
-  return canEdit.value
+  return postMap.value[props.targetId].canEdit
     ? [
         [
           {
@@ -541,9 +572,20 @@ const replydropdownMenuItems = computed(() => {
     : [[common]]
 })
 
+const onAccessSpace = (targetId, targetProfile) => {
+  // 如果之前已经打开，不进行重复打开，同时禁止打开自己的空间
+  if (!activeTargetIds.value.has(targetId) && targetId !== userInfo.value.id) {
+    profileSpaceOverlay.open({
+      targetId,
+      targetProfile
+    })
+  }
+}
+
 const onEditReply = () => {
   publisherOverlay.open({
-    action: 'updateReply'
+    action: 'updateReply',
+    targetId: props.targetId
   })
 
   if (isMobile.value) {
@@ -553,7 +595,8 @@ const onEditReply = () => {
 
 const onEditComment = () => {
   publisherOverlay.open({
-    action: 'updateComment'
+    action: 'updateComment',
+    targetId: props.targetId
   })
 
   if (isMobile.value) {
@@ -563,15 +606,22 @@ const onEditComment = () => {
 
 const onDeleteReply = async () => {
   try {
-    await deleteReplyAPI(activeReplyId.value)
-    activePost.value.commentCount--
-    const comment = comments.value[activeCommentIndex.value]
+    await deleteReplyAPI(postMap.value[props.targetId].activeReplyId)
+    postMap.value[props.targetId].activePost.commentCount--
+    const comment =
+      postMap.value[props.targetId].comments[
+        postMap.value[props.targetId].activeCommentIndex
+      ]
     comment.replyCount--
     comment.visibleReplyCount--
-    comment.replyComments.splice(activeReplyIndex.value, 1)
+    comment.replyComments.splice(
+      postMap.value[props.targetId].activeReplyIndex,
+      1
+    )
 
     if (comment.replyCount === 0) {
-      isCommentCollapsibleOpenMap.value[comment._id] = false
+      postMap.value[props.targetId].isCommentCollapsibleOpenMap[comment._id] =
+        false
     }
 
     if (isMobile.value) {
@@ -584,10 +634,10 @@ const onDeleteReply = async () => {
 
 const onDeleteComment = async () => {
   try {
-    await deleteCommentAPI(activeCommentId.value)
-    const _comments = comments.value
-    const _activeCommentIndex = activeCommentIndex.value
-    activePost.value.commentCount -=
+    await deleteCommentAPI(postMap.value[props.targetId].activeCommentId)
+    const _comments = postMap.value[props.targetId].comments
+    const _activeCommentIndex = postMap.value[props.targetId].activeCommentIndex
+    postMap.value[props.targetId].activePost.commentCount -=
       _comments[_activeCommentIndex].replyCount + 1
     _comments.splice(_activeCommentIndex, 1)
 
@@ -600,10 +650,11 @@ const onDeleteComment = async () => {
 }
 
 const onReply = (owner, commentId, commentIndex) => {
-  activeCommentId.value = commentId
-  activeCommentIndex.value = commentIndex
+  postMap.value[props.targetId].activeCommentId = commentId
+  postMap.value[props.targetId].activeCommentIndex = commentIndex
   publisherOverlay.open({
     action: 'reply',
+    targetId: props.targetId,
     owner
   })
 }
@@ -618,11 +669,11 @@ const onReplyTarget = (
   replyIndex,
   replyContent
 ) => {
-  activeCommentId.value = commentId
-  activeCommentIndex.value = commentIndex
-  activeReplyId.value = replyId
-  activeReplyIndex.value = replyIndex
-  activeReplyContent.value = replyContent
+  postMap.value[props.targetId].activeCommentId = commentId
+  postMap.value[props.targetId].activeCommentIndex = commentIndex
+  postMap.value[props.targetId].activeReplyId = replyId
+  postMap.value[props.targetId].activeReplyIndex = replyIndex
+  postMap.value[props.targetId].activeReplyContent = replyContent
   publisherOverlay.open({
     action: 'reply',
     owner,
@@ -637,10 +688,10 @@ const onOpenDropdownMenu = (
   commentIndex,
   commentContent
 ) => {
-  canEdit.value = _canEdit
-  activeCommentId.value = commentId
-  activeCommentIndex.value = commentIndex
-  activeCommentContent.value = commentContent
+  postMap.value[props.targetId].canEdit = _canEdit
+  postMap.value[props.targetId].activeCommentId = commentId
+  postMap.value[props.targetId].activeCommentIndex = commentIndex
+  postMap.value[props.targetId].activeCommentContent = commentContent
 
   if (isMobile.value) {
     isEditMenuDrawerOpen.value = true
@@ -654,11 +705,11 @@ const onOpenReplyDropdownMenu = (
   replyContent,
   commentIndex
 ) => {
-  canEdit.value = _canEdit
-  activeReplyId.value = replyId
-  activeReplyIndex.value = replyIndex
-  activeReplyContent.value = replyContent
-  activeCommentIndex.value = commentIndex
+  postMap.value[props.targetId].canEdit = _canEdit
+  postMap.value[props.targetId].activeReplyId = replyId
+  postMap.value[props.targetId].activeReplyIndex = replyIndex
+  postMap.value[props.targetId].activeReplyContent = replyContent
+  postMap.value[props.targetId].activeCommentIndex = commentIndex
 
   if (isMobile.value) {
     isEditReplyMenuDrawerOpen.value = true
@@ -666,12 +717,12 @@ const onOpenReplyDropdownMenu = (
 }
 
 const onCollipse = (commentId, index) => {
-  isCommentCollapsibleOpenMap.value[commentId] = false
-  comments.value[index].visibleReplyCount = 0
+  postMap.value[props.targetId].isCommentCollapsibleOpenMap[commentId] = false
+  postMap.value[props.targetId].comments[index].visibleReplyCount = 0
 }
 
 const onLoadReplies = async (commentId, index, visibleReplyCount) => {
-  const comment = comments.value[index]
+  const comment = postMap.value[props.targetId].comments[index]
   const { replyComments } = comment
   const replyCommentsLength = replyComments.length
 
@@ -688,26 +739,32 @@ const onLoadReplies = async (commentId, index, visibleReplyCount) => {
     comment.visibleReplyCount += data.length
   }
 
-  isCommentCollapsibleOpenMap.value[commentId] = true
+  postMap.value[props.targetId].isCommentCollapsibleOpenMap[commentId] = true
 }
 
 const initComments = async () => {
-  const { data } = await getCommentsAPI(activePostId.value)
+  const { data } = await getCommentsAPI(
+    postMap.value[props.targetId].activePostId
+  )
+
+  postMap.value[props.targetId].isCommentCollapsibleOpenMap = {}
 
   for (let i = 0, l = data.length; i < l; i++) {
     const item = data[i]
-    isCommentCollapsibleOpenMap.value[item._id] = false
+    postMap.value[props.targetId].isCommentCollapsibleOpenMap[item._id] = false
     item.page = 0
     item.visibleReplyCount = 0
     item.replyComments = []
   }
 
-  comments.value = data
+  postMap.value[props.targetId].comments = data
 }
 
 const unwatch = watch(activeTab, async v => {
   if (v === 'like') {
-    likes.value = (await getPostLikesAPI(activePostId.value)).data
+    likes.value = (
+      await getPostLikesAPI(postMap.value[props.targetId].activePostId)
+    ).data
     unwatch()
   }
 })
@@ -717,7 +774,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  comments.value = []
-  isCommentCollapsibleOpenMap.value = {}
+  postMap.value[props.targetId].comments = []
+  postMap.value[props.targetId].isCommentCollapsibleOpenMap = {}
 })
 </script>

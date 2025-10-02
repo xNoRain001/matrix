@@ -1,6 +1,6 @@
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { userInfo } from '@/types'
+import type { userInfo, message } from '@/types'
 import useUserStore from './use-user-store'
 import { useInitLocalStorate } from '@/hooks'
 
@@ -24,17 +24,31 @@ const useRecentContactsStore = defineStore('recentContactsStore', () => {
       }[]
     >(_contactNotifications), // 好友申请通知
     contactList: ref(_contactList),
-    contactProfileMap: ref(_contactProfileMap),
+    contactProfileMap: ref<
+      Record<
+        string,
+        {
+          createdAt: number
+          id: string
+          remark: string
+          status: 'normal'
+          online?: boolean
+          profile: userInfo['profile']
+        }
+      >
+    >(_contactProfileMap),
     msgContainerRef: ref<HTMLElement | null>(null), // 聊天记录容器
-    targetId: ref(''), // 当前聊天对象或者联系人的 id
-    targetProfile: ref<userInfo['profile']>(null), // 当前聊天对象或者联系人的 profile
     pinId: ref(''), // 置顶对象的 id
     skipUnshiftMessageRecord: ref(false),
+    activeTargetIds: reactive(new Set()),
+    activeTargetId: ref(''),
+    activeTargetProfile: ref<userInfo['profile']>(null),
     indexMap: ref({}),
     messageList: ref([]),
     isReceivingOfflineMsgs: ref(true),
     lastFetchedId: ref(Infinity),
     hashToBlobURLMap: ref<Map<string, string>>(new Map()),
+    messageListMap: ref<{ [x: string]: message[] }>({}),
     lastMsgMap: ref<
       Record<
         string,
@@ -46,7 +60,7 @@ const useRecentContactsStore = defineStore('recentContactsStore', () => {
           sent: boolean
           unreadMsgs: number
           timeAgo: string
-          online: boolean
+          online?: boolean
         }
       >
     >({}),

@@ -6,7 +6,11 @@
     }"
   >
     <div class="divide-default divide-y overflow-y-auto">
-      <div v-for="id in contactList" :key="id" @contextmenu="onContextmenu(id)">
+      <div
+        v-for="id in contactList"
+        :key="id"
+        @contextmenu="contextmenuId = id"
+      >
         <SlideItem>
           <template #right>
             <div class="flex flex-1 text-sm font-semibold">
@@ -24,7 +28,7 @@
           <div
             class="flex w-full cursor-pointer items-center gap-4 border-l-2 p-4 text-base transition-colors sm:px-6"
             :class="[
-              targetId === id
+              activeTargetId === id
                 ? 'border-primary bg-primary/10 text-highlighted'
                 : 'hover:border-primary hover:bg-primary/5 text-toned border-(--ui-bg)'
             ]"
@@ -52,14 +56,20 @@
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import type { ContextMenuItem } from '@nuxt/ui'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useDeleteContact } from '@/hooks'
+import type { userInfo } from '@/types'
+import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
 
 let contextmenuId = ''
-const { userInfo, globalSocket } = storeToRefs(useUserStore())
-const { targetId, targetProfile, contactList, contactProfileMap } = storeToRefs(
-  useRecentContactsStore()
-)
+const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
+const {
+  activeTargetId,
+  activeTargetProfile,
+  activeTargetIds,
+  contactList,
+  contactProfileMap
+} = storeToRefs(useRecentContactsStore())
 const toast = useToast()
 const contextMenuItems = ref<ContextMenuItem[][]>([
   [
@@ -74,15 +84,29 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
           contactProfileMap,
           globalSocket,
           toast,
-          targetId
+          activeTargetId,
+          activeTargetProfile
         )
     }
   ]
 ])
+const overlay = useOverlay()
+const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 
 const onClick = id => {
-  targetId.value = id
-  targetProfile.value = contactProfileMap.value[id].profile
+  if (activeTargetId.value === id) {
+    return
+  }
+
+  activeTargetId.value = id
+  activeTargetProfile.value = contactProfileMap.value[id].profile
+
+  // pc 端可以无缝切换好友，如果在打开了空间时点击其他联系人，由于空间没有销毁，因此
+  // 需要手动更新 id
+  if (!isMobile.value && activeTargetIds.value.size) {
+    activeTargetIds.value.clear()
+    activeTargetIds.value.add(id)
+  }
 }
 
 const onDeleteContact = id =>
@@ -93,40 +117,54 @@ const onDeleteContact = id =>
     contactProfileMap,
     globalSocket,
     toast,
-    targetId
+    activeTargetId,
+    activeTargetProfile
   )
 
-const onContextmenu = id => (contextmenuId = id)
+watch(activeTargetId, v => {
+  if (!isMobile.value) {
+    return
+  }
+
+  if (v) {
+    profileSpaceOverlay.open({
+      targetId: activeTargetId.value,
+      targetProfile: activeTargetProfile.value
+    })
+  } else {
+    profileSpaceOverlay.close()
+  }
+})
 
 defineShortcuts({
   arrowdown: () => {
     const _contactList = contactList.value
     const _contactProfileMap = contactProfileMap.value
-    const index = _contactList.findIndex(id => id === targetId.value)
+    const index = _contactList.findIndex(id => id === activeTargetId.value)
 
     if (index === -1) {
       const _targetId = _contactList[0]
-      targetId.value = _targetId
-      targetProfile.value = _contactProfileMap[_targetId]
+      activeTargetId.value = _targetId
+      activeTargetProfile.value = _contactProfileMap[_targetId].profile
     } else if (index < _contactList.length - 1) {
       const _targetId = _contactList[index + 1]
-      targetId.value = _contactList
-      targetProfile.value = _contactProfileMap[_targetId]
+      activeTargetId.value = _contactList
+      activeTargetProfile.value = _contactProfileMap[_targetId].profile
     }
   },
   arrowup: () => {
     const _contactList = contactList.value
     const _contactProfileMap = contactProfileMap.value
-    const index = _contactList.findIndex(id => id === targetId.value)
+    const index = _contactList.findIndex(id => id === activeTargetId.value)
 
     if (index === -1) {
       const _targetId = _contactList[_contactList.length - 1]
-      targetId.value = _targetId
-      targetProfile.value = _contactProfileMap[_targetId].profile
+      activeTargetId.value = _targetId
+      activeTargetProfile.value = _contactProfileMap[_targetId].profile
     } else if (index > 0) {
       const _targetId = _contactList[index - 1]
-      targetId.value = _targetId
-      targetProfile.value = _contactProfileMap[_targetId].profile
+      activeTargetId.value = _targetId
+      activeTargetProfile.value = _contactProfileMap[_targetId].profile
     }
   }
 })

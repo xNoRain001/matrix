@@ -14,7 +14,12 @@
         class="text-toned hover:border-primary hover:bg-primary/5 flex cursor-pointer items-center gap-4 border-l-2 border-(--ui-bg) p-4 text-base transition-colors sm:px-6"
       >
         <UAvatar
-          @click="onClick(id, profile)"
+          @click="
+            profileSpaceOverlay.open({
+              targetId: id,
+              targetProfile: profile
+            })
+          "
           :text="profile.nickname[0]"
           size="3xl"
         />
@@ -67,6 +72,7 @@ import { storeToRefs } from 'pinia'
 import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
 import { useFormatTimeAgo, useSendMsg } from '@/hooks'
 import { agreeCandidate, refuseCandidate } from '@/apis/contact'
+import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
 
 const isNotificationsSlideoverOpen = defineModel<boolean>()
 const { userInfo, globalSocket } = storeToRefs(useUserStore())
@@ -80,17 +86,11 @@ const {
   lastMsgMap,
   indexMap,
   unreadMsgCounter,
-  msgContainerRef,
-  targetId,
-  targetProfile
+  msgContainerRef
 } = storeToRefs(useRecentContactsStore())
+const overlay = useOverlay()
+const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 const toast = useToast()
-
-const onClick = (id, profile) => {
-  isNotificationsSlideoverOpen.value = false
-  targetId.value = id
-  targetProfile.value = profile
-}
 
 const onDelete = index => {
   const _contactNotifications = contactNotifications.value
@@ -167,7 +167,7 @@ const onAgree = async (targetId, targetProfile) => {
       id: targetId,
       createdAt: Date.now(),
       remark: '',
-      status: 'normal',
+      status: 'normal' as const,
       profile: targetProfile
     }
     _contactList.unshift(targetId)
