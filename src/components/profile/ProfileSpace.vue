@@ -70,11 +70,15 @@
       <UPageCard
         class="absolute top-[50vh] right-4 left-4 z-20 -translate-y-[calc(100%+1rem)] sm:right-6 sm:left-6 sm:-translate-y-[calc(100%+1.5rem)]"
         variant="soft"
-        :ui="{ description: '' }"
       >
         <template #title>
           <div class="flex items-center gap-2">
             <span>{{ targetProfile.nickname }}</span>
+            <!-- <UButton
+              v-if="isSelf"
+              icon="lucide:user-round-pen"
+              size="xs"
+            ></UButton> -->
             <UButton
               v-if="!isSelf && Boolean(contactProfileMap[targetId])"
               icon="lucide:user-round-pen"
@@ -102,23 +106,23 @@
           </div>
         </template>
         <template #description>
-          <span>{{ targetProfile.bio }}</span>
-          <div class="mt-2 flex flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <span>{{ targetProfile.bio }}</span>
+            <!-- <UButton
+              v-if="isSelf"
+              icon="lucide:user-round-pen"
+              size="xs"
+            ></UButton> -->
+          </div>
+          <div class="mt-2 space-y-2 space-x-2">
+            <ProfileSpaceTags
+              :target-profile="targetProfile"
+            ></ProfileSpaceTags>
             <UBadge
               v-if="isSelf"
               icon="lucide:circle-plus"
               label="标签"
               @click="onOpenTagSlideover"
-            ></UBadge>
-            <UBadge
-              v-if="targetProfile.mbti"
-              color="secondary"
-              :label="targetProfile.mbti"
-            ></UBadge>
-            <UBadge
-              v-for="tag in targetProfile.tags"
-              :key="tag"
-              :label="tag"
             ></UBadge>
           </div>
         </template>
@@ -133,10 +137,6 @@
           ></UAvatar>
         </template>
       </UPageCard>
-      <!-- 选项卡 -->
-      <div v-if="isSelf" class="p-4 sm:p-6">
-        <UTabs v-model="activeTab" :items="tabItems" :content="false" />
-      </div>
       <!-- 动态 -->
       <ProfileSpacePosts
         :is-match="isMatch"
@@ -369,17 +369,6 @@ const cards = [
     }
   ]
 ]
-const tabItems = [
-  {
-    label: '我的',
-    value: 'my'
-  },
-  {
-    label: '好友',
-    value: 'friends'
-  }
-]
-const activeTab = ref('my')
 const isSelf = props.targetId === userInfo.value.id
 const route = useRoute()
 const isContacts = computed(() => route.path === '/contacts')

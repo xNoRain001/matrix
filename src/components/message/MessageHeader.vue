@@ -8,8 +8,9 @@
         :avatar="{
           alt: targetProfile.nickname[0]
         }"
+        size="xl"
         :chip="{
-          // color: targetProfile.online ? 'primary' : 'error'
+          color: targetProfile.online ? 'primary' : 'error'
         }"
       />
     </template>
@@ -42,50 +43,28 @@
     </template>
   </UDashboardNavbar>
 
-  <UCollapsible v-model:open="open" class="border-default border-b sm:px-2">
+  <UCollapsible
+    v-model:open="open"
+    class="border-default cursor-pointer border-b sm:px-2"
+    @click="toSpace"
+    :ui="{
+      content: 'space-y-2 p-4 sm:p-6'
+    }"
+  >
     <template #content>
-      <div class="p-4">
-        <UAvatarGroup size="3xl" @click="toSpace">
-          <UAvatar :alt="userInfo.profile.nickname[0]" />
-          <UAvatar :alt="targetProfile.nickname[0]" />
-        </UAvatarGroup>
+      <UAvatarGroup size="xl">
+        <UAvatar :alt="userInfo.profile.nickname[0]" />
+        <UAvatar :alt="targetProfile.nickname[0]" />
+      </UAvatarGroup>
 
-        <div class="mt-4 flex flex-col gap-2 text-sm">
-          <div class="flex items-center gap-2">
-            <UIcon name="lucide:user-round" class="text-primary size-5"></UIcon>
-            <p class="text-muted">
-              性别：<span class="text-highlighted">{{
-                useTransformGender(targetProfile.gender)
-              }}</span>
-            </p>
-          </div>
-          <div class="flex items-center gap-2">
-            <UIcon
-              name="lucide:audio-waveform"
-              class="text-primary size-5"
-            ></UIcon>
-            <p class="text-muted">
-              年龄：<span class="text-highlighted">{{
-                computeAge(targetProfile.birthday)
-              }}</span>
-            </p>
-          </div>
-          <div class="flex items-center gap-2">
-            <UIcon name="lucide:activity" class="text-primary size-5"></UIcon>
-            <p class="text-muted">
-              地区：<span class="text-highlighted">{{
-                targetProfile.region
-              }}</span>
-            </p>
-          </div>
-        </div>
+      <div class="space-y-2 space-x-2">
+        <ProfileSpaceTags :target-profile="targetProfile"></ProfileSpaceTags>
       </div>
     </template>
   </UCollapsible>
 </template>
 
 <script setup lang="ts">
-import { useTransformGender } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
@@ -118,22 +97,5 @@ const toSpace = () => {
       targetProfile: props.targetProfile
     })
   }
-}
-
-const computeAge = v => {
-  if (!v) {
-    return '未知'
-  }
-
-  const date = new Date()
-  const year = date.getFullYear()
-  const month = date.getMonth()
-  const day = date.getDate()
-  const _year = new Date(v).getFullYear()
-  const _month = new Date(v).getMonth()
-  const _day = new Date(v).getDate()
-  const full = _month < month || (_month === month && _day <= day)
-
-  return year - _year - (full ? 0 : 1)
 }
 </script>

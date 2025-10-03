@@ -11,34 +11,28 @@
           { id, profile, createdAt, content, type }, index
         ) in contactNotifications"
         :key="id"
-        class="text-toned hover:border-primary hover:bg-primary/5 flex cursor-pointer items-center gap-4 border-l-2 border-(--ui-bg) p-4 text-base transition-colors sm:px-6"
+        class="hover:border-primary hover:bg-primary/5 cursor-pointer border-l-2 border-(--ui-bg) p-4 transition-colors sm:px-6"
+        @click="
+          profileSpaceOverlay.open({
+            targetId: id,
+            targetProfile: profile
+          })
+        "
       >
-        <UAvatar
-          @click="
-            profileSpaceOverlay.open({
-              targetId: id,
-              targetProfile: profile
-            })
-          "
-          :text="profile.nickname[0]"
-          size="3xl"
-        />
-        <div class="flex flex-1 flex-col gap-y-2 text-sm">
-          <div class="flex items-center justify-between">
-            <span class="text-highlighted line-clamp-1 max-w-1/2 font-medium">
-              {{ profile.nickname }}</span
-            >
-            <time class="text-muted text-xs">{{
-              useFormatTimeAgo(createdAt)
-            }}</time>
-          </div>
-          <div class="flex items-center justify-between">
-            <div class="text-dimmed line-clamp-1 max-w-1/2">
-              {{ content }}
-            </div>
+        <UUser
+          :avatar="{ alt: profile.nickname[0] }"
+          size="xl"
+          :ui="{
+            wrapper: 'flex-1',
+            name: 'flex justify-between',
+            description: 'flex justify-between'
+          }"
+        >
+          <template #name>
+            <span>{{ profile.nickname }}</span>
             <div v-if="type">
               <UButton
-                @click="onRefuse(id)"
+                @click.stop="onRefuse(id)"
                 class="mr-2"
                 color="error"
                 label="拒绝"
@@ -46,7 +40,7 @@
                 size="xs"
               ></UButton>
               <UButton
-                @click="onAgree(id, profile)"
+                @click.stop="onAgree(id, profile)"
                 label="同意"
                 icon="lucide:check"
                 size="xs"
@@ -54,14 +48,17 @@
             </div>
             <UButton
               v-else
-              @click="onDelete(index)"
+              @click.stop="onDelete(index)"
               color="error"
               label="删除"
-              icon="lucide:x"
               size="xs"
             ></UButton>
-          </div>
-        </div>
+          </template>
+          <template #description>
+            <span>{{ content }}</span>
+            <time>{{ useFormatTimeAgo(createdAt) }}</time>
+          </template>
+        </UUser>
       </div>
     </template>
   </USlideover>

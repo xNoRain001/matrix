@@ -26,25 +26,26 @@
             </div>
           </template>
           <div
-            class="flex w-full cursor-pointer items-center gap-4 border-l-2 p-4 text-base transition-colors sm:px-6"
+            class="w-full cursor-pointer border-l-2 p-4 transition-colors sm:px-6"
             :class="[
               activeTargetId === id
-                ? 'border-primary bg-primary/10 text-highlighted'
-                : 'hover:border-primary hover:bg-primary/5 text-toned border-(--ui-bg)'
+                ? 'border-primary bg-primary/10'
+                : 'hover:border-primary hover:bg-primary/5 border-(--ui-bg)'
             ]"
             @click="onClick(id)"
           >
-            <UChip
-              inset
-              :color="contactProfileMap[id].online ? 'primary' : 'error'"
-              size="3xl"
+            <UUser
+              :avatar="{ alt: contactProfileMap[id].profile.nickname[0] }"
+              size="xl"
+              :chip="{
+                color: contactProfileMap[id].profile.online
+                  ? 'primary'
+                  : 'error'
+              }"
+              :name="contactProfileMap[id].profile.nickname"
+              :description="`最后上线于：${useFormatTimeAgo(contactProfileMap[id].profile.createdAt)}`"
             >
-              <UAvatar
-                :text="contactProfileMap[id].profile.nickname[0]"
-              ></UAvatar>
-            </UChip>
-
-            {{ contactProfileMap[id].profile.nickname }}
+            </UUser>
           </div>
         </SlideItem>
       </div>
@@ -57,7 +58,7 @@ import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import type { ContextMenuItem } from '@nuxt/ui'
 import { ref, watch } from 'vue'
-import { useDeleteContact } from '@/hooks'
+import { useDeleteContact, useFormatTimeAgo } from '@/hooks'
 import type { userInfo } from '@/types'
 import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
 

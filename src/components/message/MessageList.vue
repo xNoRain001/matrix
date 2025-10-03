@@ -33,33 +33,29 @@
             </div>
           </template>
           <div
-            class="flex w-full cursor-pointer items-center gap-4 border-l-2 p-4 text-sm transition-colors sm:px-6"
+            class="w-full cursor-pointer border-l-2 p-4 transition-colors sm:px-6"
             :class="[
               activeTargetId === id
-                ? 'border-primary bg-primary/10 text-highlighted'
-                : 'hover:border-primary hover:bg-primary/5 text-toned border-(--ui-bg)'
+                ? 'border-primary bg-primary/10'
+                : 'hover:border-primary hover:bg-primary/5 border-(--ui-bg)'
             ]"
             @click="onClick(id)"
           >
-            <UChip
-              inset
-              :color="lastMsgMap[id].online ? 'primary' : 'error'"
-              size="3xl"
+            <UUser
+              :avatar="{ alt: lastMsgMap[id].profile.nickname[0] }"
+              size="xl"
+              :chip="{
+                color: lastMsgMap[id].profile.online ? 'primary' : 'error'
+              }"
+              :ui="{
+                root: 'w-full',
+                wrapper: 'flex-1',
+                name: 'flex justify-between items-center',
+                description: 'flex justify-between'
+              }"
             >
-              <UAvatar :text="lastMsgMap[id].profile.nickname[0]"></UAvatar>
-            </UChip>
-
-            <div class="w-[calc(100%-4rem)]">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  {{ lastMsgMap[id].profile.nickname }}
-                </div>
-                <span>{{ lastMsgMap[id].timeAgo }}</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <p class="truncate">
-                  {{ lastMsgMap[id].content }}
-                </p>
+              <template #name>
+                <span>{{ lastMsgMap[id].profile.nickname }}</span>
                 <UBadge
                   v-if="lastMsgMap[id].unreadMsgs"
                   inset
@@ -69,8 +65,12 @@
                   size="sm"
                 >
                 </UBadge>
-              </div>
-            </div>
+              </template>
+              <template #description>
+                <span>{{ lastMsgMap[id].content }}</span>
+                <time>{{ lastMsgMap[id].timeAgo }}</time>
+              </template>
+            </UUser>
           </div>
         </SlideItem>
       </div>

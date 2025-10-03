@@ -119,8 +119,9 @@
                 <span @click="onAccessSpace(owner, profile)">{{
                   profile.nickname
                 }}</span>
+                <UBadge v-if="userInfo.id === owner" label="我"></UBadge>
                 <UBadge
-                  v-if="postMap[targetId].activePost.user === owner"
+                  v-else-if="postMap[targetId].activePost.user === owner"
                   label="作者"
                 ></UBadge>
               </template>
@@ -251,7 +252,13 @@
                               profile.nickname
                             }}</span>
                             <UBadge
-                              v-if="postMap[targetId].activePost.user === user"
+                              v-if="userInfo.id === user"
+                              label="我"
+                            ></UBadge>
+                            <UBadge
+                              v-else-if="
+                                postMap[targetId].activePost.user === user
+                              "
                               label="作者"
                             ></UBadge>
                             <template v-if="replyTargetProfile">
@@ -676,6 +683,7 @@ const onReplyTarget = (
   postMap.value[props.targetId].activeReplyContent = replyContent
   publisherOverlay.open({
     action: 'reply',
+    targetId: props.targetId,
     owner,
     replyTarget,
     replyTargetNickname

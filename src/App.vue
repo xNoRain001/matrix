@@ -1171,15 +1171,15 @@ const onOnline = (type, res) => {
   if (type === 'messageList') {
     for (let i = 0, l = ids.length; i < l; i++) {
       const id = ids[i]
-      _lastMsgMap[id].online = res[id]
+      _lastMsgMap[id].profile.online = res[id]
     }
   } else if (type === 'contactList') {
     for (let i = 0, l = ids.length; i < l; i++) {
       const id = ids[i]
-      _contactProfileMap[id].online = res[id]
+      _contactProfileMap[id].profile.online = res[id]
     }
   } else if (type === 'matchTarget') {
-    matchRes.value.online = res[ids[0]]
+    matchRes.value.profile.online = res[ids[0]]
   }
 }
 

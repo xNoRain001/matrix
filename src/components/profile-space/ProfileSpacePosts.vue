@@ -1,4 +1,8 @@
 <template>
+  <!-- 选项卡 -->
+  <div v-if="isSelf" class="p-4 sm:p-6">
+    <UTabs v-model="activeTab" :items="tabItems" :content="false" />
+  </div>
   <UPageList v-if="postMap[targetId]?.posts?.length">
     <UPageCard
       v-for="(
@@ -106,16 +110,18 @@ import OverlayPostDetail from '../overlay/OverlayPostDetail.vue'
 import { onMounted, ref, watch } from 'vue'
 import { deletePostAPI, getPostsAPI } from '@/apis/post'
 import { storeToRefs } from 'pinia'
-import { usePostStore, useUserStore } from '@/store'
+import { usePostStore, useRecentContactsStore, useUserStore } from '@/store'
 import OverlayPublisher from '../overlay/OverlayPublisher.vue'
 
 const props = defineProps<{ isMatch?: boolean; targetId: string }>()
 const overlay = useOverlay()
+const activeTab = ref('my')
 const { isMobile } = storeToRefs(useUserStore())
 const postDetailOverlay = overlay.create(OverlayPostDetail)
 const publisherOverlay = overlay.create(OverlayPublisher)
 const { userInfo } = storeToRefs(useUserStore())
 const { postMap } = storeToRefs(usePostStore())
+const { contactList } = storeToRefs(useRecentContactsStore())
 const isSelf = props.targetId === userInfo.value.id
 const toast = useToast()
 const isEditMenuDrawerOpen = ref(false)
@@ -133,6 +139,16 @@ const dropdownMenuItems = [
       onSelect: () => onDeletePost()
     }
   ]
+]
+const tabItems = [
+  {
+    label: '我的',
+    value: 'my'
+  },
+  {
+    label: '好友',
+    value: 'friends'
+  }
 ]
 const { VITE_OSS_BASE_URL } = import.meta.env
 
@@ -187,19 +203,6 @@ const onComment = (postId, postIndex) => {
     targetId: props.targetId
   })
 }
-
-watch(
-  () => props.targetId,
-  async v => {
-    if (!isMobile.value) {
-      return
-    }
-
-    if (v) {
-      postMap.value[props.targetId].posts = (await getPostsAPI(v)).data
-    }
-  }
-)
 
 const getLocalPosts = async () => {
   const posts = []
@@ -267,6 +270,31 @@ const initPosts = async () => {
 
   return data
 }
+
+watch(
+  () => props.targetId,
+  async v => {
+    if (!isMobile.value) {
+      return
+    }
+
+    if (v) {
+      postMap.value[props.targetId].posts = (await getPostsAPI(v)).data
+    }
+  }
+)
+
+watch(activeTab, async v => {
+  if (v === 'friends') {
+    postMap.value.friends = postMap.value.friends || ({} as any)
+
+    for (let i = 0, l = contactList.value.length; i < l; i++) {
+      postMap.value.friends.posts = (
+        await getPostsAPI(contactList.value[i])
+      ).data
+    }
+  }
+})
 
 onMounted(async () => {
   postMap.value[props.targetId] = {} as any
