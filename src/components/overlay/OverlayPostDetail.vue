@@ -25,7 +25,7 @@
           <div>
             <UButton
               variant="ghost"
-              icon="lucide:message-circle-more"
+              icon="lucide:message-circle"
               :label="String(postMap[targetId].activePost.commentCount || '')"
             ></UButton>
             <UButton

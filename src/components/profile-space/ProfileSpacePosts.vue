@@ -34,7 +34,7 @@
         <div>
           <UButton
             variant="ghost"
-            icon="lucide:message-circle-more"
+            icon="lucide:message-circle"
             :label="String(commentCount || '')"
             @click.stop="onComment(_id, index)"
           ></UButton>
@@ -207,8 +207,8 @@ const getLocalPosts = async () => {
   const transaction = db.transaction('posts', 'readonly')
   const store = transaction.objectStore('posts')
   let cursor = await store.openCursor(
-    IDBKeyRange.bound(0, Number.MAX_SAFE_INTEGER, false, true),
-    'prev'
+    IDBKeyRange.bound(0, Number.MAX_SAFE_INTEGER, false, true)
+    // 'prev'
   )
 
   // 已经获取了所有

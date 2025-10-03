@@ -19,6 +19,25 @@ export type userInfo = {
     region: string
     bio: string
     role: 'standard'
+    mbti:
+      | 'ISTJ'
+      | 'ISFJ'
+      | 'INFJ'
+      | 'INTJ'
+      | 'ISTP'
+      | 'ISFP'
+      | 'INFP'
+      | 'INTP'
+      | 'ESTP'
+      | 'ESFP'
+      | 'ENFP'
+      | 'ENTP'
+      | 'ESTJ'
+      | 'ESFJ'
+      | 'ENFJ'
+      | 'ENTJ'
+    tags: string[]
+    createdAt: number
   }
 }
 

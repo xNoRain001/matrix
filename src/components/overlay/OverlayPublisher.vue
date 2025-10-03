@@ -42,7 +42,7 @@
         label="选择图片"
         description="每张图片的最大尺寸为 10 MB"
         icon="lucide:plus"
-        accept="image/*"
+        accept="image/png, image/jpeg, image/webp"
         multiple
         :ui="{
           files: 'grid-cols-3'
@@ -129,7 +129,7 @@
         label="选择图片"
         description="每张图片的最大尺寸为 10 MB"
         icon="lucide:plus"
-        accept="image/*"
+        accept="image/png, image/jpeg, image/webp"
         multiple
         :ui="{
           files: 'grid-cols-3'

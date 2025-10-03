@@ -69,24 +69,57 @@
       <!-- 个人资料卡片 -->
       <UPageCard
         class="absolute top-[50vh] right-4 left-4 z-20 -translate-y-[calc(100%+1rem)] sm:right-6 sm:left-6 sm:-translate-y-[calc(100%+1.5rem)]"
-        :title="targetProfile.nickname"
-        :description="targetProfile.bio"
         variant="soft"
+        :ui="{ description: '' }"
       >
         <template #title>
           <div class="flex items-center gap-2">
-            {{ targetProfile.nickname }}
+            <span>{{ targetProfile.nickname }}</span>
             <UButton
               v-if="!isSelf && Boolean(contactProfileMap[targetId])"
               icon="lucide:user-round-pen"
               label="备注"
+              size="xs"
             ></UButton>
             <UButton
               v-if="!isSelf && !inView"
               @click="messageViewOverlay.open({ targetId, targetProfile })"
               icon="lucide:message-circle-more"
               label="聊天"
+              size="xs"
             ></UButton>
+            <UBadge
+              icon="lucide:calendar"
+              :label="`${computeDays(targetProfile.createdAt)} 天`"
+            ></UBadge>
+            <UButton
+              v-if="isSelf"
+              @click="spaceBgRef.click()"
+              icon="lucide:camera"
+              label="背景"
+              size="xs"
+            ></UButton>
+          </div>
+        </template>
+        <template #description>
+          <span>{{ targetProfile.bio }}</span>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <UBadge
+              v-if="isSelf"
+              icon="lucide:circle-plus"
+              label="标签"
+              @click="onOpenTagSlideover"
+            ></UBadge>
+            <UBadge
+              v-if="targetProfile.mbti"
+              color="secondary"
+              :label="targetProfile.mbti"
+            ></UBadge>
+            <UBadge
+              v-for="tag in targetProfile.tags"
+              :key="tag"
+              :label="tag"
+            ></UBadge>
           </div>
         </template>
         <template #header>
@@ -98,13 +131,6 @@
             :alt="targetProfile.nickname"
             size="3xl"
           ></UAvatar>
-          <UButton
-            v-if="isSelf"
-            @click="spaceBgRef.click()"
-            class="absolute top-4 right-4"
-            icon="lucide:camera"
-            variant="ghost"
-          ></UButton>
         </template>
       </UPageCard>
       <!-- 选项卡 -->
@@ -124,7 +150,7 @@
       ref="spaceBgRef"
       hidden
       type="file"
-      accept="image/*"
+      accept="image/png, image/jpeg, image/webp"
     />
     <!-- 移动端设置界面 -->
     <USlideover
@@ -167,13 +193,69 @@
       <Logoff v-model="isLogoffSlideoverOpen"></Logoff>
       <Theme v-model="isThemeSlideoverOpen"></Theme>
     </template>
+    <!-- 标签 -->
+    <USlideover
+      v-if="isSelf"
+      v-model:open="isTagSlideoverOpen"
+      title="标签"
+      description=" "
+      :ui="{ body: 'space-y-4' }"
+    >
+      <template #body>
+        <UFormField label="标签">
+          <UInput
+            :max-length="12"
+            placeholder="输入标签"
+            v-model="tag"
+            class="w-full"
+            @keydown.enter="onAddTag"
+            :ui="{ trailing: 'pe-1' }"
+          >
+            <template v-if="tag.length" #trailing>
+              <UButton size="xs" label="确认" @click="onAddTag" />
+            </template>
+          </UInput>
+        </UFormField>
+        <UFormField label="MBTI">
+          <USelect
+            v-model="mbti"
+            :items="mbtiItems"
+            class="w-full"
+            placeholder="选择你的 MBTI"
+          ></USelect>
+        </UFormField>
+        <UFormField v-show="tags.length" label="标签（通过拖拽修改标签位置）">
+          <div ref="tagRef" class="flex flex-wrap gap-2">
+            <UBadge
+              trailing-icon="lucide:x"
+              v-for="(tag, index) in tags"
+              :label="tag"
+              :key="tag"
+              @click="onDeleteTag(index)"
+            ></UBadge>
+          </div>
+        </UFormField>
+        <UButton
+          class="w-full justify-center"
+          label="确认"
+          @click="onUpdateTag"
+        ></UButton>
+      </template>
+    </USlideover>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { usePostStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { computed, onBeforeMount, onBeforeUnmount, ref, watch } from 'vue'
+import {
+  computed,
+  onBeforeMount,
+  onBeforeUnmount,
+  ref,
+  useTemplateRef,
+  watch
+} from 'vue'
 import { useGetDB, useUpdateOSS } from '@/hooks'
 import { useRoute } from 'vue-router'
 import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
@@ -190,6 +272,8 @@ import OverlayAbout from '@/components/overlay/OverlayAbout.vue'
 import OverlayMessageView from '@/components/overlay/OverlayMessageView.vue'
 import OverlayPostNotification from '../overlay/OverlayPostNotification.vue'
 import type { userInfo } from '@/types'
+import { useSortable } from '@vueuse/integrations/useSortable'
+import { updateProfile } from '@/apis/profile'
 
 const overlay = useOverlay()
 const props = withDefaults(
@@ -328,6 +412,97 @@ const aboutOverlay = overlay.create(OverlayAbout)
 const messageViewOverlay = overlay.create(OverlayMessageView)
 const postNotificationOverlay = overlay.create(OverlayPostNotification)
 const prevRoute = route.path
+const isTagSlideoverOpen = ref(false)
+const tag = ref('')
+const tags = ref(JSON.parse(JSON.stringify(props.targetProfile.tags)))
+const mbti = ref(props.targetProfile.mbti)
+const mbtiItems = [
+  'ISTJ',
+  'ISFJ',
+  'INFJ',
+  'INTJ',
+  'ISTP',
+  'ISFP',
+  'INFP',
+  'INTP',
+  'ESTP',
+  'ESFP',
+  'ENFP',
+  'ENTP',
+  'ESTJ',
+  'ESFJ',
+  'ENFJ',
+  'ENTJ'
+]
+const tagRef = useTemplateRef('tagRef')
+
+const computeDays = timestamp =>
+  Math.ceil((Date.now() - timestamp) / (1000 * 60 * 60 * 24))
+
+const onUpdateTag = async () => {
+  const _mbti = mbti.value
+  const _tags = JSON.parse(JSON.stringify(tags.value))
+  const stringifyTags = _tags.join('__separator__')
+  const { profile } = userInfo.value
+  const { mbti: __mbti, tags: __tags } = profile
+  const sameMBTI = _mbti === __mbti
+  const sameTags = stringifyTags === __tags.join('__separator__')
+
+  if (sameMBTI && sameTags) {
+    toast.add({
+      title: '修改资料成功',
+      icon: 'lucide:smile'
+    })
+    isTagSlideoverOpen.value = false
+    return
+  }
+
+  const payload = {
+    ...(!sameMBTI && { mbti: _mbti }),
+    // 值为 __separator__ 表示清空所有标签
+    ...(!sameTags && { tags: stringifyTags || '__separator__' })
+  }
+
+  try {
+    const { data: token } = await updateProfile(payload)
+    localStorage.setItem('token', token)
+    profile.mbti = _mbti
+    profile.tags = _tags
+    toast.add({
+      title: '修改资料成功',
+      icon: 'lucide:smile'
+    })
+    isTagSlideoverOpen.value = false
+  } catch (error) {
+    toast.add({
+      title: error.message,
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+  }
+}
+
+const onDeleteTag = index => tags.value.splice(index, 1)
+
+const onAddTag = () => {
+  const _tags = tags.value
+  const _tag = tag.value
+
+  if (_tags.includes(_tag)) {
+    toast.add({ title: '标签已经存在', color: 'error', icon: 'lucide:annoyed' })
+    return
+  }
+
+  tags.value.unshift(_tag)
+  tag.value = ''
+}
+
+const onOpenTagSlideover = () => {
+  isTagSlideoverOpen.value = true
+  setTimeout(() => {
+    useSortable(tagRef.value, tags, { animation: 150 })
+  })
+}
 
 const onSpaceBgChange = e => useUpdateOSS(e, 'bg', userInfo, toast, bgURL)
 
@@ -353,7 +528,7 @@ onBeforeUnmount(() => {
     (activeTargetIds.value.size === 1 &&
       (prevRoute === '/message' ||
         // PC 端聊天匹配可以在这里处理，但语音匹配不可以，同时移动端聊天和语音都不可以，
-        //  虽然不会关闭聊天界面，但是需要的数据被重置了，因此在匹配页面销毁时
+        // 虽然不会关闭聊天界面，但是需要的数据被重置了，因此在匹配页面销毁时
         // 进行处理
         prevRoute === '/chat' ||
         prevRoute === '/voice-chat'))

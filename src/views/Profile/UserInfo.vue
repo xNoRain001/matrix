@@ -301,7 +301,7 @@
     ref="avatarRef"
     hidden
     type="file"
-    accept="image/*"
+    accept="image/png, image/jpeg, image/webp"
   />
 </template>
 
@@ -380,7 +380,7 @@ const avatarRef = ref(null)
 const onFileChange = e => useUpdateOSS(e, 'avatar', userInfo, toast, avatarURL)
 
 const getUserInfoDiff = (userInfo, _profileForm) => {
-  const _userInfo = userInfo.value
+  const { profile } = userInfo.value
   const keys = Object.keys(_profileForm)
   const res = {}
 
@@ -388,7 +388,7 @@ const getUserInfoDiff = (userInfo, _profileForm) => {
     const key = keys[i]
     const value = _profileForm[key]
 
-    if (value !== _userInfo[key]) {
+    if (value !== profile[key]) {
       res[key] = value
     }
   }
@@ -433,11 +433,12 @@ const onUpdateProfile = async () => {
   }
 
   try {
-    const {
-      data: { token, userInfo: _userInfo }
-    } = await updateProfile(diff)
+    const { data: token } = await updateProfile(diff)
     localStorage.setItem('token', token)
-    userInfo.value = _userInfo
+    userInfo.value.profile = {
+      ...userInfo.value.profile,
+      ...diff
+    }
     toast.add({
       title: '修改资料成功',
       icon: 'lucide:smile'

@@ -141,7 +141,7 @@
     @change="onInputChange"
     type="file"
     hidden
-    accept="image/*"
+    accept="image/png, image/jpeg, image/webp"
   />
 </template>
 
