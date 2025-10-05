@@ -69,7 +69,11 @@
               {{
                 key === 'gender'
                   ? useTransformGender(profileForm[key])
-                  : profileForm[key]
+                  : key === 'birthday'
+                    ? date
+                      ? date.toString()
+                      : ''
+                    : profileForm[key]
               }}
             </div>
             <UIcon

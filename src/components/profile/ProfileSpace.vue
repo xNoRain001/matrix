@@ -1,6 +1,6 @@
 <template>
   <div class="h-screen w-full">
-    <div ref="container" class="relative h-full overflow-y-auto">
+    <div ref="containerRef" class="relative h-full overflow-y-auto">
       <!-- 顶部导航 -->
       <UDashboardNavbar
         v-if="!isMatch"
@@ -20,17 +20,6 @@
           />
         </template>
         <template #right>
-          <UButton
-            @click="
-              container.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-              })
-            "
-            icon="lucide:chevrons-up"
-            variant="ghost"
-            color="neutral"
-          />
           <UButton
             v-if="isSelf"
             icon="lucide:bell"
@@ -141,6 +130,7 @@
       <ProfileSpacePosts
         :is-match="isMatch"
         :target-id="targetId"
+        :container="containerRef"
       ></ProfileSpacePosts>
     </div>
 
@@ -199,32 +189,61 @@
       v-model:open="isTagSlideoverOpen"
       title="标签"
       description=" "
-      :ui="{ body: 'space-y-4' }"
+      :ui="{ body: 'space-y-4 sm:space-y-6' }"
     >
       <template #body>
-        <UFormField label="标签">
-          <UInput
-            :max-length="12"
-            placeholder="输入标签"
-            v-model="tag"
-            class="w-full"
-            @keydown.enter="onAddTag"
-            :ui="{ trailing: 'pe-1' }"
-          >
-            <template v-if="tag.length" #trailing>
-              <UButton size="xs" label="确认" @click="onAddTag" />
-            </template>
-          </UInput>
-        </UFormField>
-        <UFormField label="MBTI">
-          <USelect
-            v-model="mbti"
-            :items="mbtiItems"
-            class="w-full"
-            placeholder="选择你的 MBTI"
-          ></USelect>
-        </UFormField>
-        <UFormField v-show="tags.length" label="标签（通过拖拽修改标签位置）">
+        <UPageCard
+          title="新标签"
+          description="创建你的新标签"
+          variant="naked"
+          orientation="horizontal"
+          :class="isMobile ? '' : 'mb-4'"
+        >
+        </UPageCard>
+        <UInput
+          :max-length="12"
+          placeholder="输入标签"
+          v-model="tag"
+          class="w-full"
+          enterkeyhint="done"
+          @keydown.enter="onAddTag"
+          :ui="{ base: 'bg-elevated/50', trailing: 'pe-1' }"
+        >
+          <template v-if="tag.length" #trailing>
+            <div class="text-muted text-xs tabular-nums">
+              {{ tag.length }}/12
+            </div>
+            <UButton
+              color="neutral"
+              variant="link"
+              size="sm"
+              icon="lucide:circle-x"
+              @click="tag = ''"
+            />
+            <UButton size="xs" label="确认" @click="onAddTag" />
+          </template>
+        </UInput>
+        <UPageCard
+          title="MBTI"
+          description="选择你的 MBTI"
+          variant="naked"
+          orientation="horizontal"
+          :class="isMobile ? '' : 'mb-4'"
+        ></UPageCard>
+        <USelect
+          v-model="mbti"
+          :items="mbtiItems"
+          class="bg-elevated/50 w-full"
+          placeholder="选择你的 MBTI"
+        ></USelect>
+        <UPageCard
+          title="我的标签"
+          description="通过拖拽修改标签位置"
+          variant="naked"
+          orientation="horizontal"
+          :class="isMobile ? '' : 'mb-4'"
+        ></UPageCard>
+        <UPageCard variant="subtle">
           <div ref="tagRef" class="flex flex-wrap gap-2">
             <UBadge
               trailing-icon="lucide:x"
@@ -234,7 +253,7 @@
               @click="onDeleteTag(index)"
             ></UBadge>
           </div>
-        </UFormField>
+        </UPageCard>
         <UButton
           class="w-full justify-center"
           label="确认"
@@ -287,7 +306,7 @@ const props = withDefaults(
   }
 )
 const emits = defineEmits(['close'])
-const container = ref(null)
+const containerRef = useTemplateRef('containerRef')
 const isSettingSlideoverOpen = ref(false)
 const isUserInfoSlideoverOpen = ref(false)
 const isUpdatePasswordSlideoverOpen = ref(false)

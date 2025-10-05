@@ -75,6 +75,11 @@ const router = createRouter({
       meta: { auth: false },
       component: () => import('@/views/ResetPassword.vue')
     },
+    {
+      path: '/playground',
+      meta: { auth: true },
+      component: () => import('@/views/Playground.vue')
+    },
     // 404 路由
     {
       path: '/:pathMatch(.*)*',

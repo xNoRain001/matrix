@@ -45,8 +45,12 @@ import useUpdateOSS from './use-update-oss'
 import useInitLocalStorate from './use-init-local-storage'
 import useLike from './use-like'
 import useURLToBlob from './use-url-to-blob'
+import useOpenPostDetailOverlay from './use-open-comment-overlay'
+import useOpenSpace from './use-open-space'
 
 export {
+  useOpenSpace,
+  useOpenPostDetailOverlay,
   useURLToBlob,
   useLike,
   useInitLocalStorate,

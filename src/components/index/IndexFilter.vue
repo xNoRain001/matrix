@@ -216,6 +216,11 @@ const tabItems = [
     label: '书籍',
     slot: 'book' as const,
     value: 'book'
+  },
+  {
+    label: '星座',
+    slot: 'zodiacSign' as const,
+    value: 'zodiacSign'
   }
 ]
 const [_province, _city] = isUndefRegion.value

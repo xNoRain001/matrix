@@ -205,8 +205,13 @@ const navs = [
   [
     {
       label: '大厅',
-      icon: 'lucide:bubbles',
+      icon: 'lucide:snowflake',
       to: '/'
+    },
+    {
+      label: '广场',
+      icon: 'lucide:rose',
+      to: '/playground'
     },
     {
       label: '好友',

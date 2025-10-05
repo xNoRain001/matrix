@@ -19,6 +19,13 @@
         </div>
       </div>
 
+      <UBanner
+        id="example"
+        class="mt-4"
+        title="This is a closable banner."
+        close
+      />
+
       <USlideover v-model:open="isLikeSlideoverOpen" title="赞" description=" ">
         <template #body>
           <div

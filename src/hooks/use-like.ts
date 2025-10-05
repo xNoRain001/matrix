@@ -16,7 +16,7 @@ const useLike = async (
       container.liked = false
       container.likes--
     }
-  } catch (error) {
+  } catch {
     toast.add({ title: '操作失败', color: 'error', icon: 'lucide:annoyed' })
   }
 }

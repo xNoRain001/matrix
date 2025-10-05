@@ -5,11 +5,18 @@
     :title="title"
     description=" "
     :ui="{
-      body: 'gap-4 md:gap-6 flex flex-col',
+      body: 'space-y-4 sm:space-y-6',
       footer: 'justify-between flex-row'
     }"
   >
     <template #body>
+      <UPageCard
+        title="文本"
+        description="输入文本内容"
+        variant="naked"
+        orientation="horizontal"
+      >
+      </UPageCard>
       <UTextarea
         autofocus
         placeholder="善语结缘，温暖常伴..."
@@ -17,9 +24,9 @@
         class="w-full"
         autoresize
         :rows="5"
-        :maxrows="10"
+        :maxrows="5"
         maxlength="2000"
-        :ui="{ trailing: 'flex items-end' }"
+        :ui="{ base: 'bg-elevated/50', trailing: 'flex items-end' }"
       >
         <template v-if="payload.text" #trailing>
           <div class="text-muted py-1.5 text-xs tabular-nums">
@@ -34,17 +41,23 @@
           />
         </template>
       </UTextarea>
+      <UPageCard
+        title="图片"
+        description="选择图片，最多 9 张，每张不超过 10 MB，通过拖拽交换图片位置"
+        variant="naked"
+        orientation="horizontal"
+      >
+      </UPageCard>
       <UFileUpload
         ref="fileUploadRef"
         @update:model-value="onUpdateFile"
         v-model="payload.images"
         :dropzone="false"
-        label="选择图片"
-        description="每张图片的最大尺寸为 10 MB"
         icon="lucide:plus"
         accept="image/png, image/jpeg, image/webp"
         multiple
         :ui="{
+          base: 'bg-elevated/50',
           files: 'grid-cols-3'
         }"
       >
@@ -52,7 +65,6 @@
     </template>
     <template #footer>
       <div>
-        <UButton variant="ghost" icon="lucide:image"></UButton>
         <UButton variant="ghost" icon="lucide:smile"></UButton>
       </div>
       <div>
@@ -92,11 +104,19 @@
     :title="title"
     description=" "
     :ui="{
-      body: 'gap-4 md:gap-6 flex flex-col',
+      body: 'space-y-4 sm:space-y-6',
       footer: 'justify-between flex-row'
     }"
   >
     <template #body>
+      <UPageCard
+        title="文本"
+        description="输入文本内容"
+        variant="naked"
+        orientation="horizontal"
+        class="mb-4"
+      >
+      </UPageCard>
       <UTextarea
         autofocus
         placeholder="善语结缘，温暖常伴..."
@@ -104,9 +124,9 @@
         class="w-full"
         autoresize
         :rows="5"
-        :maxrows="10"
+        :maxrows="5"
         maxlength="2000"
-        :ui="{ trailing: 'flex items-end' }"
+        :ui="{ base: 'bg-elevated/50', trailing: 'flex items-end' }"
       >
         <template v-if="payload.text" #trailing>
           <div class="text-muted py-1.5 text-xs tabular-nums">
@@ -121,17 +141,27 @@
           />
         </template>
       </UTextarea>
+      <UPageCard
+        title="图片"
+        description="选择图片，最多 9 张，每张不超过 10 MB，通过拖拽交换图片位置"
+        variant="naked"
+        orientation="horizontal"
+        class="mb-4"
+        :ui="{
+          container: 'lg:grid-cols-1'
+        }"
+      >
+      </UPageCard>
       <UFileUpload
         ref="fileUploadRef"
         @update:model-value="onUpdateFile"
         v-model="payload.images"
         :dropzone="false"
-        label="选择图片"
-        description="每张图片的最大尺寸为 10 MB"
         icon="lucide:plus"
         accept="image/png, image/jpeg, image/webp"
         multiple
         :ui="{
+          base: 'bg-elevated/50 hover:bg-elevated',
           files: 'grid-cols-3'
         }"
       >
@@ -403,8 +433,6 @@ const onPublishPost = async () => {
       _image.blob = file
     }
     postMap.value[props.targetId].posts.unshift(post)
-    delete _post.commentCount
-    delete _post.likes
     const db = await useGetDB(userInfo.value.id)
     await db.add('posts', _post)
     payload.text = ''
@@ -440,7 +468,16 @@ const onUpdatePost = async () => {
     _activePost.content = latestContent
     post.content = _latestContent
     const db = await useGetDB(userInfo.value.id)
-    await db.put('posts', post)
+    const tx = db.transaction('posts', 'readwrite')
+    const store = tx.objectStore('posts')
+    const index = store.index('_id')
+    const cursor = await index.openCursor(
+      postMap.value[props.targetId].activePostId
+    )
+    if (cursor) {
+      // 由于是从本地数据库中读取的，post 中有 id 字段，所以不需要传 id
+      await store.put(post)
+    }
     payload.text = ''
     payload.images = []
     emit('close', true)
@@ -526,7 +563,7 @@ const onUpdateComment = async () => {
     comment.content = newComment
     comment.updateAt = Date.now()
     emit('close', true)
-  } catch (error) {
+  } catch {
     toast.add({ title: '操作失败', color: 'error', icon: 'lucide:annoyed' })
   }
 }
@@ -561,7 +598,7 @@ const onFeedback = async () => {
     toast.add({ title: '提交成功', icon: 'lucide:smile' })
     localStorage.removeItem('feedbackDraft')
     emit('close', true)
-  } catch (error) {
+  } catch {
     toast.add({ title: '提交失败', color: 'error', icon: 'lucide:annoyed' })
   }
 }

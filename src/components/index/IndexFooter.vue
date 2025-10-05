@@ -44,9 +44,15 @@ const { unreadMsgCounter, contactNotifications } = storeToRefs(
 const mobileNavs = [
   {
     label: '大厅',
-    icon: 'lucide:bubbles',
+    icon: 'lucide:snowflake',
     to: '/',
     value: '/' // tab 的值，默认值为索引
+  },
+  {
+    label: '广场',
+    icon: 'lucide:rose',
+    to: '/playground',
+    value: '/playground'
   },
   {
     label: '好友',

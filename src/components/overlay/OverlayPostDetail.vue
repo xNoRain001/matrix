@@ -109,16 +109,33 @@
             >
               <template #avatar>
                 <div
-                  @click="onAccessSpace(owner, profile)"
+                  @click="
+                    useOpenSpace(
+                      profileSpaceOverlay,
+                      userInfo,
+                      activeTargetIds,
+                      owner,
+                      profile
+                    )
+                  "
                   class="text-muted bg-elevated flex size-10 items-center justify-center rounded-full text-xl font-medium"
                 >
                   {{ profile.nickname[0] }}
                 </div>
               </template>
               <template #name>
-                <span @click="onAccessSpace(owner, profile)">{{
-                  profile.nickname
-                }}</span>
+                <span
+                  @click="
+                    useOpenSpace(
+                      profileSpaceOverlay,
+                      userInfo,
+                      activeTargetIds,
+                      owner,
+                      profile
+                    )
+                  "
+                  >{{ profile.nickname }}</span
+                >
                 <UBadge v-if="userInfo.id === owner" label="我"></UBadge>
                 <UBadge
                   v-else-if="postMap[targetId].activePost.user === owner"
@@ -241,16 +258,33 @@
                         >
                           <template #avatar>
                             <div
-                              @click="onAccessSpace(user, profile)"
+                              @click="
+                                useOpenSpace(
+                                  profileSpaceOverlay,
+                                  userInfo,
+                                  activeTargetIds,
+                                  user,
+                                  profile
+                                )
+                              "
                               class="text-muted bg-elevated flex size-5 items-center justify-center rounded-full text-xs font-medium"
                             >
                               {{ profile.nickname[0] }}
                             </div>
                           </template>
                           <template #name>
-                            <span @click="onAccessSpace(user, profile)">{{
-                              profile.nickname
-                            }}</span>
+                            <span
+                              @click="
+                                useOpenSpace(
+                                  profileSpaceOverlay,
+                                  userInfo,
+                                  activeTargetIds,
+                                  user,
+                                  profile
+                                )
+                              "
+                              >{{ profile.nickname }}</span
+                            >
                             <UBadge
                               v-if="userInfo.id === user"
                               label="我"
@@ -489,7 +523,7 @@ import { usePostStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import OverlayPublisher from './OverlayPublisher.vue'
-import { useFormatTimeAgo, useLike } from '@/hooks'
+import { useFormatTimeAgo, useLike, useOpenSpace } from '@/hooks'
 import { getPostLikesAPI } from '@/apis/like'
 import {
   deleteCommentAPI,
@@ -578,16 +612,6 @@ const replydropdownMenuItems = computed(() => {
       ]
     : [[common]]
 })
-
-const onAccessSpace = (targetId, targetProfile) => {
-  // 如果之前已经打开，不进行重复打开，同时禁止打开自己的空间
-  if (!activeTargetIds.value.has(targetId) && targetId !== userInfo.value.id) {
-    profileSpaceOverlay.open({
-      targetId,
-      targetProfile
-    })
-  }
-}
 
 const onEditReply = () => {
   publisherOverlay.open({

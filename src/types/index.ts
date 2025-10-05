@@ -78,6 +78,7 @@ export type post = {
   likes: number
   liked: boolean
   unlikes: number
+  profile?: userInfo['profile']
 }
 
 export type comment = {

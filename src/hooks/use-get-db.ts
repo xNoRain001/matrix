@@ -4,7 +4,7 @@ let db = null
 
 const useGetDB = async id => {
   if (!db) {
-    db = await openDB(`chatDB-${id}`, 25, {
+    db = await openDB(`chatDB-${id}`, 31, {
       upgrade(db) {
         let store = null
 
@@ -49,10 +49,11 @@ const useGetDB = async id => {
         }
 
         if (!db.objectStoreNames.contains('posts')) {
-          db.createObjectStore('posts', {
+          const store = db.createObjectStore('posts', {
             keyPath: 'id',
             autoIncrement: true
           })
+          store.createIndex('_id', '_id', { unique: true })
         }
       }
     })

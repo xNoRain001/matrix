@@ -19,7 +19,7 @@ const useUpdateOSS = async (e, type, userInfo, toast, urlRef) => {
     await db.put(type, { id: userInfo.value.id, blob: file })
     urlRef.value = URL.createObjectURL(file)
     toast.add({ title: '更新成功', icon: 'lucide:smile' })
-  } catch (error) {
+  } catch {
     toast.add({
       title: '更新失败',
       color: 'error',

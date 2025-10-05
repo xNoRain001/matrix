@@ -26,12 +26,17 @@
             </div>
           </template>
           <div
-            class="w-full cursor-pointer border-l-2 p-4 transition-colors sm:px-6"
-            :class="[
-              activeTargetId === id
-                ? 'border-primary bg-primary/10'
-                : 'hover:border-primary hover:bg-primary/5 border-(--ui-bg)'
-            ]"
+            class="w-full cursor-pointer p-4 transition-colors sm:px-6"
+            :class="
+              isMobile
+                ? []
+                : [
+                    'border-l-2',
+                    activeTargetId === id
+                      ? 'border-primary bg-primary/10'
+                      : 'hover:border-primary hover:bg-primary/5 border-(--ui-bg)'
+                  ]
+            "
             @click="onClick(id)"
           >
             <UUser
