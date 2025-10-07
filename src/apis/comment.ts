@@ -37,6 +37,15 @@ export const replyAPI = async data =>
     }
   })
 
+export const updateReplyAPI = async data =>
+  HTTP.request(`${prefix}/reply`, {
+    data,
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+
 export const getRepliesAPI = async (commendId, page, lastId) =>
   HTTP.request(
     `${prefix}/replies?commentId=${commendId}&page=${page}&lastId=${lastId}`

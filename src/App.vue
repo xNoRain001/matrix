@@ -238,7 +238,7 @@ const navs = [
           exact: true
         },
         {
-          label: '个人资料',
+          label: '资料',
           to: '/profile/user-info'
         },
         {
@@ -250,11 +250,11 @@ const navs = [
           to: '/profile/theme'
         },
         {
-          label: '数据管理',
+          label: '数据',
           to: '/profile/data-manager'
         },
         {
-          label: '修改密码',
+          label: '密码',
           to: '/profile/update-password'
         },
         // {
@@ -333,6 +333,7 @@ const floatingBtnY = ref(Number(localStorage.getItem('floatingBtnY') || 40))
 const voiceChatOverlay = overlay.create(OverlayVoiceChat)
 const helpAndSupportOverlay = overlay.create(OverlayHelpAndSupport)
 const abouttOverlay = overlay.create(OverlayAbout)
+const { VITE_OSS_BASE_URL } = import.meta.env
 
 const initFloatingBtnPosition = (currentTarget, clientX, clientY) => {
   const { left, top, width, height } = currentTarget.getBoundingClientRect()
@@ -795,7 +796,9 @@ const replaceImageOSSURLToURL = async (hash, messageRecord) => {
           _hashToBlobURLMap.set(hash, url)
         }
       } else {
-        const blob = await useURLToBlob(messageRecord.ossURL)
+        const blob = await useURLToBlob(
+          VITE_OSS_BASE_URL + messageRecord.ossURL
+        )
         // tx 可能已经关闭，需要重新打开
         const tx = db.transaction('files', 'readwrite')
         await tx.objectStore('files').put({ hash, blob })
@@ -816,7 +819,7 @@ const replaceAudioOSSURLToURL = async (hash, messageRecord) => {
   let url = ''
 
   try {
-    const blob = await useURLToBlob(messageRecord.ossURL)
+    const blob = await useURLToBlob(VITE_OSS_BASE_URL + messageRecord.ossURL)
     const db = await useGetDB(userInfo.value.id)
     const tx = db.transaction('files', 'readwrite')
     await tx.objectStore('files').put({ hash, blob })
@@ -1302,7 +1305,7 @@ const initAvatarURL = async () => {
   )?.blob
   avatarURL.value = avatarBlob
     ? URL.createObjectURL(avatarBlob)
-    : `${import.meta.env.VITE_OSS_BASE_URL}${userInfo.value.id}/avatar`
+    : `avatar/${userInfo.value.id}`
 }
 
 const initChatBgURL = async () => {

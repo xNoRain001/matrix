@@ -147,9 +147,10 @@
                 <div
                   v-if="content.images.length"
                   @click="viewerOverlay.open({ urls: content.images })"
+                  class="flex"
                 >
                   <img
-                    class="size-11"
+                    class="size-11 rounded-lg"
                     v-for="image in content.images"
                     :src="VITE_OSS_BASE_URL + image.url"
                   />
@@ -306,9 +307,10 @@
                               v-if="
                                 replyComments[replyIndex].content.images.length
                               "
+                              class="flex"
                             >
                               <img
-                                class="size-11"
+                                class="size-11 rounded-lg"
                                 @click="
                                   viewerOverlay.open({
                                     urls: replyComments[replyIndex].content
@@ -381,6 +383,7 @@
                                         replyId,
                                         replyIndex,
                                         content,
+                                        _id,
                                         index
                                       )
                                     "
@@ -398,6 +401,7 @@
                                           replyId,
                                           replyIndex,
                                           content,
+                                          _id,
                                           index
                                         )
                                       "
@@ -735,12 +739,14 @@ const onOpenReplyDropdownMenu = (
   replyId,
   replyIndex,
   replyContent,
+  commentId,
   commentIndex
 ) => {
   postMap.value[props.targetId].canEdit = _canEdit
   postMap.value[props.targetId].activeReplyId = replyId
   postMap.value[props.targetId].activeReplyIndex = replyIndex
   postMap.value[props.targetId].activeReplyContent = replyContent
+  postMap.value[props.targetId].activeCommentId = commentId
   postMap.value[props.targetId].activeCommentIndex = commentIndex
 
   if (isMobile.value) {

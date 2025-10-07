@@ -47,7 +47,11 @@
           >
             <UAvatar
               size="2xs"
-              :src="avatarURL"
+              :src="
+                avatarURL.startsWith('blob:')
+                  ? avatarURL
+                  : VITE_OSS_BASE_URL + avatarURL
+              "
               :alt="profileForm.nickname[0]"
             ></UAvatar>
             <UIcon
@@ -258,7 +262,11 @@
             <UAvatar
               @click="viewerOverlay.open({ urls: [{ url: avatarURL }] })"
               class="cursor-pointer"
-              :src="avatarURL"
+              :src="
+                avatarURL.startsWith('blob:')
+                  ? avatarURL
+                  : VITE_OSS_BASE_URL + avatarURL
+              "
               :alt="profileForm.nickname[0]"
               size="lg"
             />
@@ -312,7 +320,7 @@
 <script lang="ts" setup>
 import { updateProfile } from '@/apis/profile'
 import { provinceCityMap } from '@/const'
-import { useTransformGender, useUpdateOSS } from '@/hooks'
+import { useTransformGender, useUpdateStaticNameFile } from '@/hooks'
 import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref, shallowRef, watch } from 'vue'
@@ -371,17 +379,16 @@ const profileItems = [
     click: () => (isOpenRegionDrawer.value = true)
   }
 ]
-// TODO: 删除正则
 const date = shallowRef(
-  profileForm.value.birthday
-    ? parseDate(profileForm.value.birthday.replace(/\//g, '-'))
-    : null
+  profileForm.value.birthday ? parseDate(profileForm.value.birthday) : null
 )
 const overlay = useOverlay()
 const viewerOverlay = overlay.create(OverlayViewer)
 const avatarRef = ref(null)
+const { VITE_OSS_BASE_URL } = import.meta.env
 
-const onFileChange = e => useUpdateOSS(e, 'avatar', userInfo, toast, avatarURL)
+const onFileChange = e =>
+  useUpdateStaticNameFile(e, 'avatar', userInfo, toast, avatarURL)
 
 const getUserInfoDiff = (userInfo, _profileForm) => {
   const { profile } = userInfo.value

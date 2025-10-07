@@ -1,6 +1,6 @@
 import useInitLabelAndSeparator from './use-init-label-and-separator'
 import useAddMessageRecordToView from './use-add-message-record-to-view'
-import { uploadImage } from '@/apis/oss'
+import { getSignedURLAPI } from '@/apis/oss'
 import useInitLastMsg from './use-init-last-msg'
 import useAddMessageRecordToDB from './use-add-message-record-to-db'
 import useUpdateLastMsgToView from './use-update-last-msg-to-view'
@@ -85,19 +85,36 @@ export const sendMsg = async (
   messageRecord,
   _lastMsgMap,
   globalSocket,
+  userInfo,
   resend = false
 ) => {
   if (!isNotMedia) {
     try {
-      const { data } = await uploadImage(file, hash)
-      payload.ossURL = `${import.meta.env.VITE_OSS_BASE_URL}${data}`
+      const { data: signedURL } = await getSignedURLAPI('msgs', hash, file.size)
+      const ossURL = `msgs/${userInfo.value.id}/${hash}`
+      const ok =
+        // 说明 oss 存在该图片，TODO: 极小概率，马上就要失效，对方收到后，无法获取图片
+        signedURL === ossURL
+          ? true
+          : (
+              await fetch(signedURL, {
+                method: 'PUT',
+                body: file
+              })
+            ).ok
 
-      if (resend) {
-        // 修改为当前时间
-        payload.timestamp = Date.now()
-        delete messageRecord.resendArgs
-        delete messageRecord.error
-        // 如果发送失败的状态保存在 db 中，这里还需要修改 db 中的 error
+      if (ok) {
+        payload.ossURL = ossURL
+
+        if (resend) {
+          // 修改为当前时间
+          payload.timestamp = Date.now()
+          delete messageRecord.resendArgs
+          delete messageRecord.error
+          // 如果发送失败的状态保存在 db 中，这里还需要修改 db 中的 error
+        }
+      } else {
+        throw Error()
       }
     } catch {
       // 重新发送时需要这些信息，重新发送时发送失败不需要重复添加这些信息
@@ -110,7 +127,8 @@ export const sendMsg = async (
           indexdbMessageRecord,
           messageRecord,
           _lastMsgMap,
-          globalSocket
+          globalSocket,
+          userInfo
         ]
         messageRecord.error = true
         // 发送失败的状态可以保存在 db 中，但是刷新后 resendArgs 就消失了，无法重新
@@ -197,7 +215,8 @@ const useSendMsg = async (
       indexdbMessageRecord,
       messageRecord,
       _lastMsgMap,
-      globalSocket
+      globalSocket,
+      userInfo
     )
   } catch {
     throw Error()

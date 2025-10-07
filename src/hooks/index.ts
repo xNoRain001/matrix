@@ -41,7 +41,7 @@ import useIsDeviceOpen from './use-is-device-open'
 import useUpdateLastMsgToDB from './use-update-last-msg-to-db'
 import useInitIndexedDBData from './use-init-indexed-db-data'
 import useAddPropsForMessageRecord from './use-add-props-for-message-record'
-import useUpdateOSS from './use-update-oss'
+import useUpdateStaticNameFile from './use-update-static-name-file'
 import useInitLocalStorate from './use-init-local-storage'
 import useLike from './use-like'
 import useURLToBlob from './use-url-to-blob'
@@ -54,7 +54,7 @@ export {
   useURLToBlob,
   useLike,
   useInitLocalStorate,
-  useUpdateOSS,
+  useUpdateStaticNameFile,
   useAddPropsForMessageRecord,
   useInitIndexedDBData,
   useUpdateLastMsgToDB,

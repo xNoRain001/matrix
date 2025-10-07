@@ -52,7 +52,13 @@
           bgURL ? 'bg-cover bg-center bg-no-repeat' : 'bg-default',
           isMatch ? '' : '-mt-16'
         ]"
-        :style="bgURL ? { 'background-image': `url(${bgURL})` } : {}"
+        :style="
+          bgURL
+            ? {
+                'background-image': `url(${bgURL.startsWith('blob:') ? bgURL : VITE_OSS_BASE_URL + bgURL})`
+              }
+            : {}
+        "
         class="sticky -top-[calc(50vh-4rem)] z-10 h-[50vh] cursor-pointer"
       ></div>
       <!-- 个人资料卡片 -->
@@ -120,7 +126,11 @@
             @click="viewerOverlay.open({ urls: [{ url: avatarURL }] })"
             class="absolute top-0 -translate-y-1/2 cursor-pointer"
             :class="isSelf ? 'cursor-pointer' : ''"
-            :src="avatarURL"
+            :src="
+              avatarURL.startsWith('blob:')
+                ? avatarURL
+                : VITE_OSS_BASE_URL + avatarURL
+            "
             :alt="targetProfile.nickname"
             size="3xl"
           ></UAvatar>
@@ -275,7 +285,7 @@ import {
   useTemplateRef,
   watch
 } from 'vue'
-import { useGetDB, useUpdateOSS } from '@/hooks'
+import { useGetDB, useUpdateStaticNameFile } from '@/hooks'
 import { useRoute } from 'vue-router'
 import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
 import UserInfo from '@/views/Profile/UserInfo.vue'
@@ -397,8 +407,11 @@ const inView = computed(() => {
   return path === '/message' || path === '/chat' || path === '/voice-chat'
 })
 const bgBlob = isSelf
-  ? (await (await useGetDB(userInfo.value.id)).get('bg', userInfo.value.id))
-      ?.blob
+  ? (
+      await (
+        await useGetDB(userInfo.value.id)
+      ).get('spaceBg', userInfo.value.id)
+    )?.blob
   : null
 const { VITE_OSS_BASE_URL } = import.meta.env
 const bgURL = ref(
@@ -406,12 +419,10 @@ const bgURL = ref(
     ? bgBlob
       ? URL.createObjectURL(bgBlob)
       : // 本地数据库中删除了但 OSS 中还存在，TODO: 重新保存到本地数据库
-        `${VITE_OSS_BASE_URL}${userInfo.value.id}/space-bg`
-    : `${VITE_OSS_BASE_URL}${props.targetId}/space-bg`
+        `space-bg/${userInfo.value.id}`
+    : `space-bg/${props.targetId}`
 )
-const avatarURL = ref(
-  isSelf ? _avatarURL.value : `${VITE_OSS_BASE_URL}${props.targetId}/avatar`
-)
+const avatarURL = ref(isSelf ? _avatarURL.value : `avatar/${props.targetId}`)
 const viewerOverlay = overlay.create(OverlayViewer)
 const logoutOverlay = overlay.create(OverlayLogout)
 const publisherOverlay = overlay.create(OverlayPublisher)
@@ -512,15 +523,16 @@ const onOpenTagSlideover = () => {
   })
 }
 
-const onSpaceBgChange = e => useUpdateOSS(e, 'bg', userInfo, toast, bgURL)
+const onSpaceBgChange = e =>
+  useUpdateStaticNameFile(e, 'spaceBg', userInfo, toast, bgURL)
 
 watch(
   () => props.targetId,
   v => {
     // PC 端 contact 页面允许无缝切换空间操作，需要更新头像和背景
     if (v && isContacts.value && !isMobile.value) {
-      bgURL.value = `${VITE_OSS_BASE_URL}${v}/space-bg`
-      avatarURL.value = `${VITE_OSS_BASE_URL}${v}/avatar`
+      bgURL.value = `space-bg/${v}`
+      avatarURL.value = `avatar/${v}`
     }
   }
 )

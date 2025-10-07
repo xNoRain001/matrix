@@ -316,6 +316,7 @@ const getPostsFromAPI = async () => {
       const image = images[i]
       const _image = _images[i]
       const blob = await useURLToBlob(VITE_OSS_BASE_URL + image.url)
+      _image.ossURL = image.url
       image.url = URL.createObjectURL(blob)
       image.blob = blob
       delete _image.url

@@ -64,7 +64,13 @@ export type message = {
 
 export type content = {
   text?: string
-  images: { url: string; width: number; height: number; blob?: File }[]
+  images: {
+    url: string
+    ossURL: string
+    width: number
+    height: number
+    blob?: Blob
+  }[]
 }
 
 export type post = {

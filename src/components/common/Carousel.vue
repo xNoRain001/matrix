@@ -19,11 +19,7 @@
       <img
         @click="viewerOverlay.open({ urls: items, activeIndex: index })"
         :src="
-          item.url.startsWith('blob:')
-            ? item.url
-            : item.url.startsWith('https://')
-              ? item.url
-              : VITE_OSS_BASE_URL + item.url
+          item.url.startsWith('blob:') ? item.url : VITE_OSS_BASE_URL + item.url
         "
         class="rounded-lg"
         :width="item.width"

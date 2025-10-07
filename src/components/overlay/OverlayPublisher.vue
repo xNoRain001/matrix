@@ -51,7 +51,7 @@
       <UFileUpload
         ref="fileUploadRef"
         @update:model-value="onUpdateFile"
-        v-model="payload.images"
+        v-model="files"
         :dropzone="false"
         icon="lucide:plus"
         accept="image/png, image/jpeg, image/webp"
@@ -69,14 +69,12 @@
       </div>
       <div>
         <UButton
-          v-if="
-            (isPost || isFeedback) && (payload.text || payload.images.length)
-          "
+          v-if="(isPost || isFeedback) && (payload.text || files.length)"
           label="草稿箱"
           @click="onDraft"
         ></UButton>
         <UButton
-          :disabled="!payload.text && !payload.images.length"
+          :disabled="!payload.text && !files.length"
           class="ml-2"
           :label="title"
           @click="
@@ -155,7 +153,7 @@
       <UFileUpload
         ref="fileUploadRef"
         @update:model-value="onUpdateFile"
-        v-model="payload.images"
+        v-model="files"
         :dropzone="false"
         icon="lucide:plus"
         accept="image/png, image/jpeg, image/webp"
@@ -174,14 +172,12 @@
       </div>
       <div>
         <UButton
-          v-if="
-            (isPost || isFeedback) && (payload.text || payload.images.length)
-          "
+          v-if="(isPost || isFeedback) && (payload.text || files.length)"
           label="草稿箱"
           @click="onDraft"
         ></UButton>
         <UButton
-          :disabled="!payload.text && !payload.images.length"
+          :disabled="!payload.text && !files.length"
           class="ml-2"
           :label="title"
           @click="
@@ -206,14 +202,21 @@
 </template>
 
 <script lang="ts" setup>
-import { publishCommentAPI, replyAPI, updateCommentAPI } from '@/apis/comment'
+import {
+  publishCommentAPI,
+  replyAPI,
+  updateCommentAPI,
+  updateReplyAPI
+} from '@/apis/comment'
 import { usePostStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { onMounted, reactive, useTemplateRef } from 'vue'
+import { onMounted, reactive, ref, useTemplateRef } from 'vue'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import { publishPostAPI, updatePostAPI } from '@/apis/post'
 import { postFeedback } from '@/apis/feedback'
-import { useGenHash, useGetDB } from '@/hooks'
+import { useGetDB, useURLToBlob } from '@/hooks'
+import useUploadFilesToOSS from '@/hooks/use-upload-files-to-oss'
+import type { content } from '@/types'
 
 let sortable = false
 const props = defineProps<{
@@ -240,7 +243,50 @@ const isFeedback = action === 'feedback'
 const isUpdatePost = action === 'updatePost'
 const isUpdateComment = action === 'updateComment'
 const isUpdateReply = action === 'updateReply'
-const payload = reactive({
+const initFiles = async () => {
+  const initCommentFiles = async images => {
+    const files = []
+    for (let i = 0, l = images.length; i < l; i++) {
+      const { width, height, url } = images[i]
+      const blob = await useURLToBlob(VITE_OSS_BASE_URL + url)
+      ;(blob as any).ossURL = url
+      ;(blob as any).width = width
+      ;(blob as any).height = height
+      files.push(blob)
+    }
+
+    return files
+  }
+
+  return isUpdatePost
+    ? postMap.value[props.targetId].activePost.content.images.map(
+        ({ blob, width, height, ossURL }) => {
+          ;(blob as any).ossURL = ossURL
+          ;(blob as any).width = width
+          ;(blob as any).height = height
+
+          return blob
+        }
+      )
+    : isUpdateComment
+      ? await initCommentFiles(
+          postMap.value[props.targetId].comments[
+            postMap.value[props.targetId].activeCommentIndex
+          ].content.images
+        )
+      : isUpdateReply
+        ? await initCommentFiles(
+            postMap.value[props.targetId].comments[
+              postMap.value[props.targetId].activeCommentIndex
+            ].replyComments[postMap.value[props.targetId].activeReplyIndex]
+              .content.images
+          )
+        : []
+}
+const files = ref(await initFiles())
+const oldFilesOrder = files.value.map(item => item.ossURL)
+const oldFileLength = files.value.length
+const payload: content = reactive({
   text: isPost
     ? localStorage.getItem('postDraft') || ''
     : isUpdatePost
@@ -252,22 +298,9 @@ const payload = reactive({
           : isUpdateReply
             ? postMap.value[props.targetId].activeReplyContent.text
             : localStorage.getItem('feedbackDraft') || '',
-  images: isUpdatePost
-    ? postMap.value[props.targetId].activePost.content.images.map(
-        item => item.blob
-      )
-    : isUpdateComment
-      ? postMap.value[props.targetId].comments[
-          postMap.value[props.targetId].activeCommentIndex
-        ].content.images.map(item => (VITE_OSS_BASE_URL + item.url) as any)
-      : isUpdateReply
-        ? postMap.value[props.targetId].comments[
-            postMap.value[props.targetId].activeCommentIndex
-          ].replyComments[
-            postMap.value[props.targetId].activeReplyIndex
-          ].content.images.map(item => (VITE_OSS_BASE_URL + item.url) as any)
-        : []
+  images: []
 })
+const oldText = payload.text
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const toast = useToast()
 const emit = defineEmits<{ close: [boolean] }>()
@@ -292,14 +325,8 @@ const initDraggable = () => {
     setTimeout(() => {
       useSortable(
         fileUploadRef.value.dropzoneRef.children[0] as HTMLElement,
-        [],
-        {
-          animation: 150,
-          onUpdate: ({ oldIndex, newIndex }) => {
-            const item = payload.images.splice(oldIndex, 1)[0]
-            payload.images.splice(newIndex, 0, item)
-          }
-        }
+        files,
+        { animation: 150 }
       )
     })
   }
@@ -351,121 +378,128 @@ const onUpdateFile = files => {
 }
 
 const onDraft = () => {
-  if (payload.text || payload.images.length) {
-    localStorage.setItem(
-      isPost ? 'postDraft' : 'feedbackDraft',
-      JSON.stringify(payload)
-    )
-    toast.add({ title: '已保存到草稿', icon: 'lucide:smile' })
-  }
-
+  localStorage.setItem(
+    isPost ? 'postDraft' : 'feedbackDraft',
+    JSON.stringify(payload)
+  )
+  toast.add({ title: '已保存到草稿', icon: 'lucide:smile' })
   emit('close', true)
-}
-
-const getImageSize = () => {
-  const { images } = payload
-  const { length } = images
-
-  return new Promise(resolve => {
-    if (length) {
-      const metadata = []
-
-      for (let i = 0; i < length; i++) {
-        const image = images[i]
-        const img = new Image()
-        img.onload = () => {
-          const { width, height } = img
-          metadata.push({ width, height })
-
-          if (i === length - 1) {
-            resolve(metadata)
-          }
-        }
-        img.src = URL.createObjectURL(image)
-      }
-    } else {
-      resolve(null)
-    }
-  })
-}
-
-const transformPayloadToFormdata = async () => {
-  const { text, images } = payload
-  const { length } = images
-  const formdata = new FormData()
-
-  if (text) {
-    formdata.append('text', text)
-  }
-
-  if (length) {
-    const metadata = await getImageSize()
-
-    for (let i = 0; i < length; i++) {
-      const image = images[i]
-      metadata[i].hash = await useGenHash(image)
-      formdata.append(String(i), image)
-    }
-
-    formdata.append('metadata', JSON.stringify(metadata))
-  }
-
-  return formdata
 }
 
 const onPublishPost = async () => {
   try {
-    const formdata = await transformPayloadToFormdata()
-    const { data: post } = await publishPostAPI(formdata)
+    const imageMetadata = await useUploadFilesToOSS(
+      userInfo,
+      'image',
+      files.value
+    )
+    payload.images = imageMetadata
+    const formData = new FormData()
+    formData.append('type', 'publishPost')
+    formData.append('content', JSON.stringify(payload))
+    const { data: post } = await publishPostAPI(formData)
     const _post = JSON.parse(JSON.stringify(post))
+    const images = post.content.images
+    const _images = _post.content.images
     toast.add({ title: '发布成功', icon: 'lucide:smile' })
     localStorage.removeItem('postDraft')
-    const { images } = post.content
-    const { images: _images } = _post.content
-    const { images: __images } = payload
-    for (let i = 0, l = images.length; i < l; i++) {
+    for (let i = 0, l = imageMetadata.length; i < l; i++) {
+      const file = files.value[i]
       const image = images[i]
       const _image = _images[i]
-      const file = __images[i]
+      // 先保存 ossURL
+      _image.ossURL = image.url
+      // 内存中也需要保存，这样立马进行更新时能判断出不是新图片
+      image.ossURL = image.url
       image.url = URL.createObjectURL(file)
       image.blob = file
-      delete _image.url
       _image.blob = file
+      delete _image.url
     }
-    postMap.value[props.targetId].posts.unshift(post)
     const db = await useGetDB(userInfo.value.id)
-    await db.add('posts', _post)
-    payload.text = ''
-    payload.images = []
+    // 需要保存 id，否则没有重新从本地数据库读取的清空下进行修改时无法更新本地数据库
+    post.id = await db.add('posts', _post)
+    postMap.value[props.targetId].posts.unshift(post)
     emit('close', true)
   } catch {
     toast.add({ title: '发布失败', color: 'error', icon: 'lucide:annoyed' })
   }
 }
 
-const onUpdatePost = async () => {
-  try {
-    const formdata = await transformPayloadToFormdata()
-    formdata.append('postId', postMap.value[props.targetId].activePostId)
-    const { data: latestContent } = await updatePostAPI(formdata)
-    const _latestContent = JSON.parse(JSON.stringify(latestContent))
+const isChanged = () => {
+  let res = true
+
+  // 判断是否更新了图片顺序
+  for (let i = 0, l = oldFilesOrder.length; i < l; i++) {
+    // 可能删除了所有图片，此时 files 为空数组
+    if (oldFilesOrder[i] !== files.value[i]?.ossURL) {
+      res = false
+      break
+    }
+  }
+
+  // 图片顺序没更新，但是有可能在最后新增了图片
+  if (res) {
+    res = files.value.length === oldFileLength
+  }
+
+  // 没发生任何改变
+  if (payload.text === oldText && res) {
     toast.add({ title: '更新成功', icon: 'lucide:smile' })
-    const { images } = latestContent
+    return false
+  }
+
+  // 发生了改变，需要判断是否将文字和图片都清空了
+  if (!payload.text && !files.value.length) {
+    toast.add({ title: '内容不能为空', color: 'error', icon: 'lucide:annoyed' })
+    return false
+  }
+
+  return true
+}
+
+const onUpdatePost = async () => {
+  if (!isChanged()) {
+    return
+  }
+
+  try {
+    const imageMetadata = await useUploadFilesToOSS(
+      userInfo,
+      'image',
+      files.value
+    )
+    payload.images = imageMetadata
+    const formData = new FormData()
+    const activePostId = postMap.value[props.targetId].activePostId
+    formData.append('type', 'updatePost')
+    formData.append('postId', activePostId)
+    const stringifyPayload = JSON.stringify(payload)
+    formData.append('content', stringifyPayload)
+    await updatePostAPI(formData)
+    const _latestContent = JSON.parse(stringifyPayload)
+    const { images } = payload
     const { images: _images } = _latestContent
-    const { images: __images } = payload
+    toast.add({ title: '更新成功', icon: 'lucide:smile' })
     const _activePost = postMap.value[props.targetId].activePost
-    for (let i = 0, l = images.length; i < l; i++) {
+    for (let i = 0, l = imageMetadata.length; i < l; i++) {
+      const file = files.value[i]
       const image = images[i]
       const _image = _images[i]
-      const file = __images[i]
+      // 如果不是新增的图片，url 已经在数据库中保存了
+      const ossURL = image.url.startsWith('tmp/')
+        ? `posts/${activePostId}/${image.url.split('/')[2]}`
+        : image.url
+      _image.ossURL = ossURL
+      image.ossURL = ossURL
       image.url = URL.createObjectURL(file)
       image.blob = file
-      delete _image.url
       _image.blob = file
+      delete _image.url
     }
     _activePost.updateAt = Date.now()
     const post = JSON.parse(JSON.stringify(_activePost))
-    _activePost.content = latestContent
+    _activePost.content = payload
     post.content = _latestContent
     const db = await useGetDB(userInfo.value.id)
     const tx = db.transaction('posts', 'readwrite')
@@ -478,8 +512,6 @@ const onUpdatePost = async () => {
       // 由于是从本地数据库中读取的，post 中有 id 字段，所以不需要传 id
       await store.put(post)
     }
-    payload.text = ''
-    payload.images = []
     emit('close', true)
   } catch {
     toast.add({ title: '更新失败', color: 'error', icon: 'lucide:annoyed' })
@@ -487,16 +519,39 @@ const onUpdatePost = async () => {
 }
 
 const onUpdateReply = async () => {
+  if (!isChanged()) {
+    return
+  }
+
   try {
-    const formdata = await transformPayloadToFormdata()
-    formdata.append('commentId', postMap.value[props.targetId].activeReplyId)
-    const newContent = (await updateCommentAPI(formdata)).data
-    payload.text = ''
-    payload.images = []
-    postMap.value[props.targetId].comments[
-      postMap.value[props.targetId].activeCommentIndex
-    ].replyComments[postMap.value[props.targetId].activeReplyIndex].content =
-      newContent
+    const imageMetadata = await useUploadFilesToOSS(
+      userInfo,
+      'image',
+      files.value
+    )
+    payload.images = imageMetadata
+    const formData = new FormData()
+    const activePostId = postMap.value[props.targetId].activePostId
+    formData.append('type', 'updateReply')
+    formData.append('content', JSON.stringify(payload))
+    formData.append('postId', activePostId)
+    formData.append('commentId', postMap.value[props.targetId].activeCommentId)
+    formData.append('replyId', postMap.value[props.targetId].activeReplyId)
+    await updateReplyAPI(formData)
+    const images = payload.images
+    for (let i = 0, l = images.length; i < l; i++) {
+      const image = images[i]
+      const { url } = image
+      image.url = url.startsWith('tmp/')
+        ? `posts/${activePostId}/${postMap.value[props.targetId].activeCommentId}/${postMap.value[props.targetId].activeReplyId}/${url.split('/')[4]}`
+        : url
+    }
+    const reply =
+      postMap.value[props.targetId].comments[
+        postMap.value[props.targetId].activeCommentIndex
+      ].replyComments[postMap.value[props.targetId].activeReplyIndex]
+    reply.content = payload
+    reply.updateAt = Date.now()
     emit('close', true)
   } catch {
     toast.add({ title: '操作失败', color: 'error', icon: 'lucide:annoyed' })
@@ -505,19 +560,26 @@ const onUpdateReply = async () => {
 
 const onReply = async () => {
   try {
-    const formdata = await transformPayloadToFormdata()
+    const imageMetadata = await useUploadFilesToOSS(
+      userInfo,
+      'image',
+      files.value
+    )
+    payload.images = imageMetadata
+    const formData = new FormData()
+    formData.append('type', 'reply')
+    formData.append('content', JSON.stringify(payload))
+    formData.append('postId', postMap.value[props.targetId].activePostId)
     const _activeCommentId = postMap.value[props.targetId].activeCommentId
-    formdata.append('owner', props.owner)
-    formdata.append('postId', postMap.value[props.targetId].activePostId)
-    formdata.append('commentId', _activeCommentId)
-    formdata.append('replyTarget', props.replyTarget || '')
-    formdata.append(
+    formData.append('commentId', _activeCommentId)
+    formData.append('owner', props.owner)
+    formData.append('replyTarget', props.replyTarget || '')
+    formData.append(
       'replyId',
       postMap.value[props.targetId].activeReplyId || ''
     )
-    const newComment = (await replyAPI(formdata)).data
-    payload.text = ''
-    payload.images = []
+    const newComment = (await replyAPI(formData)).data
+    toast.add({ title: '评论成功', icon: 'lucide:smile' })
     newComment.profile = userInfo.value.profile
     postMap.value[props.targetId].activePost.commentCount++
     const comment =
@@ -525,13 +587,10 @@ const onReply = async () => {
         postMap.value[props.targetId].activeCommentIndex
       ]
     comment.replyCount++
-
     if (props.replyTarget) {
       newComment.replyTargetProfile = { nickname: props.replyTargetNickname }
     }
-
     comment.replyComments.unshift(newComment)
-
     // 如果当前展开了回复，可见数量需要自增，因为当前可能展开了所有评论，而新增评论
     // 后如果不自增，会出现展开更多按钮
     if (
@@ -541,7 +600,6 @@ const onReply = async () => {
     ) {
       comment.visibleReplyCount++
     }
-
     emit('close', true)
   } catch {
     toast.add({ title: '操作失败', color: 'error', icon: 'lucide:annoyed' })
@@ -549,18 +607,37 @@ const onReply = async () => {
 }
 
 const onUpdateComment = async () => {
+  if (!isChanged()) {
+    return
+  }
+
   try {
-    const formdata = await transformPayloadToFormdata()
-    formdata.append('commentId', postMap.value[props.targetId].activeCommentId)
-    const newComment = (await updateCommentAPI(formdata)).data
-    payload.text = ''
-    payload.images = []
-    newComment.profile = userInfo.value.profile
+    const imageMetadata = await useUploadFilesToOSS(
+      userInfo,
+      'image',
+      files.value
+    )
+    payload.images = imageMetadata
+    const formData = new FormData()
+    const activePostId = postMap.value[props.targetId].activePostId
+    formData.append('type', 'updateComment')
+    formData.append('content', JSON.stringify(payload))
+    formData.append('postId', activePostId)
+    formData.append('commentId', postMap.value[props.targetId].activeCommentId)
+    await updateCommentAPI(formData)
+    const images = payload.images
+    for (let i = 0, l = images.length; i < l; i++) {
+      const image = images[i]
+      const { url } = image
+      image.url = url.startsWith('tmp/')
+        ? `posts/${activePostId}/${postMap.value[props.targetId].activeCommentId}/${url.split('/')[3]}`
+        : url
+    }
     const comment =
       postMap.value[props.targetId].comments[
         postMap.value[props.targetId].activeCommentIndex
       ]
-    comment.content = newComment
+    comment.content = payload
     comment.updateAt = Date.now()
     emit('close', true)
   } catch {
@@ -570,11 +647,18 @@ const onUpdateComment = async () => {
 
 const onPublishComment = async () => {
   try {
-    const formdata = await transformPayloadToFormdata()
-    formdata.append('postId', postMap.value[props.targetId].activePostId)
-    const newComment = (await publishCommentAPI(formdata)).data
-    payload.text = ''
-    payload.images = []
+    const imageMetadata = await useUploadFilesToOSS(
+      userInfo,
+      'image',
+      files.value
+    )
+    payload.images = imageMetadata
+    const formData = new FormData()
+    formData.append('type', 'publishComment')
+    formData.append('content', JSON.stringify(payload))
+    formData.append('postId', postMap.value[props.targetId].activePostId)
+    const newComment = (await publishCommentAPI(formData)).data
+    toast.add({ title: '发布成功', icon: 'lucide:smile' })
     postMap.value[props.targetId].activePost.commentCount++
     newComment.page = 0
     newComment.visibleReplyCount = 0
@@ -591,10 +675,16 @@ const onPublishComment = async () => {
 
 const onFeedback = async () => {
   try {
-    const formdata = await transformPayloadToFormdata()
-    await postFeedback(formdata)
-    payload.text = ''
-    payload.images = []
+    const imageMetadata = await useUploadFilesToOSS(
+      userInfo,
+      'image',
+      files.value
+    )
+    payload.images = imageMetadata
+    const formData = new FormData()
+    formData.append('type', 'feedback')
+    formData.append('content', JSON.stringify(payload))
+    await postFeedback(formData)
     toast.add({ title: '提交成功', icon: 'lucide:smile' })
     localStorage.removeItem('feedbackDraft')
     emit('close', true)
@@ -605,7 +695,9 @@ const onFeedback = async () => {
 
 onMounted(() => {
   setTimeout(() => {
-    initDraggable()
+    if (files.value.length) {
+      initDraggable()
+    }
   })
 })
 </script>
