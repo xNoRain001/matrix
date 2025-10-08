@@ -125,7 +125,7 @@ import {
 } from '@/hooks'
 import OverlayPostDetail from '../overlay/OverlayPostDetail.vue'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { deletePostAPI, getPostsAPI } from '@/apis/post'
+import { deletePostAPI, getPostsAPI, getSelfPostsAPI } from '@/apis/post'
 import { storeToRefs } from 'pinia'
 import { usePostStore, useUserStore } from '@/store'
 import OverlayPublisher from '../overlay/OverlayPublisher.vue'
@@ -299,39 +299,43 @@ const getPostsFromIndexedDB = async () => {
 }
 
 const getPostsFromAPI = async () => {
-  const { data } = await getPostsAPI()
-  const _data = JSON.parse(JSON.stringify(data))
+  try {
+    const { data } = await getSelfPostsAPI()
+    const _data = JSON.parse(JSON.stringify(data))
 
-  for (let i = 0, l = data.length; i < l; i++) {
-    const { images } = data[i].content
-    const { images: _images } = _data[i].content
+    for (let i = 0, l = data.length; i < l; i++) {
+      const { images } = data[i].content
+      const { images: _images } = _data[i].content
 
-    for (let i = 0, l = images.length; i < l; i++) {
-      const image = images[i]
-      const _image = _images[i]
-      const blob = await useURLToBlob(VITE_OSS_BASE_URL + image.url)
-      _image.ossURL = image.url
-      image.url = URL.createObjectURL(blob)
-      image.blob = blob
-      delete _image.url
-      _image.blob = blob
+      for (let i = 0, l = images.length; i < l; i++) {
+        const image = images[i]
+        const _image = _images[i]
+        const blob = await useURLToBlob(VITE_OSS_BASE_URL + image.url)
+        _image.ossURL = image.url
+        image.url = URL.createObjectURL(blob)
+        image.blob = blob
+        delete _image.url
+        _image.blob = blob
+      }
     }
+
+    const db = await useGetDB(userInfo.value.id)
+    const tx = db.transaction('posts', 'readwrite')
+    const store = tx.objectStore('posts')
+
+    for (let i = _data.length - 1; i >= 0; i--) {
+      await store.add(_data[i])
+    }
+
+    await tx.done
+
+    localStorage.setItem(`persistentPosts-${userInfo.value.id}`, 'true')
+    allPostLoaded.value = true
+
+    return data
+  } catch (error) {
+    toast.add({ title: error.message, color: 'error', icon: 'lucide:annoyed' })
   }
-
-  const db = await useGetDB(userInfo.value.id)
-  const tx = db.transaction('posts', 'readwrite')
-  const store = tx.objectStore('posts')
-
-  for (let i = _data.length - 1; i >= 0; i--) {
-    await store.add(_data[i])
-  }
-
-  await tx.done
-
-  localStorage.setItem(`persistentPosts-${userInfo.value.id}`, 'true')
-  allPostLoaded.value = true
-
-  return data
 }
 
 watch(
