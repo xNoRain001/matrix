@@ -28,7 +28,8 @@
         indicator="hidden"
         :items="items"
         :ui="{
-          item: 'bg-elevated/50  has-data-[state=checked]:bg-elevated'
+          // has-data-[state=checked]:bg-elevated
+          item: 'bg-elevated/50'
         }"
       >
         <template #label="{ item: { label, value } }">

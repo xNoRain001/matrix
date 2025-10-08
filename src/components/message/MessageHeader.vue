@@ -30,7 +30,7 @@
     </template>
     <template #right>
       <UButton
-        v-if="!isMatch || (isMatch && !isMobile)"
+        v-if="isMatch && isMobile"
         :icon="open ? 'lucide:chevrons-up' : 'lucide:chevrons-down'"
         color="neutral"
         variant="ghost"
@@ -45,7 +45,7 @@
   </UDashboardNavbar>
 
   <UCollapsible
-    v-if="!isMatch || (isMatch && !isMobile)"
+    v-if="isMatch && isMobile"
     v-model:open="open"
     class="border-default cursor-pointer border-b"
     @click="toSpace"

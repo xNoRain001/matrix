@@ -22,13 +22,7 @@
         <template #right>
           <UButton
             v-if="isSelf"
-            icon="lucide:bell"
-            variant="ghost"
-            @click="postNotificationOverlay.open()"
-          />
-          <UButton
-            v-if="isSelf"
-            icon="lucide:plus"
+            icon="lucide:pencil-line"
             variant="ghost"
             @click="publisherOverlay.open({ action: 'post', targetId })"
           />
@@ -299,7 +293,6 @@ import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
 import OverlayHelpAndSupport from '@/components/overlay/OverlayHelpAndSupport.vue'
 import OverlayAbout from '@/components/overlay/OverlayAbout.vue'
 import OverlayMessageView from '@/components/overlay/OverlayMessageView.vue'
-import OverlayPostNotification from '../overlay/OverlayPostNotification.vue'
 import type { userInfo } from '@/types'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import { updateProfile } from '@/apis/profile'
@@ -429,7 +422,6 @@ const publisherOverlay = overlay.create(OverlayPublisher)
 const helpAndSupportOverlay = overlay.create(OverlayHelpAndSupport)
 const aboutOverlay = overlay.create(OverlayAbout)
 const messageViewOverlay = overlay.create(OverlayMessageView)
-const postNotificationOverlay = overlay.create(OverlayPostNotification)
 const prevRoute = route.path
 const isTagSlideoverOpen = ref(false)
 const tag = ref('')

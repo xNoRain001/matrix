@@ -137,18 +137,22 @@
             <div
               v-if="item.url"
               @click="onPlayAudio(item.url)"
-              class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
+              class="flex flex-col gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
             >
-              {{ item.duration }}''
-              <UIcon
-                :name="
-                  playingURL === item.url
-                    ? 'lucide:volume-2'
-                    : 'lucide:audio-lines'
-                "
-                :class="playingURL === item.url ? 'rotate-180' : ''"
-                class="size-5"
-              ></UIcon>
+              <div class="flex items-center gap-2">
+                <UIcon
+                  :name="
+                    playingURL === item.url
+                      ? 'lucide:circle-pause'
+                      : 'lucide:circle-play'
+                  "
+                  class="size-5"
+                ></UIcon>
+                <UIcon name="lucide:audio-lines" class="size-5"></UIcon>
+                <span>{{ item.duration }}''</span>
+              </div>
+              <!-- <USeparator label="识别结果" color="primary" />
+              <div>Lorem ipsum dolor sit amet.</div> -->
             </div>
             <div
               v-else
@@ -157,6 +161,7 @@
               <UIcon name="lucide:volume-off" class="size-5"></UIcon>
               音频已失效
             </div>
+
             <UAvatar
               v-if="item.separator"
               :alt="userInfo.profile.nickname[0] || ''"
@@ -180,12 +185,13 @@
               <UIcon
                 :name="
                   playingURL === item.url
-                    ? 'lucide:volume-2'
-                    : 'lucide:audio-lines'
+                    ? 'lucide:circle-pause'
+                    : 'lucide:circle-play'
                 "
                 class="size-5"
               ></UIcon>
-              {{ item.duration }}''
+              <UIcon name="lucide:audio-lines" class="size-5"></UIcon>
+              <span>{{ item.duration }}''</span>
             </div>
             <div
               v-else

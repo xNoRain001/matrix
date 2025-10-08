@@ -71,8 +71,8 @@ let matchType = ''
 const list = [
   {
     icon: 'lucide:message-circle',
-    title: '即时聊天',
-    desc: '端到端加密，不留痕迹的安全对话',
+    title: '匹配聊天',
+    desc: '遇见同频的灵魂伙伴',
     matchType: 'chat',
     to: '/chat'
   },
@@ -82,13 +82,13 @@ const list = [
     desc: '高清音质，实时畅聊无延迟',
     matchType: 'voice-chat',
     to: '/voice-chat'
-  },
-  {
-    icon: 'lucide:video',
-    title: '视频聊天',
-    desc: '开发中...',
-    to: '/'
   }
+  // {
+  //   icon: 'lucide:video',
+  //   title: '视频聊天',
+  //   desc: '开发中...',
+  //   to: '/'
+  // }
 ]
 const isFilterOverlayOpen = ref(false)
 const { hasMatchRes, offline, matching, noMatch, filter } =

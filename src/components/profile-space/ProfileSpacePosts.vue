@@ -81,6 +81,7 @@
         </div>
       </div>
     </UPageCard>
+    <USeparator v-if="allPostLoaded" class="p-4 sm:p-6" label="已经到底了" />
     <UDrawer
       v-model:open="isEditMenuDrawerOpen"
       :handle="false"
@@ -102,20 +103,13 @@
       </template>
     </UDrawer>
   </UPageList>
-  <div v-else class="mt-4 flex justify-center sm:mt-6">
-    <UButton
-      variant="ghost"
-      class="flex flex-col"
-      icon="lucide:coffee"
-      label="空空如也..."
-    ></UButton>
-  </div>
+  <USeparator v-else class="p-4 sm:p-6" label="空空如也" />
   <!-- 滚动到顶部浮动按钮 -->
   <UButton
-    v-if="isFloatingBtnShow"
+    v-if="!isMobile && isFloatingBtnShow"
     @click="onScrollToTop"
     class="fixed right-4 bottom-20 sm:right-6 sm:bottom-22"
-    icon="lucide:chevrons-up"
+    icon="lucide:rocket"
     size="xl"
   />
 </template>
@@ -149,9 +143,11 @@ const publisherOverlay = overlay.create(OverlayPublisher)
 const { userInfo } = storeToRefs(useUserStore())
 const { postMap } = storeToRefs(usePostStore())
 const isSelf = props.targetId === userInfo.value.id
-let allPostLoaded = isSelf
-  ? Boolean(localStorage.getItem(`persistentPosts-${userInfo.value.id}`))
-  : false
+const allPostLoaded = ref(
+  isSelf
+    ? Boolean(localStorage.getItem(`persistentPosts-${userInfo.value.id}`))
+    : false
+)
 const toast = useToast()
 const isEditMenuDrawerOpen = ref(false)
 const dropdownMenuItems = [
@@ -184,13 +180,11 @@ const onScroll = useThrottleFn(
   async () => {
     const { scrollTop, scrollHeight, clientHeight } = props.container
 
-    if (scrollTop > 400) {
-      isFloatingBtnShow.value = true
-    } else {
-      isFloatingBtnShow.value = false
+    if (!isMobile.value) {
+      isFloatingBtnShow.value = scrollTop > 400
     }
 
-    if (allPostLoaded) {
+    if (allPostLoaded.value) {
       return
     }
 
@@ -208,7 +202,7 @@ const onScroll = useThrottleFn(
 
       // 等于 10 时会多发送一次请求，不做处理
       if (data.length < 10) {
-        allPostLoaded = true
+        allPostLoaded.value = true
       }
     }
   },
@@ -305,7 +299,7 @@ const getPostsFromIndexedDB = async () => {
 }
 
 const getPostsFromAPI = async () => {
-  const { data } = await getPostsAPI('', '')
+  const { data } = await getPostsAPI()
   const _data = JSON.parse(JSON.stringify(data))
 
   for (let i = 0, l = data.length; i < l; i++) {
@@ -335,7 +329,7 @@ const getPostsFromAPI = async () => {
   await tx.done
 
   localStorage.setItem(`persistentPosts-${userInfo.value.id}`, 'true')
-  allPostLoaded = true
+  allPostLoaded.value = true
 
   return data
 }
@@ -356,7 +350,7 @@ watch(
 onMounted(async () => {
   postMap.value[props.targetId] = {} as any
   postMap.value[props.targetId].posts = isSelf
-    ? allPostLoaded
+    ? allPostLoaded.value
       ? await getPostsFromIndexedDB()
       : await getPostsFromAPI()
     : (await getPostsAPI(props.targetId)).data

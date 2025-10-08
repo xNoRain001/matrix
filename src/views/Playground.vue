@@ -5,6 +5,7 @@
     </template>
     <template #body>
       <UTabs
+        ref="tabsRef"
         :items="tabItems"
         v-model="activeTab"
         variant="link"
@@ -35,9 +36,9 @@
               :key="_id"
               variant="subtle"
               class="hover:bg-accented/50 cursor-pointer"
-              :ui="{ body: 'w-full' }"
+              :ui="{ footer: 'pt-2', body: 'w-full', description: 'space-y-2' }"
             >
-              <template #header>
+              <template #footer>
                 <UUser
                   :avatar="{
                     alt: profile?.nickname[0]
@@ -59,9 +60,7 @@
               </template>
               <template #description>
                 <!-- before:content-[open-quote] after:content-[close-quote] -->
-                <div
-                  class="text-base before:content-[open-quote] after:content-[close-quote]"
-                >
+                <div class="text-base">
                   {{ content.text }}
                 </div>
                 <Carousel
@@ -69,7 +68,6 @@
                   :items="content.images"
                   :active-index="0"
                 ></Carousel>
-
                 <div class="flex items-center justify-between">
                   <p class="text-toned text-sm">
                     {{ useFormatTimeAgo(createdAt) }} · 广东
@@ -116,6 +114,11 @@
               </template>
             </UPageCard>
           </UPageColumns>
+          <USeparator
+            v-if="allPostLoaded"
+            class="px-4 pt-4 sm:px-6 sm:pt-6"
+            label="已经到底了"
+          />
         </template>
       </UTabs>
     </template>
@@ -126,7 +129,7 @@
 </template>
 
 <script lang="ts" setup>
-import { getPlaygroundPostsAPI } from '@/apis/post'
+import { getPlaygroundPostsAPI } from '@/apis/playground'
 import OverlayPostDetail from '@/components/overlay/OverlayPostDetail.vue'
 import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 import {
@@ -136,23 +139,25 @@ import {
   useOpenSpace
 } from '@/hooks'
 import { usePostStore, useRecentContactsStore, useUserStore } from '@/store'
+import { useThrottleFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, useTemplateRef, watch } from 'vue'
 
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const activeTab = ref<'latest' | 'friend' | 'hot'>('latest')
 const tabItems = [
-  {
-    label: '好友',
-    value: 'friend'
-  },
+  // {
+  //   label: '好友',
+  //   value: 'friend'
+  // },
   // {
   //   label: '热门',
   //   value: 'hot',
   // },
   {
     label: '最新',
-    value: 'latest'
+    value: 'latest',
+    icon: 'lucide:refresh-ccw'
   }
 ]
 const { postMap } = storeToRefs(usePostStore())
@@ -170,6 +175,70 @@ const toast = useToast()
 const overlay = useOverlay()
 const postDetailOverlay = overlay.create(OverlayPostDetail)
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
+const tabsRef = useTemplateRef('tabsRef')
+const allPostLoaded = ref(false)
+
+const getLatestData = async () => {
+  const _activeTab = activeTab.value
+
+  if (_activeTab === 'latest') {
+    const posts = (
+      await getPlaygroundPostsAPI(
+        _activeTab,
+        '',
+        postMap.value[_activeTab].posts[0]._id
+      )
+    ).data
+    const { length } = posts
+
+    if (length) {
+      if (length < 10) {
+        postMap.value[_activeTab].posts.unshift(...posts)
+      } else {
+        postMap.value[_activeTab].posts = posts
+      }
+    } else {
+      toast.add({
+        title: '暂时没有新内容',
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
+    }
+  }
+}
+
+const onScroll = useThrottleFn(
+  async e => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target
+
+    // if (!isMobile.value) {
+    //   isFloatingBtnShow.value = scrollTop > 400
+    // }
+
+    if (allPostLoaded.value) {
+      return
+    }
+
+    if (scrollHeight - (scrollTop + clientHeight) < 64) {
+      const lastId =
+        postMap.value[activeTab.value].posts[
+          postMap.value[activeTab.value].posts.length - 1
+        ]._id
+      const { data } = await getPlaygroundPostsAPI(activeTab.value, lastId)
+      const { length } = data
+
+      if (length) {
+        postMap.value[activeTab.value].posts.push(...data)
+      }
+
+      allPostLoaded.value =
+        length < 10 || postMap.value[activeTab.value].posts.length > 100
+    }
+  },
+  200,
+  true,
+  false
+)
 
 watch(activeTab, async v => {
   if (!postMap.value[v]) {
@@ -180,9 +249,18 @@ watch(activeTab, async v => {
 
 onMounted(async () => {
   const _activeTab = activeTab.value
-  postMap.value[_activeTab] = {} as any
-  postMap.value[_activeTab].posts = (
-    await getPlaygroundPostsAPI(_activeTab)
-  ).data
+
+  if (!postMap.value[_activeTab]) {
+    postMap.value[_activeTab] = {} as any
+    const posts = (await getPlaygroundPostsAPI(_activeTab)).data
+    postMap.value[_activeTab].posts = posts
+    allPostLoaded.value = posts.length < 10
+  }
+
+  tabsRef.value.triggersRef[0].$el.addEventListener('click', getLatestData)
+  tabsRef.value.triggersRef[0].$el.parentNode.parentNode.parentNode.addEventListener(
+    'scroll',
+    onScroll
+  )
 })
 </script>

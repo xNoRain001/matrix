@@ -5,16 +5,16 @@
     </template>
 
     <template #right>
-      <!-- <UButton
+      <UButton
         color="neutral"
         variant="ghost"
         square
         @click="isNotificationsSlideoverOpen = true"
       >
-        <UChip :show="Boolean(notifications.length)" color="error" inset>
+        <UChip :show="true" color="error" inset>
           <UIcon name="i-lucide-bell" class="text-primary size-5 shrink-0" />
         </UChip>
-      </UButton> -->
+      </UButton>
       <UButton
         @click="isFilterOverlayOpen = true"
         icon="lucide:filter"
