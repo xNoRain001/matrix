@@ -80,6 +80,11 @@ const router = createRouter({
       meta: { auth: true },
       component: () => import('@/views/Playground.vue')
     },
+    {
+      path: '/ys',
+      meta: { auth: true },
+      component: () => import('@/views/YS.vue')
+    },
     // 404 路由
     {
       path: '/:pathMatch(.*)*',

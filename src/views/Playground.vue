@@ -4,17 +4,11 @@
       <PlaygroundHeader></PlaygroundHeader>
     </template>
     <template #body>
-      <UTabs
-        ref="tabsRef"
-        :items="tabItems"
-        v-model="activeTab"
-        variant="link"
-        :ui="{ root: 'gap-4 sm:gap-6' }"
-      >
+      <UTabs ref="tabsRef" :items="tabItems" v-model="activeTab" variant="link">
         <template #content>
           <UPageColumns
             v-if="postMap?.[activeTab]?.posts?.length"
-            class="gap-4 space-y-4 sm:gap-6 sm:space-y-6"
+            class="space-y-4 sm:space-y-6"
             :class="
               activeTab === 'friend' ? 'column-1 md:columns-1 lg:columns-1' : ''
             "

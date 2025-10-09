@@ -72,7 +72,7 @@ const list = [
   {
     icon: 'lucide:message-circle',
     title: '匹配聊天',
-    desc: '遇见同频的灵魂伙伴',
+    desc: '遇见同频的伙伴',
     matchType: 'chat',
     to: '/chat'
   },
