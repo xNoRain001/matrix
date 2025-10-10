@@ -8,6 +8,12 @@ export const login = async encryptedUserInfo =>
     data: { encryptedUserInfo }
   })
 
+export const loginWithFingerprint = async encryptedUserInfo =>
+  HTTP.request(`${prefix}/login-with-fingerprint`, {
+    method: 'POST',
+    data: { encryptedUserInfo }
+  })
+
 export const loginWithPin = async (email, code) =>
   HTTP.request(`${prefix}/login-with-pin?email=${email}&code=${code}`)
 

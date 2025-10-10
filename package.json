@@ -14,6 +14,7 @@
     "deploy": "wrangler pages deploy dist --project-name chat --branch=main --commit-dirty=true"
   },
   "dependencies": {
+    "@fingerprintjs/fingerprintjs": "^4.6.2",
     "@internationalized/date": "^3.9.0",
     "@nuxt/ui": "^4.0.0",
     "@tailwindcss/vite": "^4.1.7",

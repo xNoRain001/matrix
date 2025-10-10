@@ -575,10 +575,4 @@ watch(loginWithVCPin, async v => {
     }
   }
 })
-
-onBeforeMount(() => {
-  // 登出时清空了本地 token，路由中放行，才能进入到这里，在这里重置 userInfo，因为
-  // 其他页面可能会使用到 userInfo，提前清空会报错
-  userInfo.value = null
-})
 </script>

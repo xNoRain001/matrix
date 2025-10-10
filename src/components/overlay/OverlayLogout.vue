@@ -36,10 +36,8 @@
 <script setup lang="ts">
 import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
 
 const emit = defineEmits<{ close: [boolean] }>()
-const router = useRouter()
 const { isMobile } = storeToRefs(useUserStore())
 const title = '退出登录'
 const description = ' '
@@ -47,6 +45,6 @@ const description = ' '
 const onLogout = () => {
   emit('close', true)
   localStorage.removeItem('token')
-  router.replace('/login')
+  location.replace('/login')
 }
 </script>

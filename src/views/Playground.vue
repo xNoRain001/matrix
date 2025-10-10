@@ -190,6 +190,7 @@ const getLatestData = async () => {
         postMap.value[_activeTab].posts.unshift(...posts)
       } else {
         postMap.value[_activeTab].posts = posts
+        allPostLoaded.value = false
       }
     } else {
       toast.add({
@@ -252,9 +253,8 @@ onMounted(async () => {
   }
 
   tabsRef.value.triggersRef[0].$el.addEventListener('click', getLatestData)
-  tabsRef.value.triggersRef[0].$el.parentNode.parentNode.parentNode.addEventListener(
-    'scroll',
-    onScroll
-  )
+  document
+    .querySelector('#dashboard-panel-playground')
+    .children[1].addEventListener('scroll', onScroll)
 })
 </script>

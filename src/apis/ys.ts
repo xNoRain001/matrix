@@ -13,9 +13,13 @@ export const helpAPI = async id => HTTP.request(`${prefix}/help?assistId=${id}`)
 export const cancelAssistAPI = async avatar =>
   HTTP.request(`${prefix}/cancel-assist?avatar=${avatar}`)
 
-export const getAssistsAPI = async ({ avatar, createdAt }, lastId = '') =>
+export const getAssistsAPI = async (
+  { avatar, createdAt },
+  lastId = '',
+  firstId = ''
+) =>
   HTTP.request(
-    `${prefix}/assists?avatar=${avatar}&createdAt=${createdAt}&lastId=${lastId}`
+    `${prefix}/assists?avatar=${avatar}&createdAt=${createdAt}&lastId=${lastId}&firstId=${firstId}`
   )
 
 export const getMyAssistsAPI = async () => HTTP.request(`${prefix}/my-assists`)

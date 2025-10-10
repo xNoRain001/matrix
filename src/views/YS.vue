@@ -8,6 +8,11 @@
 
         <template #right>
           <UButton
+            icon="lucide:refresh-ccw"
+            variant="ghost"
+            @click="onRefresh"
+          ></UButton>
+          <UButton
             icon="lucide:bell"
             variant="ghost"
             @click="onClick"
@@ -68,11 +73,11 @@
           ) in helpItems"
           :key="_id"
           variant="soft"
-          class="not-last:mb-2"
+          class="cursor-pointer not-last:mb-2"
           :ui="{
             header: 'mb-2'
           }"
-          @click="onHelp(_id, user, index)"
+          @click="onConfirm(_id, user, index)"
         >
           <template #header>
             <UUser
@@ -98,7 +103,7 @@
           <template #body>
             <div class="flex flex-wrap gap-2">
               <UBadge
-                :label="`支援角色: ${avatarMap[avatar]} | Lv.${avatarLevel} | 6 命`"
+                :label="`${avatarMap[avatar]} | Lv.${avatarLevel} | 6 命`"
               ></UBadge>
               <UBadge :label="`剩余次数 ${count}`"></UBadge>
               <UBadge :label="`世界等级 ${worldLevel}`"></UBadge>
@@ -110,6 +115,12 @@
                 :label="`幽境危战 ${stygianIndex} | ${stygianSeconds}秒`"
               ></UBadge>
               <UBadge :label="`满好感度角色数量 ${fetterCount}`"></UBadge>
+            </div>
+            <div class="mt-2 flex gap-2">
+              <img
+                :src="`/images/gi-avatars/${avatar}.png`"
+                class="size-28 rounded-lg"
+              />
             </div>
             <p class="text-muted mt-2 text-sm">
               {{ useFormatTimeAgo(createdAt) }}
@@ -162,44 +173,16 @@
                 size="xs"
                 color="error"
                 @click="onCancelAssist(index, avatar)"
+                loading-auto
               ></UButton>
             </template>
             <template #description>
-              <span>你支援了该角色 | 剩余次数：{{ count }}</span>
+              <span>剩余次数：{{ count }}</span>
               <time>{{ useFormatTimeAgo(createdAt) }}</time>
             </template>
           </UUser>
         </template>
       </UPageCard>
-
-      <!-- <div
-        v-for="{
-          _id,
-          avatar,
-          createdAt,
-          count,
-        } in my"
-        :key="_id"
-        class="text-toned hover:border-primary hover:bg-primary/5 flex cursor-pointer items-center gap-4 border-l-2 border-(--ui-bg) p-4 text-base transition-colors sm:px-6"
-      >
-        <UAvatar :text="avatarMap[avatar][0]" size="3xl" />
-        <div class="flex flex-1 flex-col gap-y-2 text-sm">
-          <div class="flex items-center justify-between">
-            <span class="text-highlighted line-clamp-1 max-w-1/2 font-medium">
-              {{ avatarMap[avatar] }}</span
-            >
-            <time class="text-muted text-xs">{{
-              useFormatTimeAgo(createdAt)
-            }}</time>
-          </div>
-          <div class="flex items-center justify-between">
-            <div class="text-dimmed line-clamp-1 max-w-1/2">你支援了该角色</div>
-            <div class="text-dimmed line-clamp-1 max-w-1/2">
-              剩余次数：{{ count }}
-            </div>
-          </div>
-        </div>
-      </div> -->
     </template>
   </USlideover>
   <!-- 发布 -->
@@ -268,9 +251,26 @@
         icon="lucide:sword"
         type="submit"
         @click="onAssist"
+        loading-auto
       ></UButton>
     </template>
   </USlideover>
+  <!-- 确认求助 -->
+  <UModal
+    v-model:open="isConfirmOverlayOpen"
+    title="确认"
+    :description="`确定向该用户请求支援吗，你当日还剩下 ${3 - helpCount} 次求助机会`"
+  >
+    <template #footer>
+      <UButton
+        label="取消"
+        color="neutral"
+        class="justify-center"
+        @click="isConfirmOverlayOpen = false"
+      />
+      <UButton label="确认" class="justify-center" @click="onHelp" />
+    </template>
+  </UModal>
 </template>
 
 <script lang="ts" setup>
@@ -290,6 +290,9 @@ import { storeToRefs } from 'pinia'
 import { onMounted, reactive, ref, watch } from 'vue'
 import * as z from 'zod'
 
+let assistId = null
+let assistIndex = null
+let assistUserId = null
 const assistSchema = z.object({
   avatar: z.string().min(1, '未选择角色'),
   uid: z.string().length(9, 'UID 格式不正确'),
@@ -315,7 +318,7 @@ const avatarMap = {
   Arlecchino: '阿蕾奇诺',
   Baizhu: '白术',
   Chasca: '恰斯卡',
-  Childe: '公子',
+  Tartaglia: '达达利亚',
   Chiori: '千织',
   Citlali: '茜特菈莉',
   Clorinde: '克洛琳德',
@@ -373,7 +376,7 @@ const publishMenuItems = [
   { label: '阿蕾奇诺', value: 'Arlecchino' },
   { label: '白术', value: 'Baizhu' },
   { label: '恰斯卡', value: 'Chasca' },
-  { label: '公子', value: 'Childe' },
+  { label: '达达利亚', value: 'Tartaglia' },
   { label: '千织', value: 'Chiori' },
   { label: '茜特菈莉', value: 'Citlali' },
   { label: '克洛琳德', value: 'Clorinde' },
@@ -445,6 +448,36 @@ const allPostLoaded = ref(false)
 const record = ref(
   JSON.parse(localStorage.getItem(`helpRecord-${userInfo.value.id}`)) || {}
 )
+const isConfirmOverlayOpen = ref(false)
+
+const onRefresh = async () => {
+  if (filterState.createdAt === 1) {
+    // 切换时间排序，watch 回调中发送请求
+    filterState.createdAt = -1
+  } else {
+    const { data } = await getAssistsAPI(
+      filterState,
+      '',
+      helpItems.value[0]?._id
+    )
+    const { length } = data
+
+    if (length) {
+      if (length < 10) {
+        helpItems.value.unshift(...data)
+      } else {
+        helpItems.value = data
+        allPostLoaded.value = false
+      }
+    } else {
+      toast.add({
+        title: '暂时没有新内容',
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
+    }
+  }
+}
 
 const onClick = async () => {
   isNotificationsSlideoverOpen.value = true
@@ -452,6 +485,15 @@ const onClick = async () => {
 }
 
 const onAssist = async () => {
+  if (assistCount.value >= 3) {
+    toast.add({
+      title: '今日支援数量已达到上限',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+    return
+  }
+
   if (!assistSchema.safeParse(assistState).success) {
     toast.add({
       title: '表单格式不正确',
@@ -463,9 +505,9 @@ const onAssist = async () => {
 
   try {
     const { data: res } = await assistAPI(assistState)
-    helpCount.value++
+    assistCount.value++
     toast.add({
-      title: `发布成功，今日还可以支援 ${3 - helpCount.value} 次`,
+      title: `发布成功，今日还可以支援 ${3 - assistCount.value} 次`,
       icon: 'lucide:smile'
     })
     helpItems.value.unshift(res)
@@ -476,7 +518,7 @@ const onAssist = async () => {
   }
 }
 
-const onHelp = async (id, userId, index) => {
+const onConfirm = async (id, userId, index) => {
   if (userId === userInfo.value.id) {
     toast.add({
       title: '不允许自己支援自己',
@@ -486,8 +528,24 @@ const onHelp = async (id, userId, index) => {
     return
   }
 
+  if (helpCount.value >= 3) {
+    toast.add({
+      title: '次数以达到上限，请明日再试',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+    return
+  }
+
+  assistId = id
+  assistIndex = index
+  assistUserId = userId
+  isConfirmOverlayOpen.value = true
+}
+
+const onHelp = async () => {
   try {
-    const { data: uid } = await helpAPI(id)
+    const { data: uid } = await helpAPI(assistId)
     helpCount.value++
 
     try {
@@ -498,18 +556,19 @@ const onHelp = async (id, userId, index) => {
       })
     } catch {
       alert(
-        `复制 UID（${uid}） 失败，请截图记录，今日还剩 ${3 - helpCount.value} 次求助机会`
+        `复制 UID 失败，请截图记录，对方的 UID 为：${uid}，今日还剩 ${3 - helpCount.value} 次求助机会`
       )
     }
-    helpItems.value[index].count--
-    if (helpItems.value[index].count === 0) {
-      helpItems.value.splice(helpItems.value[index], 1)
+    helpItems.value[assistIndex].count--
+    if (helpItems.value[assistIndex].count === 0) {
+      helpItems.value.splice(helpItems.value[assistIndex], 1)
     }
-    record.value[userId] = true
+    record.value[assistUserId] = true
     localStorage.setItem(
       `helpRecord-${userInfo.value.id}`,
       JSON.stringify(record.value)
     )
+    isConfirmOverlayOpen.value = false
   } catch (error) {
     toast.add({
       title: error.message,
@@ -566,7 +625,9 @@ const onCancelAssist = async (index, avatar) => {
 }
 
 watch(filterState, async v => {
-  helpItems.value = (await getAssistsAPI(v)).data
+  const { data } = await getAssistsAPI(v)
+  helpItems.value = data
+  allPostLoaded.value = data.length < 10
 })
 
 onMounted(async () => {
