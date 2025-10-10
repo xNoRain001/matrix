@@ -243,11 +243,8 @@
 </template>
 
 <script lang="ts" setup>
-import { watch, reactive, ref, onBeforeMount } from 'vue'
+import { watch, reactive, ref } from 'vue'
 import { useEncryptUserInfo } from '@/hooks'
-// import { useRouter } from 'vue-router'
-import { useUserStore } from '@/store'
-import { storeToRefs } from 'pinia'
 import {
   hasPin,
   hasResetPasswordURL,
@@ -302,8 +299,6 @@ const loginWithVCForm = reactive({
 const resetPasswordForm = reactive({ email: '' })
 const isLogin = ref(true)
 const isRegister = ref(false)
-// const router = useRouter()
-const { userInfo } = storeToRefs(useUserStore())
 const isResetPassword = ref(false)
 const isLoginWithVC = ref(false)
 const isPwd = ref(true)
@@ -476,17 +471,14 @@ const onLogin = async () => {
     // await isExistedUser(email)
     // 不进行存在性检测，因为 loginService 内部会检测
     const encryptedUserInfo = await useEncryptUserInfo(loginForm)
-    const {
-      data: { token, userInfo: _userInfo }
-    } = await login(encryptedUserInfo)
+    const { data: token } = await login(encryptedUserInfo)
     localStorage.setItem('token', token)
-    // userInfo.value = _userInfo
     toast.add({
       title: '登录成功',
       icon: 'lucide:smile'
     })
-    // TODO: 解决路由切换会造成 UApp 中只显示 RouterView 中内容，其他组件不显示
-    // router.replace('/')
+    // 不使用 router.replace('/')，会造成 UApp 中只显示 RouterView 中内容，其他
+    // 组件不显示
     location.replace('/')
   } catch (error) {
     toast.add({
@@ -519,11 +511,8 @@ watch(registerPin, async v => {
         password,
         code: s
       })
-      const {
-        data: { token, userInfo: _userInfo }
-      } = await register(encryptedUserInfo)
+      const { data: token } = await register(encryptedUserInfo)
       localStorage.setItem('token', token)
-      // userInfo.value = _userInfo
       toast.add({
         title: '登录成功',
         icon: 'lucide:smile'
@@ -555,11 +544,8 @@ watch(loginWithVCPin, async v => {
     }
 
     try {
-      const {
-        data: { token, userInfo: _userInfo }
-      } = await loginWithPin(loginWithVCForm.email, s)
+      const { data: token } = await loginWithPin(loginWithVCForm.email, s)
       localStorage.setItem('token', token)
-      // userInfo.value = _userInfo
       toast.add({
         title: '登录成功',
         icon: 'lucide:smile'

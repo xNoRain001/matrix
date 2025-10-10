@@ -52,6 +52,7 @@ const useUserStore = defineStore('userStore', () => {
 
   return {
     isMobile,
+    onlineCount: ref(0),
     globalSocket: ref<Socket | null>(null),
     globalPC: ref<RTCPeerConnection | null>(null),
     userInfo: ref<userInfo | null>(userInfo),

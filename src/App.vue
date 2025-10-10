@@ -170,7 +170,8 @@ const {
   globalSocket,
   globalPC,
   userInfo,
-  config
+  config,
+  onlineCount
 } = storeToRefs(useUserStore())
 const {
   leaveRoomTimer,
@@ -1191,6 +1192,8 @@ const onOnline = (type, res) => {
   }
 }
 
+const onGetOnlineCount = v => (onlineCount.value = v)
+
 const onAgreeWebRTCButNoPermission = () => {
   voiceChatOverlay.close()
   roomId.value = ''
@@ -1271,6 +1274,7 @@ const initSocket = socket => {
   socket.on('refresh-notifications', onRefreshNotifications)
   // 在线状态
   socket.on('online', onOnline)
+  socket.on('get-online-count', onGetOnlineCount)
   socket.emit('ready')
 }
 

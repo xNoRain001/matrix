@@ -22,9 +22,7 @@ const onLoginWithFingerprint = async () => {
     const fp = await fpPromise.load()
     const visitorId = (await fp.get()).visitorId
     const encryptedUserInfo = await useEncryptUserInfo({ visitorId })
-    const {
-      data: { token }
-    } = await loginWithFingerprint(encryptedUserInfo)
+    const { data: token } = await loginWithFingerprint(encryptedUserInfo)
     localStorage.setItem('token', token)
     toast.add({ title: '登录成功', icon: 'lucide:smile' })
     location.replace('/')
