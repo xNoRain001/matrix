@@ -78,7 +78,7 @@
 import { resetPassword } from '@/apis/user'
 import { useEncryptUserInfo } from '@/hooks'
 import { reactive, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import * as z from 'zod'
 
 const resetPasswordSchema = z.object({
@@ -89,7 +89,6 @@ const resetPasswordSchema = z.object({
 const {
   query: { token }
 } = useRoute()
-const router = useRouter()
 const passwordForm = reactive({
   password: '',
   confirmPassword: ''
@@ -120,7 +119,7 @@ const onResetPassword = async () => {
       title: message,
       icon: 'lucide:smile'
     })
-    router.replace('/login')
+    location.replace('/login')
   } catch (error) {
     toast.add({
       title: error.message,

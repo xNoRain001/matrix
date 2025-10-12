@@ -132,7 +132,6 @@ import { useUserStore } from '@/store'
 import { createReusableTemplate } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import * as z from 'zod'
 
 const isUpdatePasswordSlideoverOpen = defineModel<boolean>({ required: false })
@@ -155,7 +154,6 @@ const passwordForm = reactive({
 })
 const isPwd = ref(true)
 const toast = useToast()
-const router = useRouter()
 const { isMobile } = storeToRefs(useUserStore())
 
 const onUpdatePassword = async () => {
@@ -172,7 +170,7 @@ const onUpdatePassword = async () => {
       icon: 'lucide:smile'
     })
     localStorage.removeItem('token')
-    router.replace('/login')
+    location.replace('/login')
   } catch (error) {
     toast.add({
       title: error.message,

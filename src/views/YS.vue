@@ -92,37 +92,39 @@
               <template #name>
                 <span>{{ nickname }}</span>
                 <UBadge v-if="userInfo.id === user" label="我"></UBadge>
+              </template>
+            </UUser>
+          </template>
+          <template #body>
+            <div class="flex items-start gap-2">
+              <div class="relative min-w-28">
+                <img
+                  :src="`/images/gi-avatars/${avatar}.png`"
+                  class="size-28 rounded-lg"
+                />
+                <UBadge
+                  color="error"
+                  class="absolute top-28 left-1/2 -translate-x-1/2 -translate-y-full"
+                  :label="` Lv.${avatarLevel} | 库存：${count}`"
+                ></UBadge>
+              </div>
+              <div class="flex flex-wrap items-start gap-2">
                 <UBadge
                   v-if="record[user]"
                   label="已请求过支援"
                   color="warning"
                 ></UBadge>
-              </template>
-            </UUser>
-          </template>
-          <template #body>
-            <div class="flex flex-wrap gap-2">
-              <UBadge :label="`Lv.${level}`"></UBadge>
-              <UBadge :label="`世界等级 ${worldLevel}`"></UBadge>
-              <UBadge :label="`成就数 ${finishAchievementNum}`"></UBadge>
-              <UBadge
-                :label="`深渊 ${towerFloorIndex}-${towerLevelIndex} | ${towerStarIndex}⭐`"
-              ></UBadge>
-              <UBadge
-                :label="`幽境危战 ${stygianIndex} | ${stygianSeconds}秒`"
-              ></UBadge>
-              <UBadge :label="`满好感度角色数量 ${fetterCount}`"></UBadge>
-            </div>
-            <div class="relative mt-2 flex w-fit gap-2">
-              <img
-                :src="`/images/gi-avatars/${avatar}.png`"
-                class="size-28 rounded-lg"
-              />
-              <UBadge
-                color="error"
-                class="absolute bottom-0 left-1/2 -translate-x-1/2"
-                :label="` Lv.${avatarLevel} | 库存：${count}`"
-              ></UBadge>
+                <UBadge :label="`Lv.${level}`"></UBadge>
+                <UBadge :label="`世界等级 ${worldLevel}`"></UBadge>
+                <UBadge :label="`成就数 ${finishAchievementNum}`"></UBadge>
+                <UBadge
+                  :label="`深渊 ${towerFloorIndex}-${towerLevelIndex} | ${towerStarIndex}⭐`"
+                ></UBadge>
+                <UBadge
+                  :label="`幽境危战 ${stygianIndex} | ${stygianSeconds}秒`"
+                ></UBadge>
+                <UBadge :label="`满好感度角色数量 ${fetterCount}`"></UBadge>
+              </div>
             </div>
             <p class="text-muted mt-2 text-sm">
               {{ useFormatTimeAgo(createdAt) }}

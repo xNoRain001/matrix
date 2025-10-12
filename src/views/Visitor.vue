@@ -4,7 +4,10 @@
   >
     <UButton
       icon="lucide:fingerprint"
-      size="xl"
+      variant="ghost"
+      :ui="{
+        leadingIcon: 'size-16'
+      }"
       @click="onLoginWithFingerprint"
     ></UButton>
   </div>

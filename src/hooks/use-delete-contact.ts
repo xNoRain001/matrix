@@ -1,4 +1,4 @@
-import { deleteCandidate } from '@/apis/contact'
+import { deleteContact } from '@/apis/contact'
 
 const useDeleteContact = async (
   userInfo,
@@ -11,7 +11,7 @@ const useDeleteContact = async (
   activeTargetProfile
 ) => {
   try {
-    await deleteCandidate(targetId)
+    await deleteContact(targetId)
     toast.add({ title: '删除好友成功', icon: 'lucide:smile' })
     const { id, profile } = userInfo.value
     const notification = {
