@@ -74,6 +74,7 @@ export type content = {
 }
 
 export type post = {
+  id?: number
   _id: string
   user: string
   commentCount: number

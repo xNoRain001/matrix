@@ -1,8 +1,9 @@
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { post, comment, content } from '@/types'
 
 const usePostStore = defineStore('postStore', () => ({
+  lastFetchedPostId: ref(Number.MAX_SAFE_INTEGER),
   postMap: reactive<
     Record<
       string,

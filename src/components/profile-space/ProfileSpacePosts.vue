@@ -141,13 +141,9 @@ const { isMobile } = storeToRefs(useUserStore())
 const postDetailOverlay = overlay.create(OverlayPostDetail)
 const publisherOverlay = overlay.create(OverlayPublisher)
 const { userInfo } = storeToRefs(useUserStore())
-const { postMap } = storeToRefs(usePostStore())
+const { postMap, lastFetchedPostId } = storeToRefs(usePostStore())
 const isSelf = props.targetId === userInfo.value.id
-const allPostLoaded = ref(
-  isSelf
-    ? Boolean(localStorage.getItem(`persistentPosts-${userInfo.value.id}`))
-    : false
-)
+const allPostLoaded = ref(false)
 const toast = useToast()
 const isEditMenuDrawerOpen = ref(false)
 const dropdownMenuItems = [
@@ -189,20 +185,37 @@ const onScroll = useThrottleFn(
     }
 
     if (scrollHeight - (scrollTop + clientHeight) < 64) {
-      const lastId =
-        postMap.value[props.targetId].posts[
-          postMap.value[props.targetId].posts.length - 1
-        ]._id
-      const { data } = await getPostsAPI(props.targetId, lastId)
-      const { length } = data
+      if (isSelf) {
+        // 如果是 API 获取的 post，会返回全部，不会进入到这里，因此一定是从本地数据库
+        // 中加载的 post
+        const posts = await getPostsFromIndexedDB()
+        const { length } = posts
 
-      if (length) {
-        postMap.value[props.targetId].posts.push(...data)
-      }
+        if (length) {
+          postMap.value[props.targetId].posts.push(...posts)
+        }
 
-      // 等于 10 时会多发送一次请求，不做处理
-      if (data.length < 10) {
-        allPostLoaded.value = true
+        lastFetchedPostId.value = posts[posts.length - 1]?.id || 0
+
+        if (length < 10) {
+          allPostLoaded.value = true
+        }
+      } else {
+        const lastId =
+          postMap.value[props.targetId].posts[
+            postMap.value[props.targetId].posts.length - 1
+          ]._id
+        const { data } = await getPostsAPI(props.targetId, lastId)
+        const { length } = data
+
+        if (length) {
+          postMap.value[props.targetId].posts.push(...data)
+        }
+
+        // 等于 10 时会多发送一次请求，不做处理
+        if (data.length < 10) {
+          allPostLoaded.value = true
+        }
       }
     }
   },
@@ -269,7 +282,7 @@ const getPostsFromIndexedDB = async () => {
   const transaction = db.transaction('posts', 'readonly')
   const store = transaction.objectStore('posts')
   let cursor = await store.openCursor(
-    IDBKeyRange.bound(0, Number.MAX_SAFE_INTEGER, false, true),
+    IDBKeyRange.bound(0, lastFetchedPostId.value, false, true),
     'prev'
   )
 
@@ -279,7 +292,7 @@ const getPostsFromIndexedDB = async () => {
   }
 
   let counter = 0
-  while (cursor && counter < 20) {
+  while (cursor && counter < 10) {
     const { images } = cursor.value.content
 
     for (let i = 0, l = images.length; i < l; i++) {
@@ -352,12 +365,48 @@ watch(
 )
 
 onMounted(async () => {
-  postMap.value[props.targetId] = {} as any
-  postMap.value[props.targetId].posts = isSelf
-    ? allPostLoaded.value
-      ? await getPostsFromIndexedDB()
-      : await getPostsFromAPI()
-    : (await getPostsAPI(props.targetId)).data
+  if (isSelf) {
+    if (!postMap.value[props.targetId]) {
+      postMap.value[props.targetId] = {} as any
+      const persistentPosts = Boolean(
+        localStorage.getItem(`persistentPosts-${userInfo.value.id}`)
+      )
+      postMap.value[props.targetId].posts = persistentPosts
+        ? await getPostsFromIndexedDB()
+        : await getPostsFromAPI()
+
+      if (persistentPosts) {
+        const { length } = postMap.value[props.targetId].posts
+        lastFetchedPostId.value =
+          postMap.value[props.targetId].posts[length - 1]?.id || 0
+
+        if (length < 10) {
+          allPostLoaded.value = true
+        }
+      } else {
+        // 从 API 获取，会一次性返回所有 post
+        allPostLoaded.value = true
+      }
+    } else {
+      // 存在缓存，判断是不是获取了全部
+      const db = await useGetDB(userInfo.value.id)
+      const transaction = db.transaction('posts', 'readonly')
+      const store = transaction.objectStore('posts')
+      const count = await store.count()
+
+      if (postMap.value[props.targetId].posts.length === count) {
+        allPostLoaded.value = true
+      }
+    }
+  } else {
+    postMap.value[props.targetId] = {} as any
+    const { data: posts } = await getPostsAPI(props.targetId)
+    postMap.value[props.targetId].posts = posts
+
+    if (posts.length < 10) {
+      allPostLoaded.value = true
+    }
+  }
 
   setTimeout(() => {
     props.container.addEventListener('scroll', onScroll)

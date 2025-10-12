@@ -552,7 +552,10 @@ onBeforeUnmount(() => {
   // 没有聊天视图
 
   activeTargetIds.value.delete(props.targetId)
-  delete postMap.value[props.targetId]
+
+  if (!isSelf) {
+    delete postMap.value[props.targetId]
+  }
 
   if (activeTargetIds.value.size === 0) {
     // PC 端可能直接从好友界面切换到其他页面，此时 activeTargetIds 的数量可能为 0，也
