@@ -167,7 +167,7 @@
             :ui="{
               root: 'items-start',
               wrapper: 'flex-1',
-              name: 'flex justify-between',
+              name: 'flex justify-between items-start',
               description: 'flex justify-between'
             }"
           >

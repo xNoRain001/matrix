@@ -1,5 +1,5 @@
 <template>
-  <UPageList v-if="postMap[targetId]?.posts?.length">
+  <UPageList v-if="postMap[targetId]?.posts?.length" divide>
     <UPageCard
       v-for="(
         {
@@ -14,7 +14,7 @@
       ) in postMap[targetId].posts"
       :key="_id"
       variant="soft"
-      class="cursor-pointer"
+      class="cursor-pointer rounded-none"
       :ui="{ container: 'gap-y-2' }"
       @click="
         useOpenPostDetailOverlay(

@@ -316,7 +316,7 @@ const onTouchstart = e => {
     startTime = Date.now()
     navigator.vibrate && navigator.vibrate(200)
     initMediaRecorder()
-  }, 200)
+  }, 50)
 }
 
 const onTouchmove = useThrottleFn(

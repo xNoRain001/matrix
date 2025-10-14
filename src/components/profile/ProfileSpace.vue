@@ -61,7 +61,7 @@
         variant="soft"
       >
         <template #title>
-          <div class="flex items-center gap-2">
+          <div class="flex items-start gap-2">
             <span>{{ targetProfile.nickname }}</span>
             <!-- <UButton
               v-if="isSelf"
@@ -96,12 +96,10 @@
         </template>
         <template #description>
           <div class="flex items-center gap-2">
-            <span>{{ targetProfile.bio }}</span>
-            <!-- <UButton
-              v-if="isSelf"
-              icon="lucide:user-round-pen"
-              size="xs"
-            ></UButton> -->
+            <span
+              >{{ targetProfile.bio }} Lorem ipsum, dolor sit amet consectetur
+              adipisicing elit. Repudiandae consectetur et voluptatibus impedit
+            </span>
           </div>
           <div class="mt-2 space-y-2 space-x-2">
             <ProfileSpaceTags

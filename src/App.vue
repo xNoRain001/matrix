@@ -106,7 +106,7 @@ import {
   useUserStore,
   useWebRTCStore
 } from './store'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeMount, onMounted, ref } from 'vue'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import OverlayLogout from './components/overlay/OverlayLogout.vue'
 import { io } from 'socket.io-client'
@@ -294,7 +294,6 @@ const groups = computed(() => [
     items: navs.flat()
   }
 ])
-const id = computed(() => userInfo.value?.id || '')
 const router = useRouter()
 const constraints = {
   video: false,
@@ -409,7 +408,7 @@ const onReconnect = emit => {
   })
 
   // 重试次数耗尽后，必须重新创建 socket
-  const socket = createSocket(id.value, emit)
+  const socket = createSocket(emit)
   initSocket(socket)
 }
 
@@ -1020,7 +1019,14 @@ const onRefuseWebRTC = () => {
   })
 }
 
-const onDisconnect = () => {
+const onDisconnect = reason => {
+  // token 无效时，服务器会拒绝连接
+  if (reason === 'io server disconnect') {
+    localStorage.removeItem('token')
+    location.replace('/login')
+    return
+  }
+
   // 匹配时连接服务器失败提示
   if (matching.value) {
     offline.value = true
@@ -1205,13 +1211,13 @@ const onAgreeWebRTCButNoPermission = () => {
   })
 }
 
-const createSocket = (id, emit = null) => {
+const createSocket = (emit = null) => {
   const socket = (globalSocket.value = io(
     import.meta.env.VITE_SOCKET_BASE_URL,
     {
       reconnectionAttempts: maxReconnectionAttempts,
       auth: {
-        id
+        token: localStorage.getItem('token')
       }
     }
   ))
@@ -1319,35 +1325,6 @@ const initChatBgURL = async () => {
   config.value.theme.chatBg = chatBgBlob ? URL.createObjectURL(chatBgBlob) : ''
 }
 
-watch(
-  id,
-  async id => {
-    if (id) {
-      // 优先创建 socket
-      const socket = createSocket(id)
-      // 先获取本地数据库中的数据
-      await initLastMsgs()
-      await initAvatarURL()
-      await initChatBgURL()
-      // 拉取离线数据后，更新本地数据库中的数据和内存中的数据
-      initSocket(socket)
-    } else {
-      // 未登录或者登出
-      const socket = globalSocket.value
-      const pc = globalPC.value
-
-      if (pc) {
-        pc.close()
-        globalPC.value = null
-      }
-
-      socket && socket.disconnect()
-      globalSocket.value = null
-    }
-  },
-  { immediate: true }
-)
-
 const initBeep = () => {
   if (!isMobile.value) {
     return
@@ -1360,6 +1337,19 @@ const initBeep = () => {
   }
   window.addEventListener('touchstart', onTouchstart)
 }
+
+onBeforeMount(async () => {
+  if (userInfo.value?.id) {
+    // 优先创建 socket
+    const socket = createSocket()
+    // 先获取本地数据库中的数据
+    await initLastMsgs()
+    await initAvatarURL()
+    await initChatBgURL()
+    // 拉取离线数据后，更新本地数据库中的数据和内存中的数据
+    initSocket(socket)
+  }
+})
 
 onMounted(async () => {
   initBeep()
