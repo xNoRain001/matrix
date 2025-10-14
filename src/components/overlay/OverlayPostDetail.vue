@@ -149,7 +149,12 @@
                   @click="viewerOverlay.open({ urls: content.images })"
                   class="flex"
                 >
+                  <!-- 
+                    设置 crossorigin="anonymous" 时，浏览器通过 JS 获取图片时请求头
+                    才会携带上 Origin 字段  
+                  -->
                   <img
+                    crossorigin="anonymous"
                     class="size-11 rounded-lg"
                     v-for="image in content.images"
                     :src="VITE_OSS_BASE_URL + image.url"
@@ -310,6 +315,7 @@
                               class="flex"
                             >
                               <img
+                                crossorigin="anonymous"
                                 class="size-11 rounded-lg"
                                 @click="
                                   viewerOverlay.open({

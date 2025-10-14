@@ -20,14 +20,16 @@ const initPayloadSize = (newImageMetadata, imageMetadata) => {
 
 const initPayloadURL = async (newImageMetadata, imageMetadata) => {
   const promises = newImageMetadata.map(({ file, index }) => {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       useGenHash(file).then(hash => {
         const item = imageMetadata[index]
         item.hash = hash
-        getSignedURLAPI('tmp', hash, file.size).then(({ data }) => {
-          item.url = data
-          resolve(null)
-        })
+        getSignedURLAPI('tmp', hash, file.size)
+          .then(({ data }) => {
+            item.url = data
+            resolve(null)
+          })
+          .catch(() => reject())
       })
     })
   })
@@ -37,7 +39,7 @@ const initPayloadURL = async (newImageMetadata, imageMetadata) => {
 
 const startUplaod = (userInfo, newImageMetadata, imageMetadata) => {
   const promises = newImageMetadata.map(({ file, index }) => {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       const item = imageMetadata[index]
       const { url, hash } = item
       const { id } = userInfo.value
@@ -51,13 +53,17 @@ const startUplaod = (userInfo, newImageMetadata, imageMetadata) => {
         fetch(url, {
           method: 'PUT',
           body: file
-        }).then(({ ok }) => {
-          if (ok) {
-            item.url = `tmp/${id}/${hash}`
-            delete item.hash
-            resolve(null)
-          }
         })
+          .then(({ ok }) => {
+            if (ok) {
+              item.url = `tmp/${id}/${hash}`
+              delete item.hash
+              resolve(null)
+            } else {
+              reject()
+            }
+          })
+          .catch(() => reject())
       }
     })
   })

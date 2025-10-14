@@ -77,6 +77,7 @@
           :disabled="!payload.text && !files.length"
           class="ml-2"
           :label="title"
+          loading-auto
           @click="
             isPost
               ? onPublishPost()
@@ -180,6 +181,7 @@
           :disabled="!payload.text && !files.length"
           class="ml-2"
           :label="title"
+          loading-auto
           @click="
             isPost
               ? onPublishPost()
@@ -422,7 +424,11 @@ const onPublishPost = async () => {
     postMap.value[props.targetId].posts.unshift(post)
     emit('close', true)
   } catch {
-    toast.add({ title: '发布失败', color: 'error', icon: 'lucide:annoyed' })
+    toast.add({
+      title: '发布失败，请重试',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
   }
 }
 

@@ -1096,7 +1096,7 @@ const onMatched = async data => {
       noMatch.value = false
       clearTimeout(matchTimer)
     }, 2000)
-  } else if (status === 'suc') {
+  } else if (status === 'success') {
     // 可能出现未匹配到对方，等待再次匹配的过程中被别人给匹配到了
     clearTimeout(matchTimer)
     hasMatchRes.value = true

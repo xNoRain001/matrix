@@ -5,9 +5,10 @@
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
-
+        <template #trailing
+          ><UBadge v-if="onlineCount" :label="onlineCount"></UBadge>
+        </template>
         <template #right>
-          <UBadge :label="`在线人数：${onlineCount}`"></UBadge>
           <UButton
             icon="lucide:refresh-ccw"
             variant="ghost"

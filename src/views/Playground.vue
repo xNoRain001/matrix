@@ -249,8 +249,10 @@ onMounted(async () => {
     postMap.value[_activeTab] = {} as any
     const posts = (await getPlaygroundPostsAPI(_activeTab)).data
     postMap.value[_activeTab].posts = posts
-    allPostLoaded.value = posts.length < 10
   }
+
+  // 从别的页面切换回来时需要更新
+  allPostLoaded.value = postMap.value[_activeTab].posts.length < 10
 
   tabsRef.value.triggersRef[0].$el.addEventListener('click', getLatestData)
   document

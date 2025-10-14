@@ -3,7 +3,9 @@
     <template #leading>
       <UDashboardSidebarCollapse />
     </template>
-
+    <template #trailing
+      ><UBadge v-if="onlineCount" :label="onlineCount"></UBadge>
+    </template>
     <template #right>
       <UButton
         color="neutral"
@@ -38,10 +40,13 @@
 </template>
 
 <script lang="ts" setup>
+import { useUserStore } from '@/store'
 import { useColorMode } from '@vueuse/core'
+import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
 
 const isFilterOverlayOpen = defineModel<boolean>()
+const { onlineCount } = storeToRefs(useUserStore())
 const { store } = useColorMode()
 const getNextTheme = () =>
   store.value === 'auto'

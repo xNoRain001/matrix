@@ -33,9 +33,15 @@
     title="匹配"
     description=" "
     @after:leave="afterLeave"
+    :ui="{ body: 'flex flex-col' }"
   >
     <template #body>
-      <div class="flex h-full items-center justify-center">
+      <!-- <UBanner
+        class="rounded-lg"
+        id="example"
+        title="This is a closable banner."
+      /> -->
+      <div class="flex flex-1 items-center justify-center">
         <UButton
           v-if="offline"
           @click="rematch"
@@ -44,12 +50,44 @@
           label="重新匹配"
         ></UButton>
         <div v-else class="flex flex-col items-center text-sm">
-          <UIcon
-            name="lucide:loader-pinwheel"
-            class="size-5 animate-spin"
-          ></UIcon>
-          <div class="mt-4" v-if="noMatch">暂未匹配到对方，请耐心等待...</div>
-          <div class="mt-4" v-else>正在匹配中...</div>
+          <svg
+            class="text-primary size-16"
+            fill="currentColor"
+            viewBox="0 0 140 64"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M30.262 57.02L7.195 40.723c-5.84-3.976-7.56-12.06-3.842-18.063 3.715-6 11.467-7.65 17.306-3.68l4.52 3.76 2.6-5.274c3.716-6.002 11.47-7.65 17.304-3.68 5.84 3.97 7.56 12.054 3.842 18.062L34.49 56.118c-.897 1.512-2.793 1.915-4.228.9z"
+              fill-opacity=".5"
+            >
+              <animate
+                attributeName="fill-opacity"
+                begin="0s"
+                dur="1.4s"
+                values="0.5;1;0.5"
+                calcMode="linear"
+                repeatCount="indefinite"
+              ></animate>
+            </path>
+            <path
+              d="M105.512 56.12l-14.44-24.272c-3.716-6.008-1.996-14.093 3.843-18.062 5.835-3.97 13.588-2.322 17.306 3.68l2.6 5.274 4.52-3.76c5.84-3.97 13.593-2.32 17.308 3.68 3.718 6.003 1.998 14.088-3.842 18.064L109.74 57.02c-1.434 1.014-3.33.61-4.228-.9z"
+              fill-opacity=".5"
+            >
+              <animate
+                attributeName="fill-opacity"
+                begin="0.7s"
+                dur="1.4s"
+                values="0.5;1;0.5"
+                calcMode="linear"
+                repeatCount="indefinite"
+              ></animate>
+            </path>
+            <path
+              d="M67.408 57.834l-23.01-24.98c-5.864-6.15-5.864-16.108 0-22.248 5.86-6.14 15.37-6.14 21.234 0L70 16.168l4.368-5.562c5.863-6.14 15.375-6.14 21.235 0 5.863 6.14 5.863 16.098 0 22.247l-23.007 24.98c-1.43 1.556-3.757 1.556-5.188 0z"
+            ></path>
+          </svg>
+          <div v-if="noMatch">当前人数较少，请耐心等待...</div>
+          <div v-else>正在匹配中...</div>
         </div>
       </div>
     </template>
@@ -102,7 +140,7 @@ const showCards = computed(() => route.path === '/')
 const afterLeave = () => {
   // 匹配成功时服务器中会将双方从匹配池中清除，这里不需要再次处理
   if (!hasMatchRes.value) {
-    globalSocket.value.emit('exit-match', matchType)
+    globalSocket.value.emit('exit-match')
   }
 
   hasMatchRes.value = false
@@ -115,7 +153,7 @@ const startMatch = () => {
   const socket = globalSocket.value
   const _filter = filter.value
   socket.emit(
-    'join-match',
+    'start-match',
     {
       type: matchType,
       id: userInfo.value.id,
@@ -123,7 +161,6 @@ const startMatch = () => {
     },
     _filter[`${_filter.activeTab}Form`]
   )
-  socket.emit('start-match', matchType)
 }
 
 // 当匹配时断网会出现重新匹配按钮，点击执行这个函数

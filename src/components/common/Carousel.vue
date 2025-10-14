@@ -17,7 +17,9 @@
       @select="onSelect"
     >
       <img
-        @click="viewerOverlay.open({ urls: items, activeIndex: index })"
+        @click="
+          !viewer && viewerOverlay.open({ urls: items, activeIndex: index })
+        "
         :src="
           item.url.startsWith('blob:') ? item.url : VITE_OSS_BASE_URL + item.url
         "
