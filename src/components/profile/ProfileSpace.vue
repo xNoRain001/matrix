@@ -63,18 +63,13 @@
       >
         <template #title>
           <div class="flex items-start gap-2">
-            <span>{{ targetProfile.nickname }}</span>
+            <span class="break-all">{{ targetProfile.nickname }}</span>
             <!-- <UButton
-              v-if="isSelf"
-              icon="lucide:user-round-pen"
-              size="xs"
-            ></UButton> -->
-            <UButton
               v-if="!isSelf && Boolean(contactProfileMap[targetId])"
               icon="lucide:user-round-pen"
               label="备注"
               size="xs"
-            ></UButton>
+            ></UButton> -->
             <UButton
               v-if="!isSelf && !inView"
               @click="messageViewOverlay.open({ targetId, targetProfile })"
@@ -121,7 +116,7 @@
                 ? avatarURL
                 : VITE_OSS_BASE_URL + avatarURL
             "
-            :alt="targetProfile.nickname"
+            :alt="targetProfile.nickname[0]"
             size="3xl"
           ></UAvatar>
         </template>
@@ -320,12 +315,9 @@ const {
   userInfo,
   avatarURL: _avatarURL
 } = storeToRefs(useUserStore())
-const {
-  activeTargetIds,
-  contactProfileMap,
-  activeTargetId,
-  activeTargetProfile
-} = storeToRefs(useRecentContactsStore())
+const { activeTargetIds, activeTargetId, activeTargetProfile } = storeToRefs(
+  useRecentContactsStore()
+)
 const { postMap } = storeToRefs(usePostStore())
 const cards = [
   [

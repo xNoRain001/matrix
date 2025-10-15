@@ -1,18 +1,16 @@
 <template>
-  <UDashboardNavbar :toggle="false" :ui="{ root: 'bg-default border-none' }">
+  <UDashboardNavbar
+    :toggle="false"
+    :ui="{
+      root: 'bg-default border-none',
+      left: 'flex-1',
+      title: 'flex-1 flex justify-center'
+    }"
+  >
     <template #title>
-      <UUser
-        @click="toSpace"
-        class="absolute left-1/2 -translate-x-1/2"
-        :name="targetProfile.nickname"
-        :avatar="{
-          alt: targetProfile.nickname[0]
-        }"
-        size="xl"
-        :chip="{
-          color: targetProfile.online ? 'primary' : 'error'
-        }"
-      />
+      <span @click="toSpace" class="cursor-pointer truncate">{{
+        targetProfile.nickname
+      }}</span>
     </template>
     <template #leading>
       <UButton
@@ -30,7 +28,15 @@
     </template>
     <template #right>
       <UButton
-        v-if="isMatch && isMobile"
+        v-if="
+          isMatch &&
+          isMobile &&
+          (targetProfile.birthday ||
+            targetProfile.region ||
+            targetProfile.gender !== 'other' ||
+            targetProfile.mbti ||
+            targetProfile.tags.length)
+        "
         :icon="open ? 'lucide:chevrons-up' : 'lucide:chevrons-down'"
         color="neutral"
         variant="ghost"

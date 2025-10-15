@@ -1,105 +1,5 @@
 <template>
-  <UDrawer
-    v-if="isMobile"
-    :handle="false"
-    :title="title"
-    description=" "
-    :ui="{
-      body: 'space-y-4 sm:space-y-6',
-      footer: 'justify-between flex-row'
-    }"
-  >
-    <template #body>
-      <UPageCard
-        title="文本"
-        description="输入文本内容"
-        variant="naked"
-        orientation="horizontal"
-      >
-      </UPageCard>
-      <UTextarea
-        autofocus
-        placeholder="善语结缘，温暖常伴..."
-        v-model="payload.text"
-        class="w-full"
-        autoresize
-        :rows="5"
-        :maxrows="5"
-        maxlength="2000"
-        :ui="{ base: 'bg-elevated/50', trailing: 'flex items-end' }"
-      >
-        <template v-if="payload.text" #trailing>
-          <div class="text-muted py-1.5 text-xs tabular-nums">
-            {{ payload.text.length }}/2000
-          </div>
-          <UButton
-            color="neutral"
-            variant="link"
-            size="sm"
-            icon="lucide:circle-x"
-            @click="payload.text = ''"
-          />
-        </template>
-      </UTextarea>
-      <UPageCard
-        title="图片"
-        description="选择图片，最多 9 张，每张不超过 10 MB，通过拖拽交换图片位置"
-        variant="naked"
-        orientation="horizontal"
-      >
-      </UPageCard>
-      <UFileUpload
-        ref="fileUploadRef"
-        @update:model-value="onUpdateFile"
-        v-model="files"
-        :dropzone="false"
-        icon="lucide:plus"
-        accept="image/png, image/jpeg, image/webp"
-        multiple
-        :ui="{
-          base: 'bg-elevated/50',
-          files: 'grid-cols-3'
-        }"
-      >
-      </UFileUpload>
-    </template>
-    <template #footer>
-      <div>
-        <UButton variant="ghost" icon="lucide:smile"></UButton>
-      </div>
-      <div>
-        <UButton
-          v-if="(isPost || isFeedback) && (payload.text || files.length)"
-          label="草稿箱"
-          @click="onDraft"
-        ></UButton>
-        <UButton
-          :disabled="!payload.text && !files.length"
-          class="ml-2"
-          :label="title"
-          loading-auto
-          @click="
-            isPost
-              ? onPublishPost()
-              : isUpdatePost
-                ? onUpdatePost()
-                : isComment
-                  ? onPublishComment()
-                  : isReply
-                    ? onReply()
-                    : isUpdateComment
-                      ? onUpdateComment()
-                      : isUpdateReply
-                        ? onUpdateReply()
-                        : onFeedback()
-          "
-        ></UButton>
-      </div>
-    </template>
-  </UDrawer>
   <USlideover
-    v-else
-    class=""
     :title="title"
     description=" "
     :ui="{
@@ -303,7 +203,7 @@ const payload: content = reactive({
   images: []
 })
 const oldText = payload.text
-const { isMobile, userInfo } = storeToRefs(useUserStore())
+const { userInfo } = storeToRefs(useUserStore())
 const toast = useToast()
 const emit = defineEmits<{ close: [boolean] }>()
 const title = isPost
@@ -544,6 +444,7 @@ const onUpdateReply = async () => {
     formData.append('commentId', postMap.value[props.targetId].activeCommentId)
     formData.append('replyId', postMap.value[props.targetId].activeReplyId)
     await updateReplyAPI(formData)
+    toast.add({ title: '更新成功', icon: 'lucide:smile' })
     const images = payload.images
     for (let i = 0, l = images.length; i < l; i++) {
       const image = images[i]
@@ -631,6 +532,7 @@ const onUpdateComment = async () => {
     formData.append('postId', activePostId)
     formData.append('commentId', postMap.value[props.targetId].activeCommentId)
     await updateCommentAPI(formData)
+    toast.add({ title: '更新成功', icon: 'lucide:smile' })
     const images = payload.images
     for (let i = 0, l = images.length; i < l; i++) {
       const image = images[i]
@@ -664,7 +566,7 @@ const onPublishComment = async () => {
     formData.append('content', JSON.stringify(payload))
     formData.append('postId', postMap.value[props.targetId].activePostId)
     const newComment = (await publishCommentAPI(formData)).data
-    toast.add({ title: '发布成功', icon: 'lucide:smile' })
+    toast.add({ title: '评论成功', icon: 'lucide:smile' })
     postMap.value[props.targetId].activePost.commentCount++
     newComment.page = 0
     newComment.visibleReplyCount = 0

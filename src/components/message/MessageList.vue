@@ -53,14 +53,15 @@
                 color: lastMsgMap[id].profile.online ? 'primary' : 'error'
               }"
               :ui="{
-                root: 'w-full',
-                wrapper: 'flex-1',
-                name: 'flex justify-between items-center',
+                wrapper: 'flex-1 min-w-0',
+                name: 'flex justify-between items-center gap-2',
                 description: 'flex justify-between'
               }"
             >
               <template #name>
-                <span>{{ lastMsgMap[id].profile.nickname }}</span>
+                <span class="truncate">
+                  {{ lastMsgMap[id].profile.nickname }}
+                </span>
                 <UBadge
                   v-if="lastMsgMap[id].unreadMsgs"
                   inset

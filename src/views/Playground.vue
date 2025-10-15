@@ -1,120 +1,119 @@
 <template>
   <UDashboardPanel id="playground">
     <template #header>
-      <PlaygroundHeader></PlaygroundHeader>
+      <PlaygroundHeader v-model="allPostLoaded"></PlaygroundHeader>
     </template>
     <template #body>
-      <UTabs ref="tabsRef" :items="tabItems" v-model="activeTab" variant="link">
-        <template #content>
-          <UPageColumns
-            v-if="postMap?.[activeTab]?.posts?.length"
-            class="space-y-4 sm:space-y-6"
-            :class="
-              activeTab === 'friend' ? 'column-1 md:columns-1 lg:columns-1' : ''
-            "
-          >
-            <UPageCard
-              v-for="(
-                {
-                  _id,
+      <!-- <UTabs ref="tabsRef" :items="tabItems" v-model="activeTab">
+        <template #content> -->
+      <UPageColumns
+        v-if="postMap?.[activeTab]?.posts?.length"
+        class="space-y-4 sm:space-y-6"
+        :class="
+          activeTab === 'friend' ? 'column-1 md:columns-1 lg:columns-1' : ''
+        "
+      >
+        <UPageCard
+          v-for="(
+            {
+              _id,
+              user,
+              profile,
+              content,
+              createdAt,
+              likes,
+              liked,
+              commentCount
+            },
+            index
+          ) in postMap[activeTab].posts"
+          :key="_id"
+          variant="subtle"
+          class="hover:bg-accented/50 cursor-pointer"
+          :ui="{ footer: 'pt-2', body: 'w-full', description: 'space-y-2' }"
+        >
+          <template #footer>
+            <UUser
+              :avatar="{
+                alt: profile.nickname[0]
+              }"
+              :name="profile.nickname"
+              :description="profile.bio"
+              size="xl"
+              @click="
+                useOpenSpace(
+                  profileSpaceOverlay,
+                  userInfo,
+                  activeTargetIds,
                   user,
-                  profile,
-                  content,
-                  createdAt,
-                  likes,
-                  liked,
-                  commentCount
-                },
-                index
-              ) in postMap[activeTab].posts"
-              :key="_id"
-              variant="subtle"
-              class="hover:bg-accented/50 cursor-pointer"
-              :ui="{ footer: 'pt-2', body: 'w-full', description: 'space-y-2' }"
+                  profile
+                )
+              "
+              :ui="{
+                name: 'break-all'
+              }"
             >
-              <template #footer>
-                <UUser
-                  :avatar="{
-                    alt: profile?.nickname[0]
-                  }"
-                  :name="profile?.nickname"
-                  :description="profile?.bio"
-                  size="xl"
+            </UUser>
+          </template>
+          <template #description>
+            <!-- before:content-[open-quote] after:content-[close-quote] -->
+            <div class="text-base">
+              {{ content.text }}
+            </div>
+            <Carousel
+              v-if="content.images.length"
+              :items="content.images"
+              :active-index="0"
+            ></Carousel>
+            <div class="flex items-center justify-between">
+              <p class="text-toned text-sm">
+                <!-- · 广东 -->
+                {{ useFormatTimeAgo(createdAt) }}
+              </p>
+              <div>
+                <UButton
+                  variant="ghost"
+                  icon="lucide:message-circle"
+                  :label="String(commentCount || '')"
                   @click="
-                    useOpenSpace(
-                      profileSpaceOverlay,
-                      userInfo,
-                      activeTargetIds,
-                      user,
-                      profile
+                    useOpenPostDetailOverlay(
+                      postMap,
+                      activeTab,
+                      _id,
+                      index,
+                      postDetailOverlay
                     )
                   "
-                >
-                </UUser>
-              </template>
-              <template #description>
-                <!-- before:content-[open-quote] after:content-[close-quote] -->
-                <div class="text-base">
-                  {{ content.text }}
-                </div>
-                <Carousel
-                  v-if="content.images.length"
-                  :items="content.images"
-                  :active-index="0"
-                ></Carousel>
-                <div class="flex items-center justify-between">
-                  <p class="text-toned text-sm">
-                    {{ useFormatTimeAgo(createdAt) }} · 广东
-                  </p>
-                  <div>
-                    <UButton
-                      variant="ghost"
-                      icon="lucide:message-circle"
-                      :label="String(commentCount || '')"
-                      @click="
-                        useOpenPostDetailOverlay(
-                          postMap,
-                          activeTab,
-                          _id,
-                          index,
-                          postDetailOverlay
-                        )
-                      "
-                    ></UButton>
-                    <UButton
-                      variant="ghost"
-                      :color="liked ? 'secondary' : 'primary'"
-                      icon="lucide:heart"
-                      :label="String(likes || '')"
-                      @click="
-                        useLike(
-                          toast,
-                          postMap[activeTab].posts[index],
-                          _id,
-                          'post'
-                        )
-                      "
-                    ></UButton>
-                    <UButton
-                      v-if="isMobile"
-                      variant="ghost"
-                      icon="lucide:ellipsis"
-                    ></UButton>
-                    <UDropdownMenu v-else :items="dropdownMenuItems">
-                      <UButton variant="ghost" icon="lucide:ellipsis"></UButton>
-                    </UDropdownMenu>
-                  </div>
-                </div>
-              </template>
-            </UPageCard>
-          </UPageColumns>
-          <USeparator
-            v-if="allPostLoaded"
-            class="px-4 pt-4 sm:px-6 sm:pt-6"
-            label="已经到底了"
-          />
-        </template>
-      </UTabs>
+                ></UButton>
+                <UButton
+                  variant="ghost"
+                  :color="liked ? 'secondary' : 'primary'"
+                  icon="lucide:heart"
+                  :label="String(likes || '')"
+                  @click="
+                    useLike(toast, postMap[activeTab].posts[index], _id, 'post')
+                  "
+                ></UButton>
+                <UButton
+                  v-if="isMobile"
+                  variant="ghost"
+                  icon="lucide:ellipsis"
+                ></UButton>
+                <UDropdownMenu v-else :items="dropdownMenuItems">
+                  <UButton variant="ghost" icon="lucide:ellipsis"></UButton>
+                </UDropdownMenu>
+              </div>
+            </div>
+          </template>
+        </UPageCard>
+      </UPageColumns>
+      <USeparator
+        v-if="allPostLoaded"
+        class="px-4 pt-4 sm:px-6 sm:pt-6"
+        label="已经到底了"
+      />
+      <!-- </template>
+      </UTabs> -->
     </template>
     <template v-if="isMobile" #footer>
       <div class="h-16"></div>
@@ -135,25 +134,25 @@ import {
 import { usePostStore, useRecentContactsStore, useUserStore } from '@/store'
 import { useThrottleFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { onMounted, ref, useTemplateRef, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const activeTab = ref<'latest' | 'friend' | 'hot'>('latest')
-const tabItems = [
-  // {
-  //   label: '好友',
-  //   value: 'friend'
-  // },
-  // {
-  //   label: '热门',
-  //   value: 'hot',
-  // },
-  {
-    label: '最新',
-    value: 'latest',
-    icon: 'lucide:refresh-ccw'
-  }
-]
+// const tabItems = [
+//   {
+//     label: '好友',
+//     value: 'friend'
+//   },
+//   {
+//     label: '热门',
+//     value: 'hot'
+//   },
+//   {
+//     label: '最新',
+//     value: 'latest',
+//     icon: 'lucide:refresh-ccw'
+//   }
+// ]
 const { postMap } = storeToRefs(usePostStore())
 const { activeTargetIds } = storeToRefs(useRecentContactsStore())
 const dropdownMenuItems = [
@@ -169,38 +168,38 @@ const toast = useToast()
 const overlay = useOverlay()
 const postDetailOverlay = overlay.create(OverlayPostDetail)
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
-const tabsRef = useTemplateRef('tabsRef')
+// const tabsRef = useTemplateRef('tabsRef')
 const allPostLoaded = ref(false)
 
-const getLatestData = async () => {
-  const _activeTab = activeTab.value
+// const getLatestData = async () => {
+//   const _activeTab = activeTab.value
 
-  if (_activeTab === 'latest') {
-    const posts = (
-      await getPlaygroundPostsAPI(
-        _activeTab,
-        '',
-        postMap.value[_activeTab].posts[0]._id
-      )
-    ).data
-    const { length } = posts
+//   if (_activeTab === 'latest') {
+//     const posts = (
+//       await getPlaygroundPostsAPI(
+//         _activeTab,
+//         '',
+//         postMap.value[_activeTab].posts[0]._id
+//       )
+//     ).data
+//     const { length } = posts
 
-    if (length) {
-      if (length < 10) {
-        postMap.value[_activeTab].posts.unshift(...posts)
-      } else {
-        postMap.value[_activeTab].posts = posts
-        allPostLoaded.value = false
-      }
-    } else {
-      toast.add({
-        title: '暂时没有新内容',
-        color: 'error',
-        icon: 'lucide:annoyed'
-      })
-    }
-  }
-}
+//     if (length) {
+//       if (length < 10) {
+//         postMap.value[_activeTab].posts.unshift(...posts)
+//       } else {
+//         postMap.value[_activeTab].posts = posts
+//         allPostLoaded.value = false
+//       }
+//     } else {
+//       toast.add({
+//         title: '暂时没有新内容',
+//         color: 'error',
+//         icon: 'lucide:annoyed'
+//       })
+//     }
+//   }
+// }
 
 const onScroll = useThrottleFn(
   async e => {
@@ -254,7 +253,7 @@ onMounted(async () => {
   // 从别的页面切换回来时需要更新
   allPostLoaded.value = postMap.value[_activeTab].posts.length < 10
 
-  tabsRef.value.triggersRef[0].$el.addEventListener('click', getLatestData)
+  // tabsRef.value.triggersRef[0].$el.addEventListener('click', getLatestData)
   document
     .querySelector('#dashboard-panel-playground')
     .children[1].addEventListener('scroll', onScroll)

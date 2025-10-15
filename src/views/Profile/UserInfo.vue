@@ -21,9 +21,7 @@
             class="flex items-center gap-2 not-last:pb-4"
             :ui="{ container: 'flex-1 flex items-center gap-2 justify-end' }"
           >
-            <div
-              class="max-w-60 overflow-hidden text-ellipsis whitespace-nowrap text-(--ui-text-dimmed)"
-            >
+            <div class="w-50 truncate text-(--ui-text-dimmed)">
               {{ userInfo.email }}
             </div>
           </UFormField>
@@ -65,11 +63,11 @@
             :label="label"
             class="flex items-center gap-2 not-last:pb-4"
             @click="click"
-            :ui="{ container: 'flex-1 flex items-center gap-2 justify-end' }"
+            :ui="{
+              container: 'flex items-center justify-end gap-2 flex-1 '
+            }"
           >
-            <div
-              class="max-w-60 overflow-hidden text-ellipsis whitespace-nowrap text-(--ui-text-dimmed)"
-            >
+            <span class="w-50 truncate text-end text-(--ui-text-dimmed)">
               {{
                 key === 'gender'
                   ? useTransformGender(profileForm[key])
@@ -79,7 +77,7 @@
                       : ''
                     : profileForm[key]
               }}
-            </div>
+            </span>
             <UIcon
               name="lucide:chevron-right"
               class="size-5 text-(--ui-text-dimmed)"

@@ -26,10 +26,7 @@
               color="error"
               inset
             >
-              <UIcon
-                name="i-lucide-bell"
-                class="text-primary size-5 shrink-0"
-              />
+              <UIcon name="i-lucide-bell" class="text-primary size-5" />
             </UChip>
           </UButton>
         </UTooltip>

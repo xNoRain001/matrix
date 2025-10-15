@@ -66,7 +66,7 @@
         :alt="targetProfile.nickname[0]"
         class="size-24 text-5xl"
       ></UAvatar>
-      <div>{{ targetProfile.nickname }}</div>
+      <div class="text-center">{{ targetProfile.nickname }}</div>
       <div class="text-sm">
         {{ rtcConnected ? '通话中...' : '等待对方接通...' }}
       </div>

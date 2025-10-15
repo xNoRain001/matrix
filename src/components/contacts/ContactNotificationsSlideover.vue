@@ -3,7 +3,6 @@
     v-model:open="isNotificationsSlideoverOpen"
     title="好友申请"
     description=" "
-    :ui="{ body: '!p-0' }"
   >
     <template #body>
       <div
@@ -11,7 +10,7 @@
           { id, profile, createdAt, content, type }, index
         ) in contactNotifications"
         :key="id"
-        class="hover:border-primary hover:bg-primary/5 cursor-pointer border-l-2 border-(--ui-bg) p-4 transition-colors sm:px-6"
+        class="bg-elevated/50 cursor-pointer rounded-lg p-4 not-last:mb-2 sm:p-6"
         @click="
           profileSpaceOverlay.open({
             targetId: id,
@@ -23,17 +22,16 @@
           :avatar="{ alt: profile.nickname[0] }"
           size="xl"
           :ui="{
-            wrapper: 'flex-1',
-            name: 'flex justify-between',
+            wrapper: 'flex-1 min-w-0',
+            name: 'flex justify-between items-center gap-2',
             description: 'flex justify-between'
           }"
         >
           <template #name>
-            <span>{{ profile.nickname }}</span>
-            <div v-if="type">
+            <span class="truncate">{{ profile.nickname }}</span>
+            <div v-if="type" class="flex gap-2">
               <UButton
                 @click.stop="onRefuse(id)"
-                class="mr-2"
                 color="error"
                 label="拒绝"
                 icon="lucide:x"

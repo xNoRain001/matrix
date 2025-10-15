@@ -87,7 +87,9 @@
               :avatar="{ alt: nickname[0] }"
               :description="signature"
               :ui="{
-                name: 'flex items-center gap-2 flex-wrap '
+                root: 'items-start',
+                wrapper: 'flex-1',
+                name: 'flex items-start gap-2 break-all'
               }"
             >
               <template #name>

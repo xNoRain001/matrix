@@ -46,7 +46,7 @@ const links = [
     },
     {
       icon: 'lucide:user-round',
-      label: '个人资料',
+      label: '资料',
       to: '/profile/user-info'
     },
     {
@@ -61,12 +61,12 @@ const links = [
     },
     {
       icon: 'lucide:database',
-      label: '数据管理',
+      label: '数据',
       to: '/profile/data-manager'
     },
     {
       icon: 'lucide:shield',
-      label: '修改密码',
+      label: '密码',
       to: '/profile/update-password'
     }
   ],

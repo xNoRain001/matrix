@@ -89,6 +89,7 @@
       <audio hidden ref="localAudioRef" muted></audio>
       <audio hidden ref="remoteAudioRef" autoplay></audio>
       <audio hidden ref="beepAudioRef"></audio>
+      <SkyBg></SkyBg>
     </UApp>
 
     <!-- 注册登录和重置密码等内容 -->

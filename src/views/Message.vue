@@ -18,7 +18,7 @@
       <template #right>
         <UButton
           @click="onResetMsgCounter"
-          icon="lucide:equal-approximately"
+          icon="lucide:mail-check"
           variant="ghost"
         ></UButton>
         <!-- <UTabs

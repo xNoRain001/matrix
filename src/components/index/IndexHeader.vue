@@ -13,8 +13,8 @@
         square
         @click="isNotificationsSlideoverOpen = true"
       >
-        <UChip :show="true" color="error" inset>
-          <UIcon name="i-lucide-bell" class="text-primary size-5 shrink-0" />
+        <UChip :show="false" color="error" inset>
+          <UIcon name="i-lucide-bell" class="text-primary size-5" />
         </UChip>
       </UButton>
       <UButton

@@ -49,6 +49,10 @@
               }"
               :name="contactProfileMap[id].profile.nickname"
               :description="`最后上线于：${useFormatTimeAgo(contactProfileMap[id].profile.createdAt)}`"
+              :ui="{
+                wrapper: 'flex-1 min-w-0',
+                name: 'truncate'
+              }"
             >
             </UUser>
           </div>

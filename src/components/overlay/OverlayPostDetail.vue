@@ -103,7 +103,7 @@
               :ui="{
                 root: 'items-start',
                 wrapper: 'flex-1',
-                name: 'gap-2 flex text-sm text-toned items-center',
+                name: 'gap-2 flex text-sm text-toned items-start break-all',
                 description: 'text-highlighted flex flex-col justify-between'
               }"
             >
@@ -162,7 +162,8 @@
                 </div>
                 <div class="flex items-center justify-between">
                   <p class="text-toned items-center">
-                    <span>{{ useFormatTimeAgo(createdAt) }} · 广东</span>
+                    <!-- · 广东 -->
+                    <span>{{ useFormatTimeAgo(createdAt) }}</span>
                     <span class="ml-2" @click="onReply(owner, _id, index)"
                       >回复</span
                     >
@@ -251,15 +252,13 @@
                     >
                       <template #body>
                         <UUser
-                          :avatar="{ alt: profile.nickname[0] }"
                           size="xl"
                           :ui="{
                             root: 'items-start',
                             wrapper: 'flex-1',
-                            name: 'gap-2 flex text-sm text-toned items-center ',
+                            name: 'gap-2 flex text-sm text-toned items-start break-all',
                             description:
-                              'text-highlighted flex flex-col justify-between',
-                            avatar: 'size-5 text-xs'
+                              'text-highlighted flex flex-col justify-between'
                           }"
                         >
                           <template #avatar>
@@ -289,8 +288,15 @@
                                   profile
                                 )
                               "
-                              >{{ profile.nickname }}</span
                             >
+                              {{
+                                `${profile.nickname}${
+                                  replyTargetProfile?.nickname
+                                    ? ` 回复 ${replyTargetProfile?.nickname}`
+                                    : ''
+                                }`
+                              }}
+                            </span>
                             <UBadge
                               v-if="userInfo.id === user"
                               label="我"
@@ -301,10 +307,6 @@
                               "
                               label="作者"
                             ></UBadge>
-                            <template v-if="replyTargetProfile">
-                              <UIcon name="lucide:chevrons-right"></UIcon>
-                              <span>{{ replyTargetProfile?.nickname }}</span>
-                            </template>
                           </template>
                           <template #description>
                             <div class="text-base">{{ content.text }}</div>
@@ -330,10 +332,10 @@
                             </div>
                             <div class="flex items-center justify-between">
                               <p class="text-toned">
-                                <span
-                                  >{{ useFormatTimeAgo(createdAt) }} ·
-                                  广东</span
-                                >
+                                <span>
+                                  <!-- · 广东 -->
+                                  {{ useFormatTimeAgo(createdAt) }}
+                                </span>
                                 <span
                                   class="ml-2"
                                   @click="
@@ -445,31 +447,28 @@
         <USeparator class="px-4 pt-4 sm:px-6 sm:pt-6" label="已经到底了" />
       </div>
       <div v-else>
-        <UPageCard
+        <div
           v-for="{ user, profile, createdAt } in likes"
           :key="user"
-          variant="soft"
-          class="not-last:mb-2"
-          :ui="{ body: 'w-full' }"
+          class="bg-elevated/50 rounded-lg p-4 not-last:mb-2 sm:p-6"
         >
-          <template #body>
-            <UUser
-              :name="profile.nickname"
-              :avatar="{ alt: profile.nickname[0] }"
-              size="xl"
-              :ui="{
-                root: 'items-start',
-                wrapper: 'flex-1',
-                description: 'flex justify-between'
-              }"
-            >
-              <template #description>
-                <span>点赞了你的内容</span>
-                <time>{{ useFormatTimeAgo(createdAt) }}</time>
-              </template>
-            </UUser>
-          </template>
-        </UPageCard>
+          <UUser
+            :name="profile.nickname"
+            :avatar="{ alt: profile.nickname[0] }"
+            size="xl"
+            :ui="{
+              root: 'items-start',
+              wrapper: 'flex-1 min-w-0',
+              name: 'truncate',
+              description: 'flex justify-between'
+            }"
+          >
+            <template #description>
+              <span>点赞了你的内容</span>
+              <time>{{ useFormatTimeAgo(createdAt) }}</time>
+            </template>
+          </UUser>
+        </div>
         <USeparator class="px-4 pt-4 sm:px-6 sm:pt-6" label="已经到底了" />
       </div>
       <UDrawer

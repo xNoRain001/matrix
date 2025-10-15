@@ -24,6 +24,7 @@ const onLoginWithFingerprint = async () => {
   try {
     const fp = await fpPromise.load()
     const visitorId = (await fp.get()).visitorId
+    // const visitorId = '632206f0f46de61b8d46f94bd4958039'
     const encryptedUserInfo = await useEncryptUserInfo({ visitorId })
     const { data: token } = await loginWithFingerprint(encryptedUserInfo)
     localStorage.setItem('token', token)
