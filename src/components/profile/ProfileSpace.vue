@@ -39,6 +39,7 @@
         </template>
       </UDashboardNavbar>
       <!-- 背景图片，由于移动端有 pb-16，所有高度全部使用 50vh，而不是 50% -->
+      <!-- 灰色滤镜：grayscale-50 filter -->
       <div
         @click="viewerOverlay.open({ urls: [{ url: bgURL }] })"
         :class="[
@@ -96,10 +97,7 @@
         </template>
         <template #description>
           <div class="flex items-center gap-2">
-            <span
-              >{{ targetProfile.bio }} Lorem ipsum, dolor sit amet consectetur
-              adipisicing elit. Repudiandae consectetur et voluptatibus impedit
-            </span>
+            <span>{{ targetProfile.bio }} </span>
           </div>
           <div class="mt-2 space-y-2 space-x-2">
             <ProfileSpaceTags
@@ -209,7 +207,7 @@
           class="w-full"
           enterkeyhint="done"
           @keydown.enter="onAddTag"
-          :ui="{ base: 'bg-elevated/50', trailing: 'pe-1' }"
+          :ui="{ trailing: 'pe-1' }"
         >
           <template v-if="tag.length" #trailing>
             <div class="text-muted text-xs tabular-nums">
@@ -235,11 +233,11 @@
         <USelect
           v-model="mbti"
           :items="mbtiItems"
-          class="bg-elevated/50 w-full"
+          class="w-full"
           placeholder="选择你的 MBTI"
         ></USelect>
         <UPageCard
-          title="我的标签"
+          :title="`我的标签（${tags.length} / 10）`"
           description="通过拖拽修改标签位置"
           variant="naked"
           orientation="horizontal"
@@ -495,6 +493,16 @@ const onDeleteTag = index => tags.value.splice(index, 1)
 
 const onAddTag = () => {
   const _tags = tags.value
+
+  if (_tags.length >= 10) {
+    toast.add({
+      title: '标签数量达到上限',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+    return
+  }
+
   const _tag = tag.value
 
   if (_tags.includes(_tag)) {

@@ -46,7 +46,7 @@ const { activeTargetIds, activeTargetId, activeTargetProfile } = storeToRefs(
 )
 const { postMap } = storeToRefs(usePostStore())
 const isOpen = ref(
-  Boolean(matchRes.value.type === 'chat' && matchRes.value.profile)
+  Boolean(matchRes.value?.type === 'chat' && matchRes.value?.profile)
 )
 
 if (isOpen.value) {

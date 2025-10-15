@@ -58,7 +58,7 @@ const { postMap } = storeToRefs(usePostStore())
 const { roomId, isVoiceChatMatch, webRTCTargetId, webRTCTargetProfile } =
   storeToRefs(useWebRTCStore())
 const isOpen = ref(
-  Boolean(matchRes.value.type === 'voice-chat' && matchRes.value.profile)
+  Boolean(matchRes.value?.type === 'voice-chat' && matchRes.value?.profile)
 )
 
 if (isOpen.value) {

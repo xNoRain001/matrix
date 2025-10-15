@@ -442,6 +442,7 @@
             </UUser>
           </template>
         </UPageCard>
+        <USeparator class="px-4 pt-4 sm:px-6 sm:pt-6" label="已经到底了" />
       </div>
       <div v-else>
         <UPageCard
@@ -469,6 +470,7 @@
             </UUser>
           </template>
         </UPageCard>
+        <USeparator class="px-4 pt-4 sm:px-6 sm:pt-6" label="已经到底了" />
       </div>
       <UDrawer
         v-model:open="isEditMenuDrawerOpen"

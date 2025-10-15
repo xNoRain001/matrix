@@ -45,7 +45,15 @@
   </UDashboardNavbar>
 
   <UCollapsible
-    v-if="isMatch && isMobile"
+    v-if="
+      isMatch &&
+      isMobile &&
+      (targetProfile.birthday ||
+        targetProfile.region ||
+        targetProfile.gender !== 'other' ||
+        targetProfile.mbti ||
+        targetProfile.tags.length)
+    "
     v-model:open="open"
     class="border-default cursor-pointer border-b"
     @click="toSpace"

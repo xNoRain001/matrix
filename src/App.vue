@@ -284,6 +284,11 @@ const navs = [
       label: '关于',
       icon: 'lucide:info',
       onSelect: () => abouttOverlay.open()
+    },
+    {
+      label: '只有神知道的世界',
+      icon: 'lucide:leaf',
+      onSelect: () => router.replace('/ys')
     }
   ]
 ] satisfies NavigationMenuItem[][]
@@ -916,6 +921,11 @@ const acceptWebRTC = async (targetProfile, roomId, now, isAccept: boolean) => {
         socket.emit('agree-unidirectional-web-rtc', roomId, _targetId)
       } else {
         socket.emit('agree-unidirectional-web-rtc-but-no-permission', _targetId)
+        toast.add({
+          title: '未开启麦克风权限',
+          color: 'error',
+          icon: 'lucide:annoyed'
+        })
       }
 
       useSendMsg(
