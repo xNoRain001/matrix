@@ -1,62 +1,84 @@
 <template>
   <div class="w-fit select-none">
-    <UCarousel
-      ref="carousel"
-      v-slot="{ item, index }"
-      :arrows="viewer && items.length > 1"
-      :items="items"
-      :prev="{ onClick: onClickPrev }"
-      :next="{ onClick: onClickNext }"
-      :class="
-        viewer
-          ? isMobile
-            ? 'w-[calc(100vw-2rem)] sm:w-[calc(100vh-11rem)]'
-            : 'w-[calc(100vh-11rem)]'
-          : 'w-full max-w-xs'
-      "
-      @select="onSelect"
-    >
-      <img
-        @click="
-          !viewer && viewerOverlay.open({ urls: items, activeIndex: index })
-        "
-        :src="
-          item.url.startsWith('blob:') ? item.url : VITE_OSS_BASE_URL + item.url
-        "
-        class="rounded-lg"
-        :width="item.width"
-        :height="item.height"
+    <template v-if="items.length > 1">
+      <UCarousel
+        ref="carousel"
+        v-slot="{ item, index }"
+        :arrows="viewer && items.length > 1"
+        :items="items"
+        :prev="{ onClick: onClickPrev }"
+        :next="{ onClick: onClickNext }"
         :class="
           viewer
             ? isMobile
-              ? 'mx-auto max-h-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] sm:max-h-[calc(100vh-11rem)] sm:max-w-[calc(100vh-11rem)]'
-              : 'mx-auto max-h-[calc(100vh-11rem)] max-w-[calc(100vh-11rem)]'
-            : 'max-h-80 w-full max-w-80'
+              ? 'w-[calc(100vw-2rem)] sm:w-[calc(100vh-11rem)]'
+              : 'w-[calc(100vh-11rem)]'
+            : 'w-full max-w-xs'
         "
-      />
-    </UCarousel>
-    <div
-      v-if="items.length > 1"
-      :class="viewer ? 'mx-auto' : ''"
-      class="flex w-full max-w-xs gap-1 overflow-auto pt-4 sm:max-w-md"
-    >
-      <div
-        v-for="(item, index) in items"
-        :key="index"
-        class="shrink-0 opacity-25 transition-opacity hover:opacity-100"
-        :class="{ 'opacity-100': activeIndex === index }"
-        @click="select(index)"
+        @select="onSelect"
       >
         <img
+          @click="
+            !viewer && viewerOverlay.open({ urls: items, activeIndex: index })
+          "
           :src="
             item.url.startsWith('blob:')
               ? item.url
               : VITE_OSS_BASE_URL + item.url
           "
-          class="size-11 rounded-lg"
+          class="rounded-lg"
+          :width="item.width"
+          :height="item.height"
+          :class="
+            viewer
+              ? isMobile
+                ? 'mx-auto max-h-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] sm:max-h-[calc(100vh-11rem)] sm:max-w-[calc(100vh-11rem)]'
+                : 'mx-auto max-h-[calc(100vh-11rem)] max-w-[calc(100vh-11rem)]'
+              : 'max-h-80 w-full max-w-80'
+          "
         />
+      </UCarousel>
+      <div
+        :class="viewer ? 'mx-auto' : ''"
+        class="flex w-full max-w-xs gap-1 overflow-auto pt-4 sm:max-w-md"
+      >
+        <div
+          v-for="(item, index) in items"
+          :key="index"
+          class="shrink-0 opacity-25 transition-opacity hover:opacity-100"
+          :class="{ 'opacity-100': activeIndex === index }"
+          @click="select(index)"
+        >
+          <img
+            :src="
+              item.url.startsWith('blob:')
+                ? item.url
+                : VITE_OSS_BASE_URL + item.url
+            "
+            class="size-11 rounded-lg"
+          />
+        </div>
       </div>
-    </div>
+    </template>
+    <img
+      v-else
+      @click="!viewer && viewerOverlay.open({ urls: items, activeIndex: 0 })"
+      :src="
+        items[0].url.startsWith('blob:')
+          ? items[0].url
+          : VITE_OSS_BASE_URL + items[0].url
+      "
+      class="rounded-lg"
+      :width="items[0].width"
+      :height="items[0].height"
+      :class="
+        viewer
+          ? isMobile
+            ? 'mx-auto max-h-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] sm:max-h-[calc(100vh-11rem)] sm:max-w-[calc(100vh-11rem)]'
+            : 'mx-auto max-h-[calc(100vh-11rem)] max-w-[calc(100vh-11rem)]'
+          : 'max-h-80 w-full max-w-80'
+      "
+    />
   </div>
 </template>
 

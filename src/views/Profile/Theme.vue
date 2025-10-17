@@ -63,6 +63,15 @@ const [DefineSlideoverBodyTemplate, ReuseSlideoverBodyTemplate] =
 const { config, userInfo, isMobile } = storeToRefs(useUserStore())
 const sections = [
   {
+    title: '全局背景',
+    fields: [
+      {
+        name: 'starsBg',
+        label: '星空背景'
+      }
+    ]
+  },
+  {
     title: '背景',
     fields: [
       // {

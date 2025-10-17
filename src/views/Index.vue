@@ -5,6 +5,7 @@
     </template>
 
     <template #body>
+      <IndexPlanets></IndexPlanets>
       <!-- class="from-primary/10 to-default bg-gradient-to-tl from-5%" -->
       <UPageCard
         v-for="({ icon, title, desc, matchType, to }, index) in list"
@@ -156,7 +157,6 @@ const startMatch = () => {
     'start-match',
     {
       type: matchType,
-      id: userInfo.value.id,
       profile: userInfo.value.profile
     },
     _filter[`${_filter.activeTab}Form`]

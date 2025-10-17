@@ -31,6 +31,7 @@ const onLoginWithFingerprint = async () => {
     toast.add({ title: '登录成功', icon: 'lucide:smile' })
     location.replace('/')
   } catch (error) {
+    console.log(error)
     toast.add({ title: '登录失败', color: 'error', icon: 'lucide:annoyed' })
   }
 }

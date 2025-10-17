@@ -40,7 +40,8 @@ const useUserStore = defineStore('userStore', () => {
     theme: {
       sendBtn: false,
       isChatBgOpen: false,
-      chatBg: ''
+      chatBg: '',
+      starsBg: true
     }
   }
   const _config = useInitLocalStorate(

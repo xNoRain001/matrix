@@ -48,7 +48,7 @@
                   : 'error'
               }"
               :name="contactProfileMap[id].profile.nickname"
-              :description="`最后上线于：${useFormatTimeAgo(contactProfileMap[id].profile.createdAt)}`"
+              :description="`添加于：${useFormatTimeAgo(contactProfileMap[id].createdAt)}`"
               :ui="{
                 wrapper: 'flex-1 min-w-0',
                 name: 'truncate'

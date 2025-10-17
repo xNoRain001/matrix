@@ -10,3 +10,6 @@ export const updateProfile = async userInfo =>
     method: 'POST',
     data: userInfo
   })
+
+export const getRandomProfilesAPI = async () =>
+  HTTP.request(`${prefix}/get-random-profiles`)
