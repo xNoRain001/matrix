@@ -55,7 +55,7 @@
               :ui="{
                 wrapper: 'flex-1 min-w-0',
                 name: 'flex justify-between items-center gap-2',
-                description: 'flex justify-between'
+                description: 'flex justify-between gap-2'
               }"
             >
               <template #name>
@@ -73,7 +73,9 @@
                 </UBadge>
               </template>
               <template #description>
-                <span>{{ lastMsgMap[id].content }}</span>
+                <span class="flex-1 truncate">{{
+                  lastMsgMap[id].content
+                }}</span>
                 <time>{{ lastMsgMap[id].timeAgo }}</time>
               </template>
             </UUser>

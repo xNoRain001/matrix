@@ -30,8 +30,7 @@ const onLoginWithFingerprint = async () => {
     localStorage.setItem('token', token)
     toast.add({ title: '登录成功', icon: 'lucide:smile' })
     location.replace('/')
-  } catch (error) {
-    console.log(error)
+  } catch {
     toast.add({ title: '登录失败', color: 'error', icon: 'lucide:annoyed' })
   }
 }

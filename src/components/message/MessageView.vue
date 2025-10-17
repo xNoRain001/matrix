@@ -19,14 +19,12 @@
           v-if="!recording && !isRecord"
           @click="onSpeak"
           variant="ghost"
-          color="neutral"
           icon="lucide:mic"
         ></UButton>
         <UButton
           v-if="!recording && isRecord"
           @click="isRecord = !isRecord"
           variant="ghost"
-          color="neutral"
           icon="lucide:keyboard"
         ></UButton>
         <div
@@ -49,6 +47,7 @@
         </UBadge>
         <UTextarea
           v-if="!recording && !isRecord"
+          ref="mobileTextareaRef"
           @keydown.enter.prevent="onSendMsg"
           @focus="onFocus"
           enterkeyhint="send"
@@ -59,19 +58,23 @@
           autoresize
         />
         <UButton
-          v-if="!recording"
+          :icon="isEmojiOpen ? 'lucide:keyboard' : 'lucide:smile'"
           variant="ghost"
-          color="neutral"
-          icon="lucide:smile"
-        ></UButton>
+          class="w-fit"
+          @click="onOpenEmoji"
+        />
         <UButton
           v-if="!recording"
           variant="ghost"
-          color="neutral"
           :icon="expanded ? 'lucide:circle-x' : 'lucide:circle-plus'"
           @click="onExpand"
         ></UButton>
       </div>
+      <Emoji
+        v-model="message"
+        v-model:is-emoji-open="isEmojiOpen"
+        :elm="mobileTextareaRef"
+      ></Emoji>
       <UCollapsible v-model:open="expanded">
         <template #content>
           <div class="mt-4 grid grid-cols-4 gap-y-4 p-4">
@@ -96,8 +99,9 @@
       </UCollapsible>
     </div>
     <!-- PC 端输入框 -->
-    <UPageCard v-else variant="subtle" :ui="{ container: '!p-4' }">
+    <UPageCard v-else variant="soft">
       <UTextarea
+        ref="textareaRef"
         placeholder="Ctrl + Enter 换行"
         @keydown.enter.prevent="onKeydown"
         enterkeyhint="send"
@@ -112,10 +116,8 @@
       </UTextarea>
 
       <div class="flex justify-between">
-        <div class="space-x-3">
-          <UTooltip text="表情">
-            <UButton variant="ghost" icon="lucide:smile"></UButton>
-          </UTooltip>
+        <div class="space-x-2">
+          <Emoji v-model="message" :elm="textareaRef"></Emoji>
           <UTooltip text="图片">
             <UButton
               variant="ghost"
@@ -169,7 +171,8 @@ import {
   ref,
   computed,
   watch,
-  onBeforeMount
+  onBeforeMount,
+  useTemplateRef
 } from 'vue'
 import type { message, userInfo } from '@/types'
 import { voiceChatInviteToastPendingTime } from '@/const'
@@ -185,6 +188,8 @@ let first = true
 let timer = null
 let chunks = []
 let mediaRecorder = null
+const textareaRef = useTemplateRef('textareaRef')
+const mobileTextareaRef = useTemplateRef('mobileTextareaRef')
 const constraints = { audio: true }
 const props = withDefaults(
   defineProps<{
@@ -227,6 +232,7 @@ const toast = useToast()
 const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent)
 const inputRef = ref<HTMLInputElement | null>(null)
 const expanded = ref(false)
+const isEmojiOpen = ref(false)
 const dashboardPanelRef = computed(
   () => (msgContainerRef.value as any)?.$el?.parentNode as HTMLElement
 )
@@ -241,7 +247,13 @@ const prevRoute = route.path
 
 const onSpeak = async () => {
   if (await useIsDeviceOpen(toast, 'microphone', '麦克风')) {
-    isRecord.value = !isRecord.value
+    const v = !isRecord.value
+    isRecord.value = v
+
+    if (v) {
+      isEmojiOpen.value = false
+      expanded.value = false
+    }
   }
 }
 
@@ -417,8 +429,24 @@ const onCall = async () => {
   )
 }
 
+const onOpenEmoji = () => {
+  const v = !isEmojiOpen.value
+  isEmojiOpen.value = v
+
+  if (v) {
+    expanded.value = false
+    isRecord.value = false
+  }
+}
+
 const onExpand = () => {
-  expanded.value = !expanded.value
+  const v = !expanded.value
+  expanded.value = v
+
+  if (v) {
+    isEmojiOpen.value = false
+    isRecord.value = false
+  }
 }
 
 const resizeHandler = () => {
@@ -437,7 +465,11 @@ const resizeHandler = () => {
   ;(msgContainerRef.value as any).scrollToBottom()
 }
 
-const onFocus = () => (expanded.value = false)
+const onFocus = () => {
+  expanded.value = false
+  isEmojiOpen.value = false
+  // 不需要修改 isRecord，因为能聚焦时一定没有进行发送语音行为
+}
 
 const onOpenFileSelector = target => target.click()
 

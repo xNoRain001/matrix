@@ -1,6 +1,6 @@
 <template>
   <DefineFilterBodyTemplate>
-    <UTabs :items="tabItems" v-model="activeTab" :ui="{ content: 'mt-4' }">
+    <UTabs :items="tabItems" v-model="activeTab" :ui="{ root: 'gap-4' }">
       <template #common>
         <UForm :state="filter.commonForm" class="space-y-4">
           <UFormField label="性别">
