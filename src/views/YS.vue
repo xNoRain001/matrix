@@ -638,7 +638,6 @@ watch(filterState, async v => {
 })
 
 onMounted(async () => {
-  return
   const { data } = await getAssistsAPI({ avatar: 'undef', createdAt: -1 })
   helpItems.value = data
   allPostLoaded.value = data.length < 10

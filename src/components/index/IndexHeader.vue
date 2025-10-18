@@ -8,6 +8,11 @@
     </template>
     <template #right>
       <UButton
+        :icon="isFullScreen ? 'lucide:minimize' : 'lucide:maximize'"
+        variant="ghost"
+        @click="onScreenSize"
+      ></UButton>
+      <UButton
         color="neutral"
         variant="ghost"
         square
@@ -40,11 +45,13 @@
 </template>
 
 <script lang="ts" setup>
+import { useExitFullscreen, useRequestFullscreen } from '@/hooks'
 import { useUserStore } from '@/store'
 import { useColorMode } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
 
+const isFullScreen = ref(false)
 const isFilterOverlayOpen = defineModel<boolean>()
 const { onlineCount } = storeToRefs(useUserStore())
 const { store } = useColorMode()
@@ -92,6 +99,17 @@ const startViewTransition = (event: MouseEvent) => {
       }
     )
   })
+}
+
+const onScreenSize = () => {
+  const v = !isFullScreen.value
+  isFullScreen.value = v
+
+  if (v) {
+    useRequestFullscreen()
+  } else {
+    useExitFullscreen()
+  }
 }
 
 watch(store, () =>

@@ -47,8 +47,12 @@ import useLike from './use-like'
 import useURLToBlob from './use-url-to-blob'
 import useOpenPostDetailOverlay from './use-open-comment-overlay'
 import useOpenSpace from './use-open-space'
+import useRequestFullscreen from './use-request-full-screen'
+import useExitFullscreen from './use-exit-full-screen'
 
 export {
+  useRequestFullscreen,
+  useExitFullscreen,
   useOpenSpace,
   useOpenPostDetailOverlay,
   useURLToBlob,

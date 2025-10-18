@@ -50,6 +50,7 @@
     </template>
   </UDashboardNavbar>
 
+  <!-- 移动端匹配时，对方的信息 -->
   <UCollapsible
     v-if="
       isMatch &&

@@ -17,7 +17,6 @@
       >
       </UPageCard>
       <UTextarea
-        autofocus
         placeholder="善语结缘，温暖常伴..."
         v-model="payload.text"
         class="w-full"

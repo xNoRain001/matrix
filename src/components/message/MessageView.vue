@@ -13,7 +13,7 @@
       :target-profile="targetProfile"
     ></MessageDynamicScroller>
     <!-- 移动端输入框 -->
-    <div class="relative p-4" v-if="isMobile">
+    <div class="border-default relative border-t p-4" v-if="isMobile">
       <div class="flex items-end gap-2">
         <UButton
           v-if="!recording && !isRecord"
@@ -58,6 +58,7 @@
           autoresize
         />
         <UButton
+          v-if="!recording"
           :icon="isEmojiOpen ? 'lucide:keyboard' : 'lucide:smile'"
           variant="ghost"
           class="w-fit"
@@ -74,24 +75,21 @@
         v-model="message"
         v-model:is-emoji-open="isEmojiOpen"
         :elm="mobileTextareaRef"
+        @send="onSendMsg"
       ></Emoji>
       <UCollapsible v-model:open="expanded">
         <template #content>
-          <div class="mt-4 grid grid-cols-4 gap-y-4 p-4">
+          <div class="grid grid-cols-4 gap-4 pt-4">
             <div class="flex flex-col items-center">
               <UButton
-                color="neutral"
                 icon="lucide:file-image"
+                size="xl"
                 @click="onOpenFileSelector(inputRef)"
               ></UButton>
               <div class="mt-2 text-xs">图片</div>
             </div>
             <div class="flex flex-col items-center">
-              <UButton
-                color="neutral"
-                icon="lucide:phone"
-                @click="onCall"
-              ></UButton>
+              <UButton icon="lucide:phone" size="xl" @click="onCall"></UButton>
               <div class="mt-2 text-xs">语音</div>
             </div>
           </div>

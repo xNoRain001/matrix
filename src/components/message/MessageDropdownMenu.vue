@@ -1,5 +1,57 @@
 <template>
-  <UDropdownMenu :items="dropdownItems">
+  <USlideover
+    v-if="isMobile"
+    title="聊天信息"
+    description=" "
+    :ui="{ body: 'space-y-4' }"
+  >
+    <UButton icon="lucide:ellipsis" color="neutral" variant="ghost" />
+
+    <template #body>
+      <UPageCard variant="subtle">
+        <UFormField
+          label="添加好友"
+          class="flex items-center justify-between gap-2 not-last:pb-4"
+        >
+          <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
+        </UFormField>
+      </UPageCard>
+      <UPageCard
+        variant="subtle"
+        :ui="{ container: 'divide-y divide-default' }"
+      >
+        <UFormField
+          label="隐藏列表"
+          class="flex items-center justify-between gap-2 not-last:pb-4"
+        >
+          <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
+        </UFormField>
+        <UFormField
+          label="删除列表"
+          class="flex items-center justify-between gap-2 not-last:pb-4"
+        >
+          <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
+        </UFormField>
+      </UPageCard>
+      <UPageCard variant="subtle">
+        <UFormField
+          label="清空聊天记录"
+          class="flex items-center justify-between gap-2 not-last:pb-4"
+        >
+          <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
+        </UFormField>
+      </UPageCard>
+      <UPageCard variant="subtle">
+        <UFormField
+          label="举报"
+          class="flex items-center justify-between gap-2 not-last:pb-4"
+        >
+          <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
+        </UFormField>
+      </UPageCard>
+    </template>
+  </USlideover>
+  <UDropdownMenu v-else :items="dropdownItems">
     <UButton icon="lucide:ellipsis" color="neutral" variant="ghost" />
   </UDropdownMenu>
 </template>
@@ -38,7 +90,7 @@ const {
   indexMap,
   unreadMsgCounter
 } = storeToRefs(useRecentContactsStore())
-const { globalSocket, userInfo } = storeToRefs(useUserStore())
+const { globalSocket, userInfo, isMobile } = storeToRefs(useUserStore())
 const isFriend = computed(() =>
   Boolean(contactProfileMap.value[props.targetId])
 )

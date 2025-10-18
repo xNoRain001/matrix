@@ -1,5 +1,48 @@
 <template>
-  <UDropdownMenu :items="dropdownItems">
+  <USlideover
+    v-if="isMobile"
+    title="好友信息"
+    description=" "
+    :ui="{ body: 'space-y-4' }"
+  >
+    <UButton icon="lucide:ellipsis" color="neutral" variant="ghost" />
+
+    <template #body>
+      <UPageCard variant="subtle">
+        <UFormField
+          label="备注"
+          class="flex items-center justify-between gap-2 not-last:pb-4"
+        >
+          <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
+        </UFormField>
+      </UPageCard>
+      <UPageCard variant="subtle">
+        <UFormField
+          label="添加好友"
+          class="flex items-center justify-between gap-2 not-last:pb-4"
+        >
+          <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
+        </UFormField>
+      </UPageCard>
+      <UPageCard variant="subtle">
+        <UFormField
+          label="删除好友"
+          class="flex items-center justify-between gap-2 not-last:pb-4"
+        >
+          <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
+        </UFormField>
+      </UPageCard>
+      <UPageCard variant="subtle">
+        <UFormField
+          label="举报"
+          class="flex items-center justify-between gap-2 not-last:pb-4"
+        >
+          <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
+        </UFormField>
+      </UPageCard>
+    </template>
+  </USlideover>
+  <UDropdownMenu v-else :items="dropdownItems">
     <UButton icon="lucide:ellipsis" color="neutral" variant="ghost" />
   </UDropdownMenu>
 </template>
@@ -14,7 +57,7 @@ const props = defineProps<{ targetId: string }>()
 const toast = useToast()
 const { activeTargetId, activeTargetProfile, contactProfileMap, contactList } =
   storeToRefs(useRecentContactsStore())
-const { globalSocket, userInfo } = storeToRefs(useUserStore())
+const { globalSocket, userInfo, isMobile } = storeToRefs(useUserStore())
 const isFriend = computed(() =>
   Boolean(contactProfileMap.value[props.targetId])
 )
