@@ -1,5 +1,11 @@
 <template>
-  <USlideover title=" " description=" ">
+  <USlideover
+    title=" "
+    description=" "
+    :ui="{
+      description: 'hidden'
+    }"
+  >
     <template #content>
       <MessageView
         @close="emit('close', false)"

@@ -3,7 +3,7 @@
     v-if="isMobile"
     title="好友信息"
     description=" "
-    :ui="{ body: 'space-y-4' }"
+    :ui="{ body: 'space-y-4', description: 'hidden' }"
   >
     <UButton icon="lucide:ellipsis" color="neutral" variant="ghost" />
 

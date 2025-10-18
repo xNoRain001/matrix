@@ -34,7 +34,7 @@
     title="匹配"
     description=" "
     @after:leave="afterLeave"
-    :ui="{ body: 'flex flex-col' }"
+    :ui="{ body: 'flex flex-col', description: 'hidden' }"
   >
     <template #body>
       <!-- <UBanner

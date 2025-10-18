@@ -5,7 +5,7 @@
       v-model:open="isUserInfoSlideoverOpen"
       title="个人资料"
       description=" "
-      :ui="{ body: 'flex flex-col gap-4 sm:gap-6' }"
+      :ui="{ body: 'flex flex-col gap-4 sm:gap-6', description: 'hidden' }"
     >
       <template #body>
         <UPageCard
@@ -97,6 +97,9 @@
       v-model:open="isOpenNicknameDrawer"
       title="修改昵称"
       description=" "
+      :ui="{
+        description: 'hidden'
+      }"
     >
       <template #body>
         <UFormField>
@@ -118,7 +121,14 @@
       </template>
     </UDrawer>
 
-    <UDrawer v-model:open="isOpenGenderDrawer" title="修改性别" description=" ">
+    <UDrawer
+      v-model:open="isOpenGenderDrawer"
+      title="修改性别"
+      description=" "
+      :ui="{
+        description: 'hidden'
+      }"
+    >
       <template #body>
         <USelect
           class="w-full"
@@ -132,13 +142,23 @@
       v-model:open="isOpenBirthdayDrawer"
       title="修改生日"
       description=" "
+      :ui="{
+        description: 'hidden'
+      }"
     >
       <template #body>
         <DatePicker v-model="date"></DatePicker>
       </template>
     </UDrawer>
 
-    <UDrawer v-model:open="isOpenRegionDrawer" title="修改地区" description=" ">
+    <UDrawer
+      v-model:open="isOpenRegionDrawer"
+      title="修改地区"
+      description=" "
+      :ui="{
+        description: 'hidden'
+      }"
+    >
       <template #body>
         <div class="flex gap-2">
           <USelect class="flex-1" v-model="province" :items="provinceOptions" />

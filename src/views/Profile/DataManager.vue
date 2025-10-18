@@ -21,7 +21,7 @@
     v-model:open="isDataManagerSlideoverOpen"
     title="数据管理"
     description=" "
-    :ui="{ body: 'flex flex-col gap-4' }"
+    :ui="{ body: 'flex flex-col gap-4', description: 'hidden' }"
   >
     <template #body>
       <ReuseSlideoverBodyTemplate></ReuseSlideoverBodyTemplate>

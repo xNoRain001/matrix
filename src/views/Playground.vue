@@ -57,7 +57,7 @@
           </template>
           <template #description>
             <!-- before:content-[open-quote] after:content-[close-quote] -->
-            <div class="text-base">
+            <div class="text-base break-words whitespace-pre-wrap">
               {{ content.text }}
             </div>
             <Carousel

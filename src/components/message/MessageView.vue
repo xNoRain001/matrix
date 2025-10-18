@@ -61,7 +61,6 @@
           v-if="!recording"
           :icon="isEmojiOpen ? 'lucide:keyboard' : 'lucide:smile'"
           variant="ghost"
-          class="w-fit"
           @click="onOpenEmoji"
         />
         <UButton
@@ -459,7 +458,17 @@ const resizeHandler = () => {
   // visualViewport.offsetTop 表示视觉视口相对于布局视口的偏移，标签栏在底部时
   // 这个值可能不准
   // TODO: 找到解决办法
-  dashboardPanelRef.value.style.paddingTop = `${visualViewport.offsetTop}px`
+  const { offsetTop, height } = visualViewport
+  dashboardPanelRef.value.style.paddingTop = `${offsetTop}px`
+  const html = document.documentElement
+  const { scrollHeight } = html
+
+  // 不相等，说明输入框被软键盘挡住了，需要修正位置，在底部输入框出现了高度较大的折叠
+  // 项时，会出现这种情况
+  if (scrollHeight !== offsetTop + height) {
+    html.scrollTop = scrollHeight - height
+  }
+
   ;(msgContainerRef.value as any).scrollToBottom()
 }
 

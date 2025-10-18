@@ -1,6 +1,12 @@
 <template>
   <!-- class="max-w-none" 实现平板全屏 -->
-  <USlideover title=" " description=" ">
+  <USlideover
+    title=" "
+    description=" "
+    :ui="{
+      description: 'hidden'
+    }"
+  >
     <template #content>
       <ProfileSpace
         @close="emit('close', false)"

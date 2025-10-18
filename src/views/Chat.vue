@@ -5,7 +5,7 @@
     title=" "
     description=" "
     v-model:open="isOpen"
-    :ui="{ content: 'flex-row' }"
+    :ui="{ content: 'flex-row', description: 'hidden' }"
   >
     <template #content>
       <MessageView

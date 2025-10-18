@@ -4,7 +4,7 @@
     :close="{ onClick: () => emit('close', false) }"
     title="语音通话"
     description=" "
-    :ui="{ body: 'flex' }"
+    :ui="{ body: 'flex', description: 'hidden' }"
   >
     <template #body>
       <MessageVoice

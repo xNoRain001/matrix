@@ -3,6 +3,9 @@
     v-model:open="isNotificationsSlideoverOpen"
     title="好友申请"
     description=" "
+    :ui="{
+      description: 'hidden'
+    }"
   >
     <template #body>
       <div

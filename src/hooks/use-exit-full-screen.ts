@@ -1,16 +1,12 @@
-// @ts-nocheck
-const useExitFullscreen = () => {
-  if (document.exitFullscreen) {
+const useExitFullscreen = toast => {
+  try {
     document.exitFullscreen()
-  } else if (document.webkitExitFullscreen) {
-    // Safari
-    document.webkitExitFullscreen()
-  } else if (document.mozCancelFullScreen) {
-    // Firefox
-    document.mozCancelFullScreen()
-  } else if (document.msExitFullscreen) {
-    // IE/Edge
-    document.msExitFullscreen()
+  } catch {
+    toast.add({
+      title: '退出全屏模式失败',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
   }
 }
 

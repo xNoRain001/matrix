@@ -5,7 +5,8 @@
     title="预览"
     description=" "
     :ui="{
-      body: 'flex justify-center items-center'
+      body: 'flex justify-center items-center',
+      description: 'hidden'
     }"
   >
     <template #body>

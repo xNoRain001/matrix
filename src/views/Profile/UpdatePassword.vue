@@ -115,6 +115,9 @@
     v-model:open="isUpdatePasswordSlideoverOpen"
     title="修改密码"
     description=" "
+    :ui="{
+      description: 'hidden'
+    }"
   >
     <template #body>
       <ReuseSlideoverBodyTemplate></ReuseSlideoverBodyTemplate>

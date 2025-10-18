@@ -143,6 +143,9 @@
       v-model:open="isSettingSlideoverOpen"
       title="设置"
       description=" "
+      :ui="{
+        description: 'hidden'
+      }"
     >
       <template #body>
         <UPageCard
@@ -184,7 +187,7 @@
       v-model:open="isTagSlideoverOpen"
       title="标签"
       description=" "
-      :ui="{ body: 'space-y-4 sm:space-y-6' }"
+      :ui="{ body: 'space-y-4 sm:space-y-6', description: 'hidden' }"
     >
       <template #body>
         <UPageCard

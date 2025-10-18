@@ -5,7 +5,7 @@
     title=" "
     description=" "
     v-model:open="isOpen"
-    :ui="{ content: 'flex-row' }"
+    :ui="{ content: 'flex-row', description: 'hidden' }"
   >
     <!-- 规定时间内对方没接通时会清除 matchRes，因此需要使用到 v-if -->
     <template v-if="isOpen" #content>

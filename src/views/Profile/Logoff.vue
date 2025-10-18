@@ -15,6 +15,9 @@
     v-model:open="isLogoffSlideoverOpen"
     title="注销账号"
     description=" "
+    :ui="{
+      description: 'hidden'
+    }"
   >
     <template #body>
       <ReuseSlideoverBodyTemplate></ReuseSlideoverBodyTemplate>

@@ -2,7 +2,7 @@
   <USlideover
     title="详情"
     description=" "
-    :ui="{ body: 'gap-4 md:gap-6 flex flex-col' }"
+    :ui="{ body: 'gap-4 md:gap-6 flex flex-col', description: 'hidden' }"
   >
     <template #body>
       <UPageCard
@@ -476,6 +476,9 @@
         :handle="false"
         title="操作"
         description=" "
+        :ui="{
+          description: 'hidden'
+        }"
       >
         <template #footer>
           <UButton
@@ -496,6 +499,9 @@
         :handle="false"
         title="操作"
         description=" "
+        :ui="{
+          description: 'hidden'
+        }"
       >
         <template #footer>
           <UButton

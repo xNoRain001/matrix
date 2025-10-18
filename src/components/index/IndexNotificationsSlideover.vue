@@ -3,6 +3,9 @@
     v-model:open="isNotificationsSlideoverOpen"
     title="通知"
     description=" "
+    :ui="{
+      description: 'hidden'
+    }"
   >
     <template #body>
       <UBlogPost

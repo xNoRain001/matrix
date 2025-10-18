@@ -1,5 +1,13 @@
 <template>
-  <UModal :dismissible="false" title="网络错误" description=" " :close="false">
+  <UModal
+    :dismissible="false"
+    title="网络错误"
+    description=" "
+    :ui="{
+      description: 'hidden'
+    }"
+    :close="false"
+  >
     <template #footer>
       <UButton
         color="error"

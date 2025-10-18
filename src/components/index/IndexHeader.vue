@@ -42,6 +42,19 @@
 
   <!-- 通知 -->
   <IndexNotificationsSlideover v-model="isNotificationsSlideoverOpen" />
+  <USlideover
+    v-if="isMobile"
+    title="开启全屏"
+    description=" "
+    :ui="{
+      description: 'hidden'
+    }"
+    v-model:open="isFullscreenSlideoverOpen"
+  >
+    <template #body>
+      <img src="/images/fullscreen.webp" />
+    </template>
+  </USlideover>
 </template>
 
 <script lang="ts" setup>
@@ -52,8 +65,9 @@ import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
 
 const isFullScreen = ref(false)
+const isFullscreenSlideoverOpen = ref(false)
 const isFilterOverlayOpen = defineModel<boolean>()
-const { onlineCount } = storeToRefs(useUserStore())
+const { onlineCount, isMobile } = storeToRefs(useUserStore())
 const { store } = useColorMode()
 const getNextTheme = () =>
   store.value === 'auto'
@@ -65,6 +79,7 @@ const getNextTheme = () =>
       : 'dark'
 const nextTheme = ref<'light' | 'dark' | 'auto'>(getNextTheme())
 const isNotificationsSlideoverOpen = ref(false)
+const toast = useToast()
 
 const switchTheme = () => (store.value = nextTheme.value)
 
@@ -102,13 +117,18 @@ const startViewTransition = (event: MouseEvent) => {
 }
 
 const onScreenSize = () => {
+  if (isMobile.value) {
+    isFullscreenSlideoverOpen.value = true
+    return
+  }
+
   const v = !isFullScreen.value
   isFullScreen.value = v
 
   if (v) {
-    useRequestFullscreen()
+    useRequestFullscreen(toast)
   } else {
-    useExitFullscreen()
+    useExitFullscreen(toast)
   }
 }
 

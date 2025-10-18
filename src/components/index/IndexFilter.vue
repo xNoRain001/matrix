@@ -157,6 +157,9 @@
     v-if="isMobile"
     title="筛选"
     description=" "
+    :ui="{
+      description: 'hidden'
+    }"
     v-model:open="isFilterOverlayOpen"
   >
     <template #body>
@@ -167,6 +170,9 @@
     v-else
     title="筛选"
     description=" "
+    :ui="{
+      description: 'hidden'
+    }"
     v-model:open="isFilterOverlayOpen"
   >
     <template #body>

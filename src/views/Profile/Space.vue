@@ -5,7 +5,8 @@
     title=" "
     description=" "
     :ui="{
-      content: 'flex items-center'
+      content: 'flex items-center',
+      description: 'hidden'
     }"
   >
     <template #content>

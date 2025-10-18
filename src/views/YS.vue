@@ -153,6 +153,9 @@
     v-model:open="isNotificationsSlideoverOpen"
     title="我的"
     description=" "
+    :ui="{
+      description: 'hidden'
+    }"
   >
     <template #body>
       <UPageCard
@@ -197,7 +200,7 @@
     v-model:open="isPublishSlideoverOpen"
     :title="`支援（${assistCount + 1} / 3）`"
     description=" "
-    :ui="{ body: 'space-y-4 sm:space-y-6' }"
+    :ui="{ body: 'space-y-4 sm:space-y-6', description: 'hidden' }"
   >
     <template #body>
       <UPageCard

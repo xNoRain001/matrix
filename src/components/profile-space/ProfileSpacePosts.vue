@@ -26,7 +26,7 @@
         )
       "
     >
-      <p class="text-highlighted">
+      <p class="text-highlighted break-words whitespace-pre-wrap">
         {{ text }}
       </p>
       <Carousel
@@ -87,6 +87,9 @@
       :handle="false"
       title="操作"
       description=" "
+      :ui="{
+        description: 'hidden'
+      }"
     >
       <template #footer>
         <UButton

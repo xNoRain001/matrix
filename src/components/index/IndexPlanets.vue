@@ -115,11 +115,11 @@ const initSphere = () => {
   // 第一个参数表示球体的半径，决定球的大小
   // 第二个参数表示水平分段数，即经线数，数值越大球体越圆滑
   // 第三个参数表示垂直分段数，即纬线数，数值越大球体越圆滑
-  const sphereGeometry = new THREE.SphereGeometry(sphereRadius, 16, 16)
+  const sphereGeometry = new THREE.SphereGeometry(sphereRadius, 32, 32)
   const sphereMaterial = new THREE.ShaderMaterial({
     uniforms: {
-      color: { value: new THREE.Color(0x0f172b) },
-      opacity: { value: 0 }
+      color: { value: new THREE.Color(0x05df72) },
+      opacity: { value: 0.2 }
     },
     vertexShader: `
       varying vec3 vNormal;
@@ -203,7 +203,7 @@ const createTextTexture = text => {
 }
 
 const initPlanets = planets => {
-  const smallBallGeometry = new THREE.SphereGeometry(planetRadius, 16, 16)
+  const smallBallGeometry = new THREE.SphereGeometry(planetRadius, 32, 32)
   const numPoints = 20
   // 黄金分割率
   const goldenRatio = (1 + Math.sqrt(5)) / 2

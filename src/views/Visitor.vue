@@ -15,7 +15,7 @@
 
 <script lang="ts" setup>
 import { loginWithFingerprint } from '@/apis/auth'
-import { useEncryptUserInfo, useRequestFullscreen } from '@/hooks'
+import { useEncryptUserInfo } from '@/hooks'
 import fpPromise from '@fingerprintjs/fingerprintjs'
 
 const toast = useToast()

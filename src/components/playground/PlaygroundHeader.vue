@@ -30,6 +30,9 @@
     v-model:open="isNotificationSlideoverOpen"
     title="通知"
     description=" "
+    :ui="{
+      description: 'hidden'
+    }"
   >
     <template #body>
       <UTabs :items="tabItems">
@@ -60,7 +63,14 @@
       </UTabs>
     </template>
   </USlideover>
-  <USlideover v-model:open="isLikeSlideoverOpen" title="赞" description=" ">
+  <USlideover
+    v-model:open="isLikeSlideoverOpen"
+    title="赞"
+    description=" "
+    :ui="{
+      description: 'hidden'
+    }"
+  >
     <template #body></template>
   </USlideover>
 </template>
