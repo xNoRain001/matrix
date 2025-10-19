@@ -6,12 +6,9 @@
     <template #body>
       <!-- <UTabs ref="tabsRef" :items="tabItems" v-model="activeTab">
         <template #content> -->
-      <UPageColumns
+      <UPageList
         v-if="postMap?.[activeTab]?.posts?.length"
         class="space-y-4 sm:space-y-6"
-        :class="
-          activeTab === 'friend' ? 'column-1 md:columns-1 lg:columns-1' : ''
-        "
       >
         <UPageCard
           v-for="(
@@ -106,10 +103,10 @@
             </div>
           </template>
         </UPageCard>
-      </UPageColumns>
+      </UPageList>
       <USeparator
         v-if="allPostLoaded"
-        class="px-4 pt-4 sm:px-6 sm:pt-6"
+        class="px-4 sm:px-6"
         label="已经到底了"
       />
       <!-- </template>

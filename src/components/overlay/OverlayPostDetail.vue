@@ -10,7 +10,7 @@
         class="cursor-pointer"
         :ui="{ container: 'gap-y-2' }"
       >
-        <p class="text-highlighted">
+        <p class="text-highlighted break-words whitespace-pre-wrap">
           {{ postMap[targetId].activePost.content.text }}
         </p>
         <Carousel
@@ -143,7 +143,9 @@
                 ></UBadge>
               </template>
               <template #description>
-                <div class="text-base">{{ content.text }}</div>
+                <div class="text-base break-words whitespace-pre-wrap">
+                  {{ content.text }}
+                </div>
                 <div
                   v-if="content.images.length"
                   @click="viewerOverlay.open({ urls: content.images })"
@@ -309,7 +311,11 @@
                             ></UBadge>
                           </template>
                           <template #description>
-                            <div class="text-base">{{ content.text }}</div>
+                            <div
+                              class="text-base break-words whitespace-pre-wrap"
+                            >
+                              {{ content.text }}
+                            </div>
                             <div
                               v-if="
                                 replyComments[replyIndex].content.images.length
@@ -675,6 +681,8 @@ const onDeleteReply = async () => {
     if (isMobile.value) {
       isEditReplyMenuDrawerOpen.value = false
     }
+
+    toast.add({ title: '删除成功', icon: 'lucide:smile' })
   } catch {
     toast.add({ title: '操作失败', color: 'error', icon: 'lucide:annoyed' })
   }
@@ -692,6 +700,8 @@ const onDeleteComment = async () => {
     if (isMobile.value) {
       isEditMenuDrawerOpen.value = false
     }
+
+    toast.add({ title: '删除成功', icon: 'lucide:smile' })
   } catch {
     toast.add({ title: '操作失败', color: 'error', icon: 'lucide:annoyed' })
   }
