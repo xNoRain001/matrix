@@ -10,7 +10,10 @@ const useDeleteMessageList = async (
   lastMsgMap,
   messageList,
   _targetId,
-  lastFetchedId
+  lastFetchedId,
+  isSlide,
+  isMobile,
+  emits = null
 ) => {
   await useHideMessageList(
     userInfo,
@@ -19,7 +22,10 @@ const useDeleteMessageList = async (
     indexMap,
     lastMsgList,
     lastMsgMap,
-    _targetId
+    _targetId,
+    isSlide,
+    isMobile,
+    emits
   )
   await useClearMessageRecord(
     userInfo,

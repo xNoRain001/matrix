@@ -258,6 +258,11 @@ const onSelectEmoji = ({ target, currentTarget }) => {
     const newIndex = index + 2
 
     setTimeout(() => {
+      // 移动端选择表情后修改光标位置时会激活输入框的 focus 事件，需要跳过
+      if (isMobile.value) {
+        textareaRef.setAttribute('skipFocus', 'true')
+      }
+
       textareaRef.setSelectionRange(newIndex, newIndex)
 
       if (!isMobile.value) {

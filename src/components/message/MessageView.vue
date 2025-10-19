@@ -472,7 +472,14 @@ const resizeHandler = () => {
   ;(msgContainerRef.value as any).scrollToBottom()
 }
 
-const onFocus = () => {
+const onFocus = ({ target }) => {
+  if (target.getAttribute('skipFocus') === 'true') {
+    target.setAttribute('skipFocus', 'false')
+    // 失焦，实现点击输入框时关闭 emoji
+    target.blur()
+    return
+  }
+
   expanded.value = false
   isEmojiOpen.value = false
   // 不需要修改 isRecord，因为能聚焦时一定没有进行发送语音行为

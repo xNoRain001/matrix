@@ -6,36 +6,17 @@
     :ui="{ body: 'space-y-4', description: 'hidden' }"
   >
     <UButton icon="lucide:ellipsis" color="neutral" variant="ghost" />
-
     <template #body>
-      <UPageCard variant="subtle">
+      <UPageCard
+        variant="subtle"
+        :ui="{ container: 'divide-y divide-default' }"
+      >
         <UFormField
-          label="备注"
+          v-for="({ label, onSelect }, index) in dropdownItems"
+          :key="index"
+          :label="label"
           class="flex items-center justify-between gap-2 not-last:pb-4"
-        >
-          <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
-        </UFormField>
-      </UPageCard>
-      <UPageCard variant="subtle">
-        <UFormField
-          label="添加好友"
-          class="flex items-center justify-between gap-2 not-last:pb-4"
-        >
-          <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
-        </UFormField>
-      </UPageCard>
-      <UPageCard variant="subtle">
-        <UFormField
-          label="删除好友"
-          class="flex items-center justify-between gap-2 not-last:pb-4"
-        >
-          <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
-        </UFormField>
-      </UPageCard>
-      <UPageCard variant="subtle">
-        <UFormField
-          label="举报"
-          class="flex items-center justify-between gap-2 not-last:pb-4"
+          @click="onSelect"
         >
           <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
         </UFormField>
@@ -45,16 +26,51 @@
   <UDropdownMenu v-else :items="dropdownItems">
     <UButton icon="lucide:ellipsis" color="neutral" variant="ghost" />
   </UDropdownMenu>
+  <defineOverlayTemplate>
+    <UButton
+      label="取消"
+      color="neutral"
+      class="justify-center"
+      @click="isOverlayOpen = false"
+    />
+    <UButton label="确认" class="justify-center" @click="onDeleteContact()" />
+  </defineOverlayTemplate>
+  <UDrawer
+    v-if="isMobile"
+    v-model:open="isOverlayOpen"
+    :title="title"
+    description=" "
+    :ui="{ description: 'hidden' }"
+  >
+    <template #footer>
+      <reuseOverlayTemplate></reuseOverlayTemplate>
+    </template>
+  </UDrawer>
+  <UModal
+    v-else
+    v-model:open="isOverlayOpen"
+    :title="title"
+    description=" "
+    :ui="{ description: 'hidden' }"
+  >
+    <template #footer>
+      <reuseOverlayTemplate></reuseOverlayTemplate>
+    </template>
+  </UModal>
 </template>
 
 <script lang="ts" setup>
 import { useAddContact, useDeleteContact } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
+import { createReusableTemplate } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps<{ targetId: string }>()
 const toast = useToast()
+const [defineOverlayTemplate, reuseOverlayTemplate] = createReusableTemplate()
+const isOverlayOpen = ref(false)
+const title = ref('')
 const { activeTargetId, activeTargetProfile, contactProfileMap, contactList } =
   storeToRefs(useRecentContactsStore())
 const { globalSocket, userInfo, isMobile } = storeToRefs(useUserStore())
@@ -72,20 +88,33 @@ const deleteContact = [
   {
     label: '删除好友',
     icon: 'i-lucide-triangle-alert',
-    onSelect: () =>
-      useDeleteContact(
-        userInfo,
-        props.targetId,
-        contactList,
-        contactProfileMap,
-        globalSocket,
-        toast,
-        activeTargetId,
-        activeTargetProfile
-      )
+    onSelect: () => {
+      title.value = '删除好友'
+      isOverlayOpen.value = true
+    }
   }
 ]
 const dropdownItems = computed(() =>
   isFriend.value ? deleteContact : addContact
 )
+
+const onDeleteContact = async () => {
+  try {
+    await useDeleteContact(
+      userInfo,
+      props.targetId,
+      contactList,
+      contactProfileMap,
+      globalSocket,
+      toast,
+      activeTargetId,
+      activeTargetProfile
+    )
+    toast.add({ title: '删除好友成功', icon: 'lucide:smile' })
+  } catch {
+    toast.add({ title: '删除好友失败', color: 'error', icon: 'lucide:annoyed' })
+  } finally {
+    isOverlayOpen.value = false
+  }
+}
 </script>

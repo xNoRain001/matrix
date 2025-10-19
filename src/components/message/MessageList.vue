@@ -123,7 +123,9 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
           indexMap,
           lastMsgList,
           lastMsgMap,
-          activeTargetId
+          activeTargetId,
+          false,
+          false
         )
     },
     {
@@ -139,7 +141,9 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
           lastMsgMap,
           messageList,
           activeTargetId,
-          lastFetchedId
+          lastFetchedId,
+          false,
+          false
         )
     }
   ]
@@ -185,7 +189,9 @@ const onDeleteMessageList = id =>
     lastMsgMap,
     messageList,
     activeTargetId,
-    lastFetchedId
+    lastFetchedId,
+    true,
+    true
   )
 
 const onHideMessageList = id =>
@@ -196,7 +202,9 @@ const onHideMessageList = id =>
     indexMap,
     lastMsgList,
     lastMsgMap,
-    activeTargetId
+    activeTargetId,
+    true,
+    true
   )
 
 watch(activeTargetId, v => {

@@ -119,7 +119,7 @@ const initSphere = () => {
   const sphereMaterial = new THREE.ShaderMaterial({
     uniforms: {
       color: { value: new THREE.Color(0x05df72) },
-      opacity: { value: 0.2 }
+      opacity: { value: 0 }
     },
     vertexShader: `
       varying vec3 vNormal;

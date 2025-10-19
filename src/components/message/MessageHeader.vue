@@ -43,6 +43,7 @@
         @click="open = !open"
       />
       <MessageDropdownMenu
+        @close="emits('close')"
         :is-match="isMatch"
         :target-id="targetId"
         :target-profile="targetProfile"

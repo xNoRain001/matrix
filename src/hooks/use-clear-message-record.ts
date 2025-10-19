@@ -32,6 +32,8 @@ const clearMessageRecord = async (
     cursor = await cursor.continue()
   }
 
+  // TODO: 删除列表时，先删除列表，聊天界面销毁时会清空内存中的聊天记录，这里不需要再
+  // 次清空
   if (_targetId.value === targetId) {
     messageList.value = []
     lastFetchedId.value = Infinity

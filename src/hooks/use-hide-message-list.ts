@@ -7,7 +7,10 @@ const useHideMessageList = async (
   indexMap,
   lastMsgList,
   lastMsgMap,
-  _targetId
+  activeTargetId,
+  isSlide,
+  isMobile,
+  emits = null
 ) => {
   const { id } = userInfo.value
   const db = await useGetDB(id)
@@ -33,10 +36,16 @@ const useHideMessageList = async (
     _indexMap[_lastMsgList[i]]--
   }
 
-  // 如果不相等，说明当前在聊天界面中，通过右键菜单隐藏了其他人的列表，因此不需要关闭
-  // 当前的聊天界面
-  if (_targetId.value === targetId) {
-    _targetId.value = ''
+  if (!isSlide) {
+    if (isMobile) {
+      emits('close')
+    } else if (activeTargetId.value === targetId) {
+      // 如果不相等，说明当前在聊天界面中，通过右键菜单隐藏了其他人的列表，因此不需要关闭
+      // 当前的聊天界面，由于 PC 端此时不显示模态框，而是通过 activeTargetId 的值决定聊天
+      // 界面是否显示，因此这里需要修改 activeTargetId 的值（这里还处理了打开了聊天界面，
+      // 同时通过右键菜单隐藏当前聊天对象的行为）
+      activeTargetId.value = ''
+    }
   }
 }
 
