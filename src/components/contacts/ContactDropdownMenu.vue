@@ -65,37 +65,51 @@ import { useRecentContactsStore, useUserStore } from '@/store'
 import { createReusableTemplate } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 const props = defineProps<{ targetId: string }>()
 const toast = useToast()
 const [defineOverlayTemplate, reuseOverlayTemplate] = createReusableTemplate()
 const isOverlayOpen = ref(false)
 const title = ref('')
-const { activeTargetId, activeTargetProfile, contactProfileMap, contactList } =
-  storeToRefs(useRecentContactsStore())
+const {
+  activeTargetId,
+  activeTargetIds,
+  activeTargetProfile,
+  contactProfileMap,
+  contactList
+} = storeToRefs(useRecentContactsStore())
 const { globalSocket, userInfo, isMobile } = storeToRefs(useUserStore())
 const isFriend = computed(() =>
   Boolean(contactProfileMap.value[props.targetId])
 )
-const addContact = [
-  {
-    label: '添加好友',
-    icon: 'lucide:circle-plus',
-    onSelect: () => useAddContact(userInfo, props.targetId, globalSocket, toast)
+const route = useRoute()
+const isContacts = computed(() => route.path === '/contacts')
+const addContact = {
+  label: '添加好友',
+  icon: 'lucide:circle-plus',
+  onSelect: () => useAddContact(userInfo, props.targetId, globalSocket, toast)
+}
+const deleteContact = {
+  label: '删除好友',
+  icon: 'i-lucide-triangle-alert',
+  onSelect: () => {
+    title.value = '删除好友'
+    isOverlayOpen.value = true
   }
-]
-const deleteContact = [
-  {
-    label: '删除好友',
-    icon: 'i-lucide-triangle-alert',
-    onSelect: () => {
-      title.value = '删除好友'
-      isOverlayOpen.value = true
-    }
-  }
-]
+}
+const report = {
+  label: '举报',
+  icon: 'lucide:circle-alert',
+  onSelect: () => {}
+}
 const dropdownItems = computed(() =>
-  isFriend.value ? deleteContact : addContact
+  isFriend.value
+    ? // 只有 contacts 页面下的一级界面才提供删除好友的选项
+      activeTargetIds.value.size === 1 && isContacts.value
+      ? [deleteContact, report]
+      : [report]
+    : [addContact, report]
 )
 
 const onDeleteContact = async () => {

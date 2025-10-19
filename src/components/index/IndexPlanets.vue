@@ -42,7 +42,7 @@ import * as THREE from 'three'
 //   RepeatWrapping,
 //   ClampToEdgeWrapping
 // } from 'three'
-import { onMounted, useTemplateRef } from 'vue'
+import { onMounted, ref, useTemplateRef } from 'vue'
 import { getRandomProfilesAPI } from '@/apis/profile'
 import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
 

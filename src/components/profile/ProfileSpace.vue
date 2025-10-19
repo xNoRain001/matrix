@@ -33,7 +33,7 @@
             @click="isSettingSlideoverOpen = true"
           />
           <ContactDropdownMenu
-            v-if="!isSelf && isContacts"
+            v-if="!isSelf"
             :target-id="targetId"
           ></ContactDropdownMenu>
         </template>

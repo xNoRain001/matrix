@@ -17,6 +17,17 @@ const useMatchStore = defineStore('matchStore', () => {
       college: '',
       grade: '',
       gender: ''
+    },
+    gameForm: {
+      game: '',
+      age: '',
+      gender: ''
+    },
+    movieForm: {
+      movie: ''
+    },
+    bookForm: {
+      book: ''
     }
   }
   const _filter = useInitLocalStorate(`filter-${id}`, defaultFilter)

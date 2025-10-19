@@ -23,19 +23,16 @@
         </UChip>
       </UButton>
       <UButton
+        v-if="false"
         @click="isFilterOverlayOpen = true"
         icon="lucide:filter"
-        color="neutral"
         variant="ghost"
-        :ui="{ leadingIcon: 'text-primary', label: 'font-semibold' }"
       ></UButton>
       <IndexThemePicker></IndexThemePicker>
       <UButton
         @click="startViewTransition"
         :icon="nextTheme === 'dark' ? 'lucide:moon' : 'lucide:sun'"
         variant="ghost"
-        color="neutral"
-        :ui="{ leadingIcon: 'text-primary' }"
       ></UButton>
     </template>
   </UDashboardNavbar>

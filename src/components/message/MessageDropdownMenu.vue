@@ -118,7 +118,7 @@ const isFriend = computed(() =>
 const route = useRoute()
 const isConfirmOverlayOpen = ref(false)
 const isOverlayOpen = ref(false)
-const isContacts = computed(() => route.path === '/contacts')
+const isMessage = computed(() => route.path === '/message')
 const title = ref('')
 const description = ref(' ')
 const deleteList = {
@@ -148,29 +148,27 @@ const dropdownItems = computed(() =>
   isFriend.value
     ? props.isMatch
       ? [deleteMessageRecord]
-      : isContacts.value
-        ? [deleteMessageRecord]
-        : activeTargetIds.value.size > 1
-          ? [deleteMessageRecord]
-          : [
-              // 好友才提供隐藏列表的选项，这个操作能保留聊天记录
-              {
-                label: '隐藏列表',
-                icon: 'lucide:eye-off',
-                onSelect: () => {
-                  title.value = '隐藏列表'
-                  description.value = '该操作不会删除聊天记录'
-                  isConfirmOverlayOpen.value = true
-                }
-              },
-              deleteList,
-              deleteMessageRecord
-            ]
+      : activeTargetIds.value.size === 1 && isMessage.value
+        ? // 只有 message 页面下的一级界面才提供修改列表的选项
+          [
+            {
+              label: '隐藏列表',
+              icon: 'lucide:eye-off',
+              onSelect: () => {
+                title.value = '隐藏列表'
+                description.value = '该操作不会删除聊天记录'
+                isConfirmOverlayOpen.value = true
+              }
+            },
+            deleteList,
+            deleteMessageRecord
+          ]
+        : [deleteMessageRecord]
     : props.isMatch
-      ? [deleteMessageRecord, addContact]
-      : activeTargetIds.value.size > 1
-        ? [deleteMessageRecord, addContact]
-        : [deleteList, deleteMessageRecord, addContact]
+      ? [addContact, deleteMessageRecord]
+      : activeTargetIds.value.size === 1 && isMessage.value
+        ? [addContact, deleteList, deleteMessageRecord]
+        : [addContact, deleteMessageRecord]
 )
 
 const onDeleteList = async () => {
