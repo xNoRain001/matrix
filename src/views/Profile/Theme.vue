@@ -38,6 +38,20 @@
   >
     <template #body>
       <ReuseSlideoverBodyTemplate></ReuseSlideoverBodyTemplate>
+      <div>
+        <UPageCard title="控制台" variant="naked" class="mb-4" />
+        <UPageCard
+          variant="subtle"
+          :ui="{ container: 'divide-y divide-default' }"
+        >
+          <UFormField
+            label="控制台"
+            class="flex items-center justify-between gap-2 not-last:pb-4"
+          >
+            <USwitch v-model="isConsoleOpen" />
+          </UFormField>
+        </UPageCard>
+      </div>
     </template>
   </USlideover>
   <ReuseSlideoverBodyTemplate v-else></ReuseSlideoverBodyTemplate>
@@ -55,8 +69,9 @@ import { useGetDB, useNoop } from '@/hooks'
 import { useUserStore } from '@/store'
 import { createReusableTemplate } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
+let vConsole = null
 const isNotificationSlideoverOpen = defineModel<boolean>({ required: false })
 const [DefineSlideoverBodyTemplate, ReuseSlideoverBodyTemplate] =
   createReusableTemplate()
@@ -101,6 +116,7 @@ const sections = [
 ]
 const chatBgRef = ref(null)
 const toast = useToast()
+const isConsoleOpen = ref(false)
 
 const onChange = async () => {
   localStorage.setItem(
@@ -118,4 +134,13 @@ const onUpdateChatBg = async e => {
   input.value = ''
   toast.add({ title: '更新聊天背景成功', icon: 'lucide:smile' })
 }
+
+watch(isConsoleOpen, async v => {
+  if (v) {
+    const VConsole = (await import('vconsole')).default
+    vConsole = new VConsole()
+  } else {
+    vConsole.destroy()
+  }
+})
 </script>

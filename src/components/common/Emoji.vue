@@ -68,7 +68,7 @@
         class="hover:bg-accented/50 flex aspect-square items-center justify-center rounded-lg p-1.5"
         @click="onSendEmoji(blob)"
       >
-        <img :src="blobURL" />
+        <img class="rounded-lg" :src="blobURL" />
       </div>
       <template v-else>
         <UButton @click="onAddEmoji" icon="lucide:plus" size="xl"></UButton>
