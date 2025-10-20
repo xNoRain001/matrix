@@ -74,6 +74,7 @@
         v-model="message"
         v-model:is-emoji-open="isEmojiOpen"
         :elm="mobileTextareaRef"
+        :input-ref="inputRef"
         @send="onSendMsg"
       ></Emoji>
       <UCollapsible v-model:open="expanded">
@@ -114,7 +115,11 @@
 
       <div class="flex justify-between">
         <div class="space-x-2">
-          <Emoji v-model="message" :elm="textareaRef"></Emoji>
+          <Emoji
+            v-model="message"
+            :elm="textareaRef"
+            :input-ref="inputRef"
+          ></Emoji>
           <UTooltip text="图片">
             <UButton
               variant="ghost"

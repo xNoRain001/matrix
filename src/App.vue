@@ -1370,6 +1370,9 @@ onBeforeMount(async () => {
 
 onMounted(async () => {
   initBeep()
+  setInterval(() => {
+    globalSocket.value.emit('get-online-count')
+  }, 1000 * 60)
 })
 </script>
 

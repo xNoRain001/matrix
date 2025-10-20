@@ -46,7 +46,7 @@
           v-for="(item, index) in items"
           :key="index"
           class="shrink-0 opacity-25 transition-opacity hover:opacity-100"
-          :class="{ 'opacity-100': activeIndex === index }"
+          :class="{ 'opacity-100': _activeIndex === index }"
           @click="select(index)"
         >
           <img
