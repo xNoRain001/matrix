@@ -104,7 +104,7 @@ import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMatchStore, useUserStore, useWebRTCStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { useIsDeviceOpen } from '@/hooks'
+import { useComputeAge, useIsDeviceOpen } from '@/hooks'
 
 let matchType = ''
 const list = [
@@ -150,15 +150,29 @@ const afterLeave = () => {
 }
 
 const startMatch = () => {
+  if (filter.value.activeTab === 'college' && !userInfo.value.profile.college) {
+    toast.add({
+      title: '你的个人资料中没有填写学校',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+    return
+  }
+
   matching.value = true
   const socket = globalSocket.value
   const _filter = filter.value
+  const age = useComputeAge(userInfo.value.profile.birthday)
   socket.emit(
     'start-match',
     {
       type: matchType,
-      profile: userInfo.value.profile
+      profile: {
+        ...userInfo.value.profile,
+        age: age === '未知' ? '' : age
+      }
     },
+    _filter.activeTab,
     _filter[`${_filter.activeTab}Form`]
   )
 }

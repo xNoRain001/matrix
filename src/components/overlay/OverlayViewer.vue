@@ -6,6 +6,7 @@
     description=" "
     :ui="{
       body: 'flex justify-center items-center',
+      footer: 'justify-center',
       description: 'hidden'
     }"
   >
@@ -17,7 +18,11 @@
       ></Carousel>
     </template>
     <!-- <template #footer>
-      <UButton label="下载" />
+      <UButton
+        label="下载"
+        class="flex w-full justify-center"
+        icon="lucide:cloud-download"
+      />
     </template> -->
   </UModal>
 </template>

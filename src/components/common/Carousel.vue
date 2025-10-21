@@ -1,5 +1,5 @@
 <template>
-  <div class="w-fit select-none">
+  <div class="select-none">
     <template v-if="items.length > 1">
       <UCarousel
         ref="carousel"
@@ -15,6 +15,7 @@
               : 'w-[calc(100vh-11rem)]'
             : 'w-full max-w-xs'
         "
+        :ui="{ container: 'items-center  ' }"
         @select="onSelect"
       >
         <img
@@ -26,7 +27,7 @@
               ? item.url
               : VITE_OSS_BASE_URL + item.url
           "
-          class="rounded-lg"
+          class="w-fit rounded-lg"
           :width="item.width"
           :height="item.height"
           :class="
@@ -34,7 +35,7 @@
               ? isMobile
                 ? 'mx-auto max-h-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] sm:max-h-[calc(100vh-11rem)] sm:max-w-[calc(100vh-11rem)]'
                 : 'mx-auto max-h-[calc(100vh-11rem)] max-w-[calc(100vh-11rem)]'
-              : 'max-h-80 w-full max-w-80'
+              : 'max-h-80 max-w-80'
           "
         />
       </UCarousel>
@@ -68,7 +69,7 @@
           ? items[0].url
           : VITE_OSS_BASE_URL + items[0].url
       "
-      class="rounded-lg"
+      class="w-fit rounded-lg"
       :width="items[0].width"
       :height="items[0].height"
       :class="
@@ -76,7 +77,7 @@
           ? isMobile
             ? 'mx-auto max-h-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] sm:max-h-[calc(100vh-11rem)] sm:max-w-[calc(100vh-11rem)]'
             : 'mx-auto max-h-[calc(100vh-11rem)] max-w-[calc(100vh-11rem)]'
-          : 'max-h-80 w-full max-w-80'
+          : 'max-h-80 max-w-80'
       "
     />
   </div>

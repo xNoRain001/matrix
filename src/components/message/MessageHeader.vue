@@ -32,7 +32,7 @@
           isMatch &&
           isMobile &&
           (targetProfile.birthday ||
-            targetProfile.region ||
+            targetProfile.province ||
             targetProfile.gender !== 'other' ||
             targetProfile.mbti ||
             targetProfile.tags.length)
@@ -57,7 +57,7 @@
       isMatch &&
       isMobile &&
       (targetProfile.birthday ||
-        targetProfile.region ||
+        targetProfile.province ||
         targetProfile.gender !== 'other' ||
         targetProfile.mbti ||
         targetProfile.tags.length)

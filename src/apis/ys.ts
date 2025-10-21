@@ -10,8 +10,8 @@ export const assistAPI = async data =>
 
 export const helpAPI = async id => HTTP.request(`${prefix}/help?assistId=${id}`)
 
-export const cancelAssistAPI = async avatar =>
-  HTTP.request(`${prefix}/cancel-assist?avatar=${avatar}`)
+export const cancelAssistAPI = async id =>
+  HTTP.request(`${prefix}/cancel-assist?assistId=${id}`)
 
 export const getAssistsAPI = async (
   { avatar, createdAt },

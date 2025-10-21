@@ -7,27 +7,30 @@ import { useInitLocalStorate } from '@/hooks'
 const useMatchStore = defineStore('matchStore', () => {
   const id = useUserStore().userInfo?.id || ''
   const defaultFilter = {
-    activeTab: 'common',
-    commonForm: {
+    activeTab: 'region',
+    regionForm: {
       gender: '',
       age: '',
-      region: ''
+      province: '',
+      city: ''
     },
     collegeForm: {
       college: '',
-      grade: '',
+      // grade: '',
       gender: ''
     },
     gameForm: {
       game: '',
-      age: '',
+      // age: '',
       gender: ''
     },
     movieForm: {
-      movie: ''
+      movie: '',
+      gender: ''
     },
-    bookForm: {
-      book: ''
+    zodiacSignForm: {
+      zodiacSign: '',
+      gender: ''
     }
   }
   const _filter = useInitLocalStorate(`filter-${id}`, defaultFilter)

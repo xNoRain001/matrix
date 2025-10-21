@@ -5,11 +5,11 @@
 
       <UPageCard variant="subtle">
         <UFormField
-          v-for="{ label } in section.fields"
+          v-for="{ label, onSelect } in section.fields"
           :key="label"
           :label="label"
           class="flex items-center justify-between gap-2 not-last:pb-4"
-          @click="isDataManagerModalOpen = true"
+          @click="onSelect"
         >
           <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
         </UFormField>
@@ -67,8 +67,9 @@
 </template>
 
 <script setup lang="ts">
+import { defaultFilter } from '@/const'
 import { useFixIndexedDB } from '@/hooks'
-import { useUserStore } from '@/store'
+import { useMatchStore, useUserStore } from '@/store'
 import { createReusableTemplate } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
@@ -78,16 +79,31 @@ const isDataManagerModalOpen = ref(false)
 const [DefineSlideoverBodyTemplate, ReuseSlideoverBodyTemplate] =
   createReusableTemplate()
 const { isMobile, userInfo } = storeToRefs(useUserStore())
+const { filter } = storeToRefs(useMatchStore())
+const toast = useToast()
 const sections = [
   {
     title: '聊天记录',
     fields: [
       {
-        label: '清空聊天记录'
+        label: '清空聊天记录',
+        onSelect: () => (isDataManagerModalOpen.value = true)
       }
       // {
       //   label: '清空缓存图片'
       // }
+    ]
+  },
+  {
+    title: '匹配',
+    fields: [
+      {
+        label: '重置匹配条件',
+        onSelect: () => {
+          filter.value = defaultFilter
+          toast.add({ title: '重置完成', icon: 'lucide:annoyed' })
+        }
+      }
     ]
   }
 ]

@@ -23,7 +23,6 @@
         </UChip>
       </UButton>
       <UButton
-        v-if="false"
         @click="isFilterOverlayOpen = true"
         icon="lucide:filter"
         variant="ghost"

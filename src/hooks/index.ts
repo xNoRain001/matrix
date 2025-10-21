@@ -49,8 +49,10 @@ import useOpenPostDetailOverlay from './use-open-comment-overlay'
 import useOpenSpace from './use-open-space'
 import useRequestFullscreen from './use-request-full-screen'
 import useExitFullscreen from './use-exit-full-screen'
+import useComputeAge from './use-compute-age'
 
 export {
+  useComputeAge,
   useRequestFullscreen,
   useExitFullscreen,
   useOpenSpace,

@@ -16,8 +16,10 @@ export type userInfo = {
     nickname: string
     gender: 'male' | 'female' | 'other'
     birthday: string
-    region: string
+    province: string
+    city: string
     bio: string
+    college: string
     role: 'standard'
     mbti:
       | 'ISTJ'

@@ -75,7 +75,10 @@
                     ? date
                       ? date.toString()
                       : ''
-                    : profileForm[key]
+                    : key === 'region'
+                      ? profileForm.province +
+                        `${profileForm.city ? ` - ${profileForm.city}` : ''}`
+                      : profileForm[key]
               }}
             </span>
             <UIcon
@@ -161,8 +164,16 @@
     >
       <template #body>
         <div class="flex gap-2">
-          <USelect class="flex-1" v-model="province" :items="provinceOptions" />
-          <USelect class="flex-1" v-model="city" :items="cityOptions" />
+          <USelect
+            class="flex-1"
+            v-model="profileForm.province"
+            :items="provinceOptions"
+          />
+          <USelect
+            class="flex-1"
+            v-model="profileForm.city"
+            :items="cityOptions"
+          />
         </div>
       </template>
     </UDrawer>
@@ -254,6 +265,29 @@
         </UFormField>
         <USeparator />
         <UFormField
+          name="college"
+          label="大学"
+          description="填写你的大学"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
+        >
+          <UInput class="w-full" v-model="profileForm.college" maxlength="30">
+            <template v-if="profileForm.college" #trailing>
+              <div class="text-muted text-xs tabular-nums">
+                {{ profileForm.college.length }}/30
+              </div>
+              <UButton
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="lucide:circle-x"
+                @click="profileForm.college = ''"
+              />
+            </template>
+          </UInput>
+        </UFormField>
+        <USeparator />
+        <UFormField
           name="username"
           label="地区"
           description="填写你的地区"
@@ -263,10 +297,14 @@
           <div class="flex gap-4">
             <USelect
               class="flex-1"
-              v-model="province"
+              v-model="profileForm.province"
               :items="provinceOptions"
             />
-            <USelect class="flex-1" v-model="city" :items="cityOptions" />
+            <USelect
+              class="flex-1"
+              v-model="profileForm.city"
+              :items="cityOptions"
+            />
           </div>
         </UFormField>
         <USeparator />
@@ -353,13 +391,9 @@ const isOpenRegionDrawer = ref(false)
 const isOpenNicknameDrawer = ref(false)
 const { isMobile, userInfo, avatarURL } = storeToRefs(useUserStore())
 const profileForm = ref({ ...userInfo.value.profile })
-const { region } = userInfo.value.profile
-const [_province, _city] = region === '' ? [null, null] : region.split(' - ')
-const province = ref(_province)
-const city = ref(_city)
 const sourceProvinceOptions = Object.keys(provinceCityMap)
 const provinceOptions = ref(sourceProvinceOptions)
-const cityOptions = ref(provinceCityMap[_province] || [])
+const cityOptions = ref(provinceCityMap[profileForm.value.province] || [])
 const unknownGenderOption =
   userInfo.value.profile.gender === 'other'
     ? [{ label: '未知', value: 'other' }]
@@ -411,7 +445,7 @@ const onFileChange = e =>
 const getUserInfoDiff = (userInfo, _profileForm) => {
   const { profile } = userInfo.value
   const keys = Object.keys(_profileForm)
-  const res = {}
+  const res: any = {}
 
   for (let i = 0, l = keys.length; i < l; i++) {
     const key = keys[i]
@@ -422,17 +456,16 @@ const getUserInfoDiff = (userInfo, _profileForm) => {
     }
   }
 
+  // 如果修改市区，需要携带上省份
+  if (res.city) {
+    res.province = _profileForm.province
+  }
+
   return res
 }
 
 const onUpdateProfile = async () => {
   const _profileForm = profileForm.value
-
-  if (province.value && !city.value) {
-    province.value = null
-    _profileForm.region = ''
-  }
-
   const _date = date.value
 
   if (_date) {
@@ -485,18 +518,13 @@ const onUpdateProfile = async () => {
   }
 }
 
-watch(province, v => {
-  if (v) {
-    cityOptions.value = provinceCityMap[v]
-    // 切换省份时清空市区，赋值为 '' 可能会导致样式问题
-    city.value = null
+watch(
+  () => profileForm.value.province,
+  v => {
+    if (v) {
+      cityOptions.value = provinceCityMap[v]
+      profileForm.value.city = ''
+    }
   }
-})
-
-watch(city, v => {
-  // 切换省份时清空市区，此时值是空字符串
-  if (v) {
-    profileForm.value.region = `${province.value} - ${v}`
-  }
-})
+)
 </script>

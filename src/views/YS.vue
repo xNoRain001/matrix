@@ -182,7 +182,7 @@
                 label="取消支援"
                 size="xs"
                 color="error"
-                @click="onCancelAssist(index, avatar)"
+                @click="onCancelAssist(index, _id)"
                 loading-auto
               ></UButton>
             </template>
@@ -617,9 +617,9 @@ const onScroll = useThrottleFn(
   false
 )
 
-const onCancelAssist = async (index, avatar) => {
+const onCancelAssist = async (index, id) => {
   try {
-    await cancelAssistAPI(avatar)
+    await cancelAssistAPI(id)
     my.value.splice(index, 1)
     toast.add({
       title: '成功取消',
