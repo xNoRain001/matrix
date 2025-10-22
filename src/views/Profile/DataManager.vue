@@ -67,9 +67,8 @@
 </template>
 
 <script setup lang="ts">
-import { defaultFilter } from '@/const'
 import { useFixIndexedDB } from '@/hooks'
-import { useMatchStore, useUserStore } from '@/store'
+import { useUserStore } from '@/store'
 import { createReusableTemplate } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
@@ -79,8 +78,6 @@ const isDataManagerModalOpen = ref(false)
 const [DefineSlideoverBodyTemplate, ReuseSlideoverBodyTemplate] =
   createReusableTemplate()
 const { isMobile, userInfo } = storeToRefs(useUserStore())
-const { filter } = storeToRefs(useMatchStore())
-const toast = useToast()
 const sections = [
   {
     title: '聊天记录',
@@ -92,18 +89,6 @@ const sections = [
       // {
       //   label: '清空缓存图片'
       // }
-    ]
-  },
-  {
-    title: '匹配',
-    fields: [
-      {
-        label: '重置匹配条件',
-        onSelect: () => {
-          filter.value = defaultFilter
-          toast.add({ title: '重置完成', icon: 'lucide:annoyed' })
-        }
-      }
     ]
   }
 ]

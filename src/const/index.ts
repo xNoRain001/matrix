@@ -533,30 +533,3 @@ export const provinceCityMap = {
     '嘉义市'
   ]
 }
-export const defaultFilter = {
-  activeTab: 'region',
-  regionForm: {
-    gender: '',
-    age: '',
-    province: '',
-    city: ''
-  },
-  collegeForm: {
-    college: '',
-    // grade: '',
-    gender: ''
-  },
-  gameForm: {
-    game: '',
-    age: '',
-    gender: ''
-  },
-  movieForm: {
-    movie: '',
-    gender: ''
-  },
-  zodiacSignForm: {
-    zodiacSign: '',
-    gender: ''
-  }
-}

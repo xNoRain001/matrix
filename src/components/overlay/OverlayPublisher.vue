@@ -327,9 +327,9 @@ const onPublishPost = async () => {
     }
 
     emit('close', true)
-  } catch {
+  } catch (error) {
     toast.add({
-      title: '发布失败，请重试',
+      title: error.message,
       color: 'error',
       icon: 'lucide:annoyed'
     })
@@ -423,8 +423,12 @@ const onUpdatePost = async () => {
       await store.put(post)
     }
     emit('close', true)
-  } catch {
-    toast.add({ title: '更新失败', color: 'error', icon: 'lucide:annoyed' })
+  } catch (error) {
+    toast.add({
+      title: error.message,
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
   }
 }
 
@@ -464,8 +468,12 @@ const onUpdateReply = async () => {
     reply.content = payload
     reply.updateAt = Date.now()
     emit('close', true)
-  } catch {
-    toast.add({ title: '操作失败', color: 'error', icon: 'lucide:annoyed' })
+  } catch (error) {
+    toast.add({
+      title: error.message,
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
   }
 }
 
@@ -512,8 +520,12 @@ const onReply = async () => {
       comment.visibleReplyCount++
     }
     emit('close', true)
-  } catch {
-    toast.add({ title: '操作失败', color: 'error', icon: 'lucide:annoyed' })
+  } catch (error) {
+    toast.add({
+      title: error.message,
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
   }
 }
 
@@ -552,8 +564,12 @@ const onUpdateComment = async () => {
     comment.content = payload
     comment.updateAt = Date.now()
     emit('close', true)
-  } catch {
-    toast.add({ title: '操作失败', color: 'error', icon: 'lucide:annoyed' })
+  } catch (error) {
+    toast.add({
+      title: error.message,
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
   }
 }
 
@@ -580,8 +596,12 @@ const onPublishComment = async () => {
       false
     postMap.value[props.targetId].comments.unshift(newComment)
     emit('close', true)
-  } catch {
-    toast.add({ title: '操作失败', color: 'error', icon: 'lucide:annoyed' })
+  } catch (error) {
+    toast.add({
+      title: error.message,
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
   }
 }
 
@@ -600,8 +620,12 @@ const onFeedback = async () => {
     toast.add({ title: '提交成功', icon: 'lucide:smile' })
     localStorage.removeItem('feedbackDraft')
     emit('close', true)
-  } catch {
-    toast.add({ title: '提交失败', color: 'error', icon: 'lucide:annoyed' })
+  } catch (error) {
+    toast.add({
+      title: error.message,
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
   }
 }
 
