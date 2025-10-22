@@ -295,7 +295,7 @@
       <template #zodiacSign>
         <UForm :state="filter.zodiacSignForm" class="space-y-4">
           <UFormField label="星座" :ui="{ container: 'flex gap-2' }">
-            <USelectMenu
+            <USelect
               :color="filter.zodiacSignForm.zodiacSign ? 'primary' : 'neutral'"
               :variant="filter.zodiacSignForm.zodiacSign ? 'subtle' : 'outline'"
               class="w-48"

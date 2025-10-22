@@ -31,6 +31,7 @@ const useUserStore = defineStore('userStore', () => {
 
   const _notifications = useInitLocalStorate('notifications', [])
   const defaultConfig = {
+    version: 0,
     notification: {
       isBeepOpen: true,
       beep: 'beep-1',

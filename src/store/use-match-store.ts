@@ -7,10 +7,11 @@ import { useInitLocalStorate } from '@/hooks'
 const useMatchStore = defineStore('matchStore', () => {
   const id = useUserStore().userInfo?.id || ''
   const defaultFilter = {
+    version: 0,
     activeTab: 'region',
     regionForm: {
       gender: '',
-      age: '',
+      // age: '',
       province: '',
       city: ''
     },

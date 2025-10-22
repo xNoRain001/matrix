@@ -8,6 +8,7 @@
     </template>
     <template #right>
       <UButton
+        v-if="!isMobile"
         :icon="isFullScreen ? 'lucide:minimize' : 'lucide:maximize'"
         variant="ghost"
         @click="onScreenSize"

@@ -155,6 +155,32 @@
     </UDrawer>
 
     <UDrawer
+      v-model:open="isOpenCollegeDrawer"
+      title="修改学校"
+      description=" "
+      :ui="{
+        description: 'hidden'
+      }"
+    >
+      <template #body>
+        <UInput class="w-full" v-model="profileForm.college" maxlength="30">
+          <template v-if="profileForm.college" #trailing>
+            <div class="text-muted text-xs tabular-nums">
+              {{ profileForm.college.length }}/30
+            </div>
+            <UButton
+              color="neutral"
+              variant="link"
+              size="sm"
+              icon="lucide:circle-x"
+              @click="profileForm.college = ''"
+            />
+          </template>
+        </UInput>
+      </template>
+    </UDrawer>
+
+    <UDrawer
       v-model:open="isOpenRegionDrawer"
       title="修改地区"
       description=" "
@@ -389,6 +415,7 @@ const isOpenGenderDrawer = ref(false)
 const isOpenBirthdayDrawer = ref(false)
 const isOpenRegionDrawer = ref(false)
 const isOpenNicknameDrawer = ref(false)
+const isOpenCollegeDrawer = ref(false)
 const { isMobile, userInfo, avatarURL } = storeToRefs(useUserStore())
 const profileForm = ref({ ...userInfo.value.profile })
 const sourceProvinceOptions = Object.keys(provinceCityMap)
@@ -424,6 +451,11 @@ const profileItems = [
     label: '生日',
     key: 'birthday',
     click: () => (isOpenBirthdayDrawer.value = true)
+  },
+  {
+    label: '大学',
+    key: 'college',
+    click: () => (isOpenCollegeDrawer.value = true)
   },
   {
     label: '地区',

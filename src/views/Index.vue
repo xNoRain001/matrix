@@ -104,7 +104,7 @@ import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMatchStore, useUserStore, useWebRTCStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { useComputeAge, useIsDeviceOpen } from '@/hooks'
+import { useComputeZodiacSign, useIsDeviceOpen } from '@/hooks'
 
 let matchType = ''
 const list = [
@@ -150,7 +150,13 @@ const afterLeave = () => {
 }
 
 const startMatch = () => {
-  if (filter.value.activeTab === 'college' && !userInfo.value.profile.college) {
+  const _filter = filter.value
+  const { activeTab } = _filter
+  const isZodiacSign = activeTab === 'zodiacSign'
+  const { profile } = userInfo.value
+  const { college, birthday } = profile
+
+  if (activeTab === 'college' && !college) {
     toast.add({
       title: '你的个人资料中没有填写学校',
       color: 'error',
@@ -159,21 +165,29 @@ const startMatch = () => {
     return
   }
 
+  if (isZodiacSign && !birthday) {
+    toast.add({
+      title: '你的个人资料中没有填写生日',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+    return
+  }
+
   matching.value = true
-  const socket = globalSocket.value
-  const _filter = filter.value
-  const age = useComputeAge(userInfo.value.profile.birthday)
-  socket.emit(
+  // const age = useComputeAge(birthday)
+  globalSocket.value.emit(
     'start-match',
     {
       type: matchType,
-      profile: {
-        ...userInfo.value.profile,
-        age: age === '未知' ? '' : age
-      }
+      profile
     },
-    _filter.activeTab,
-    _filter[`${_filter.activeTab}Form`]
+    {
+      // age: age === '未知' ? '' : age,
+      ...(isZodiacSign && { zodiacSign: useComputeZodiacSign(birthday) })
+    },
+    activeTab,
+    _filter[`${activeTab}Form`]
   )
 }
 
