@@ -57,7 +57,7 @@
         v-model="files"
         :dropzone="false"
         icon="lucide:plus"
-        accept="image/png, image/jpeg, image/webp"
+        accept="image/png, image/jpeg, image/gif"
         multiple
         :ui="{
           base: 'bg-elevated/50 hover:bg-elevated',

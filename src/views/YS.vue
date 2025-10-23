@@ -84,7 +84,10 @@
           <template #header>
             <UUser
               size="xl"
-              :avatar="{ alt: nickname[0] }"
+              :avatar="{
+                src: `${VITE_OSS_BASE_URL}avatar/${user}`,
+                alt: nickname[0]
+              }"
               :description="signature"
               :ui="{
                 root: 'items-start',
@@ -303,6 +306,7 @@ import * as z from 'zod'
 let assistId = null
 let assistIndex = null
 let assistUserId = null
+const { VITE_OSS_BASE_URL } = import.meta.env
 const assistSchema = z.object({
   avatar: z.string().min(1, '未选择角色'),
   uid: z.string().length(9, 'UID 格式不正确'),

@@ -71,8 +71,11 @@
   >
     <template #content>
       <UAvatarGroup size="xl">
-        <UAvatar :alt="userInfo.profile.nickname[0]" />
-        <UAvatar :alt="targetProfile.nickname[0]" />
+        <UAvatar :src="avatarURL" :alt="userInfo.profile.nickname[0]" />
+        <UAvatar
+          :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
+          :alt="targetProfile.nickname[0]"
+        />
       </UAvatarGroup>
 
       <div class="space-y-2 space-x-2">
@@ -90,6 +93,7 @@ import { useRoute } from 'vue-router'
 import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
 import type { userInfo } from '@/types'
 
+const { VITE_OSS_BASE_URL } = import.meta.env
 const props = withDefaults(
   defineProps<{
     isMatch?: boolean
@@ -102,7 +106,7 @@ const props = withDefaults(
 )
 const emits = defineEmits(['close'])
 const open = ref(props.isMatch ? true : false)
-const { isMobile, userInfo } = storeToRefs(useUserStore())
+const { isMobile, userInfo, avatarURL } = storeToRefs(useUserStore())
 const { unreadMsgCounter } = storeToRefs(useRecentContactsStore())
 const route = useRoute()
 const overlay = useOverlay()

@@ -26,10 +26,7 @@
           {{ formatTimestamp(item.timestamp) }}
         </div>
         <template v-else-if="item.type === 'text'">
-          <div
-            v-if="item.sent"
-            class="flex items-center justify-end gap-3 pb-1"
-          >
+          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
             <UButton
               v-if="item.error"
               @click="onResendMsg(item)"
@@ -44,15 +41,17 @@
             </div>
             <UAvatar
               v-if="item.separator"
+              :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-center gap-3 pb-1">
+          <div v-else class="flex items-start gap-3 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
+              :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
               :alt="targetProfile.nickname"
               size="xl"
             />
@@ -65,10 +64,7 @@
           </div>
         </template>
         <template v-else-if="item.type === 'image'">
-          <div
-            v-if="item.sent"
-            class="flex items-center justify-end gap-3 pb-1"
-          >
+          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
             <UButton
               v-if="item.error"
               @click="onResendMsg(item)"
@@ -92,15 +88,17 @@
             </div>
             <UAvatar
               v-if="item.separator"
+              :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-center gap-3 pb-1">
+          <div v-else class="flex items-start gap-3 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
+              :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
               :alt="targetProfile.nickname"
               size="xl"
             />
@@ -123,10 +121,7 @@
           </div>
         </template>
         <template v-else-if="item.type === 'audio'">
-          <div
-            v-if="item.sent"
-            class="flex items-center justify-end gap-3 pb-1"
-          >
+          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
             <UButton
               v-if="item.error"
               @click="onResendMsg(item)"
@@ -164,15 +159,17 @@
 
             <UAvatar
               v-if="item.separator"
+              :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-center gap-3 pb-1">
+          <div v-else class="flex items-start gap-3 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
+              :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
               :alt="targetProfile.nickname"
               size="xl"
             />
@@ -203,10 +200,7 @@
           </div>
         </template>
         <template v-else-if="item.type === 'voiceChatCallTip'">
-          <div
-            v-if="item.sent"
-            class="flex items-center justify-end gap-3 pb-1"
-          >
+          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
             <div
               class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
             >
@@ -215,15 +209,17 @@
             </div>
             <UAvatar
               v-if="item.separator"
+              :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-center gap-3 pb-1">
+          <div v-else class="flex items-start gap-3 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
+              :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
               :alt="targetProfile.nickname"
               size="xl"
             />
@@ -237,10 +233,7 @@
           </div>
         </template>
         <template v-else-if="item.type === 'voiceChatCallOffTip'">
-          <div
-            v-if="item.sent"
-            class="flex items-center justify-end gap-3 pb-1"
-          >
+          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
             <div
               class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
             >
@@ -249,15 +242,17 @@
             </div>
             <UAvatar
               v-if="item.separator"
+              :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-center gap-3 pb-1">
+          <div v-else class="flex items-start gap-3 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
+              :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
               :alt="targetProfile.nickname"
               size="xl"
             />
@@ -271,10 +266,7 @@
           </div>
         </template>
         <template v-else-if="item.type === 'voiceChatRefuseTip'">
-          <div
-            v-if="item.sent"
-            class="flex items-center justify-end gap-3 pb-1"
-          >
+          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
             <div
               class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
             >
@@ -283,15 +275,17 @@
             </div>
             <UAvatar
               v-if="item.separator"
+              :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-center gap-3 pb-1">
+          <div v-else class="flex items-start gap-3 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
+              :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
               :alt="targetProfile.nickname"
               size="xl"
             />
@@ -305,10 +299,7 @@
           </div>
         </template>
         <template v-else-if="item.type === 'voiceChatAgreeTip'">
-          <div
-            v-if="item.sent"
-            class="flex items-center justify-end gap-3 pb-1"
-          >
+          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
             <div
               class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
             >
@@ -317,15 +308,17 @@
             </div>
             <UAvatar
               v-if="item.separator"
+              :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-center gap-3 pb-1">
+          <div v-else class="flex items-start gap-3 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
+              :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
               :alt="targetProfile.nickname"
               size="xl"
             />
@@ -339,10 +332,7 @@
           </div>
         </template>
         <template v-else-if="item.type === 'voiceChatAgreeButNoPermissionTip'">
-          <div
-            v-if="item.sent"
-            class="flex items-center justify-end gap-3 pb-1"
-          >
+          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
             <div
               class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
             >
@@ -351,15 +341,17 @@
             </div>
             <UAvatar
               v-if="item.separator"
+              :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-center gap-3 pb-1">
+          <div v-else class="flex items-start gap-3 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
+              :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
               :alt="targetProfile.nickname"
               size="xl"
             />
@@ -373,10 +365,7 @@
           </div>
         </template>
         <template v-else-if="item.type === 'contactAgreeTip'">
-          <div
-            v-if="item.sent"
-            class="flex items-center justify-end gap-3 pb-1"
-          >
+          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
             <div
               class="flex items-center gap-2 rounded-xl bg-(--ui-bg-muted) px-4 py-2"
             >
@@ -385,15 +374,17 @@
             </div>
             <UAvatar
               v-if="item.separator"
+              :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
               size="xl"
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-center gap-3 pb-1">
+          <div v-else class="flex items-start gap-3 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
+              :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
               :alt="targetProfile.nickname"
               size="xl"
             />
@@ -425,13 +416,14 @@ import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
 import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 import type { userInfo } from '@/types'
 
+const { VITE_OSS_BASE_URL } = import.meta.env
 const playingURL = ref('')
 const props = defineProps<{
   isMatch: boolean
   targetId: string
   targetProfile: userInfo['profile']
 }>()
-const { config, isMobile, userInfo } = storeToRefs(useUserStore())
+const { config, isMobile, userInfo, avatarURL } = storeToRefs(useUserStore())
 const {
   lastMsgMap,
   hashToBlobURLMap,

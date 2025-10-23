@@ -47,7 +47,10 @@
             @click="onClick(id)"
           >
             <UUser
-              :avatar="{ alt: lastMsgMap[id].profile.nickname[0] }"
+              :avatar="{
+                src: `${VITE_OSS_BASE_URL}avatar/${id}`,
+                alt: lastMsgMap[id].profile.nickname[0]
+              }"
               size="xl"
               :chip="{
                 color: lastMsgMap[id].profile.online ? 'primary' : 'error'
@@ -97,6 +100,7 @@ import OverlayMessageView from '../overlay/OverlayMessageView.vue'
 
 let timer = null
 let contextmenuId = ''
+const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const {
   lastMsgMap,

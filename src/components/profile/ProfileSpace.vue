@@ -50,7 +50,7 @@
         :style="
           bgURL
             ? {
-                'background-image': `url(${bgURL.startsWith('blob:') ? bgURL : VITE_OSS_BASE_URL + bgURL})`
+                'background-image': `url(${bgURL})`
               }
             : {}
         "
@@ -111,11 +111,7 @@
             @click="viewerOverlay.open({ urls: [{ url: avatarURL }] })"
             class="absolute top-0 -translate-y-1/2 cursor-pointer"
             :class="isSelf ? 'cursor-pointer' : ''"
-            :src="
-              avatarURL.startsWith('blob:')
-                ? avatarURL
-                : VITE_OSS_BASE_URL + avatarURL
-            "
+            :src="avatarURL"
             :alt="targetProfile.nickname[0]"
             size="3xl"
           ></UAvatar>
@@ -135,7 +131,7 @@
       ref="spaceBgRef"
       hidden
       type="file"
-      accept="image/png, image/jpeg, image/webp"
+      accept="image/png, image/jpeg, image/gif"
     />
     <!-- 移动端设置界面 -->
     <USlideover
@@ -403,10 +399,12 @@ const bgURL = ref(
     ? bgBlob
       ? URL.createObjectURL(bgBlob)
       : // 本地数据库中删除了但 OSS 中还存在，TODO: 重新保存到本地数据库
-        `space-bg/${userInfo.value.id}`
-    : `space-bg/${props.targetId}`
+        `${VITE_OSS_BASE_URL}space-bg/${userInfo.value.id}`
+    : `${VITE_OSS_BASE_URL}space-bg/${props.targetId}`
 )
-const avatarURL = ref(isSelf ? _avatarURL.value : `avatar/${props.targetId}`)
+const avatarURL = ref(
+  isSelf ? _avatarURL.value : `${VITE_OSS_BASE_URL}avatar/${props.targetId}`
+)
 const viewerOverlay = overlay.create(OverlayViewer)
 const logoutOverlay = overlay.create(OverlayLogout)
 const publisherOverlay = overlay.create(OverlayPublisher)
@@ -524,8 +522,8 @@ watch(
   v => {
     // PC 端 contact 页面允许无缝切换空间操作，需要更新头像和背景
     if (v && isContacts.value && !isMobile.value) {
-      bgURL.value = `space-bg/${v}`
-      avatarURL.value = `avatar/${v}`
+      bgURL.value = `${VITE_OSS_BASE_URL}space-bg/${v}`
+      avatarURL.value = `${VITE_OSS_BASE_URL}avatar/${v}`
     }
   }
 )

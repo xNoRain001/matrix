@@ -63,6 +63,7 @@
     </div>
     <div class="flex flex-1 flex-col items-center gap-4">
       <UAvatar
+        :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
         :alt="targetProfile.nickname[0]"
         class="size-24 text-5xl"
       ></UAvatar>
@@ -151,6 +152,7 @@ const props = withDefaults(
     close: () => {}
   }
 )
+const { VITE_OSS_BASE_URL } = import.meta.env
 const {
   roomId,
   rtcConnected,

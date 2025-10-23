@@ -460,7 +460,10 @@
         >
           <UUser
             :name="profile.nickname"
-            :avatar="{ alt: profile.nickname[0] }"
+            :avatar="{
+              src: `${VITE_OSS_BASE_URL}avatar/${user}`,
+              alt: profile.nickname[0]
+            }"
             size="xl"
             :ui="{
               root: 'items-start',

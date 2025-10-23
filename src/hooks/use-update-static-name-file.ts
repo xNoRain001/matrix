@@ -1,4 +1,4 @@
-import { getSignedURLAPI } from '@/apis/oss'
+import { getSignedURLAPI, updateStaticNameAPI } from '@/apis/oss'
 import useGenHash from './use-gen-hash'
 import useGetDB from './use-get-db'
 import useNSFW from './use-nsfw'
@@ -36,26 +36,34 @@ const useUpdateStaticNameFile = async (
   }
 
   try {
-    // hash 用于生成预签名前检查文件类型是否满足要求
     const hash = await useGenHash(file)
-    const { data: signedURL } = await getSignedURLAPI(type, hash, file.size)
-    // 由于是固定名称，不进行 hash 比较，如果上传相同的图片也直接进行覆盖
-    const { ok } = await fetch(signedURL, {
-      method: 'PUT',
-      body: file
-    })
+    const { data: signedURL } = await getSignedURLAPI('tmp', hash, file.size)
+    const ossURL = `tmp/${userInfo.value.id}/${hash}`
 
-    if (ok) {
+    // 临时目录中不存在该图片
+    if (signedURL !== ossURL) {
+      const { ok } = await fetch(signedURL, {
+        method: 'PUT',
+        body: file
+      })
+
+      if (!ok) {
+        throw Error('上传图片失败')
+      }
+    }
+
+    try {
+      await updateStaticNameAPI(type, hash)
       const db = await useGetDB(userInfo.value.id)
       await db.put(type, { id: userInfo.value.id, blob: file })
       urlRef.value = URL.createObjectURL(file)
       toast.add({ title: '更新成功', icon: 'lucide:smile' })
-    } else {
-      throw Error()
+    } catch (error) {
+      throw error
     }
-  } catch {
+  } catch (error) {
     toast.add({
-      title: '更新失败',
+      title: error.message,
       color: 'error',
       icon: 'lucide:annoyed'
     })

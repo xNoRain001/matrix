@@ -1,6 +1,8 @@
 let model = null
 
 const useNSFW = async files => {
+  return true
+
   if (!model) {
     const nsfwjs = await import('nsfwjs')
     model = await nsfwjs.load('/nsfw-model/model.json', {

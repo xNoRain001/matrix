@@ -475,6 +475,7 @@ const onAddContact = async notification => {
     title: notification.profile.nickname,
     description: '请求添加你为好友',
     avatar: {
+      src: `${VITE_OSS_BASE_URL}avatar/${notification.id}`,
       alt: notification.profile.nickname[0]
     }
   })
@@ -985,7 +986,7 @@ const acceptWebRTC = async (targetProfile, roomId, now, isAccept: boolean) => {
   }
 }
 
-const onInviteWebRTC = (roomId, targetProfile) => {
+const onInviteWebRTC = (roomId, targetId, targetProfile) => {
   const now = Date.now()
 
   voiceChatInviteToastId = toast.add({
@@ -993,6 +994,7 @@ const onInviteWebRTC = (roomId, targetProfile) => {
     title: targetProfile.nickname,
     description: '邀请你语音通话',
     avatar: {
+      src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
       alt: targetProfile.nickname[0]
     },
     duration: voiceChatInviteToastExpireTime,
@@ -1332,7 +1334,7 @@ const initAvatarURL = async () => {
   )?.blob
   avatarURL.value = avatarBlob
     ? URL.createObjectURL(avatarBlob)
-    : `avatar/${userInfo.value.id}`
+    : `${VITE_OSS_BASE_URL}avatar/${userInfo.value.id}`
 }
 
 const initChatBgURL = async () => {

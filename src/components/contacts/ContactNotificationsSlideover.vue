@@ -22,7 +22,10 @@
         "
       >
         <UUser
-          :avatar="{ alt: profile.nickname[0] }"
+          :avatar="{
+            src: `${VITE_OSS_BASE_URL}avatar/${id}`,
+            alt: profile.nickname[0]
+          }"
           size="xl"
           :ui="{
             wrapper: 'flex-1 min-w-0',
@@ -72,6 +75,7 @@ import { useFormatTimeAgo, useSendMsg } from '@/hooks'
 import { agreeCandidate, refuseCandidate } from '@/apis/contact'
 import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
 
+const { VITE_OSS_BASE_URL } = import.meta.env
 const isNotificationsSlideoverOpen = defineModel<boolean>()
 const { userInfo, globalSocket } = storeToRefs(useUserStore())
 const { matchRes } = storeToRefs(useMatchStore())

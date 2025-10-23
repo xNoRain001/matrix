@@ -8,8 +8,11 @@
   >
     <UButton
       v-bind="{
-        ...user,
-        label: collapsed ? undefined : user?.name,
+        avatar: {
+          src: avatarURL,
+          alt: userInfo.profile.nickname[0]
+        },
+        label: collapsed ? undefined : userInfo.profile.nickname,
         trailingIcon: collapsed ? undefined : 'i-lucide-chevrons-up-down'
       }"
       color="neutral"
@@ -40,7 +43,7 @@ import { useUserStore } from '@/store'
 import type { DropdownMenuItem } from '@nuxt/ui'
 import { useColorMode } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive } from 'vue'
 import { appConfig as _appConfig } from '@/const'
 import { useUpdateTheme } from '@/hooks'
 import OverlayLogout from '../overlay/OverlayLogout.vue'
@@ -53,20 +56,16 @@ const overlay = useOverlay()
 const logoutOverlay = overlay.create(OverlayLogout)
 const { store } = useColorMode()
 const appConfig = reactive(_appConfig)
-const { userInfo } = storeToRefs(useUserStore())
-const user = ref({
-  name: userInfo.value.profile.nickname,
-  avatar: {
-    // src: 'https://github.com/benjamincanac.png',
-    alt: userInfo.value.profile.nickname
-  }
-})
-const items = computed<DropdownMenuItem[][]>(() => [
+const { userInfo, avatarURL } = storeToRefs(useUserStore())
+const items = computed<DropdownMenuItem[]>(() => [
   [
     {
       type: 'label',
-      label: user.value.name,
-      avatar: user.value.avatar
+      label: userInfo.value.profile.nickname,
+      avatar: {
+        src: avatarURL.value,
+        alt: userInfo.value.profile.nickname
+      }
     }
   ],
   [

@@ -60,7 +60,7 @@
     ref="chatBgRef"
     hidden
     type="file"
-    accept="image/png, image/jpeg, image/webp"
+    accept="image/png, image/jpeg, image/gif"
   />
 </template>
 

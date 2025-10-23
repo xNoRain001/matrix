@@ -40,7 +40,10 @@
             @click="onClick(id)"
           >
             <UUser
-              :avatar="{ alt: contactProfileMap[id].profile.nickname[0] }"
+              :avatar="{
+                src: `${VITE_OSS_BASE_URL}avatar/${id}`,
+                alt: contactProfileMap[id].profile.nickname[0]
+              }"
               size="xl"
               :chip="{
                 color: contactProfileMap[id].profile.online
@@ -72,6 +75,7 @@ import type { userInfo } from '@/types'
 import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
 
 let contextmenuId = ''
+const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
 const {
   activeTargetId,

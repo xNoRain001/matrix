@@ -23,7 +23,7 @@
             !viewer && viewerOverlay.open({ urls: items, activeIndex: index })
           "
           :src="
-            item.url.startsWith('blob:')
+            item.url.startsWith('blob:') || item.url.startsWith('https://')
               ? item.url
               : VITE_OSS_BASE_URL + item.url
           "
@@ -52,7 +52,7 @@
         >
           <img
             :src="
-              item.url.startsWith('blob:')
+              item.url.startsWith('blob:') || item.url.startsWith('https://')
                 ? item.url
                 : VITE_OSS_BASE_URL + item.url
             "
@@ -65,7 +65,7 @@
       v-else
       @click="!viewer && viewerOverlay.open({ urls: items, activeIndex: 0 })"
       :src="
-        items[0].url.startsWith('blob:')
+        items[0].url.startsWith('blob:') || items[0].url.startsWith('https://')
           ? items[0].url
           : VITE_OSS_BASE_URL + items[0].url
       "

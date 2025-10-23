@@ -32,6 +32,7 @@
           <template #footer>
             <UUser
               :avatar="{
+                src: `${VITE_OSS_BASE_URL}avatar/${user}`,
                 alt: profile.nickname[0]
               }"
               :name="profile.nickname"
@@ -133,6 +134,7 @@ import { useThrottleFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref, watch } from 'vue'
 
+const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const activeTab = ref<'latest' | 'friend' | 'hot'>('latest')
 // const tabItems = [

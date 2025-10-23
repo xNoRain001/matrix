@@ -45,11 +45,7 @@
           >
             <UAvatar
               size="2xs"
-              :src="
-                avatarURL.startsWith('blob:')
-                  ? avatarURL
-                  : VITE_OSS_BASE_URL + avatarURL
-              "
+              :src="avatarURL"
               :alt="profileForm.nickname[0]"
             ></UAvatar>
             <UIcon
@@ -344,11 +340,7 @@
             <UAvatar
               @click="viewerOverlay.open({ urls: [{ url: avatarURL }] })"
               class="cursor-pointer"
-              :src="
-                avatarURL.startsWith('blob:')
-                  ? avatarURL
-                  : VITE_OSS_BASE_URL + avatarURL
-              "
+              :src="avatarURL"
               :alt="profileForm.nickname[0]"
               size="lg"
             />
@@ -395,7 +387,7 @@
     ref="avatarRef"
     hidden
     type="file"
-    accept="image/png, image/jpeg, image/webp"
+    accept="image/png, image/jpeg, image/gif"
   />
 </template>
 
@@ -469,7 +461,6 @@ const date = shallowRef(
 const overlay = useOverlay()
 const viewerOverlay = overlay.create(OverlayViewer)
 const avatarRef = ref(null)
-const { VITE_OSS_BASE_URL } = import.meta.env
 
 const onFileChange = e =>
   useUpdateStaticNameFile(e, 'avatar', userInfo, toast, avatarURL)
