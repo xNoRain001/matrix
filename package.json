@@ -22,6 +22,7 @@
     "@vueuse/core": "^13.6.0",
     "axios": "^1.11.0",
     "idb": "^8.0.3",
+    "nsfwjs": "^4.2.1",
     "pinia": "^3.0.3",
     "querystring": "^0.2.1",
     "socket.io-client": "^4.8.1",

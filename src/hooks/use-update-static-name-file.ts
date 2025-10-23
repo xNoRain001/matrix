@@ -1,6 +1,7 @@
 import { getSignedURLAPI } from '@/apis/oss'
 import useGenHash from './use-gen-hash'
 import useGetDB from './use-get-db'
+import useNSFW from './use-nsfw'
 
 const useUpdateStaticNameFile = async (
   e,
@@ -13,7 +14,25 @@ const useUpdateStaticNameFile = async (
   const file = input.files[0]
 
   if (file.size > 10 * 1024 * 1024) {
-    throw Error('上传失败，图片大小不能超过 10MB')
+    toast.add({
+      title: '上传失败，图片大小不能超过 10MB',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+    input.value = ''
+    return
+  }
+
+  try {
+    await useNSFW([file])
+  } catch {
+    toast.add({
+      title: '操作失败，图片违规',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+    input.value = ''
+    return
   }
 
   try {

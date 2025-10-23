@@ -22,5 +22,13 @@ export default defineConfig({
     alias: {
       '@': resolve(__dirname, 'src')
     }
+  },
+  build: {
+    rollupOptions: {
+      external: id =>
+        // 跳过 nsfwjs 模型的打包，已经自托管了模型，不需要再次打包
+        id.startsWith('../models/mobilenet_v2') ||
+        id.startsWith('../models/inception_v3')
+    }
   }
 })

@@ -1,5 +1,6 @@
 import { getSignedURLAPI } from '@/apis/oss'
 import useGenHash from './use-gen-hash'
+import useNSFW from './use-nsfw'
 
 const initPayloadSize = (newImageMetadata, imageMetadata) => {
   const promises = newImageMetadata.map(({ file, index }) => {
@@ -76,6 +77,12 @@ const useUploadFilesToOSS = async (
   fileType: 'image' | 'audio',
   files
 ) => {
+  try {
+    await useNSFW(files)
+  } catch {
+    throw new Error('操作失败，存在违规图片')
+  }
+
   // 最终上传到服务器的内容
   const imageMetadata = []
   // 新添加的图片

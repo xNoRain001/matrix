@@ -51,8 +51,10 @@ import useRequestFullscreen from './use-request-full-screen'
 import useExitFullscreen from './use-exit-full-screen'
 import useComputeAge from './use-compute-age'
 import useComputeZodiacSign from './use-compute-zodiac-sign'
+import useNSFW from './use-nsfw'
 
 export {
+  useNSFW,
   useComputeZodiacSign,
   useComputeAge,
   useRequestFullscreen,
