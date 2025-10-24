@@ -137,13 +137,13 @@
             </p>
           </template>
         </UPageCard>
+        <USeparator
+          v-if="allPostLoaded"
+          class="p-4 sm:p-6"
+          label="已经到底了"
+        />
       </UPageList>
       <USeparator v-else class="p-4 sm:p-6" label="暂时没有人提供支援" />
-      <USeparator
-        v-if="helpItems.length && allPostLoaded"
-        class="px-4 pt-4 sm:px-6 sm:pt-6"
-        label="已经到底了"
-      />
     </template>
 
     <template v-if="isMobile" #footer>

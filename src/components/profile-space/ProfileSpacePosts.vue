@@ -1,4 +1,14 @@
 <template>
+  <div v-if="loading" class="space-y-4 p-4 sm:p-6">
+    <div v-for="i in 5" :key="i" class="flex items-center gap-4">
+      <USkeleton class="h-12 w-12 rounded-full" />
+
+      <div class="grid flex-1 gap-2">
+        <USkeleton class="h-4 w-full" />
+        <USkeleton class="h-4 w-4/5" />
+      </div>
+    </div>
+  </div>
   <UPageList v-if="postMap[targetId]?.posts?.length" divide>
     <UPageCard
       v-for="(
@@ -106,7 +116,11 @@
       </template>
     </UDrawer>
   </UPageList>
-  <USeparator v-else class="p-4 sm:p-6" label="空空如也" />
+  <USeparator
+    v-if="postMap[targetId]?.posts?.length === 0"
+    class="p-4 sm:p-6"
+    label="空空如也"
+  />
   <!-- 滚动到顶部浮动按钮 -->
   <UButton
     v-if="!isMobile && isFloatingBtnShow"
@@ -166,6 +180,7 @@ const dropdownMenuItems = [
 ]
 const { VITE_OSS_BASE_URL } = import.meta.env
 const isFloatingBtnShow = ref(false)
+const loading = ref(!postMap.value[props.targetId])
 
 const onScrollToTop = () => {
   props.container.scrollTo({
@@ -199,10 +214,7 @@ const onScroll = useThrottleFn(
         }
 
         lastFetchedPostId.value = posts[posts.length - 1]?.id || 0
-
-        if (length < 10) {
-          allPostLoaded.value = true
-        }
+        allPostLoaded.value = length < 10
       } else {
         const lastId =
           postMap.value[props.targetId].posts[
@@ -216,9 +228,7 @@ const onScroll = useThrottleFn(
         }
 
         // 等于 10 时会多发送一次请求，不做处理
-        if (data.length < 10) {
-          allPostLoaded.value = true
-        }
+        allPostLoaded.value = data.length < 10
       }
     }
   },
@@ -354,15 +364,25 @@ const getPostsFromAPI = async () => {
   }
 }
 
+const getPosts = async () => {
+  postMap.value[props.targetId] = {} as any
+  const { data: posts } = await getPostsAPI(props.targetId)
+  postMap.value[props.targetId].posts = posts
+  allPostLoaded.value = posts.length < 10
+}
+
 watch(
   () => props.targetId,
   async v => {
-    if (!isMobile.value) {
+    if (isMobile.value) {
       return
     }
 
+    // 处理 PC 端无缝切换好友空间
     if (v) {
-      postMap.value[props.targetId].posts = (await getPostsAPI(v)).data
+      loading.value = true
+      await getPosts()
+      loading.value = false
     }
   }
 )
@@ -382,14 +402,13 @@ onMounted(async () => {
         const { length } = postMap.value[props.targetId].posts
         lastFetchedPostId.value =
           postMap.value[props.targetId].posts[length - 1]?.id || 0
-
-        if (length < 10) {
-          allPostLoaded.value = true
-        }
+        allPostLoaded.value = length < 10
       } else {
         // 从 API 获取，会一次性返回所有 post
         allPostLoaded.value = true
       }
+
+      loading.value = false
     } else {
       // 存在缓存，判断是不是获取了全部
       const db = await useGetDB(userInfo.value.id)
@@ -402,13 +421,8 @@ onMounted(async () => {
       }
     }
   } else {
-    postMap.value[props.targetId] = {} as any
-    const { data: posts } = await getPostsAPI(props.targetId)
-    postMap.value[props.targetId].posts = posts
-
-    if (posts.length < 10) {
-      allPostLoaded.value = true
-    }
+    await getPosts()
+    loading.value = false
   }
 
   setTimeout(() => {

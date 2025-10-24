@@ -6,8 +6,18 @@
     <template #body>
       <!-- <UTabs ref="tabsRef" :items="tabItems" v-model="activeTab">
         <template #content> -->
+      <template v-if="loading">
+        <div v-for="i in 10" :key="i" class="flex items-center gap-4">
+          <USkeleton class="h-12 w-12 rounded-full" />
+
+          <div class="grid flex-1 gap-2">
+            <USkeleton class="h-4 w-full" />
+            <USkeleton class="h-4 w-4/5" />
+          </div>
+        </div>
+      </template>
       <UPageList
-        v-if="postMap?.[activeTab]?.posts?.length"
+        v-if="postMap[activeTab]?.posts?.length"
         class="space-y-4 sm:space-y-6"
       >
         <UPageCard
@@ -168,7 +178,10 @@ const overlay = useOverlay()
 const postDetailOverlay = overlay.create(OverlayPostDetail)
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 // const tabsRef = useTemplateRef('tabsRef')
-const allPostLoaded = ref(false)
+const allPostLoaded = ref(
+  (postMap.value[activeTab.value]?.posts?.length || 0) >= 10
+)
+const loading = ref(postMap.value[activeTab.value]?.posts === undefined)
 
 // const getLatestData = async () => {
 //   const _activeTab = activeTab.value
@@ -233,24 +246,22 @@ const onScroll = useThrottleFn(
   false
 )
 
-watch(activeTab, async v => {
-  if (!postMap.value[v]) {
-    postMap.value[v] = {} as any
-    postMap.value[v].posts = (await getPlaygroundPostsAPI(v)).data
-  }
-})
-
-onMounted(async () => {
+const getPosts = async () => {
   const _activeTab = activeTab.value
 
   if (!postMap.value[_activeTab]) {
     postMap.value[_activeTab] = {} as any
     const posts = (await getPlaygroundPostsAPI(_activeTab)).data
     postMap.value[_activeTab].posts = posts
+    allPostLoaded.value = posts.length < 10
+    loading.value = false
   }
+}
 
-  // 从别的页面切换回来时需要更新
-  allPostLoaded.value = postMap.value[_activeTab].posts.length < 10
+watch(activeTab, getPosts)
+
+onMounted(async () => {
+  await getPosts()
 
   // tabsRef.value.triggersRef[0].$el.addEventListener('click', getLatestData)
   document

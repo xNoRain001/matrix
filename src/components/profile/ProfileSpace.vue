@@ -42,19 +42,11 @@
       <!-- 灰色滤镜：grayscale-50 filter -->
       <div
         @click="viewerOverlay.open({ urls: [{ url: bgURL }] })"
-        :class="[
-          isSelf ? 'cursor-pointer' : '',
-          bgURL ? 'bg-cover bg-center bg-no-repeat' : 'bg-default',
-          isMatch ? '' : '-mt-16'
-        ]"
-        :style="
-          bgURL
-            ? {
-                'background-image': `url(${bgURL})`
-              }
-            : {}
-        "
-        class="sticky -top-[calc(50vh-4rem)] z-10 h-[50vh] cursor-pointer"
+        :class="[isSelf ? 'cursor-pointer' : '', isMatch ? '' : '-mt-16']"
+        :style="{
+          'background-image': `url(${bgURL})`
+        }"
+        class="sticky -top-[calc(50vh-4rem)] z-10 h-[50vh] cursor-pointer bg-cover bg-center bg-no-repeat"
       ></div>
       <!-- 个人资料卡片 -->
       <UPageCard
@@ -108,10 +100,20 @@
         </template>
         <template #header>
           <UAvatar
-            @click="viewerOverlay.open({ urls: [{ url: avatarURL }] })"
+            @click="
+              viewerOverlay.open({
+                urls: [
+                  {
+                    url: isSelf
+                      ? avatarURL
+                      : `${VITE_OSS_BASE_URL}avatar/${targetId}`
+                  }
+                ]
+              })
+            "
             class="absolute top-0 -translate-y-1/2 cursor-pointer"
             :class="isSelf ? 'cursor-pointer' : ''"
-            :src="avatarURL"
+            :src="isSelf ? avatarURL : `${VITE_OSS_BASE_URL}avatar/${targetId}`"
             :alt="targetProfile.nickname[0]"
             size="3xl"
           ></UAvatar>
@@ -309,11 +311,7 @@ const isLogoffSlideoverOpen = ref(false)
 const isThemeSlideoverOpen = ref(false)
 const spaceBgRef = ref(null)
 const toast = useToast()
-const {
-  isMobile,
-  userInfo,
-  avatarURL: _avatarURL
-} = storeToRefs(useUserStore())
+const { isMobile, userInfo, avatarURL } = storeToRefs(useUserStore())
 const { activeTargetIds, activeTargetId, activeTargetProfile } = storeToRefs(
   useRecentContactsStore()
 )
@@ -379,8 +377,8 @@ const cards = [
   ]
 ]
 const isSelf = props.targetId === userInfo.value.id
-const route = useRoute()
 const isContacts = computed(() => route.path === '/contacts')
+const route = useRoute()
 // 在聊天界面中打开对方空间或匹配到对方显示的空间不需要显示聊天按钮
 const inView = computed(() => {
   const { path } = route
@@ -399,11 +397,8 @@ const bgURL = ref(
     ? bgBlob
       ? URL.createObjectURL(bgBlob)
       : // 本地数据库中删除了但 OSS 中还存在，TODO: 重新保存到本地数据库
-        `${VITE_OSS_BASE_URL}space-bg/${userInfo.value.id}`
-    : `${VITE_OSS_BASE_URL}space-bg/${props.targetId}`
-)
-const avatarURL = ref(
-  isSelf ? _avatarURL.value : `${VITE_OSS_BASE_URL}avatar/${props.targetId}`
+        `${VITE_OSS_BASE_URL}spaceBg/${userInfo.value.id}`
+    : `${VITE_OSS_BASE_URL}spaceBg/${props.targetId}`
 )
 const viewerOverlay = overlay.create(OverlayViewer)
 const logoutOverlay = overlay.create(OverlayLogout)
@@ -520,10 +515,9 @@ const onSpaceBgChange = e =>
 watch(
   () => props.targetId,
   v => {
-    // PC 端 contact 页面允许无缝切换空间操作，需要更新头像和背景
+    // PC 端 contact 页面允许无缝切换空间操作，需要更新背景
     if (v && isContacts.value && !isMobile.value) {
-      bgURL.value = `${VITE_OSS_BASE_URL}space-bg/${v}`
-      avatarURL.value = `${VITE_OSS_BASE_URL}avatar/${v}`
+      bgURL.value = `${VITE_OSS_BASE_URL}spaceBg/${v}`
     }
   }
 )

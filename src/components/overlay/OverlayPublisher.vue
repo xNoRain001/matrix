@@ -18,7 +18,9 @@
       >
       </UPageCard>
       <UTextarea
-        placeholder="善语结缘，温暖常伴..."
+        :placeholder="
+          isReply ? `回复：${replyTargetNickname}` : '善语结缘，温暖常伴...'
+        "
         v-model="payload.text"
         class="w-full"
         autoresize
@@ -279,10 +281,7 @@ const onUpdateFile = files => {
 }
 
 const onDraft = () => {
-  localStorage.setItem(
-    isPost ? 'postDraft' : 'feedbackDraft',
-    JSON.stringify(payload)
-  )
+  localStorage.setItem(isPost ? 'postDraft' : 'feedbackDraft', payload.text)
   toast.add({ title: '已保存到草稿', icon: 'lucide:smile' })
   emit('close', true)
 }

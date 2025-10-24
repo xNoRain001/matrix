@@ -1,10 +1,15 @@
 const useInitLocalStorate = (key, value) => {
   try {
     const data = JSON.parse(localStorage.getItem(key))
+
+    if (!data) {
+      return value
+    }
+
     const { version } = value
 
     // 如果存在版本号，需要进行版本控制
-    if (version !== undefined && data) {
+    if (version !== undefined) {
       if (version === data.version) {
         value = data
       } else {
@@ -19,6 +24,8 @@ const useInitLocalStorate = (key, value) => {
 
         localStorage.setItem(key, JSON.stringify(value))
       }
+    } else {
+      value = data
     }
   } catch {}
 

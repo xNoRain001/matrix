@@ -166,7 +166,9 @@
                   <p class="text-toned items-center">
                     <!-- · 广东 -->
                     <span>{{ useFormatTimeAgo(createdAt) }}</span>
-                    <span class="ml-2" @click="onReply(owner, _id, index)"
+                    <span
+                      class="ml-2"
+                      @click="onReply(owner, _id, index, profile.nickname)"
                       >回复</span
                     >
                   </p>
@@ -710,13 +712,14 @@ const onDeleteComment = async () => {
   }
 }
 
-const onReply = (owner, commentId, commentIndex) => {
+const onReply = (owner, commentId, commentIndex, replyTargetNickname) => {
   postMap.value[props.targetId].activeCommentId = commentId
   postMap.value[props.targetId].activeCommentIndex = commentIndex
   publisherOverlay.open({
     action: 'reply',
     targetId: props.targetId,
-    owner
+    owner,
+    replyTargetNickname
   })
 }
 

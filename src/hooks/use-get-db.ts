@@ -4,7 +4,7 @@ let db = null
 
 const useGetDB = async id => {
   if (!db) {
-    db = await openDB(`chatDB-${id}`, 37, {
+    db = await openDB(`chatDB-${id}`, 38, {
       upgrade(db) {
         let store = null
 
