@@ -27,7 +27,7 @@
         :rows="5"
         :maxrows="5"
         maxlength="2000"
-        :ui="{ base: 'bg-elevated/50', trailing: 'flex items-end' }"
+        :ui="{ trailing: 'flex items-end' }"
       >
         <template v-if="payload.text" #trailing>
           <div class="text-muted py-1.5 text-xs tabular-nums">
@@ -62,7 +62,6 @@
         accept="image/png, image/jpeg, image/gif"
         multiple
         :ui="{
-          base: 'bg-elevated/50 hover:bg-elevated',
           files: 'grid-cols-3'
         }"
       >

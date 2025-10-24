@@ -159,10 +159,10 @@
       }"
     >
       <template #body>
-        <UInput class="w-full" v-model="profileForm.college" maxlength="30">
+        <UInput class="w-full" v-model="profileForm.college" maxlength="19">
           <template v-if="profileForm.college" #trailing>
             <div class="text-muted text-xs tabular-nums">
-              {{ profileForm.college.length }}/30
+              {{ profileForm.college.length }}/19
             </div>
             <UButton
               color="neutral"
@@ -293,10 +293,10 @@
           class="flex items-start justify-between gap-4"
           :ui="{ container: 'w-3/5' }"
         >
-          <UInput class="w-full" v-model="profileForm.college" maxlength="30">
+          <UInput class="w-full" v-model="profileForm.college" maxlength="19">
             <template v-if="profileForm.college" #trailing>
               <div class="text-muted text-xs tabular-nums">
-                {{ profileForm.college.length }}/30
+                {{ profileForm.college.length }}/19
               </div>
               <UButton
                 color="neutral"

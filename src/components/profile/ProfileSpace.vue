@@ -239,10 +239,10 @@
           orientation="horizontal"
           :class="isMobile ? '' : 'mb-4'"
         ></UPageCard>
-        <UPageCard variant="subtle">
+        <UPageCard>
           <div ref="tagRef" class="flex flex-wrap gap-2">
             <UBadge
-              trailing-icon="lucide:x"
+              trailing-icon="lucide:circle-x"
               v-for="(tag, index) in tags"
               :label="tag"
               :key="tag"

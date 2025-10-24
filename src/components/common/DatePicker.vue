@@ -3,7 +3,7 @@
     <UButton
       class="w-full"
       color="neutral"
-      variant="subtle"
+      variant="outline"
       icon="i-lucide-calendar"
     >
       {{ date ? date.toString() : '选择日期' }}

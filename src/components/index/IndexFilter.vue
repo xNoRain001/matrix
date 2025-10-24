@@ -13,18 +13,12 @@
         <UForm :state="filter.regionForm" class="space-y-4">
           <UFormField label="地区" :ui="{ container: 'flex gap-2' }">
             <USelect
-              :color="filter.regionForm.province ? 'primary' : 'neutral'"
-              :variant="filter.regionForm.province ? 'subtle' : 'outline'"
               class="flex-1"
-              :class="filter.regionForm.province ? 'bg-elevated/50' : ''"
               v-model="filter.regionForm.province"
               :items="provinceOptions"
             />
             <USelect
-              :color="filter.regionForm.city ? 'primary' : 'neutral'"
-              :variant="filter.regionForm.city ? 'subtle' : 'outline'"
               class="flex-1"
-              :class="filter.regionForm.city ? 'bg-elevated/50' : ''"
               v-model="filter.regionForm.city"
               :items="cityOptions"
             />
@@ -43,7 +37,7 @@
               v-model="filter.regionForm.gender"
               :items="genderItems"
               :ui="{
-                item: 'bg-elevated/50 py-1.5 has-data-[state=checked]:bg-primary'
+                item: 'py-1.5 has-data-[state=checked]:bg-primary'
               }"
             >
               <template #label="{ item: { label, value } }">
@@ -91,9 +85,6 @@
           <UFormField label="高校" :ui="{ container: 'flex gap-2' }">
             <UInput
               class="w-48"
-              :color="filter.collegeForm.college ? 'primary' : 'neutral'"
-              :variant="filter.collegeForm.college ? 'subtle' : 'outline'"
-              :class="filter.collegeForm.college ? 'bg-elevated/50' : ''"
               v-model="filter.collegeForm.college"
               maxlength="19"
             >
@@ -149,7 +140,7 @@
               v-model="filter.collegeForm.gender"
               :items="genderItems"
               :ui="{
-                item: 'bg-elevated/50 py-1.5 has-data-[state=checked]:bg-primary'
+                item: 'py-1.5 has-data-[state=checked]:bg-primary'
               }"
             >
               <template #label="{ item: { label, value } }">
@@ -171,10 +162,7 @@
         <UForm :state="filter.gameForm" class="space-y-4">
           <UFormField label="游戏" :ui="{ container: 'flex gap-2' }">
             <USelectMenu
-              :color="filter.gameForm.game ? 'primary' : 'neutral'"
-              :variant="filter.gameForm.game ? 'subtle' : 'outline'"
               class="w-48"
-              :class="filter.gameForm.game ? 'bg-elevated/50' : ''"
               v-model="filter.gameForm.game"
               :items="gameItems"
             />
@@ -187,7 +175,7 @@
               v-model="filter.gameForm.gender"
               :items="genderItems"
               :ui="{
-                item: 'bg-elevated/50 py-1.5 has-data-[state=checked]:bg-primary'
+                item: 'py-1.5 has-data-[state=checked]:bg-primary'
               }"
             >
               <template #label="{ item: { label, value } }">
@@ -258,10 +246,7 @@
         <UForm :state="filter.movieForm" class="space-y-4">
           <UFormField label="电影" :ui="{ container: 'flex gap-2' }">
             <USelectMenu
-              :color="filter.movieForm.movie ? 'primary' : 'neutral'"
-              :variant="filter.movieForm.movie ? 'subtle' : 'outline'"
               class="w-48"
-              :class="filter.movieForm.movie ? 'bg-elevated/50' : ''"
               v-model="filter.movieForm.movie"
               :items="movieItems"
             />
@@ -274,7 +259,7 @@
               v-model="filter.movieForm.gender"
               :items="genderItems"
               :ui="{
-                item: 'bg-elevated/50 py-1.5 has-data-[state=checked]:bg-primary'
+                item: 'py-1.5 has-data-[state=checked]:bg-primary'
               }"
             >
               <template #label="{ item: { label, value } }">
@@ -296,10 +281,7 @@
         <UForm :state="filter.zodiacSignForm" class="space-y-4">
           <UFormField label="星座" :ui="{ container: 'flex gap-2' }">
             <USelect
-              :color="filter.zodiacSignForm.zodiacSign ? 'primary' : 'neutral'"
-              :variant="filter.zodiacSignForm.zodiacSign ? 'subtle' : 'outline'"
               class="w-48"
-              :class="filter.zodiacSignForm.zodiacSign ? 'bg-elevated/50' : ''"
               v-model="filter.zodiacSignForm.zodiacSign"
               :items="zodiacSignItems"
             />
@@ -312,7 +294,7 @@
               v-model="filter.zodiacSignForm.gender"
               :items="genderItems"
               :ui="{
-                item: 'bg-elevated/50 py-1.5 has-data-[state=checked]:bg-primary'
+                item: 'py-1.5 has-data-[state=checked]:bg-primary'
               }"
             >
               <template #label="{ item: { label, value } }">
