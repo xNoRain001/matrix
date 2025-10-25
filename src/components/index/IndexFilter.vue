@@ -18,6 +18,7 @@
               :items="provinceOptions"
             />
             <USelect
+              :disabled="!filter.regionForm.province"
               class="flex-1"
               v-model="filter.regionForm.city"
               :items="cityOptions"

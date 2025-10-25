@@ -9,7 +9,7 @@
       </div>
     </div>
   </div>
-  <UPageList v-if="postMap[targetId]?.posts?.length" divide>
+  <div v-if="postMap[targetId]?.posts?.length">
     <UPageCard
       v-for="(
         {
@@ -24,7 +24,7 @@
       ) in postMap[targetId].posts"
       :key="_id"
       variant="soft"
-      class="cursor-pointer rounded-none"
+      class="border-b-accented/50 cursor-pointer rounded-none border-b"
       :ui="{ container: 'gap-y-2' }"
       @click="
         useOpenPostDetailOverlay(
@@ -115,7 +115,7 @@
         ></UButton>
       </template>
     </UDrawer>
-  </UPageList>
+  </div>
   <USeparator
     v-if="postMap[targetId]?.posts?.length === 0"
     class="p-4 sm:p-6"
@@ -271,6 +271,8 @@ const onDeletePost = async () => {
     if (isMobile.value) {
       isEditMenuDrawerOpen.value = false
     }
+
+    toast.add({ title: '删除成功', icon: 'lucide:smile' })
   } catch {
     toast.add({ title: '删除失败', color: 'error', icon: 'lucide:annoyed' })
 

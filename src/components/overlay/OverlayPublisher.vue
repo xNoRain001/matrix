@@ -316,7 +316,7 @@ const onPublishPost = async () => {
       delete _image.url
     }
     const db = await useGetDB(userInfo.value.id)
-    // 需要保存 id，否则没有重新从本地数据库读取的清空下进行修改时无法更新本地数据库
+    // 需要保存 id，否则没有重新从本地数据库读取的情况下进行修改时无法更新本地数据库
     post.id = await db.add('posts', _post)
 
     // 在广场直接发布 post，如果之前没有打开过个人空间，postMap 中是没有值的

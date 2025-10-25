@@ -120,7 +120,12 @@
                   "
                   class="text-muted bg-elevated flex size-10 items-center justify-center rounded-full text-xl font-medium"
                 >
-                  {{ profile.nickname[0] }}
+                  <img
+                    class="size-full rounded-full object-cover"
+                    :src="`${VITE_OSS_BASE_URL}avatar/${owner}`"
+                    :alt="profile.nickname[0]"
+                    @error="onError"
+                  />
                 </div>
               </template>
               <template #name>
@@ -278,7 +283,12 @@
                               "
                               class="text-muted bg-elevated flex size-5 items-center justify-center rounded-full text-xs font-medium"
                             >
-                              {{ profile.nickname[0] }}
+                              <img
+                                class="size-full rounded-full object-cover"
+                                :src="`${VITE_OSS_BASE_URL}avatar/${user}`"
+                                :alt="profile.nickname[0]"
+                                @error="onError"
+                              />
                             </div>
                           </template>
                           <template #name>
@@ -640,6 +650,13 @@ const replydropdownMenuItems = computed(() => {
       ]
     : [[common]]
 })
+
+const onError = e => {
+  const { target } = e
+  const span = document.createElement('span')
+  span.textContent = target.alt
+  target.replaceWith(span)
+}
 
 const onEditReply = () => {
   publisherOverlay.open({

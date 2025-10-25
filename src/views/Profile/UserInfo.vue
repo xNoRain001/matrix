@@ -102,10 +102,10 @@
     >
       <template #body>
         <UFormField>
-          <UInput v-model="profileForm.nickname" class="w-full" maxlength="30">
+          <UInput v-model="profileForm.nickname" class="w-full" maxlength="16">
             <template v-if="profileForm.nickname" #trailing>
               <div class="text-muted text-xs tabular-nums">
-                {{ profileForm.nickname.length }}/30
+                {{ profileForm.nickname.length }}/16
               </div>
               <UButton
                 color="neutral"
@@ -192,6 +192,7 @@
             :items="provinceOptions"
           />
           <USelect
+            :disabled="!profileForm.province"
             class="flex-1"
             v-model="profileForm.city"
             :items="cityOptions"
@@ -246,10 +247,10 @@
           class="flex items-start justify-between gap-4"
           :ui="{ container: 'w-3/5' }"
         >
-          <UInput class="w-full" v-model="profileForm.nickname" maxlength="30">
+          <UInput class="w-full" v-model="profileForm.nickname" maxlength="16">
             <template v-if="profileForm.nickname" #trailing>
               <div class="text-muted text-xs tabular-nums">
-                {{ profileForm.nickname.length }}/30
+                {{ profileForm.nickname.length }}/16
               </div>
               <UButton
                 color="neutral"
@@ -323,6 +324,7 @@
               :items="provinceOptions"
             />
             <USelect
+              :disabled="!profileForm.province"
               class="flex-1"
               v-model="profileForm.city"
               :items="cityOptions"
