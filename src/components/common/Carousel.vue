@@ -4,18 +4,17 @@
       <UCarousel
         ref="carousel"
         v-slot="{ item, index }"
-        :arrows="viewer && items.length > 1"
         :items="items"
         :prev="{ onClick: onClickPrev }"
         :next="{ onClick: onClickNext }"
         :class="
           viewer
             ? isMobile
-              ? 'w-[calc(100vw-2rem)] sm:w-[calc(100vh-11rem)]'
-              : 'w-[calc(100vh-11rem)]'
-            : 'w-full max-w-xs'
+              ? 'w-[calc(100vw-2rem)] sm:w-[calc(100vw-3rem)]'
+              : 'w-[calc(100vw-3rem)]'
+            : 'w-80'
         "
-        :ui="{ container: 'items-center  ' }"
+        :ui="{ container: 'items-center' }"
         @select="onSelect"
       >
         <img
@@ -33,8 +32,8 @@
           :class="
             viewer
               ? isMobile
-                ? 'mx-auto max-h-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] sm:max-h-[calc(100vh-11rem)] sm:max-w-[calc(100vh-11rem)]'
-                : 'mx-auto max-h-[calc(100vh-11rem)] max-w-[calc(100vh-11rem)]'
+                ? 'mx-auto max-h-[calc(100vh-9.75rem)] max-w-[calc(100vw-2rem)] sm:max-h-[calc(100vh-10.75rem)] sm:max-w-[calc(100vw-3rem)]'
+                : 'mx-auto max-h-[calc(100vh-10.75rem)] max-w-[calc(100vw-3rem)]'
               : 'max-h-80 max-w-80'
           "
         />
@@ -75,8 +74,8 @@
       :class="
         viewer
           ? isMobile
-            ? 'mx-auto max-h-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] sm:max-h-[calc(100vh-11rem)] sm:max-w-[calc(100vh-11rem)]'
-            : 'mx-auto max-h-[calc(100vh-11rem)] max-w-[calc(100vh-11rem)]'
+            ? 'mx-auto max-h-[calc(100vh-6rem)] max-w-[calc(100vw-2rem)] sm:max-h-[calc(100vh-7rem)] sm:max-w-[calc(100vw-3rem)]'
+            : 'mx-auto max-h-[calc(100vh-7rem)] max-w-[calc(100vw-3rem)]'
           : 'max-h-80 max-w-80'
       "
     />

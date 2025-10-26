@@ -69,7 +69,7 @@
     </template>
     <template #footer>
       <div>
-        <UButton variant="ghost" icon="lucide:smile"></UButton>
+        <!-- <UButton variant="ghost" icon="lucide:smile"></UButton> -->
       </div>
       <div>
         <UButton

@@ -339,12 +339,12 @@ const cards = [
       icon: 'lucide:database',
       label: '数据管理',
       onSelect: () => (isDataManagerSlideoverOpen.value = true)
-    },
-    {
-      icon: 'lucide:shield',
-      label: '修改密码',
-      onSelect: () => (isUpdatePasswordSlideoverOpen.value = true)
     }
+    // {
+    //   icon: 'lucide:shield',
+    //   label: '修改密码',
+    //   onSelect: () => (isUpdatePasswordSlideoverOpen.value = true)
+    // }
   ],
   [
     {

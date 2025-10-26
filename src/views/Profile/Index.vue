@@ -63,12 +63,12 @@ const links = [
       icon: 'lucide:database',
       label: '数据',
       to: '/profile/data-manager'
-    },
-    {
-      icon: 'lucide:shield',
-      label: '密码',
-      to: '/profile/update-password'
     }
+    // {
+    //   icon: 'lucide:shield',
+    //   label: '密码',
+    //   to: '/profile/update-password'
+    // }
   ],
   [
     // {
