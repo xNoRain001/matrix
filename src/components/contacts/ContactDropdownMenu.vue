@@ -66,6 +66,7 @@ import { createReusableTemplate } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import OverlayPublisher from '../overlay/OverlayPublisher.vue'
 
 const props = defineProps<{ targetId: string }>()
 const toast = useToast()
@@ -98,10 +99,18 @@ const deleteContact = {
     isOverlayOpen.value = true
   }
 }
+const overlay = useOverlay()
+const publisherOverlay = overlay.create(OverlayPublisher)
 const report = {
-  label: '举报',
+  label: '举报头像/背景',
   icon: 'lucide:circle-alert',
-  onSelect: () => {}
+  onSelect: () => {
+    publisherOverlay.open({
+      action: 'report',
+      reportTarget: 'avatarOrSpaceBg',
+      reportUserId: props.targetId
+    })
+  }
 }
 const dropdownItems = computed(() =>
   isFriend.value

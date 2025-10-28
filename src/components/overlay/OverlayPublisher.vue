@@ -9,6 +9,22 @@
     }"
   >
     <template #body>
+      <template v-if="isReport">
+        <UPageCard
+          title="违规类型"
+          description="选择对方的违规类型"
+          variant="naked"
+          orientation="horizontal"
+          class="mb-4"
+        >
+        </UPageCard>
+        <URadioGroup
+          color="primary"
+          variant="table"
+          v-model="reportType"
+          :items="radioGroupitems"
+        />
+      </template>
       <UPageCard
         title="文本"
         description="输入文本内容"
@@ -95,7 +111,9 @@
                       ? onUpdateComment()
                       : isUpdateReply
                         ? onUpdateReply()
-                        : onFeedback()
+                        : isFeedback
+                          ? onFeedback()
+                          : onReport()
           "
         ></UButton>
       </div>
@@ -119,6 +137,7 @@ import { postFeedback } from '@/apis/feedback'
 import { useGetDB, useURLToBlob } from '@/hooks'
 import useUploadFilesToOSS from '@/hooks/use-upload-files-to-oss'
 import type { content } from '@/types'
+import { adminGetReportsAPI, reportAPI } from '@/apis/report'
 
 let sortable = false
 const props = defineProps<{
@@ -130,10 +149,14 @@ const props = defineProps<{
     | 'reply'
     | 'updateReply'
     | 'feedback'
+    | 'report'
   targetId?: string
   owner?: string
   replyTarget?: string
   replyTargetNickname?: string
+  reportTarget?: 'avatarOrSpaceBg' | 'post' | 'messageRecord'
+  reportUserId?: string
+  reportPostId?: string
 }>()
 const { VITE_OSS_BASE_URL } = import.meta.env
 const { postMap } = storeToRefs(usePostStore())
@@ -145,6 +168,7 @@ const isFeedback = action === 'feedback'
 const isUpdatePost = action === 'updatePost'
 const isUpdateComment = action === 'updateComment'
 const isUpdateReply = action === 'updateReply'
+const isReport = action === 'report'
 const initFiles = async () => {
   const initCommentFiles = async images => {
     const files = []
@@ -216,8 +240,119 @@ const title = isPost
         ? '编辑评论'
         : isReply
           ? '回复评论'
-          : '提交反馈'
+          : isFeedback
+            ? '提交反馈'
+            : '举报'
 const fileUploadRef = useTemplateRef('fileUploadRef')
+const reportType = ref('a')
+const radioGroupitems = [
+  {
+    label: '我不喜欢',
+    value: 'a',
+    description: ''
+  },
+  {
+    label: '侵犯权益',
+    value: 'b',
+    description: '搬运抄袭，或侵犯肖像、隐私、名誉、商标、专利权'
+  },
+  {
+    label: '搬运、抄袭作品',
+    value: 'c',
+    description: '原创作品的全部内容或部分内容被盗用'
+  },
+  {
+    label: '色情低俗',
+    value: 'd',
+    description:
+      '作品中可能含有展示或隐晦表达淫秽色情、诱惑诱导性交友、渲染低级趣味的内容'
+  },
+  {
+    label: '违法犯罪',
+    value: 'e',
+    description:
+      '作品中可能含有管制枪械、刀具、毒品，等违禁品，或涉嫌诈骗、赌博、侵害野生动植物的相关内容'
+  },
+  {
+    label: '政治敏感',
+    value: 'f',
+    description:
+      '作品中可能含有非权威媒体发布有关政治的争议。有关国防、外交政策等方面的重大分歧等相关内容'
+  },
+  {
+    label: '违规营销',
+    value: 'g',
+    description:
+      '作品中可能含有虚假营销、夸张宣传、售卖假冒商品等有关售卖及违规广告的内容'
+  },
+  {
+    label: '不实信息',
+    value: 'h',
+    description:
+      '作品中可能含有虚假信息，包括但不限于对社会新闻事件或专业领域知识的不实阐述、错误解读'
+  },
+  {
+    label: '网络暴力',
+    value: 'i',
+    description:
+      '作品中可能含有侮辱谩骂、造谣诽谤、煽动仇恨、威逼胁迫、侵犯隐私，以及影响身心健康的指责嘲讽、贬低歧视等内容'
+  },
+  {
+    label: '危害人身安全',
+    value: 'j',
+    description:
+      '作品中可能含有宣扬展示自杀/自残场景、教唆他人自杀或其他容易造成人身伤害危险行为'
+  },
+  {
+    label: '未成年相关',
+    value: 'k',
+    description:
+      '对话中可能含有未成年抽烟、喝酒等不文明行为，侵害未成年身心健康以及未成年低俗相关内容'
+  },
+  {
+    label: 'AI 生成内容问题',
+    value: 'l',
+    description:
+      '作品应用 AI 生成类工具，未添加 AI 标识、传播违规信息，或不实信息'
+  },
+  {
+    label: '以上没有我想举报的类型',
+    value: 'm',
+    description:
+      '作品中可能含有血腥、恐怖、暴力等内容，或者其他未提及的违规类型'
+  }
+]
+
+const onReport = async () => {
+  try {
+    const imageMetadata = await useUploadFilesToOSS(
+      userInfo,
+      'image',
+      files.value
+    )
+    payload.images = imageMetadata
+    const formData = new FormData()
+
+    if (props.reportTarget === 'post') {
+      formData.append('reportPostId', props.reportPostId)
+    }
+
+    formData.append('type', 'report')
+    formData.append('reportType', reportType.value)
+    formData.append('reportTarget', props.reportTarget)
+    formData.append('reportUserId', props.reportUserId)
+    formData.append('content', JSON.stringify(payload))
+    await reportAPI(formData)
+    toast.add({ title: '提交成功', icon: 'lucide:smile' })
+    emit('close', true)
+  } catch (error) {
+    toast.add({
+      title: error.message,
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+  }
+}
 
 const initDraggable = () => {
   if (!sortable) {

@@ -70,13 +70,13 @@
     }"
   >
     <template #content>
-      <UAvatarGroup size="xl">
+      <!-- <UAvatarGroup size="3xl">
         <UAvatar :src="avatarURL" :alt="userInfo.profile.nickname[0]" />
         <UAvatar
           :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
           :alt="targetProfile.nickname[0]"
         />
-      </UAvatarGroup>
+      </UAvatarGroup> -->
 
       <div class="space-y-2 space-x-2">
         <ProfileSpaceTags :target-profile="targetProfile"></ProfileSpaceTags>

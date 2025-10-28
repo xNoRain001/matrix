@@ -8,17 +8,28 @@
       <UPageCard
         variant="soft"
         class="cursor-pointer"
-        :ui="{ container: 'gap-y-2' }"
+        :ui="{
+          container: 'gap-y-0'
+        }"
       >
         <p class="text-highlighted break-words whitespace-pre-wrap">
           {{ postMap[targetId].activePost.content.text }}
         </p>
         <Carousel
+          :class="postMap[targetId].activePost.content.text ? 'mt-2' : ''"
           v-if="postMap[targetId].activePost.content.images.length"
           :items="postMap[targetId].activePost.content.images"
           :active-index="0"
         ></Carousel>
-        <div class="flex items-center justify-between">
+        <div
+          :class="
+            postMap[targetId].activePost.content.text &&
+            !postMap[targetId].activePost.content.images.length
+              ? ''
+              : 'mt-2'
+          "
+          class="flex items-center justify-between"
+        >
           <p class="text-toned text-sm">
             {{ useFormatTimeAgo(postMap[targetId].activePost.createdAt) }}
           </p>

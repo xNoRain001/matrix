@@ -2,24 +2,30 @@
   <UBadge
     v-if="targetProfile.gender !== 'other'"
     icon="lucide:user-round"
-    :label="`性别：${useTransformGender(targetProfile.gender)}`"
+    :label="useTransformGender(targetProfile.gender)"
     color="warning"
   ></UBadge>
   <UBadge
     v-if="targetProfile.birthday"
-    icon="lucide:cake-slice"
-    :label="`年龄：${useComputeAge(targetProfile.birthday)}`"
+    icon="lucide:cake"
+    :label="useComputeAge(targetProfile.birthday)"
     color="warning"
   ></UBadge>
   <UBadge
     v-if="targetProfile.province"
-    icon="lucide:ghost"
-    :label="`地区：${targetProfile.province}${targetProfile.city ? ` - ${targetProfile.city}` : ''}`"
+    icon="lucide:map-pin"
+    :label="`${targetProfile.province}${targetProfile.city ? ` - ${targetProfile.city}` : ''}`"
+    color="warning"
+  ></UBadge>
+  <UBadge
+    v-if="targetProfile.college"
+    icon="lucide:university"
+    :label="targetProfile.college"
     color="warning"
   ></UBadge>
   <UBadge
     v-if="targetProfile.birthday"
-    icon="lucide:crown"
+    icon="lucide:heart-pulse"
     :label="useComputeZodiacSign(targetProfile.birthday)"
     color="secondary"
   ></UBadge>

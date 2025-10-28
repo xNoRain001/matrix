@@ -39,8 +39,8 @@
         />
       </UCarousel>
       <div
-        :class="viewer ? 'mx-auto' : ''"
-        class="flex w-full max-w-xs gap-1 overflow-auto pt-4 sm:max-w-md"
+        :class="viewer ? 'mx-auto justify-center pt-4' : 'pt-2'"
+        class="flex w-full max-w-xs gap-2 overflow-auto sm:max-w-md"
       >
         <div
           v-for="(item, index) in items"

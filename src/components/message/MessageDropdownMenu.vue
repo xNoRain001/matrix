@@ -86,6 +86,7 @@ import { createReusableTemplate } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import OverlayPublisher from '../overlay/OverlayPublisher.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -144,10 +145,35 @@ const addContact = {
   icon: 'lucide:circle-plus',
   onSelect: () => useAddContact(userInfo, props.targetId, globalSocket, toast)
 }
+const overlay = useOverlay()
+const publisherOverlay = overlay.create(OverlayPublisher)
+const report = {
+  label: '举报聊天记录',
+  icon: 'lucide:circle-alert',
+  onSelect: () =>
+    publisherOverlay.open({
+      action: 'report',
+      reportTarget: 'messageRecord',
+      reportUserId: props.targetId
+    })
+}
+const reportAvatarOrSpaceBg = {
+  label: '举报头像/背景',
+  icon: 'lucide:circle-alert',
+  onSelect: () =>
+    publisherOverlay.open({
+      action: 'report',
+      reportTarget: 'avatarOrSpaceBg',
+      reportUserId: props.targetId
+    })
+}
+
 const dropdownItems = computed(() =>
   isFriend.value
     ? props.isMatch
-      ? [deleteMessageRecord]
+      ? isMobile.value
+        ? [deleteMessageRecord, report]
+        : [deleteMessageRecord, report, reportAvatarOrSpaceBg]
       : activeTargetIds.value.size === 1 && isMessage.value
         ? // 只有 message 页面下的一级界面才提供修改列表的选项
           [
@@ -161,14 +187,17 @@ const dropdownItems = computed(() =>
               }
             },
             deleteList,
-            deleteMessageRecord
+            deleteMessageRecord,
+            report
           ]
-        : [deleteMessageRecord]
+        : [deleteMessageRecord, report]
     : props.isMatch
-      ? [addContact, deleteMessageRecord]
+      ? isMobile.value
+        ? [addContact, deleteMessageRecord, report]
+        : [addContact, deleteMessageRecord, report, reportAvatarOrSpaceBg]
       : activeTargetIds.value.size === 1 && isMessage.value
-        ? [addContact, deleteList, deleteMessageRecord]
-        : [addContact, deleteMessageRecord]
+        ? [addContact, deleteList, deleteMessageRecord, report]
+        : [addContact, deleteMessageRecord, report]
 )
 
 const onDeleteList = async () => {

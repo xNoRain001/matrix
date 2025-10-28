@@ -25,7 +25,7 @@
       :key="_id"
       variant="soft"
       class="border-b-accented/50 cursor-pointer rounded-none border-b"
-      :ui="{ container: 'gap-y-2' }"
+      :ui="{ container: 'gap-y-0' }"
       @click="
         useOpenPostDetailOverlay(
           postMap,
@@ -41,11 +41,15 @@
       </p>
       <Carousel
         v-if="images.length"
+        :class="text ? 'mt-2' : ''"
         @click.stop="useNoop"
         :items="images"
         :active-index="0"
       ></Carousel>
-      <div class="flex items-center justify-between">
+      <div
+        :class="text && !images.length ? '' : 'mt-2'"
+        class="flex items-center justify-between"
+      >
         <p class="text-toned text-sm">
           {{ useFormatTimeAgo(createdAt) }}
         </p>
@@ -73,21 +77,19 @@
               useLike(toast, postMap[targetId].posts[index], _id, 'post')
             "
           ></UButton>
-          <template v-if="isSelf">
+          <UButton
+            v-if="isMobile"
+            variant="ghost"
+            icon="lucide:ellipsis"
+            @click.stop="onOpenDropdownMenu(_id, index)"
+          ></UButton>
+          <UDropdownMenu v-else :items="dropdownMenuItems">
             <UButton
-              v-if="isMobile"
               variant="ghost"
               icon="lucide:ellipsis"
               @click.stop="onOpenDropdownMenu(_id, index)"
             ></UButton>
-            <UDropdownMenu v-else :items="dropdownMenuItems">
-              <UButton
-                variant="ghost"
-                icon="lucide:ellipsis"
-                @click.stop="onOpenDropdownMenu(_id, index)"
-              ></UButton>
-            </UDropdownMenu>
-          </template>
+          </UDropdownMenu>
         </div>
       </div>
     </UPageCard>
@@ -163,24 +165,44 @@ const isSelf = props.targetId === userInfo.value.id
 const allPostLoaded = ref(false)
 const toast = useToast()
 const isEditMenuDrawerOpen = ref(false)
-const dropdownMenuItems = [
-  [
-    {
-      label: '编辑',
-      icon: 'lucide:pen',
-      onSelect: () => onEditPost()
-    },
-    {
-      label: '删除',
-      icon: 'lucide:trash',
-      color: 'error',
-      onSelect: () => onDeletePost()
-    }
-  ]
-]
+const dropdownMenuItems = isSelf
+  ? [
+      [
+        {
+          label: '编辑',
+          icon: 'lucide:pen',
+          onSelect: () => onEditPost()
+        },
+        {
+          label: '删除',
+          icon: 'lucide:trash',
+          color: 'error',
+          onSelect: () => onDeletePost()
+        }
+      ]
+    ]
+  : [
+      [
+        {
+          label: '举报',
+          icon: 'lucide:info',
+          color: 'error',
+          onSelect: () => onReport()
+        }
+      ]
+    ]
 const { VITE_OSS_BASE_URL } = import.meta.env
 const isFloatingBtnShow = ref(false)
 const loading = ref(!postMap.value[props.targetId])
+
+const onReport = () => {
+  publisherOverlay.open({
+    action: 'report',
+    reportTarget: 'post',
+    reportUserId: props.targetId,
+    reportPostId: postMap.value[props.targetId].activePostId
+  })
+}
 
 const onScrollToTop = () => {
   props.container.scrollTo({

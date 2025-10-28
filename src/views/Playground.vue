@@ -37,9 +37,9 @@
           :key="_id"
           variant="subtle"
           class="hover:bg-accented/50 cursor-pointer"
-          :ui="{ footer: 'pt-2', body: 'w-full', description: 'space-y-2' }"
+          :ui="{ header: 'mb-2', body: 'w-full' }"
         >
-          <template #footer>
+          <template #header>
             <UUser
               :avatar="{
                 src: `${VITE_OSS_BASE_URL}avatar/${user}`,
@@ -65,15 +65,22 @@
           </template>
           <template #description>
             <!-- before:content-[open-quote] after:content-[close-quote] -->
-            <div class="text-base break-words whitespace-pre-wrap">
+            <div
+              v-if="content.text"
+              class="text-base break-words whitespace-pre-wrap"
+            >
               {{ content.text }}
             </div>
             <Carousel
               v-if="content.images.length"
+              :class="content.text ? 'mt-2' : ''"
               :items="content.images"
               :active-index="0"
             ></Carousel>
-            <div class="flex items-center justify-between">
+            <div
+              :class="content.text && !content.images.length ? '' : 'mt-2'"
+              class="flex items-center justify-between"
+            >
               <p class="text-toned text-sm">
                 <!-- · 广东 -->
                 {{ useFormatTimeAgo(createdAt) }}
@@ -106,9 +113,14 @@
                   v-if="isMobile"
                   variant="ghost"
                   icon="lucide:ellipsis"
+                  @click.stop="onOpenDropdownMenu(user, _id)"
                 ></UButton>
                 <UDropdownMenu v-else :items="dropdownMenuItems">
-                  <UButton variant="ghost" icon="lucide:ellipsis"></UButton>
+                  <UButton
+                    variant="ghost"
+                    icon="lucide:ellipsis"
+                    @click.stop="onOpenDropdownMenu(user, _id)"
+                  ></UButton>
                 </UDropdownMenu>
               </div>
             </div>
@@ -127,12 +139,33 @@
       <div class="h-16"></div>
     </template>
   </UDashboardPanel>
+
+  <UDrawer
+    v-if="isMobile"
+    v-model:open="isDrawerOpen"
+    :handle="false"
+    title="操作"
+    description=" "
+    :ui="{
+      description: 'hidden'
+    }"
+  >
+    <template #footer>
+      <UButton
+        label="举报"
+        class="justify-center"
+        color="error"
+        @click="onReport"
+      ></UButton>
+    </template>
+  </UDrawer>
 </template>
 
 <script lang="ts" setup>
 import { getPlaygroundPostsAPI } from '@/apis/playground'
 import OverlayPostDetail from '@/components/overlay/OverlayPostDetail.vue'
 import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
+import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
 import {
   useFormatTimeAgo,
   useLike,
@@ -144,6 +177,8 @@ import { useThrottleFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref, watch } from 'vue'
 
+let reportUserId = null
+let reportPostId = null
 const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const activeTab = ref<'latest' | 'friend' | 'hot'>('latest')
@@ -169,7 +204,8 @@ const dropdownMenuItems = [
     {
       label: '举报',
       icon: 'lucide:info',
-      color: 'error'
+      color: 'error',
+      onSelect: () => onReport()
     }
   ]
 ]
@@ -177,11 +213,13 @@ const toast = useToast()
 const overlay = useOverlay()
 const postDetailOverlay = overlay.create(OverlayPostDetail)
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
+const publisherOverlay = overlay.create(OverlayPublisher)
 // const tabsRef = useTemplateRef('tabsRef')
 const allPostLoaded = ref(
   (postMap.value[activeTab.value]?.posts?.length || 0) >= 10
 )
 const loading = ref(postMap.value[activeTab.value]?.posts === undefined)
+const isDrawerOpen = ref(false)
 
 // const getLatestData = async () => {
 //   const _activeTab = activeTab.value
@@ -212,6 +250,24 @@ const loading = ref(postMap.value[activeTab.value]?.posts === undefined)
 //     }
 //   }
 // }
+
+const onReport = () => {
+  publisherOverlay.open({
+    action: 'report',
+    reportTarget: 'post',
+    reportUserId,
+    reportPostId
+  })
+}
+
+const onOpenDropdownMenu = (user, postId) => {
+  reportUserId = user
+  reportPostId = postId
+
+  if (isMobile.value) {
+    isDrawerOpen.value = true
+  }
+}
 
 const onScroll = useThrottleFn(
   async e => {
