@@ -137,7 +137,7 @@ import { postFeedback } from '@/apis/feedback'
 import { useGetDB, useURLToBlob } from '@/hooks'
 import useUploadFilesToOSS from '@/hooks/use-upload-files-to-oss'
 import type { content } from '@/types'
-import { adminGetReportsAPI, reportAPI } from '@/apis/report'
+import { reportAPI } from '@/apis/report'
 
 let sortable = false
 const props = defineProps<{

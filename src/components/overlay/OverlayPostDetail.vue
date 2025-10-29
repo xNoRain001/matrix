@@ -524,6 +524,12 @@
             class="justify-center"
             color="error"
           ></UButton>
+          <UButton
+            label="举报"
+            @click="onReport"
+            class="justify-center"
+            color="error"
+          ></UButton>
         </template>
       </UDrawer>
       <UDrawer
@@ -544,6 +550,12 @@
           <UButton
             label="删除"
             @click="onDeleteReply"
+            class="justify-center"
+            color="error"
+          ></UButton>
+          <UButton
+            label="举报"
+            @click="onReport"
             class="justify-center"
             color="error"
           ></UButton>
@@ -621,6 +633,14 @@ const items = [
 ]
 const isEditMenuDrawerOpen = ref(false)
 const isEditReplyMenuDrawerOpen = ref(false)
+const report = {
+  label: '举报',
+  icon: 'lucide:circle-alert',
+  color: 'error',
+  onSelect: () => {
+    onReport()
+  }
+}
 const dropdownMenuItems = computed(() => {
   const common = {
     label: '删除',
@@ -639,7 +659,7 @@ const dropdownMenuItems = computed(() => {
           common
         ]
       ]
-    : [[common]]
+    : [[common, report]]
 })
 const replydropdownMenuItems = computed(() => {
   const common = {
@@ -659,8 +679,10 @@ const replydropdownMenuItems = computed(() => {
           common
         ]
       ]
-    : [[common]]
+    : [[common, report]]
 })
+
+const onReport = () => {}
 
 const onError = e => {
   const { target } = e

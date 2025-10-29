@@ -29,7 +29,6 @@ const useUserStore = defineStore('userStore', () => {
     localStorage.removeItem('token')
   }
 
-  const _notifications = useInitLocalStorate('notifications', [])
   const defaultConfig = {
     version: 0,
     notification: {
@@ -59,16 +58,7 @@ const useUserStore = defineStore('userStore', () => {
     globalPC: ref<RTCPeerConnection | null>(null),
     userInfo: ref<userInfo | null>(userInfo),
     config: ref<typeof defaultConfig>(_config),
-    avatarURL: ref(''),
-    notifications: ref<
-      {
-        content: string
-        createdAt: number
-        id: string
-        type: string
-        profile: userInfo['profile']
-      }[]
-    >(_notifications)
+    avatarURL: ref('')
   }
 })
 

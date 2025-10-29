@@ -109,6 +109,7 @@
 import { storeToRefs } from 'pinia'
 import {
   useMatchStore,
+  useNotificationsStore,
   useRecentContactsStore,
   useUserStore,
   useWebRTCStore
@@ -172,7 +173,6 @@ const publisherOverlay = overlay.create(OverlayPublisher)
 const offlineOverlay = overlay.create(OverlayOffline)
 const {
   avatarURL,
-  notifications,
   isMobile,
   globalSocket,
   globalPC,
@@ -200,13 +200,15 @@ const {
   messageList,
   lastMsgMap,
   lastMsgList,
-  contactNotifications,
   contactList,
   contactProfileMap,
   hashToBlobURLMap,
   indexMap,
   isReceivingOfflineMsgs
 } = storeToRefs(useRecentContactsStore())
+const { contactNotifications, homeNotifications } = storeToRefs(
+  useNotificationsStore()
+)
 const { matchRes, hasMatchRes, offline, matching, noMatch } =
   storeToRefs(useMatchStore())
 const navs = [
@@ -1182,19 +1184,31 @@ const onOtherWebRTC = () => {
   })
 }
 
-const onRefreshContactNotifications = remoteNotifications => {
-  const _contactNotifications = contactNotifications.value
-  _contactNotifications.unshift(...remoteNotifications)
-  localStorage.setItem(
-    `contactNotifications-${userInfo.value.id}`,
-    JSON.stringify(_contactNotifications)
+const onRefreshNotifications = notifications => {
+  const _homeNotifications = notifications.filter(
+    item => item.type === 'feedback'
   )
-}
+  const _contactNotifications = notifications.filter(
+    item => item.type === 'contact'
+  )
+  const __homeNotifications = homeNotifications.value
+  const __contactNotifications = contactNotifications.value
 
-const onRefreshNotifications = remoteNotifications => {
-  const _notifications = notifications.value
-  _notifications.unshift(...remoteNotifications)
-  localStorage.setItem('notifications', JSON.stringify(_notifications))
+  if (_homeNotifications.length) {
+    __homeNotifications.unshift(..._homeNotifications)
+    localStorage.setItem(
+      `homeNotifications-${userInfo.value.id}`,
+      JSON.stringify(__homeNotifications)
+    )
+  }
+
+  if (_contactNotifications) {
+    __contactNotifications.unshift(..._contactNotifications)
+    localStorage.setItem(
+      `contactNotifications-${userInfo.value.id}`,
+      JSON.stringify(_contactNotifications)
+    )
+  }
 }
 
 const onOnline = (type, res) => {
@@ -1293,9 +1307,7 @@ const initSocket = socket => {
   socket.on('matched', onMatched)
   // 对方结束了 web rtc
   socket.on('bye', onBye)
-  // 好友申请通知
-  socket.on('refresh-contact-notifications', onRefreshContactNotifications)
-  // 其他通知
+  // 通知
   socket.on('refresh-notifications', onRefreshNotifications)
   // 在线状态
   socket.on('online', onOnline)

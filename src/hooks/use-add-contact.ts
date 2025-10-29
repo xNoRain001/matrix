@@ -8,7 +8,8 @@ const useAddContact = async (userInfo, targetId, globalSocket, toast) => {
     const notification = {
       id,
       content: '请求添加你为好友',
-      type: 'add-contact',
+      type: 'contact',
+      actionType: 'addContact',
       createdAt: Date.now(),
       profile
     }

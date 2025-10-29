@@ -10,7 +10,7 @@
     <template #body>
       <div
         v-for="(
-          { id, profile, createdAt, content, type }, index
+          { id, profile, createdAt, content, actionType }, index
         ) in contactNotifications"
         :key="id"
         class="bg-elevated/50 cursor-pointer rounded-lg p-4 not-last:mb-2 sm:p-6"
@@ -30,12 +30,12 @@
           :ui="{
             wrapper: 'flex-1 min-w-0',
             name: 'flex justify-between items-center gap-2',
-            description: 'flex justify-between'
+            description: 'flex justify-between gap-2'
           }"
         >
           <template #name>
             <span class="truncate">{{ profile.nickname }}</span>
-            <div v-if="type" class="flex gap-2">
+            <div v-if="actionType === 'addContact'" class="flex gap-2">
               <UButton
                 @click.stop="onRefuse(id)"
                 color="error"
@@ -59,7 +59,7 @@
             ></UButton>
           </template>
           <template #description>
-            <span>{{ content }}</span>
+            <span class="flex-1 truncate">{{ content }}</span>
             <time>{{ useFormatTimeAgo(createdAt) }}</time>
           </template>
         </UUser>
@@ -70,7 +70,12 @@
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
+import {
+  useMatchStore,
+  useNotificationsStore,
+  useRecentContactsStore,
+  useUserStore
+} from '@/store'
 import { useFormatTimeAgo, useSendMsg } from '@/hooks'
 import { agreeCandidate, refuseCandidate } from '@/apis/contact'
 import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
@@ -80,7 +85,6 @@ const isNotificationsSlideoverOpen = defineModel<boolean>()
 const { userInfo, globalSocket } = storeToRefs(useUserStore())
 const { matchRes } = storeToRefs(useMatchStore())
 const {
-  contactNotifications,
   contactList,
   contactProfileMap,
   messageList,
@@ -90,6 +94,7 @@ const {
   unreadMsgCounter,
   msgContainerRef
 } = storeToRefs(useRecentContactsStore())
+const { contactNotifications } = storeToRefs(useNotificationsStore())
 const overlay = useOverlay()
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 const toast = useToast()
@@ -117,6 +122,8 @@ const onRefuse = async targetId => {
     const notification = {
       id,
       content: '拒绝了你的好友请求',
+      type: 'contact',
+      actionType: 'refuseContact',
       createdAt: Date.now(),
       profile
     }
@@ -155,6 +162,8 @@ const onAgree = async (targetId, targetProfile) => {
       profile
     }
     const notification = {
+      type: 'contact',
+      actionType: 'agreeContact',
       content: '同意了你的好友请求',
       ...common
     }

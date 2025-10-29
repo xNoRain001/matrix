@@ -17,6 +17,8 @@ const useDeleteContact = async (
     const notification = {
       id,
       content: '将你从好友列表中移除了',
+      type: 'contact',
+      actionType: 'deleteContact',
       createdAt: Date.now(),
       profile
     }

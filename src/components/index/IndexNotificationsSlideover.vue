@@ -8,6 +8,29 @@
     }"
   >
     <template #body>
+      <div
+        v-for="({ _id, createdAt, content }, index) in homeNotifications"
+        :key="_id"
+        class="bg-elevated/50 cursor-pointer rounded-lg p-4 not-last:mb-2 sm:p-6"
+      >
+        <UUser
+          size="xl"
+          :ui="{
+            wrapper: 'flex-1 min-w-0',
+            description: 'flex justify-between items-center gap-2'
+          }"
+        >
+          <template #description>
+            <span class="flex-1 truncate">{{ content }}</span>
+            <time>{{ useFormatTimeAgo(createdAt) }}已收到反馈</time>
+            <UBadge
+              label="删除"
+              color="error"
+              @click="onDelete(index)"
+            ></UBadge>
+          </template>
+        </UUser>
+      </div>
       <UBlogPost
         class="not-last:mb-2"
         variant="soft"
@@ -25,5 +48,19 @@
 </template>
 
 <script setup lang="ts">
+import { useFormatTimeAgo } from '@/hooks'
+import { useNotificationsStore, useUserStore } from '@/store'
+import { storeToRefs } from 'pinia'
+
 const isNotificationsSlideoverOpen = defineModel<boolean>()
+const { userInfo } = storeToRefs(useUserStore())
+const { homeNotifications } = storeToRefs(useNotificationsStore())
+
+const onDelete = index => {
+  homeNotifications.value.splice(index, 1)
+  localStorage.setItem(
+    `homeNotifications-${userInfo.value.id}`,
+    JSON.stringify(homeNotifications.value)
+  )
+}
 </script>

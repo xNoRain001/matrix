@@ -7,22 +7,9 @@ import { useInitLocalStorate } from '@/hooks'
 const useRecentContactsStore = defineStore('recentContactsStore', () => {
   const id = useUserStore().userInfo?.id || ''
   const _contactList = useInitLocalStorate(`contactList-${id}`, [])
-  const _contactNotifications = useInitLocalStorate(
-    `contactNotifications-${id}`,
-    []
-  )
   const _contactProfileMap = useInitLocalStorate(`contactProfileMap-${id}`, {})
 
   return {
-    contactNotifications: ref<
-      {
-        content: string
-        createdAt: number
-        id: string
-        type: string
-        profile: userInfo['profile']
-      }[]
-    >(_contactNotifications), // 好友申请通知
     contactList: ref(_contactList),
     contactProfileMap: ref<
       Record<

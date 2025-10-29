@@ -85,6 +85,11 @@ const router = createRouter({
       meta: { auth: true },
       component: () => import('@/views/YS.vue')
     },
+    {
+      path: '/admin',
+      meta: { auth: true },
+      component: () => import('@/views/Admin.vue')
+    },
     // 404 路由
     {
       path: '/:pathMatch(.*)*',

@@ -19,7 +19,7 @@
         square
         @click="isNotificationsSlideoverOpen = true"
       >
-        <UChip :show="false" color="error" inset>
+        <UChip :show="Boolean(homeNotifications.length)" color="error" inset>
           <UIcon name="i-lucide-bell" class="text-primary size-5" />
         </UChip>
       </UButton>
@@ -56,7 +56,7 @@
 
 <script lang="ts" setup>
 import { useExitFullscreen, useRequestFullscreen } from '@/hooks'
-import { useUserStore } from '@/store'
+import { useNotificationsStore, useUserStore } from '@/store'
 import { useColorMode } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
@@ -65,6 +65,7 @@ const isFullScreen = ref(false)
 const isFullscreenSlideoverOpen = ref(false)
 const isFilterOverlayOpen = defineModel<boolean>()
 const { onlineCount, isMobile } = storeToRefs(useUserStore())
+const { homeNotifications } = storeToRefs(useNotificationsStore())
 const { store } = useColorMode()
 const getNextTheme = () =>
   store.value === 'auto'

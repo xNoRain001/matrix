@@ -102,7 +102,7 @@ const deleteContact = {
 const overlay = useOverlay()
 const publisherOverlay = overlay.create(OverlayPublisher)
 const report = {
-  label: '举报头像/背景',
+  label: '举报头像/背景/昵称/签名',
   icon: 'lucide:circle-alert',
   onSelect: () => {
     publisherOverlay.open({
@@ -133,9 +133,7 @@ const onDeleteContact = async () => {
       activeTargetId,
       activeTargetProfile
     )
-    toast.add({ title: '删除好友成功', icon: 'lucide:smile' })
   } catch {
-    toast.add({ title: '删除好友失败', color: 'error', icon: 'lucide:annoyed' })
   } finally {
     isOverlayOpen.value = false
   }

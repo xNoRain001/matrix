@@ -203,7 +203,7 @@ const dropdownMenuItems = [
   [
     {
       label: '举报',
-      icon: 'lucide:info',
+      icon: 'lucide:circle-alert',
       color: 'error',
       onSelect: () => onReport()
     }
@@ -216,7 +216,7 @@ const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 const publisherOverlay = overlay.create(OverlayPublisher)
 // const tabsRef = useTemplateRef('tabsRef')
 const allPostLoaded = ref(
-  (postMap.value[activeTab.value]?.posts?.length || 0) >= 10
+  (postMap.value[activeTab.value]?.posts?.length || 0) >= 100
 )
 const loading = ref(postMap.value[activeTab.value]?.posts === undefined)
 const isDrawerOpen = ref(false)
