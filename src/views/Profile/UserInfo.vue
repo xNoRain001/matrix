@@ -410,7 +410,8 @@ const isOpenBirthdayDrawer = ref(false)
 const isOpenRegionDrawer = ref(false)
 const isOpenNicknameDrawer = ref(false)
 const isOpenCollegeDrawer = ref(false)
-const { isMobile, userInfo, avatarURL } = storeToRefs(useUserStore())
+const { isMobile, userInfo, avatarURL, globalSocket } =
+  storeToRefs(useUserStore())
 const profileForm = ref({ ...userInfo.value.profile })
 const sourceProvinceOptions = Object.keys(provinceCityMap)
 const provinceOptions = ref(sourceProvinceOptions)
@@ -522,6 +523,7 @@ const onUpdateProfile = async () => {
   try {
     const { data: token } = await updateProfile(diff)
     localStorage.setItem('token', token)
+    globalSocket.value.emit('refresh-token', token)
     userInfo.value.profile = {
       ...userInfo.value.profile,
       ...diff

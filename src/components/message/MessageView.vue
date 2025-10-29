@@ -389,12 +389,7 @@ const onCall = async () => {
   // 不在这里更新 roomId.value，因为要先确保对方能通话时才会显示语音浮动按钮，
   // 因此在 onJoin 中更新 roomId.value
   const _roomId = useGenRoomId(userInfo.value.id, _targetId)
-  globalSocket.value.emit(
-    'unidirectional-web-rtc',
-    _roomId,
-    userInfo.value.profile,
-    _targetId
-  )
+  globalSocket.value.emit('unidirectional-web-rtc', _roomId, _targetId)
   leaveRoomTimer.value = setTimeout(() => {
     globalSocket.value.emit('leave', roomId.value)
     voiceChatOverlay.close()

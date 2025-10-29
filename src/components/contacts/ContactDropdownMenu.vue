@@ -89,7 +89,7 @@ const isContacts = computed(() => route.path === '/contacts')
 const addContact = {
   label: '添加好友',
   icon: 'lucide:circle-plus',
-  onSelect: () => useAddContact(userInfo, props.targetId, globalSocket, toast)
+  onSelect: () => useAddContact(props.targetId, globalSocket, toast)
 }
 const deleteContact = {
   label: '删除好友',

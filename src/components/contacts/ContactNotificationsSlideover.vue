@@ -114,20 +114,12 @@ const onRefuse = async targetId => {
     contactNotifications.value = contactNotifications.value.filter(
       item => item.id !== targetId
     )
-    const { id, profile } = userInfo.value
+    const { id } = userInfo.value
     localStorage.setItem(
       `contactNotifications-${id}`,
       JSON.stringify(contactNotifications.value)
     )
-    const notification = {
-      id,
-      content: '拒绝了你的好友请求',
-      type: 'contact',
-      actionType: 'refuseContact',
-      createdAt: Date.now(),
-      profile
-    }
-    globalSocket.value.emit('refuse-contact', targetId, notification)
+    globalSocket.value.emit('refuse-contact', targetId)
   } catch (error) {
     toast.add({
       title: error.message,
@@ -144,7 +136,7 @@ const onAgree = async (targetId, targetProfile) => {
     contactNotifications.value = contactNotifications.value.filter(
       item => item.id !== targetId
     )
-    const { id, profile } = userInfo.value
+    const { id } = userInfo.value
 
     localStorage.setItem(
       `contactNotifications-${id}`,
@@ -156,22 +148,6 @@ const onAgree = async (targetId, targetProfile) => {
       return
     }
 
-    const common = {
-      id,
-      createdAt: Date.now(),
-      profile
-    }
-    const notification = {
-      type: 'contact',
-      actionType: 'agreeContact',
-      content: '同意了你的好友请求',
-      ...common
-    }
-    const contact = {
-      remark: '',
-      status: 'normal',
-      ...common
-    }
     const _contactList = contactList.value
     const _contactProfileMap = contactProfileMap.value
     const local = {
@@ -188,7 +164,7 @@ const onAgree = async (targetId, targetProfile) => {
       `contactProfileMap-${id}`,
       JSON.stringify(_contactProfileMap)
     )
-    globalSocket.value.emit('agree-contact', targetId, notification, contact)
+    globalSocket.value.emit('agree-contact', targetId)
     useSendMsg(
       'contactAgreeTip',
       '同意了你的好友请求',

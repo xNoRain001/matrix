@@ -178,10 +178,7 @@ const startMatch = () => {
   // const age = useComputeAge(birthday)
   globalSocket.value.emit(
     'start-match',
-    {
-      type: matchType,
-      profile
-    },
+    { type: matchType },
     {
       // age: age === '未知' ? '' : age,
       ...(isZodiacSign && { zodiacSign: useComputeZodiacSign(birthday) })

@@ -13,15 +13,7 @@ const useDeleteContact = async (
   try {
     await deleteContact(targetId)
     toast.add({ title: '删除好友成功', icon: 'lucide:smile' })
-    const { id, profile } = userInfo.value
-    const notification = {
-      id,
-      content: '将你从好友列表中移除了',
-      type: 'contact',
-      actionType: 'deleteContact',
-      createdAt: Date.now(),
-      profile
-    }
+    const { id } = userInfo.value
     const _contactList = contactList.value
     const _contactProfileMap = contactProfileMap.value
     const index = _contactList.findIndex(id => id === targetId)
@@ -35,7 +27,7 @@ const useDeleteContact = async (
         JSON.stringify(_contactProfileMap)
       )
     }
-    globalSocket.value.emit('delete-contact', targetId, notification)
+    globalSocket.value.emit('delete-contact', targetId)
 
     if (targetId === activeTargetId.value) {
       activeTargetId.value = ''

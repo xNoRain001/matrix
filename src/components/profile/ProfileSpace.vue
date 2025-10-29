@@ -311,7 +311,8 @@ const isLogoffSlideoverOpen = ref(false)
 const isThemeSlideoverOpen = ref(false)
 const spaceBgRef = ref(null)
 const toast = useToast()
-const { isMobile, userInfo, avatarURL } = storeToRefs(useUserStore())
+const { isMobile, userInfo, avatarURL, globalSocket } =
+  storeToRefs(useUserStore())
 const { activeTargetIds, activeTargetId, activeTargetProfile } = storeToRefs(
   useRecentContactsStore()
 )
@@ -461,6 +462,7 @@ const onUpdateTag = async () => {
   try {
     const { data: token } = await updateProfile(payload)
     localStorage.setItem('token', token)
+    globalSocket.value.emit('refresh-token', token)
     profile.mbti = _mbti
     profile.tags = _tags
     toast.add({
