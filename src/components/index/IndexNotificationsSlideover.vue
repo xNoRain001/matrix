@@ -9,7 +9,7 @@
   >
     <template #body>
       <div
-        v-for="({ _id, createdAt, content }, index) in homeNotifications"
+        v-for="({ _id, createdAt, content, type }, index) in homeNotifications"
         :key="_id"
         class="bg-elevated/50 cursor-pointer rounded-lg p-4 not-last:mb-2 sm:p-6"
       >
@@ -22,7 +22,16 @@
         >
           <template #description>
             <span class="flex-1 truncate">{{ content }}</span>
-            <time>{{ useFormatTimeAgo(createdAt) }}已收到反馈</time>
+            <time
+              >{{ useFormatTimeAgo(createdAt)
+              }}{{
+                type === 'feedback'
+                  ? '已阅读反馈'
+                  : type === 'reporter'
+                    ? '已处理举报对象'
+                    : ''
+              }}</time
+            >
             <UBadge
               label="删除"
               color="error"

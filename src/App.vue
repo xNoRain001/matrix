@@ -1186,7 +1186,10 @@ const onOtherWebRTC = () => {
 
 const onRefreshNotifications = notifications => {
   const _homeNotifications = notifications.filter(
-    item => item.type === 'feedback'
+    item =>
+      item.type === 'feedback' ||
+      item.type === 'reporter' ||
+      item.type === 'reported'
   )
   const _contactNotifications = notifications.filter(
     item => item.type === 'contact'
@@ -1232,6 +1235,11 @@ const onOnline = (type, res) => {
 }
 
 const onGetOnlineCount = v => (onlineCount.value = v)
+
+const onRefreshToken = token => {
+  localStorage.setItem('token', token)
+  location.reload()
+}
 
 const onAgreeWebRTCButNoPermission = () => {
   voiceChatOverlay.close()
@@ -1312,6 +1320,7 @@ const initSocket = socket => {
   // 在线状态
   socket.on('online', onOnline)
   socket.on('get-online-count', onGetOnlineCount)
+  socket.on('refresh-token', onRefreshToken)
   socket.emit('ready')
 }
 

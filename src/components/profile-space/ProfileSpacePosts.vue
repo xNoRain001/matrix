@@ -19,6 +19,7 @@
           likes,
           commentCount,
           liked
+          // visibility
         },
         index
       ) in postMap[targetId].posts"
@@ -92,6 +93,13 @@
           </UDropdownMenu>
         </div>
       </div>
+      <!-- <UBadge
+       v-if="visibility === 'hidden'"
+        class=" w-fit"
+        label="违规内容，去申诉"
+        trailing-icon="lucide:navigation"
+        @click="onAppeal"
+      ></UBadge> -->
     </UPageCard>
     <USeparator v-if="allPostLoaded" class="p-4 sm:p-6" label="已经到底了" />
     <UDrawer
@@ -194,6 +202,15 @@ const dropdownMenuItems = isSelf
 const { VITE_OSS_BASE_URL } = import.meta.env
 const isFloatingBtnShow = ref(false)
 const loading = ref(!postMap.value[props.targetId])
+
+// @ts-ignore
+const onAppeal = () => {
+  publisherOverlay.open({
+    action: 'appeal',
+    appealTarget: 'post',
+    appealPostId: postMap.value[props.targetId].activePostId
+  })
+}
 
 const onReport = () => {
   publisherOverlay.open({

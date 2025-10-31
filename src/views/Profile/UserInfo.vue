@@ -523,7 +523,7 @@ const onUpdateProfile = async () => {
   try {
     const { data: token } = await updateProfile(diff)
     localStorage.setItem('token', token)
-    globalSocket.value.emit('refresh-token', token)
+    globalSocket.value.emit('refresh-profile', token)
     userInfo.value.profile = {
       ...userInfo.value.profile,
       ...diff

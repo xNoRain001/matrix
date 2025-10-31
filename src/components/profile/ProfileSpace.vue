@@ -462,7 +462,7 @@ const onUpdateTag = async () => {
   try {
     const { data: token } = await updateProfile(payload)
     localStorage.setItem('token', token)
-    globalSocket.value.emit('refresh-token', token)
+    globalSocket.value.emit('refresh-profile', token)
     profile.mbti = _mbti
     profile.tags = _tags
     toast.add({

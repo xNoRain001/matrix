@@ -26,6 +26,12 @@
           :label="contactNotifications.length"
           size="sm"
         />
+        <UBadge
+          v-if="to === '/' && homeNotifications.length"
+          class="absolute top-0 right-0"
+          :label="homeNotifications.length"
+          size="sm"
+        />
       </template>
     </UTabs>
   </div>
@@ -36,10 +42,11 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { storeToRefs } from 'pinia'
-import { useRecentContactsStore } from '@/store'
+import { useNotificationsStore, useRecentContactsStore } from '@/store'
 
-const { unreadMsgCounter, contactNotifications } = storeToRefs(
-  useRecentContactsStore()
+const { unreadMsgCounter } = storeToRefs(useRecentContactsStore())
+const { contactNotifications, homeNotifications } = storeToRefs(
+  useNotificationsStore()
 )
 const mobileNavs = [
   {

@@ -158,12 +158,12 @@ const report = {
     })
 }
 const reportAvatarOrSpaceBg = {
-  label: '举报头像/背景',
+  label: '举报个人资料',
   icon: 'lucide:circle-alert',
   onSelect: () =>
     publisherOverlay.open({
       action: 'report',
-      reportTarget: 'avatarOrSpaceBg',
+      reportTarget: 'profile',
       reportUserId: props.targetId
     })
 }

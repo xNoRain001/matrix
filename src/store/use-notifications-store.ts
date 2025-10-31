@@ -9,7 +9,7 @@ type notifications = {
   content: string
   createdAt: number
   id: string
-  type: 'contact' | 'feedback'
+  type: 'contact' | 'feedback' | 'reporter' | 'reported'
   actionType: 'addContact' | 'agreeContact' | 'refuseContact' | 'deleteContact'
   profile: userInfo['profile']
 }[]

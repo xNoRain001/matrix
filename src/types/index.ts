@@ -88,6 +88,7 @@ export type post = {
   liked: boolean
   unlikes: number
   profile?: userInfo['profile']
+  visibility: 'public' | 'onlyMe' | 'hidden'
 }
 
 export type comment = {

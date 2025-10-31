@@ -10,6 +10,21 @@
   >
     <template #body>
       <template v-if="isReport">
+        <template v-if="reportTarget === 'profile'">
+          <UPageCard
+            title="举报对象"
+            description="选择举报对象"
+            variant="naked"
+            orientation="horizontal"
+            class="mb-4"
+          >
+          </UPageCard>
+          <USelect
+            class="w-full"
+            v-model="reportTargetType"
+            :items="reportTargetTypes"
+          />
+        </template>
         <UPageCard
           title="违规类型"
           description="选择对方的违规类型"
@@ -150,13 +165,16 @@ const props = defineProps<{
     | 'updateReply'
     | 'feedback'
     | 'report'
+    | 'appeal'
   targetId?: string
   owner?: string
   replyTarget?: string
   replyTargetNickname?: string
-  reportTarget?: 'avatarOrSpaceBg' | 'post' | 'messageRecord'
+  reportTarget?: 'profile' | 'post' | 'messageRecord'
   reportUserId?: string
   reportPostId?: string
+  appealTarget?: 'post'
+  appealPostId?: string
 }>()
 const { VITE_OSS_BASE_URL } = import.meta.env
 const { postMap } = storeToRefs(usePostStore())
@@ -322,8 +340,40 @@ const radioGroupitems = [
       '作品中可能含有血腥、恐怖、暴力等内容，或者其他未提及的违规类型'
   }
 ]
+const reportTargetType = ref('')
+const reportTargetTypes = [
+  {
+    label: '头像',
+    value: 'avatar'
+  },
+  {
+    label: '背景',
+    value: 'spaceBg'
+  },
+  {
+    label: '昵称',
+    value: 'nickname'
+  },
+  {
+    label: '签名',
+    value: 'bio'
+  },
+  {
+    label: '标签',
+    value: 'tag'
+  }
+]
 
 const onReport = async () => {
+  if (props.reportTarget === 'profile' && reportTargetType.value === '') {
+    toast.add({
+      title: '未选择举报对象',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+    return
+  }
+
   try {
     const imageMetadata = await useUploadFilesToOSS(
       userInfo,
@@ -339,7 +389,12 @@ const onReport = async () => {
 
     formData.append('type', 'report')
     formData.append('reportType', reportType.value)
-    formData.append('reportTarget', props.reportTarget)
+    formData.append(
+      'reportTarget',
+      props.reportTarget === 'profile'
+        ? reportTargetType.value
+        : props.reportTarget
+    )
     formData.append('reportUserId', props.reportUserId)
     formData.append('content', JSON.stringify(payload))
     await reportAPI(formData)

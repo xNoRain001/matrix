@@ -86,9 +86,14 @@ const router = createRouter({
       component: () => import('@/views/YS.vue')
     },
     {
-      path: '/admin',
+      path: '/report',
       meta: { auth: true },
-      component: () => import('@/views/Admin.vue')
+      component: () => import('@/views/Report.vue')
+    },
+    {
+      path: '/feedback',
+      meta: { auth: true },
+      component: () => import('@/views/Feedback.vue')
     },
     // 404 路由
     {

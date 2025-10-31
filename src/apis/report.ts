@@ -10,6 +10,3 @@ export const reportAPI = async data =>
       'Content-Type': 'multipart/form-data'
     }
   })
-
-export const adminGetReportsAPI = async () =>
-  HTTP.request(`${prefix}/admin-get-reports`)

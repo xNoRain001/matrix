@@ -102,12 +102,12 @@ const deleteContact = {
 const overlay = useOverlay()
 const publisherOverlay = overlay.create(OverlayPublisher)
 const report = {
-  label: '举报头像/背景/昵称/签名',
+  label: '举报个人资料',
   icon: 'lucide:circle-alert',
   onSelect: () => {
     publisherOverlay.open({
       action: 'report',
-      reportTarget: 'avatarOrSpaceBg',
+      reportTarget: 'profile',
       reportUserId: props.targetId
     })
   }
