@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import type { Socket } from 'socket.io-client'
 import type { userInfo } from '@/types'
 import { useBreakpoints, breakpointsTailwind } from '@vueuse/core'
-import { useInitLocalStorate } from '@/hooks'
+import { useInitLocalStorage } from '@/hooks'
 
 const useUserStore = defineStore('userStore', () => {
   let userInfo = null
@@ -44,7 +44,7 @@ const useUserStore = defineStore('userStore', () => {
       starsBg: true
     }
   }
-  const _config = useInitLocalStorate(
+  const _config = useInitLocalStorage(
     `config-${userInfo?.id || ''}`,
     defaultConfig
   )

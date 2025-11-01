@@ -725,8 +725,8 @@ onMounted(() => {
 })
 
 onBeforeMount(() => {
-  // 先显示聊天界面时
   if (!activeTargetIds.value.size) {
+    activeTargetId.value = props.targetId
     activeTargetIds.value.add(props.targetId)
   }
 })

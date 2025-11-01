@@ -21,15 +21,15 @@
           size="sm"
         />
         <UBadge
-          v-if="to === '/contacts' && contactNotifications.length"
+          v-if="to === '/contacts' && unreadContactNotificationCount"
           class="absolute top-0 right-0"
-          :label="contactNotifications.length"
+          :label="unreadContactNotificationCount"
           size="sm"
         />
         <UBadge
-          v-if="to === '/' && homeNotifications.length"
+          v-if="to === '/' && unreadHomeNotificationCount"
           class="absolute top-0 right-0"
-          :label="homeNotifications.length"
+          :label="unreadHomeNotificationCount"
           size="sm"
         />
       </template>
@@ -45,9 +45,8 @@ import { storeToRefs } from 'pinia'
 import { useNotificationsStore, useRecentContactsStore } from '@/store'
 
 const { unreadMsgCounter } = storeToRefs(useRecentContactsStore())
-const { contactNotifications, homeNotifications } = storeToRefs(
-  useNotificationsStore()
-)
+const { unreadHomeNotificationCount, unreadContactNotificationCount } =
+  storeToRefs(useNotificationsStore())
 const mobileNavs = [
   {
     label: '大厅',

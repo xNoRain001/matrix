@@ -19,7 +19,7 @@
         square
         @click="isNotificationsSlideoverOpen = true"
       >
-        <UChip :show="Boolean(homeNotifications.length)" color="error" inset>
+        <UChip :show="Boolean(unreadHomeNotificationCount)" color="error" inset>
           <UIcon name="i-lucide-bell" class="text-primary size-5" />
         </UChip>
       </UButton>
@@ -64,8 +64,8 @@ import { ref, watch } from 'vue'
 const isFullScreen = ref(false)
 const isFullscreenSlideoverOpen = ref(false)
 const isFilterOverlayOpen = defineModel<boolean>()
-const { onlineCount, isMobile } = storeToRefs(useUserStore())
-const { homeNotifications } = storeToRefs(useNotificationsStore())
+const { userInfo, onlineCount, isMobile } = storeToRefs(useUserStore())
+const { unreadHomeNotificationCount } = storeToRefs(useNotificationsStore())
 const { store } = useColorMode()
 const getNextTheme = () =>
   store.value === 'auto'
@@ -134,4 +134,14 @@ watch(store, () =>
   // 在定时器中获取的才是最新的
   setTimeout(() => (nextTheme.value = getNextTheme()))
 )
+
+watch(isNotificationsSlideoverOpen, v => {
+  if (v && unreadHomeNotificationCount.value) {
+    unreadHomeNotificationCount.value = 0
+    localStorage.setItem(
+      `unreadHomeNotificationCount-${userInfo.value.id}`,
+      '0'
+    )
+  }
+})
 </script>

@@ -39,6 +39,12 @@
               tooltip
               popover
             >
+              <template #home-trailing>
+                <UBadge
+                  v-if="unreadHomeNotificationCount"
+                  :label="unreadHomeNotificationCount"
+                  size="sm"
+              /></template>
               <template #message-trailing>
                 <UBadge
                   v-if="unreadMsgCounter"
@@ -47,8 +53,8 @@
               /></template>
               <template #contacts-trailing>
                 <UBadge
-                  v-if="contactNotifications.length"
-                  :label="contactNotifications.length"
+                  v-if="unreadContactNotificationCount"
+                  :label="unreadContactNotificationCount"
                   size="sm"
               /></template>
             </UNavigationMenu>
@@ -206,9 +212,12 @@ const {
   indexMap,
   isReceivingOfflineMsgs
 } = storeToRefs(useRecentContactsStore())
-const { contactNotifications, homeNotifications } = storeToRefs(
-  useNotificationsStore()
-)
+const {
+  contactNotifications,
+  homeNotifications,
+  unreadContactNotificationCount,
+  unreadHomeNotificationCount
+} = storeToRefs(useNotificationsStore())
 const { matchRes, hasMatchRes, offline, matching, noMatch } =
   storeToRefs(useMatchStore())
 const navs = [
@@ -216,7 +225,8 @@ const navs = [
     {
       label: '大厅',
       icon: 'lucide:house',
-      to: '/'
+      to: '/',
+      slot: 'home'
     },
     {
       label: '广场',
@@ -482,20 +492,31 @@ const onAddContact = async notification => {
     }
   })
   const _contactNotifications = contactNotifications.value
+  const { id } = userInfo.value
   _contactNotifications.unshift(notification)
+  unreadContactNotificationCount.value++
   localStorage.setItem(
-    `contactNotifications-${userInfo.value.id}`,
+    `contactNotifications-${id}`,
     JSON.stringify(_contactNotifications)
+  )
+  localStorage.setItem(
+    `unreadContactNotificationCount-${id}`,
+    String(unreadContactNotificationCount.value)
   )
 }
 
 const onAgreeContact = (notification, contact) => {
   const _contactNotifications = contactNotifications.value
   _contactNotifications.unshift(notification)
+  unreadContactNotificationCount.value++
   const { id } = userInfo.value
   localStorage.setItem(
     `contactNotifications-${id}`,
     JSON.stringify(_contactNotifications)
+  )
+  localStorage.setItem(
+    `unreadContactNotificationCount-${id}`,
+    String(unreadContactNotificationCount.value)
   )
   const _contactList = contactList.value
   const _contactProfileMap = contactProfileMap.value
@@ -511,20 +532,31 @@ const onAgreeContact = (notification, contact) => {
 
 const onRefuseContact = notification => {
   const _contactNotifications = contactNotifications.value
+  const { id } = userInfo.value
   _contactNotifications.unshift(notification)
+  unreadContactNotificationCount.value++
   localStorage.setItem(
-    `contactNotifications-${userInfo.value.id}`,
+    `contactNotifications-${id}`,
     JSON.stringify(_contactNotifications)
+  )
+  localStorage.setItem(
+    `unreadContactNotificationCount-${id}`,
+    String(unreadContactNotificationCount.value)
   )
 }
 
 const onDeleteContact = (notification, targetId) => {
   const _contactNotifications = contactNotifications.value
   _contactNotifications.unshift(notification)
+  unreadContactNotificationCount.value++
   const { id } = userInfo.value
   localStorage.setItem(
     `contactNotifications-${id}`,
     JSON.stringify(_contactNotifications)
+  )
+  localStorage.setItem(
+    `unreadContactNotificationCount-${id}`,
+    String(unreadContactNotificationCount.value)
   )
 
   const _contactList = contactList.value
@@ -1196,20 +1228,33 @@ const onRefreshNotifications = notifications => {
   )
   const __homeNotifications = homeNotifications.value
   const __contactNotifications = contactNotifications.value
+  const homeNotificationsLength = _homeNotifications.length
+  const contactNotificationsLength = _contactNotifications.length
+  const { id } = userInfo.value
 
-  if (_homeNotifications.length) {
+  if (homeNotificationsLength) {
     __homeNotifications.unshift(..._homeNotifications)
+    unreadHomeNotificationCount.value += homeNotificationsLength
     localStorage.setItem(
-      `homeNotifications-${userInfo.value.id}`,
+      `homeNotifications-${id}`,
       JSON.stringify(__homeNotifications)
+    )
+    localStorage.setItem(
+      `unreadHomeNotificationCount-${id}`,
+      String(unreadHomeNotificationCount.value)
     )
   }
 
-  if (_contactNotifications) {
+  if (contactNotificationsLength) {
     __contactNotifications.unshift(..._contactNotifications)
+    unreadContactNotificationCount.value += contactNotificationsLength
     localStorage.setItem(
-      `contactNotifications-${userInfo.value.id}`,
+      `contactNotifications-${id}`,
       JSON.stringify(_contactNotifications)
+    )
+    localStorage.setItem(
+      `unreadContactNotificationCount-${id}`,
+      String(unreadContactNotificationCount.value)
     )
   }
 }

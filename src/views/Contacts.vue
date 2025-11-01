@@ -22,7 +22,7 @@
             @click="isNotificationsSlideoverOpen = true"
           >
             <UChip
-              :show="Boolean(contactNotifications.length)"
+              :show="Boolean(unreadContactNotificationCount)"
               color="error"
               inset
             >
@@ -69,7 +69,7 @@ import {
 } from '@/store'
 import type { userInfo } from '@/types'
 import { storeToRefs } from 'pinia'
-import { onMounted, ref, onBeforeUnmount } from 'vue'
+import { onMounted, ref, onBeforeUnmount, watch } from 'vue'
 
 let timer = null
 const toast = useToast()
@@ -77,7 +77,7 @@ const isNotificationsSlideoverOpen = ref(false)
 const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
 const { activeTargetId, activeTargetProfile, contactList, contactProfileMap } =
   storeToRefs(useRecentContactsStore())
-const { contactNotifications } = storeToRefs(useNotificationsStore())
+const { unreadContactNotificationCount } = storeToRefs(useNotificationsStore())
 
 const initContactList = async () => {
   const now = Date.now()
@@ -104,6 +104,16 @@ const initContactList = async () => {
     }
   }
 }
+
+watch(isNotificationsSlideoverOpen, v => {
+  if (v && unreadContactNotificationCount.value) {
+    unreadContactNotificationCount.value = 0
+    localStorage.setItem(
+      `unreadContactNotificationCount-${userInfo.value.id}`,
+      '0'
+    )
+  }
+})
 
 onMounted(async () => {
   await initContactList()

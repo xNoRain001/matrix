@@ -1,8 +1,8 @@
-const useInitLocalStorate = (key, value) => {
+const useInitLocalStorage = (key, value) => {
   try {
     const data = JSON.parse(localStorage.getItem(key))
 
-    if (!data) {
+    if (data === null) {
       return value
     }
 
@@ -32,4 +32,4 @@ const useInitLocalStorate = (key, value) => {
   return value
 }
 
-export default useInitLocalStorate
+export default useInitLocalStorage

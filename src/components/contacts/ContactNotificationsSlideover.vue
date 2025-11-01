@@ -4,16 +4,18 @@
     title="好友申请"
     description=" "
     :ui="{
+      body: 'p-0 sm:p-0',
       description: 'hidden'
     }"
   >
     <template #body>
       <div
+        v-if="contactNotifications.length"
         v-for="(
           { id, profile, createdAt, content, actionType }, index
         ) in contactNotifications"
         :key="id"
-        class="bg-elevated/50 cursor-pointer rounded-lg p-4 not-last:mb-2 sm:p-6"
+        class="bg-elevated/50 border-b-accented/50 cursor-pointer rounded-none border-b p-4 sm:p-6"
         @click="
           profileSpaceOverlay.open({
             targetId: id,
@@ -63,6 +65,9 @@
             <time>{{ useFormatTimeAgo(createdAt) }}</time>
           </template>
         </UUser>
+      </div>
+      <div v-else class="flex h-full items-center justify-center">
+        <UIcon name="lucide:bell" class="text-dimmed size-32" />
       </div>
     </template>
   </USlideover>

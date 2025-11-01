@@ -2,7 +2,10 @@
   <USlideover
     title="详情"
     description=" "
-    :ui="{ body: 'gap-4 md:gap-6 flex flex-col', description: 'hidden' }"
+    :ui="{
+      body: 'p-0 sm:p-0 gap-4 sm:gap-6 flex flex-col',
+      description: 'hidden'
+    }"
   >
     <template #body>
       <UPageCard
@@ -60,7 +63,7 @@
       </UPageCard>
       <div
         v-if="postMap[targetId].activePost.user === userInfo.id"
-        class="flex items-center justify-between"
+        class="flex items-center justify-between px-4 sm:px-6"
       >
         <UTabs
           v-model="activeTab"
@@ -76,7 +79,7 @@
           :items="items"
         />
       </div>
-      <div v-else class="flex items-center justify-between">
+      <div v-else class="flex items-center justify-between px-4 sm:px-6">
         <div class="text-highlighted font-semibold">评论</div>
         <UTabs
           size="xs"
@@ -105,7 +108,7 @@
           ) in postMap[targetId].comments"
           :key="_id"
           variant="soft"
-          class="not-last:mb-2"
+          class="border-b-accented/50 rounded-none border-b"
           :ui="{ body: 'w-full' }"
         >
           <template #body>
@@ -321,7 +324,7 @@
                               {{
                                 `${profile.nickname}${
                                   replyTargetProfile?.nickname
-                                    ? ` 回复 ${replyTargetProfile?.nickname}`
+                                    ? ` ➤ ${replyTargetProfile?.nickname}`
                                     : ''
                                 }`
                               }}
@@ -487,7 +490,7 @@
         <div
           v-for="{ user, profile, createdAt } in likes"
           :key="user"
-          class="bg-elevated/50 rounded-lg p-4 not-last:mb-2 sm:p-6"
+          class="bg-elevated/50 border-b-accented/50 rounded-none border-b p-4 sm:p-6"
         >
           <UUser
             :name="profile.nickname"

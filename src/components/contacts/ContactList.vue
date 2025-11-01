@@ -162,7 +162,7 @@ defineShortcuts({
       activeTargetProfile.value = _contactProfileMap[_targetId].profile
     } else if (index < _contactList.length - 1) {
       const _targetId = _contactList[index + 1]
-      activeTargetId.value = _contactList
+      activeTargetId.value = _targetId
       activeTargetProfile.value = _contactProfileMap[_targetId].profile
     }
   },

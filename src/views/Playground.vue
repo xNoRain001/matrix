@@ -1,5 +1,5 @@
 <template>
-  <UDashboardPanel id="playground">
+  <UDashboardPanel id="playground" :ui="{ body: 'p-0 sm:p-0' }">
     <template #header>
       <PlaygroundHeader v-model="allPostLoaded"></PlaygroundHeader>
     </template>
@@ -16,10 +16,7 @@
           </div>
         </div>
       </template>
-      <UPageList
-        v-if="postMap[activeTab]?.posts?.length"
-        class="space-y-4 sm:space-y-6"
-      >
+      <UPageList v-if="postMap[activeTab]?.posts?.length">
         <UPageCard
           v-for="(
             {
@@ -35,8 +32,8 @@
             index
           ) in postMap[activeTab].posts"
           :key="_id"
-          variant="subtle"
-          class="hover:bg-accented/50 cursor-pointer"
+          variant="soft"
+          class="hover:bg-accented/50 border-b-accented/50 cursor-pointer rounded-none border-b"
           :ui="{ header: 'mb-2', body: 'w-full' }"
         >
           <template #header>

@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { userInfo } from '@/types'
 import useUserStore from './use-user-store'
-import { useInitLocalStorate } from '@/hooks'
+import { useInitLocalStorage } from '@/hooks'
 
 type notifications = {
   _id: string
@@ -19,10 +19,19 @@ const useNotificationsStore = defineStore('notificationsStore', () => {
 
   return {
     contactNotifications: ref<notifications>(
-      useInitLocalStorate(`contactNotifications-${id}`, [])
+      useInitLocalStorage(`contactNotifications-${id}`, [])
     ),
     homeNotifications: ref<notifications>(
-      useInitLocalStorate(`homeNotifications-${id}`, [])
+      useInitLocalStorage(`homeNotifications-${id}`, [])
+    ),
+    likeNotifications: ref<notifications>(
+      useInitLocalStorage(`likeNotifications-${id}`, [])
+    ),
+    unreadContactNotificationCount: ref(
+      Number(useInitLocalStorage(`unreadContactNotificationCount-${id}`, 0))
+    ),
+    unreadHomeNotificationCount: ref(
+      Number(useInitLocalStorage(`unreadHomeNotificationCount-${id}`, 0))
     )
   }
 })

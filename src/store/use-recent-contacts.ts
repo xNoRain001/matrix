@@ -2,12 +2,12 @@ import { reactive, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { userInfo, message } from '@/types'
 import useUserStore from './use-user-store'
-import { useInitLocalStorate } from '@/hooks'
+import { useInitLocalStorage } from '@/hooks'
 
 const useRecentContactsStore = defineStore('recentContactsStore', () => {
   const id = useUserStore().userInfo?.id || ''
-  const _contactList = useInitLocalStorate(`contactList-${id}`, [])
-  const _contactProfileMap = useInitLocalStorate(`contactProfileMap-${id}`, {})
+  const _contactList = useInitLocalStorage(`contactList-${id}`, [])
+  const _contactProfileMap = useInitLocalStorage(`contactProfileMap-${id}`, {})
 
   return {
     contactList: ref(_contactList),

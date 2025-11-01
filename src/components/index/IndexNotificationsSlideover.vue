@@ -4,14 +4,16 @@
     title="通知"
     description=" "
     :ui="{
+      body: 'p-0 sm:p-0',
       description: 'hidden'
     }"
   >
     <template #body>
       <div
+        v-if="homeNotifications.length"
         v-for="({ _id, createdAt, content, type }, index) in homeNotifications"
         :key="_id"
-        class="bg-elevated/50 cursor-pointer rounded-lg p-4 not-last:mb-2 sm:p-6"
+        class="bg-elevated/50 border-b-accented/50 cursor-pointer rounded-none border-b p-4 sm:p-6"
       >
         <UUser
           size="xl"
@@ -40,18 +42,9 @@
           </template>
         </UUser>
       </div>
-      <UBlogPost
-        class="not-last:mb-2"
-        variant="soft"
-        image="https://nuxt.com/assets/blog/nuxt-icon/cover.png"
-        date="2000-01-01 14:23"
-        title="Lorem ipsum dolor sit amet."
-        description="Lorem
-        ipsum dolor sit amet consectetur adipisicing elit. Voluptas iste dolore
-        at expedita sint delectus nisi pariatur blanditiis. Sint, eaque saepe
-        harum doloribus iste eos nesciunt hic veritatis provident quos!"
-      >
-      </UBlogPost>
+      <div v-else class="flex h-full items-center justify-center">
+        <UIcon name="lucide:bell" class="text-dimmed size-32" />
+      </div>
     </template>
   </USlideover>
 </template>

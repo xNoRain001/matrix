@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { userInfo } from '@/types'
 import useUserStore from './use-user-store'
-import { useInitLocalStorate } from '@/hooks'
+import { useInitLocalStorage } from '@/hooks'
 
 const useMatchStore = defineStore('matchStore', () => {
   const id = useUserStore().userInfo?.id || ''
@@ -34,7 +34,7 @@ const useMatchStore = defineStore('matchStore', () => {
       gender: ''
     }
   }
-  const _filter = useInitLocalStorate(`filter-${id}`, defaultFilter)
+  const _filter = useInitLocalStorage(`filter-${id}`, defaultFilter)
 
   return {
     matching: ref(false), // 正在匹配中，值为 true 时匹配 modal 会处于打开状态
