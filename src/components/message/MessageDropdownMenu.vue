@@ -154,7 +154,7 @@ const report = {
     publisherOverlay.open({
       action: 'report',
       reportTarget: 'messageRecord',
-      reportUserId: props.targetId
+      reportedUserId: props.targetId
     })
 }
 const reportAvatarOrSpaceBg = {
@@ -164,7 +164,7 @@ const reportAvatarOrSpaceBg = {
     publisherOverlay.open({
       action: 'report',
       reportTarget: 'profile',
-      reportUserId: props.targetId
+      reportedUserId: props.targetId
     })
 }
 

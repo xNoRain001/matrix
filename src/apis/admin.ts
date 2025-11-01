@@ -16,11 +16,11 @@ export const adminReadReportAPI = async id =>
 
 export const adminResetProfileAPI = async (
   reportId,
-  reporterId,
   type,
-  reportedId,
-  postId
+  reportedUserId,
+  postId,
+  commentId
 ) =>
   HTTP.request(
-    `${prefix}/reset-profile?reportId=${reportId}&reporterId=${reporterId}&type=${type}&reportedId=${reportedId}&postId=${postId}`
+    `${prefix}/reset-profile?reportId=${reportId}&type=${type}&reportedUserId=${reportedUserId}&postId=${postId}&commentId=${commentId}`
   )

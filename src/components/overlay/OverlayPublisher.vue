@@ -170,9 +170,10 @@ const props = defineProps<{
   owner?: string
   replyTarget?: string
   replyTargetNickname?: string
-  reportTarget?: 'profile' | 'post' | 'messageRecord'
-  reportUserId?: string
+  reportTarget?: 'profile' | 'post' | 'comment' | 'messageRecord'
+  reportedUserId?: string
   reportPostId?: string
+  reportedCommentId?: string
   appealTarget?: 'post'
   appealPostId?: string
 }>()
@@ -385,6 +386,8 @@ const onReport = async () => {
 
     if (props.reportTarget === 'post') {
       formData.append('reportPostId', props.reportPostId)
+    } else if (props.reportTarget === 'comment') {
+      formData.append('reportedCommentId', props.reportedCommentId)
     }
 
     formData.append('type', 'report')
@@ -395,7 +398,7 @@ const onReport = async () => {
         ? reportTargetType.value
         : props.reportTarget
     )
-    formData.append('reportUserId', props.reportUserId)
+    formData.append('reportedUserId', props.reportedUserId)
     formData.append('content', JSON.stringify(payload))
     await reportAPI(formData)
     toast.add({ title: '提交成功', icon: 'lucide:smile' })

@@ -177,7 +177,7 @@ import { useThrottleFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref, watch } from 'vue'
 
-let reportUserId = null
+let reportedUserId = null
 let reportPostId = null
 const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile, userInfo } = storeToRefs(useUserStore())
@@ -255,13 +255,13 @@ const onReport = () => {
   publisherOverlay.open({
     action: 'report',
     reportTarget: 'post',
-    reportUserId,
+    reportedUserId,
     reportPostId
   })
 }
 
 const onOpenDropdownMenu = (user, postId) => {
-  reportUserId = user
+  reportedUserId = user
   reportPostId = postId
 
   if (isMobile.value) {

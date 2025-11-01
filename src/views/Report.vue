@@ -4,8 +4,7 @@
       <UPageList class="space-y-4 sm:space-y-6">
         <UPageCard
           v-for="(
-            { _id, user, profile, content, reportTarget, reportUserId, post },
-            index
+            { _id, user, profile, reportTarget, post, comment }, index
           ) in reports"
           :key="_id"
           variant="subtle"
@@ -27,16 +26,30 @@
                 :active-index="0"
               ></Carousel>
             </template>
+            <template v-if="reportTarget === 'comment'">
+              <div
+                v-if="comment.content.text"
+                class="text-base break-words whitespace-pre-wrap"
+              >
+                {{ comment.content.text }}
+              </div>
+              <Carousel
+                v-if="comment.content.images.length"
+                :class="comment.content.text ? 'mt-2' : ''"
+                :items="comment.content.images"
+                :active-index="0"
+              ></Carousel>
+            </template>
             <template v-else-if="reportTarget === 'avatar'">
               <img
                 class="max-h-80 max-w-80 rounded-lg"
-                :src="`${VITE_OSS_BASE_URL}avatar/${reportUserId}`"
+                :src="`${VITE_OSS_BASE_URL}avatar/${user}`"
               />
             </template>
             <template v-else-if="reportTarget === 'spaceBg'">
               <img
                 class="max-h-80 max-w-80 rounded-lg"
-                :src="`${VITE_OSS_BASE_URL}space-bg/${reportUserId}`"
+                :src="`${VITE_OSS_BASE_URL}space-bg/${user}`"
               />
             </template>
             <template v-else-if="reportTarget === 'nickname'">
@@ -51,7 +64,7 @@
               </div>
             </template>
 
-            <USeparator
+            <!-- <USeparator
               label="举报人发言"
               :ui="{ border: 'border-elevated' }"
             />
@@ -66,7 +79,7 @@
               :class="content.text ? 'mt-2' : ''"
               :items="content.images"
               :active-index="0"
-            ></Carousel>
+            ></Carousel> -->
             <div class="mt-2">
               <UButton
                 label="违规"
@@ -74,10 +87,10 @@
                   onHandleReport(
                     index,
                     _id,
-                    user,
                     reportTarget,
-                    reportUserId,
-                    post?._id
+                    user,
+                    post?._id,
+                    comment?._id
                   )
                 "
               ></UButton>
@@ -109,17 +122,23 @@ const toast = useToast()
 const onHandleReport = async (
   index,
   _id,
-  user,
   reportTarget,
-  reportUserId,
-  postId
+  reportedUserId,
+  postId,
+  commentId
 ) => {
   try {
-    await adminResetProfileAPI(_id, user, reportTarget, reportUserId, postId)
+    await adminResetProfileAPI(
+      _id,
+      reportTarget,
+      reportedUserId,
+      postId,
+      commentId
+    )
     reports.value.splice(index, 1)
     toast.add({ title: '操作成功', icon: 'lucide:smile' })
-  } catch {
-    toast.add({ title: '操作失败', color: 'error', icon: 'lucide:annoyed' })
+  } catch (error) {
+    toast.add({ title: error.message, color: 'error', icon: 'lucide:annoyed' })
   }
 }
 

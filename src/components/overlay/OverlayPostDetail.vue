@@ -220,9 +220,11 @@
                         @click="
                           onOpenDropdownMenu(
                             owner === userInfo.id,
+                            owner,
                             _id,
                             index,
-                            content
+                            content,
+                            true
                           )
                         "
                       ></UButton>
@@ -233,9 +235,11 @@
                           @click="
                             onOpenDropdownMenu(
                               owner === userInfo.id,
+                              owner,
                               _id,
                               index,
-                              content
+                              content,
+                              true
                             )
                           "
                         ></UButton>
@@ -417,11 +421,13 @@
                                     @click="
                                       onOpenReplyDropdownMenu(
                                         user === userInfo.id,
+                                        user,
                                         replyId,
                                         replyIndex,
                                         content,
                                         _id,
-                                        index
+                                        index,
+                                        false
                                       )
                                     "
                                   ></UButton>
@@ -435,11 +441,13 @@
                                       @click="
                                         onOpenReplyDropdownMenu(
                                           user === userInfo.id,
+                                          user,
                                           replyId,
                                           replyIndex,
                                           content,
                                           _id,
-                                          index
+                                          index,
+                                          false
                                         )
                                       "
                                     ></UButton>
@@ -596,6 +604,8 @@ import type { userInfo } from '@/types'
 import OverlayViewer from './OverlayViewer.vue'
 import OverlayProfileSpace from './OverlayProfileSpace.vue'
 
+let isComment = false
+let reportedUserId = ''
 const props = defineProps<{ targetId: string }>()
 const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile, userInfo } = storeToRefs(useUserStore())
@@ -682,7 +692,16 @@ const replydropdownMenuItems = computed(() => {
     : [[common, report]]
 })
 
-const onReport = () => {}
+const onReport = () => {
+  publisherOverlay.open({
+    action: 'report',
+    reportTarget: 'comment',
+    reportedUserId,
+    reportedCommentId: isComment
+      ? postMap.value[props.targetId].activeCommentId
+      : postMap.value[props.targetId].activeReplyId
+  })
+}
 
 const onError = e => {
   const { target } = e
@@ -799,14 +818,18 @@ const onReplyTarget = (
 
 const onOpenDropdownMenu = (
   _canEdit,
+  user,
   commentId,
   commentIndex,
-  commentContent
+  commentContent,
+  _isComment
 ) => {
   postMap.value[props.targetId].canEdit = _canEdit
   postMap.value[props.targetId].activeCommentId = commentId
   postMap.value[props.targetId].activeCommentIndex = commentIndex
   postMap.value[props.targetId].activeCommentContent = commentContent
+  isComment = _isComment
+  reportedUserId = user
 
   if (isMobile.value) {
     isEditMenuDrawerOpen.value = true
@@ -815,11 +838,13 @@ const onOpenDropdownMenu = (
 
 const onOpenReplyDropdownMenu = (
   _canEdit,
+  user,
   replyId,
   replyIndex,
   replyContent,
   commentId,
-  commentIndex
+  commentIndex,
+  _isComment
 ) => {
   postMap.value[props.targetId].canEdit = _canEdit
   postMap.value[props.targetId].activeReplyId = replyId
@@ -827,6 +852,8 @@ const onOpenReplyDropdownMenu = (
   postMap.value[props.targetId].activeReplyContent = replyContent
   postMap.value[props.targetId].activeCommentId = commentId
   postMap.value[props.targetId].activeCommentIndex = commentIndex
+  isComment = _isComment
+  reportedUserId = user
 
   if (isMobile.value) {
     isEditReplyMenuDrawerOpen.value = true

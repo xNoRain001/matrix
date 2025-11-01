@@ -878,7 +878,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
         messageRecord
       )
       messageRecord.sent = false
-      const label = useInitLabelAndSeparator(messageRecord, _lastMsgMap, id)
+      const label = useInitLabelAndSeparator(messageRecord, __lastMsgMap, id)
       const [indexdbLabel, indexdbMessageRecord] = useInitIndexedDBData(
         label,
         messageRecord

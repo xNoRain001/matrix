@@ -108,7 +108,7 @@ const report = {
     publisherOverlay.open({
       action: 'report',
       reportTarget: 'profile',
-      reportUserId: props.targetId
+      reportedUserId: props.targetId
     })
   }
 }

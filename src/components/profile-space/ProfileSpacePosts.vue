@@ -216,7 +216,7 @@ const onReport = () => {
   publisherOverlay.open({
     action: 'report',
     reportTarget: 'post',
-    reportUserId: props.targetId,
+    reportedUserId: props.targetId,
     reportPostId: postMap.value[props.targetId].activePostId
   })
 }
