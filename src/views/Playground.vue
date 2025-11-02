@@ -16,7 +16,7 @@
           </div>
         </div>
       </template>
-      <UPageList v-if="postMap[activeTab]?.posts?.length">
+      <div v-if="postMap[activeTab]?.posts?.length">
         <UPageCard
           v-for="(
             {
@@ -123,11 +123,16 @@
             </div>
           </template>
         </UPageCard>
-      </UPageList>
+        <USeparator
+          v-if="allPostLoaded"
+          class="p-4 sm:p-6"
+          label="已经到底了"
+        />
+      </div>
       <USeparator
-        v-if="allPostLoaded"
-        class="px-4 sm:px-6"
-        label="已经到底了"
+        v-if="postMap[activeTab]?.posts?.length === 0"
+        class="p-4 sm:p-6"
+        label="空空如也"
       />
       <!-- </template>
       </UTabs> -->

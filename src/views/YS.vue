@@ -48,7 +48,7 @@
         >
         </USelect>
       </UForm>
-      <UPageList v-if="helpItems.length">
+      <div v-if="helpItems.length">
         <UPageCard
           v-for="(
             {
@@ -142,8 +142,12 @@
           class="p-4 sm:p-6"
           label="已经到底了"
         />
-      </UPageList>
-      <USeparator v-else class="p-4 sm:p-6" label="暂时没有人提供支援" />
+      </div>
+      <USeparator
+        v-if="helpItems.length === 0"
+        class="p-4 sm:p-6"
+        label="空空如也"
+      />
     </template>
 
     <template v-if="isMobile" #footer>
@@ -324,65 +328,7 @@ const filterState = reactive({
   createdAt: -1
 })
 const helpCount = ref(0)
-const avatarMap = {
-  undef: '',
-  Albedo: '阿贝多',
-  Alhaitham: '艾尔海森',
-  'Arataki Itto': '荒泷一斗',
-  Arlecchino: '阿蕾奇诺',
-  Baizhu: '白术',
-  Chasca: '恰斯卡',
-  Tartaglia: '达达利亚',
-  Chiori: '千织',
-  Citlali: '茜特菈莉',
-  Clorinde: '克洛琳德',
-  Cyno: '赛诺',
-  Dehya: '迪希雅',
-  Diluc: '迪卢克',
-  Emilie: '艾梅莉埃',
-  Eula: '优菈',
-  Furina: '芙宁娜',
-  Ganyu: '甘雨',
-  'Hu Tao': '胡桃',
-  Jean: '琴',
-  'Kaedehara Kazuha': '枫原万叶',
-  'Kamisato Ayaka': '神里绫华',
-  'Kamisato Ayato': '神里绫人',
-  Keqing: '刻晴',
-  Kinich: '基尼奇',
-  Klee: '可莉',
-  Lyney: '林尼',
-  Mavuika: '玛薇卡',
-  Mona: '莫娜',
-  Mualani: '玛拉妮',
-  Nahida: '纳西妲',
-  Navia: '娜维娅',
-  Neuvillette: '那维莱特',
-  Nilou: '妮露',
-  Qiqi: '七七',
-  'Raiden Shogun': '雷电将军',
-  'Sangonomiya Kokomi': '珊瑚宫心海',
-  Shenhe: '申鹤',
-  Sigewinne: '希格雯',
-  Skirk: '丝柯克',
-  Tighnari: '提纳里',
-  Venti: '温迪',
-  Wanderer: '流浪者',
-  Wriothesley: '莱欧斯利',
-  Xianyun: '闲云',
-  Xiao: '魈',
-  Xilonen: '希诺宁',
-  'Yae Miko': '八重神子',
-  Yelan: '夜兰',
-  Zhongli: '钟离',
-  Varesa: '瓦蕾莎',
-  Yoimiya: '宵宫',
-  'Yumemizuki Mizuki': '梦见月瑞希',
-  Ineffa: '伊涅芙',
-  Lauma: '菈乌玛',
-  Flins: '菲林斯',
-  Escofier: '爱可菲'
-}
+const avatarMap = { undef: '' }
 const publishMenuItems = [
   { label: '阿贝多', value: 'Albedo' },
   { label: '艾尔海森', value: 'Alhaitham' },
@@ -439,8 +385,15 @@ const publishMenuItems = [
   { label: '伊涅芙', value: 'Ineffa' },
   { label: '菈乌玛', value: 'Lauma' },
   { label: '菲林斯', value: 'Flins' },
-  { label: '爱可菲', value: 'Escofier' }
+  { label: '爱可菲', value: 'Escofier' },
+  { label: '奈芙尔', value: 'Nefer' }
 ]
+
+for (let i = 0, l = publishMenuItems.length; i < l; i++) {
+  const { label, value } = publishMenuItems[i]
+  avatarMap[value] = label
+}
+
 const selectMenuItems = [{ label: '不限', value: 'undef' }, ...publishMenuItems]
 const orderItems = [
   {

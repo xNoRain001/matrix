@@ -1,7 +1,7 @@
 <template>
-  <UDashboardPanel id="feedback">
+  <UDashboardPanel id="feedback" :ui="{ body: 'p-0 sm:p-0' }">
     <template #body>
-      <UPageList class="space-y-4 sm:space-y-6">
+      <div>
         <UPageCard
           v-for="(
             { _id, user, profile, content, createdAt }, index
@@ -54,7 +54,7 @@
             ></UButton>
           </template>
         </UPageCard>
-      </UPageList>
+      </div>
     </template>
   </UDashboardPanel>
 </template>

@@ -1,7 +1,7 @@
 <template>
-  <UDashboardPanel id="admin">
+  <UDashboardPanel id="report" :ui="{ body: 'p-0 sm:p-0' }">
     <template #body>
-      <UPageList class="space-y-4 sm:space-y-6">
+      <div>
         <UPageCard
           v-for="(
             { _id, user, profile, reportTarget, post, comment }, index
@@ -102,7 +102,7 @@
             </div>
           </template>
         </UPageCard>
-      </UPageList>
+      </div>
     </template>
   </UDashboardPanel>
 </template>
