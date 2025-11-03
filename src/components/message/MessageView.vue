@@ -102,7 +102,6 @@
         ref="textareaRef"
         placeholder="Ctrl + Enter 换行"
         @keydown.enter.prevent="onKeydown"
-        enterkeyhint="send"
         class="relative w-full"
         v-model="message"
         :rows="3"

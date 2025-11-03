@@ -2,7 +2,6 @@
   <UDashboardNavbar
     :toggle="false"
     :ui="{
-      root: 'bg-default border-none',
       left: 'flex-1',
       title: 'flex-1 flex justify-center'
     }"

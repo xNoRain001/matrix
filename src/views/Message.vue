@@ -17,6 +17,11 @@
 
       <template #right>
         <UButton
+          @click="isLLMSlideoverOpen = true"
+          icon="lucide:bot"
+          variant="ghost"
+        ></UButton>
+        <UButton
           @click="onResetMsgCounter"
           icon="lucide:mail-check"
           variant="ghost"
@@ -52,6 +57,9 @@
   >
     <UIcon name="lucide:message-circle-more" class="text-dimmed size-32" />
   </div>
+
+  <!-- LLM -->
+  <MessageLLM v-model="isLLMSlideoverOpen"></MessageLLM>
 </template>
 
 <script setup lang="ts">
@@ -59,7 +67,7 @@ import { getProfiles } from '@/apis/profile'
 import { useGetDB, useRefreshOnline } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { onMounted, onBeforeUnmount } from 'vue'
+import { onMounted, onBeforeUnmount, ref } from 'vue'
 
 // const tabItems = [
 //   {
@@ -82,6 +90,7 @@ const {
   lastMsgMap,
   lastMsgList
 } = storeToRefs(useRecentContactsStore())
+const isLLMSlideoverOpen = ref(false)
 
 const onResetMsgCounter = async () => {
   const _lastMsgMap = lastMsgMap.value

@@ -196,7 +196,7 @@ const activeTab = ref<'latest' | 'friend' | 'hot'>('latest')
 //   {
 //     label: '最新',
 //     value: 'latest',
-//     icon: 'lucide:refresh-ccw'
+//     icon: 'lucide:refresh-cw'
 //   }
 // ]
 const { postMap } = storeToRefs(usePostStore())

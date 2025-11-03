@@ -4,7 +4,7 @@ let db = null
 
 const useGetDB = async id => {
   if (!db) {
-    db = await openDB(`chatDB-${id}`, 38, {
+    db = await openDB(`chatDB-${id}`, 42, {
       upgrade(db) {
         let store = null
 
@@ -13,7 +13,7 @@ const useGetDB = async id => {
             keyPath: 'id',
             autoIncrement: true
           })
-          // 创建符合索引
+          // 创建复合索引
           store.createIndex('contact_id', ['contact', 'id'], { unique: false })
         }
 
@@ -66,6 +66,13 @@ const useGetDB = async id => {
 
         if (!db.objectStoreNames.contains('colleges')) {
           db.createObjectStore('colleges', {
+            keyPath: 'id',
+            autoIncrement: true
+          })
+        }
+
+        if (!db.objectStoreNames.contains('llm')) {
+          store = db.createObjectStore('llm', {
             keyPath: 'id',
             autoIncrement: true
           })

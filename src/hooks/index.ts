@@ -52,8 +52,10 @@ import useExitFullscreen from './use-exit-full-screen'
 import useComputeAge from './use-compute-age'
 import useComputeZodiacSign from './use-compute-zodiac-sign'
 import useNSFW from './use-nsfw'
+import useFixSoftKeyboardInIOS from './use-fix-soft-keyboard-in-ios'
 
 export {
+  useFixSoftKeyboardInIOS,
   useNSFW,
   useComputeZodiacSign,
   useComputeAge,

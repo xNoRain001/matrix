@@ -6,7 +6,7 @@
 
     <template #right>
       <UButton
-        icon="lucide:refresh-ccw"
+        icon="lucide:refresh-cw"
         variant="ghost"
         @click="getLatestData"
       ></UButton>
