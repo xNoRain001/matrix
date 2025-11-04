@@ -132,7 +132,7 @@
                       profile
                     )
                   "
-                  class="text-muted bg-elevated flex size-10 items-center justify-center rounded-full text-xl font-medium"
+                  class="text-muted bg-elevated size-10 rounded-full text-center text-xl font-medium"
                 >
                   <img
                     class="size-full rounded-full object-cover"
@@ -299,7 +299,7 @@
                                   profile
                                 )
                               "
-                              class="text-muted bg-elevated flex size-5 items-center justify-center rounded-full text-xs font-medium"
+                              class="text-muted bg-elevated size-5 rounded-full text-center text-xs font-medium"
                             >
                               <img
                                 class="size-full rounded-full object-cover"
@@ -708,9 +708,7 @@ const onReport = () => {
 
 const onError = e => {
   const { target } = e
-  const span = document.createElement('span')
-  span.textContent = target.alt
-  target.replaceWith(span)
+  target.replaceWith(target.alt)
 }
 
 const onEditReply = () => {

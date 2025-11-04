@@ -125,19 +125,26 @@
         ></UButton>
       </template>
     </UDrawer>
+    <!-- 滚动到顶部浮动按钮 -->
+    <Transition
+      enter-active-class="animate-[fade-in_200ms_ease-out]"
+      leave-active-class="animate-[fade-out_200ms_ease-in]"
+    >
+      <div v-if="isAutoScrollBtnShow" class="fixed top-5/6 right-0 left-0">
+        <UButton
+          @click="onScrollToTop"
+          class="absolute left-1/2 -translate-x-1/2 rounded-full"
+          variant="outline"
+          color="neutral"
+          icon="lucide:arrow-up"
+        ></UButton>
+      </div>
+    </Transition>
   </div>
   <USeparator
     v-if="postMap[targetId]?.posts?.length === 0"
     class="p-4 sm:p-6"
     label="空空如也"
-  />
-  <!-- 滚动到顶部浮动按钮 -->
-  <UButton
-    v-if="!isMobile && isFloatingBtnShow"
-    @click="onScrollToTop"
-    class="fixed right-4 bottom-20 sm:right-6 sm:bottom-22"
-    icon="lucide:rocket"
-    size="xl"
   />
 </template>
 
@@ -200,8 +207,8 @@ const dropdownMenuItems = isSelf
       ]
     ]
 const { VITE_OSS_BASE_URL } = import.meta.env
-const isFloatingBtnShow = ref(false)
 const loading = ref(!postMap.value[props.targetId])
+const isAutoScrollBtnShow = ref(false)
 
 // @ts-ignore
 const onAppeal = () => {
@@ -226,16 +233,13 @@ const onScrollToTop = () => {
     top: 0,
     behavior: 'smooth'
   })
-  isFloatingBtnShow.value = false
 }
 
 const onScroll = useThrottleFn(
   async () => {
     const { scrollTop, scrollHeight, clientHeight } = props.container
 
-    if (!isMobile.value) {
-      isFloatingBtnShow.value = scrollTop > 400
-    }
+    isAutoScrollBtnShow.value = scrollTop > 400
 
     if (allPostLoaded.value) {
       return

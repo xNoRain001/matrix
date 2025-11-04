@@ -4,7 +4,7 @@
     :min-item-size="44"
     :emit-update="true"
     ref="msgContainerRef"
-    class="h-full p-4 sm:p-6"
+    class="relative h-full p-4 sm:p-6"
     :class="chatBg ? 'bg-cover bg-center bg-no-repeat' : ''"
     :style="chatBg ? { 'background-image': `url(${chatBg})` } : {}"
     @update="onUpdate"
@@ -400,6 +400,24 @@
       </DynamicScrollerItem>
     </template>
   </DynamicScroller>
+  <Transition
+    enter-active-class="animate-[fade-in_200ms_ease-out]"
+    leave-active-class="animate-[fade-out_200ms_ease-in]"
+  >
+    <div
+      v-if="isAutoScrollBtnShow"
+      class="fixed right-0 bottom-30 left-0 sm:bottom-50"
+    >
+      <UButton
+        class="absolute left-1/2 -translate-x-1/2 rounded-full"
+        variant="outline"
+        color="neutral"
+        icon="lucide:arrow-down"
+        @click="(msgContainerRef as any).scrollToBottom()"
+      ></UButton>
+    </div>
+  </Transition>
+
   <!-- 音频播放器 -->
   <audio @ended="onEnded" ref="audioRef" hidden></audio>
 </template>
@@ -468,6 +486,7 @@ const chatBg = computed(() => {
   const { isChatBgOpen, chatBg } = config.value.theme
   return isChatBgOpen && chatBg
 })
+const isAutoScrollBtnShow = ref(false)
 
 const onResendMsg = messageRecord => {
   if (!messageRecord.resendArgs) {
@@ -500,13 +519,15 @@ const onPlayAudio = url => {
 }
 
 const onScroll = useThrottleFn(
-  async e => {
+  async ({ target: { scrollHeight, clientHeight, scrollTop } }) => {
+    isAutoScrollBtnShow.value = scrollHeight - clientHeight - scrollTop > 400
+
     if (
       !skipUnshiftMessageRecord.value &&
-      e.target.scrollTop === 0 &&
+      scrollTop === 0 &&
       lastFetchedId.value
     ) {
-      const unshiftCounter = await useGetMessages(
+      const unshiftCount = await useGetMessages(
         userInfo.value.id,
         hashToBlobURLMap,
         messageList,
@@ -515,8 +536,8 @@ const onScroll = useThrottleFn(
         true
       )
 
-      if (unshiftCounter) {
-        ;(msgContainerRef.value as any).scrollToItem(unshiftCounter)
+      if (unshiftCount) {
+        ;(msgContainerRef.value as any).scrollToItem(unshiftCount)
       }
     }
   },

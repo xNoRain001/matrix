@@ -97,18 +97,21 @@
         }"
       >
       </UFileUpload>
-      <div class="text-primary text-center text-sm" @click="onTextToImage">
-        没有图片？试试 AI 生成图片
-      </div>
-      <UChatPrompt
-        v-model="prompt"
-        variant="soft"
-        placeholder="帮我生成一只卡通风格的猫"
-        :maxrows="3"
-        :loading="generating"
-      >
-        <UChatPromptSubmit class="rounded-full" @click="onTextToImage" />
-      </UChatPrompt>
+      <template v-if="isPost">
+        <div class="text-primary text-center text-sm" @click="onTextToImage">
+          没有图片？试试 AI 生成图片
+        </div>
+        <UChatPrompt
+          :autofocus="false"
+          v-model="prompt"
+          variant="soft"
+          placeholder="帮我生成一只卡通风格的猫"
+          :maxrows="3"
+          :loading="generating"
+        >
+          <UChatPromptSubmit class="rounded-full" @click="onTextToImage" />
+        </UChatPrompt>
+      </template>
     </template>
     <template #footer>
       <div>

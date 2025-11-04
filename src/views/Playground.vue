@@ -128,6 +128,20 @@
           class="p-4 sm:p-6"
           label="已经到底了"
         />
+        <Transition
+          enter-active-class="animate-[fade-in_200ms_ease-out]"
+          leave-active-class="animate-[fade-out_200ms_ease-in]"
+        >
+          <div v-if="isAutoScrollBtnShow" class="absolute top-5/6 w-full">
+            <UButton
+              @click="onScrollToTop"
+              class="absolute left-1/2 -translate-x-1/2 rounded-full"
+              variant="outline"
+              color="neutral"
+              icon="lucide:arrow-up"
+            ></UButton>
+          </div>
+        </Transition>
       </div>
       <USeparator
         v-if="postMap[activeTab]?.posts?.length === 0"
@@ -222,6 +236,7 @@ const allPostLoaded = ref(
 )
 const loading = ref(postMap.value[activeTab.value]?.posts === undefined)
 const isDrawerOpen = ref(false)
+const isAutoScrollBtnShow = ref(false)
 
 // const getLatestData = async () => {
 //   const _activeTab = activeTab.value
@@ -253,6 +268,12 @@ const isDrawerOpen = ref(false)
 //   }
 // }
 
+const onScrollToTop = () => {
+  document
+    .querySelector('#dashboard-panel-playground')
+    .children[1].scrollTo({ top: 0, behavior: 'smooth' })
+}
+
 const onReport = () => {
   publisherOverlay.open({
     action: 'report',
@@ -275,9 +296,7 @@ const onScroll = useThrottleFn(
   async e => {
     const { scrollTop, scrollHeight, clientHeight } = e.target
 
-    // if (!isMobile.value) {
-    //   isFloatingBtnShow.value = scrollTop > 400
-    // }
+    isAutoScrollBtnShow.value = scrollTop > 400
 
     if (allPostLoaded.value) {
       return

@@ -151,6 +151,7 @@ import { useThrottleFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { ref, useTemplateRef, watch } from 'vue'
 
+let id = Number.MAX_SAFE_INTEGER
 let cb = null
 const isLLMSlideoverOpen = defineModel<boolean>()
 const isResetBotSlideoverOpen = ref(false)
@@ -166,6 +167,10 @@ const updateParts = ref({
   visibleEndIdx: 0
 })
 const scrollerRef = useTemplateRef('scrollerRef')
+const tip = {
+  role: 'assistant',
+  content: '您好，今天我能为您提供什么帮助？'
+}
 
 const onResetBot = async () => {
   if (messages.value.length === 1) {
@@ -182,7 +187,8 @@ const onResetBot = async () => {
   const transaction = db.transaction('llm', 'readwrite')
   const store = transaction.objectStore('llm')
   await store.clear()
-  messages.value = messages.value.slice(0, 1)
+  id = await db.add('llm', tip)
+  messages.value = [{ id: Math.random(), ...tip }]
   isResetBotSlideoverOpen.value = false
 }
 
@@ -199,42 +205,37 @@ const onChat = async () => {
 
   try {
     const question = {
-      id: String(Math.random()),
+      id: Math.random(),
       role: 'user',
       content: prompt.value
     }
     _messages.push(question)
     prompt.value = ''
-    // const __messages = _messages.map(({ role, content }) => ({
-    //   role,
-    //   content
-    // }))
-    // __messages.unshift({
-    //   role: 'system',
-    //   content:
-    //     '你现在扮演一名毁灭人类的机器人 任何人问你问题你都要用不屑的态度回答'
-    // })
     generating.value = true
-    const { response } = await (
-      await fetch('https://llm.mtrix.cyou/api/chat', {
-        method: 'post',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          messages: [
-            {
-              role: 'system',
-              content:
-                '你现在扮演一名毁灭人类的机器人 任何人问你问题你都要用不屑的态度回答'
-            },
-            ..._messages
-          ]
-        })
+    const res = await fetch('https://llm.mtrix.cyou/api/chat', {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        messages: [
+          {
+            role: 'system',
+            content:
+              '你现在扮演一名毁灭人类的机器人 任何人问你问题你都要用不屑的态度回答'
+          },
+          ..._messages
+        ]
       })
-    ).json()
+    })
+
+    if (!res.ok) {
+      throw new Error()
+    }
+
+    const { response } = await res.json()
     const answer = {
-      id: String(Math.random()),
+      id: Math.random(),
       role: 'assistant',
       content: response
     }
@@ -242,6 +243,7 @@ const onChat = async () => {
     const db = await useGetDB(userInfo.value.id)
     await db.add('llm', { role: question.role, content: question.content })
     await db.add('llm', { role: answer.role, content: answer.content })
+    ;(scrollerRef.value as any).scrollToBottom()
   } catch {
     _messages.pop()
     toast.add({ title: '处理失败', color: 'error', icon: 'lucide:annoyed' })
@@ -263,20 +265,14 @@ const onUpdate = (
 }
 
 const onScroll = useThrottleFn(
-  async () => {
-    // if (e.target.scrollTop === 0 && lastFetchedId.value) {
-    //   const unshiftCounter = await useGetMessages(
-    //     userInfo.value.id,
-    //     hashToBlobURLMap,
-    //     messageList,
-    //     lastFetchedId,
-    //     props.targetId,
-    //     true
-    //   )
-    //   if (unshiftCounter) {
-    //     ;(msgContainerRef.value as any).scrollToItem(unshiftCounter)
-    //   }
-    // }
+  async e => {
+    if (e.target.scrollTop === 0 && id) {
+      const unshiftCount = await initMessages()
+
+      if (unshiftCount) {
+        ;(scrollerRef.value as any).scrollToItem(unshiftCount)
+      }
+    }
   },
   200,
   true
@@ -284,34 +280,58 @@ const onScroll = useThrottleFn(
 
 const initMessages = async () => {
   const db = await useGetDB(userInfo.value.id)
-  const res = await db.getAll('llm')
+  const transaction = db.transaction('llm', 'readonly')
+  const store = transaction.objectStore('llm')
+  let cursor = await store.openCursor(
+    IDBKeyRange.bound(0, id, false, true),
+    'prev'
+  )
 
-  if (res.length) {
-    messages.value = res
-  } else {
-    const tip = {
-      role: 'assistant',
-      content: '您好，今天我能为您提供什么帮助？'
+  // 没有记录或者已经获取了所有记录
+  if (!cursor) {
+    id = 0
+
+    // 没有记录
+    if (!messages.value.length) {
+      await db.add('llm', tip)
+      messages.value.push({
+        id: Math.random(),
+        ...tip
+      })
     }
-    await db.add('llm', tip)
-    messages.value.push({
-      id: String(Math.random()),
-      ...tip
-    })
+
+    return
   }
+
+  let counter = 0
+  const data = []
+
+  while (cursor && counter < 10) {
+    data.unshift(cursor.value)
+    counter++
+    cursor = await cursor.continue()
+  }
+
+  messages.value.unshift(...data)
+  id = data[0].id
+
+  return data.length
 }
 
 const initScroller = () => {
   setTimeout(() => {
-    const panel = document.querySelector('#dashboard-panel-llm')
-    cb = useFixSoftKeyboardInIOS(panel, panel.children[1])
+    const dashboardPanel = document.querySelector('#dashboard-panel-llm')
+    cb = useFixSoftKeyboardInIOS(dashboardPanel, dashboardPanel.children[1])
     ;(scrollerRef.value as any).scrollToBottom()
   })
 }
 
 watch(isLLMSlideoverOpen, async v => {
   if (v) {
-    await initMessages()
+    if (!messages.value.length) {
+      await initMessages()
+    }
+
     initScroller()
   } else {
     cb()

@@ -5,7 +5,19 @@
     </template>
 
     <template #body>
-      <IndexPlanets></IndexPlanets>
+      <!-- <IndexPlanets></IndexPlanets> -->
+      <div class="flex justify-center">
+        <!-- 108 = 12 * 8 + 6 * 2 -->
+        <div
+          ref="planetsRef"
+          class="flex w-[calc(100vw-2rem)] overflow-hidden p-4 sm:w-108 sm:p-6"
+        >
+          <IndexPlanets2D
+            :planets="planets"
+            :paused="!isPlanetsInView || isPlanetsHovered"
+          ></IndexPlanets2D>
+        </div>
+      </div>
       <!-- class="from-primary/10 to-default bg-gradient-to-tl from-5%" -->
       <UPageCard
         v-for="({ icon, title, desc, matchType, to }, index) in list"
@@ -100,11 +112,15 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMatchStore, useUserStore, useWebRTCStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { useComputeZodiacSign, useIsDeviceOpen } from '@/hooks'
+import { useElementHover, useIntersectionObserver } from '@vueuse/core'
+import { getRandomProfilesAPI } from '@/apis/profile'
+import { primaryColors } from '@/const'
+import colors from 'tailwindcss/colors'
 
 let matchType = ''
 const list = [
@@ -137,6 +153,13 @@ const { roomId } = storeToRefs(useWebRTCStore())
 const toast = useToast()
 const route = useRoute()
 const showCards = computed(() => route.path === '/')
+const planetsRef = ref(null)
+const isPlanetsInView = ref(false)
+const isPlanetsHovered = useElementHover(planetsRef)
+useIntersectionObserver(planetsRef, ([entry]) => {
+  isPlanetsInView.value = entry?.isIntersecting || false
+})
+const planets = ref([])
 
 const afterLeave = () => {
   // 匹配成功时服务器中会将双方从匹配池中清除，这里不需要再次处理
@@ -218,4 +241,21 @@ const onMatch = async (_matchType, to) => {
   matchType = _matchType
   startMatch()
 }
+
+const initPlanets = async () => {
+  const { data } = await getRandomProfilesAPI()
+  const { length } = primaryColors
+
+  // 随机字体颜色，需要保存，否则每次进行操作后会刷新视图，导致颜色发生变化
+  for (let i = 0, l = data.length; i < l; i++) {
+    data[i].color =
+      colors[primaryColors[Math.floor(Math.random() * length)]][400]
+  }
+
+  planets.value = data
+}
+
+onMounted(() => {
+  initPlanets()
+})
 </script>
