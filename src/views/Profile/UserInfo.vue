@@ -159,20 +159,12 @@
       }"
     >
       <template #body>
-        <UInput class="w-full" v-model="profileForm.college" maxlength="19">
-          <template v-if="profileForm.college" #trailing>
-            <div class="text-muted text-xs tabular-nums">
-              {{ profileForm.college.length }}/19
-            </div>
-            <UButton
-              color="neutral"
-              variant="link"
-              size="sm"
-              icon="lucide:circle-x"
-              @click="profileForm.college = ''"
-            />
-          </template>
-        </UInput>
+        <USelectMenu
+          virtualize
+          v-model="profileForm.college"
+          :items="colleges"
+          class="w-full"
+        />
       </template>
     </UDrawer>
 
@@ -294,20 +286,12 @@
           class="flex items-start justify-between gap-4"
           :ui="{ container: 'w-3/5' }"
         >
-          <UInput class="w-full" v-model="profileForm.college" maxlength="19">
-            <template v-if="profileForm.college" #trailing>
-              <div class="text-muted text-xs tabular-nums">
-                {{ profileForm.college.length }}/19
-              </div>
-              <UButton
-                color="neutral"
-                variant="link"
-                size="sm"
-                icon="lucide:circle-x"
-                @click="profileForm.college = ''"
-              />
-            </template>
-          </UInput>
+          <USelectMenu
+            virtualize
+            v-model="profileForm.college"
+            :items="colleges"
+            class="w-full"
+          />
         </UFormField>
         <USeparator />
         <UFormField
@@ -395,7 +379,7 @@
 
 <script lang="ts" setup>
 import { updateProfile } from '@/apis/profile'
-import { provinceCityMap } from '@/const'
+import { colleges, provinceCityMap } from '@/const'
 import { useTransformGender, useUpdateStaticNameFile } from '@/hooks'
 import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'

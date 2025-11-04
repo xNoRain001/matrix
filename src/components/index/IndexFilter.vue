@@ -84,24 +84,12 @@
       <template #college>
         <UForm :state="filter.collegeForm" class="space-y-4">
           <UFormField label="高校" :ui="{ container: 'flex gap-2' }">
-            <UInput
-              class="w-48"
+            <USelectMenu
+              virtualize
               v-model="filter.collegeForm.college"
-              maxlength="19"
-            >
-              <template v-if="filter.collegeForm.college" #trailing>
-                <div class="text-muted text-xs tabular-nums">
-                  {{ filter.collegeForm.college.length }}/19
-                </div>
-                <UButton
-                  color="neutral"
-                  variant="link"
-                  size="sm"
-                  icon="lucide:circle-x"
-                  @click="filter.collegeForm.college = ''"
-                />
-              </template>
-            </UInput>
+              :items="colleges"
+              class="w-48"
+            />
             <!-- <UButton
               @click="onSelectUndefCollege"
               :color="isUndefCollege ? 'primary' : 'neutral'"
@@ -163,6 +151,7 @@
         <UForm :state="filter.gameForm" class="space-y-4">
           <UFormField label="游戏" :ui="{ container: 'flex gap-2' }">
             <USelectMenu
+              virtualize
               class="w-48"
               v-model="filter.gameForm.game"
               :items="gameItems"
@@ -247,6 +236,7 @@
         <UForm :state="filter.movieForm" class="space-y-4">
           <UFormField label="电影" :ui="{ container: 'flex gap-2' }">
             <USelectMenu
+              virtualize
               class="w-48"
               v-model="filter.movieForm.movie"
               :items="movieItems"
@@ -354,7 +344,7 @@ import { useMatchStore, useUserStore } from '@/store'
 import { createReusableTemplate } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, ref, watch } from 'vue'
-import { provinceCityMap } from '@/const'
+import { colleges, provinceCityMap } from '@/const'
 
 const toast = useToast()
 const isFilterOverlayOpen = defineModel<boolean>()

@@ -16,7 +16,7 @@
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^4.6.2",
     "@internationalized/date": "^3.9.0",
-    "@nuxt/ui": "^4.0.0",
+    "@nuxt/ui": "^4.1.0",
     "@tailwindcss/vite": "^4.1.7",
     "@vueuse/components": "^13.6.0",
     "@vueuse/core": "^13.6.0",

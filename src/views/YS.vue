@@ -31,6 +31,7 @@
     <template #body>
       <UForm class="flex space-x-2 sm:block">
         <USelectMenu
+          virtualize
           icon="lucide:sword"
           placeholder="选择指定角色"
           v-model="filterState.avatar"
@@ -219,6 +220,7 @@
       >
       </UPageCard>
       <USelectMenu
+        virtualize
         v-model="assistState.avatar"
         value-key="value"
         :items="publishMenuItems"
