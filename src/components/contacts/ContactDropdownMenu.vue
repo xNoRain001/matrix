@@ -3,9 +3,11 @@
     v-if="isMobile"
     title="好友信息"
     description=" "
-    :ui="{ body: 'space-y-4', description: 'hidden' }"
+    :ui="{ content: 'max-w-none', body: 'space-y-4', description: 'hidden' }"
   >
-    <UButton icon="lucide:ellipsis" color="neutral" variant="ghost" />
+    <template #default>
+      <UButton icon="lucide:ellipsis" color="neutral" variant="ghost" />
+    </template>
     <template #body>
       <UPageCard
         variant="subtle"

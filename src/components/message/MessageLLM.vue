@@ -1,5 +1,6 @@
 <template>
   <USlideover
+    :class="isMobile ? 'max-w-none' : ''"
     v-model:open="isLLMSlideoverOpen"
     title=" "
     description=" "

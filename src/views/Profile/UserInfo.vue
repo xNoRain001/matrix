@@ -2,6 +2,7 @@
   <template v-if="isMobile">
     <!-- 需要放在下面这些模态框之前才不会被覆盖 -->
     <USlideover
+      :class="isMobile ? 'max-w-none' : ''"
       v-model:open="isUserInfoSlideoverOpen"
       title="个人资料"
       description=" "

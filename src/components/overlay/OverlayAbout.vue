@@ -1,6 +1,7 @@
 <template>
   <USlideover
     v-if="isMobile"
+    :class="isMobile ? 'max-w-none' : ''"
     :close="{ onClick: () => emit('close', false) }"
     :title="title"
     :description="description"

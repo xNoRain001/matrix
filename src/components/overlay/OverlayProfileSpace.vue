@@ -1,6 +1,6 @@
 <template>
-  <!-- class="max-w-none" 实现平板全屏 -->
   <USlideover
+    :class="isMobile ? 'max-w-none' : ''"
     title=" "
     description=" "
     :ui="{
@@ -18,11 +18,14 @@
 </template>
 
 <script lang="ts" setup>
+import { useUserStore } from '@/store'
 import type { userInfo } from '@/types'
+import { storeToRefs } from 'pinia'
 
 defineProps<{
   targetId: string
   targetProfile: userInfo['profile']
 }>()
 const emit = defineEmits<{ close: [boolean] }>()
+const { isMobile } = storeToRefs(useUserStore())
 </script>

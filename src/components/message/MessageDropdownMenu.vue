@@ -3,7 +3,7 @@
     v-if="isMobile"
     title="聊天信息"
     description=" "
-    :ui="{ body: 'space-y-4', description: 'hidden' }"
+    :ui="{ content: 'max-w-none', body: 'space-y-4', description: 'hidden' }"
     v-model:open="isOverlayOpen"
   >
     <UButton

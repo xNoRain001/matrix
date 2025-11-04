@@ -47,6 +47,7 @@
   </DefineSlideoverBodyTemplate>
   <USlideover
     v-if="isMobile"
+    :class="isMobile ? 'max-w-none' : ''"
     v-model:open="isNotificationSlideoverOpen"
     title="通知"
     description=" "

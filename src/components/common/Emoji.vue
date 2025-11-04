@@ -19,8 +19,8 @@
     </div>
     <template v-if="activeTab === 'emoji'">
       <div
-        class="gap grid cursor-pointer items-start overflow-y-auto pt-2 sm:p-6"
-        :class="isMobile ? 'h-60 grid-cols-6' : 'h-100 grid-cols-10'"
+        class="gap grid cursor-pointer grid-cols-6 items-start overflow-y-auto pt-2 sm:grid-cols-10 sm:p-6"
+        :class="isMobile ? 'h-60' : 'h-100'"
         @click="onSelectEmoji"
       >
         <div

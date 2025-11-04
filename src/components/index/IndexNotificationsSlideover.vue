@@ -1,5 +1,6 @@
 <template>
   <USlideover
+    :class="isMobile ? 'max-w-none' : ''"
     v-model:open="isNotificationsSlideoverOpen"
     title="通知"
     description=" "
@@ -55,7 +56,7 @@ import { useNotificationsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 
 const isNotificationsSlideoverOpen = defineModel<boolean>()
-const { userInfo } = storeToRefs(useUserStore())
+const { userInfo, isMobile } = storeToRefs(useUserStore())
 const { homeNotifications } = storeToRefs(useNotificationsStore())
 
 const onDelete = index => {

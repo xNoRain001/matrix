@@ -27,6 +27,7 @@
 
   <!-- 通知模态框 -->
   <USlideover
+    :class="isMobile ? 'max-w-none' : ''"
     v-model:open="isNotificationSlideoverOpen"
     title="通知"
     description=" "
@@ -152,7 +153,7 @@ const { VITE_OSS_BASE_URL } = import.meta.env
 const allPostLoaded = defineModel<boolean>()
 const overlay = useOverlay()
 const publisherOverlay = overlay.create(OverlayPublisher)
-const { userInfo } = storeToRefs(useUserStore())
+const { userInfo, isMobile } = storeToRefs(useUserStore())
 const { postMap } = storeToRefs(usePostStore())
 const { likeNotifications } = storeToRefs(useNotificationsStore())
 const isNotificationSlideoverOpen = ref(false)

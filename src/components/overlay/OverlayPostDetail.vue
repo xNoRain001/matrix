@@ -1,5 +1,6 @@
 <template>
   <USlideover
+    :class="isMobile ? 'max-w-none' : ''"
     title="详情"
     description=" "
     :ui="{

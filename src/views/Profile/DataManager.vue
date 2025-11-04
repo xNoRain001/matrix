@@ -18,6 +18,7 @@
   </DefineSlideoverBodyTemplate>
   <USlideover
     v-if="isMobile"
+    :class="isMobile ? 'max-w-none' : ''"
     v-model:open="isDataManagerSlideoverOpen"
     title="数据管理"
     description=" "

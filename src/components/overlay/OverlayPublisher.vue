@@ -1,5 +1,6 @@
 <template>
   <USlideover
+    :class="isMobile ? 'max-w-none' : ''"
     :title="title"
     description=" "
     :ui="{
@@ -262,7 +263,7 @@ const payload: content = reactive({
   images: []
 })
 const oldText = payload.text
-const { userInfo } = storeToRefs(useUserStore())
+const { userInfo, isMobile } = storeToRefs(useUserStore())
 const toast = useToast()
 const emit = defineEmits<{ close: [boolean] }>()
 const title = isPost

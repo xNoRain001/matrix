@@ -1,5 +1,6 @@
 <template>
   <USlideover
+    :class="isMobile ? 'max-w-none' : ''"
     v-model:open="isNotificationsSlideoverOpen"
     title="好友申请"
     description=" "
@@ -87,7 +88,7 @@ import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
 
 const { VITE_OSS_BASE_URL } = import.meta.env
 const isNotificationsSlideoverOpen = defineModel<boolean>()
-const { userInfo, globalSocket } = storeToRefs(useUserStore())
+const { userInfo, globalSocket, isMobile } = storeToRefs(useUserStore())
 const { matchRes } = storeToRefs(useMatchStore())
 const {
   contactList,

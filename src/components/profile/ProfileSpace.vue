@@ -138,6 +138,7 @@
     <!-- 移动端设置界面 -->
     <USlideover
       v-if="isMobile && isSelf"
+      :class="isMobile ? 'max-w-none' : ''"
       v-model:open="isSettingSlideoverOpen"
       title="设置"
       description=" "
@@ -182,6 +183,7 @@
     <!-- 标签 -->
     <USlideover
       v-if="isSelf"
+      :class="isMobile ? 'max-w-none' : ''"
       v-model:open="isTagSlideoverOpen"
       title="标签"
       description=" "
