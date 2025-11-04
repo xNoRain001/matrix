@@ -15,7 +15,7 @@
           container: 'gap-y-0'
         }"
       >
-        <p class="text-highlighted break-words whitespace-pre-wrap">
+        <p class="text-highlighted break-all whitespace-pre-wrap">
           {{ postMap[targetId].activePost.content.text }}
         </p>
         <Carousel
@@ -67,25 +67,27 @@
       >
         <UTabs
           v-model="activeTab"
-          variant="link"
           :content="false"
           :items="tabItems"
+          size="xs"
         />
         <UTabs
           v-if="activeTab === 'comment'"
-          v-model="activeRightTab"
           size="xs"
+          v-model="sortBy"
           :content="false"
           :items="items"
+          @update:model-value="onSort"
         />
       </div>
       <div v-else class="flex items-center justify-between px-4 sm:px-6">
         <div class="text-highlighted font-semibold">评论</div>
         <UTabs
           size="xs"
-          v-model="activeRightTab"
+          v-model="sortBy"
           :content="false"
           :items="items"
+          @update:model-value="onSort"
         />
       </div>
       <div v-if="activeTab === 'comment'">
@@ -132,7 +134,7 @@
                       profile
                     )
                   "
-                  class="text-muted bg-elevated size-10 rounded-full text-center text-xl font-medium"
+                  class="text-muted bg-elevated flex size-10 items-center justify-center rounded-full text-xl font-medium"
                 >
                   <img
                     class="size-full rounded-full object-cover"
@@ -162,7 +164,7 @@
                 ></UBadge>
               </template>
               <template #description>
-                <div class="text-base break-words whitespace-pre-wrap">
+                <div class="text-base break-all whitespace-pre-wrap">
                   {{ content.text }}
                 </div>
                 <div
@@ -342,7 +344,7 @@
                           </template>
                           <template #description>
                             <div
-                              class="text-base break-words whitespace-pre-wrap"
+                              class="text-base break-all whitespace-pre-wrap"
                             >
                               {{ content.text }}
                             </div>
@@ -624,24 +626,24 @@ const likes = ref<
 const toast = useToast()
 const tabItems = [
   {
-    label: '评论',
+    label: `评论 ${postMap.value[props.targetId].activePost.commentCount}`,
     value: 'comment'
   },
   {
-    label: '赞',
+    label: `赞 ${postMap.value[props.targetId].activePost.likes}`,
     value: 'like'
   }
 ]
 const activeTab = ref('comment')
-const activeRightTab = ref('recommend')
+const sortBy = ref('hot')
 const items = [
   {
-    label: '推荐',
-    value: 'recommend'
+    label: '热度',
+    value: 'hot'
   },
   {
-    label: '最新',
-    value: 'latest'
+    label: '时间',
+    value: 'time'
   }
 ]
 const isEditMenuDrawerOpen = ref(false)
@@ -694,6 +696,10 @@ const replydropdownMenuItems = computed(() => {
       ]
     : [[common, report]]
 })
+
+const onSort = v => {
+  sortBy.value = v
+}
 
 const onReport = () => {
   publisherOverlay.open({

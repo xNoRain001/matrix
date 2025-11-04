@@ -2,6 +2,7 @@
   <Suspense>
     <UApp
       v-if="userInfo"
+      :locale="zh_cn"
       :toaster="{ position: 'top-center', progress: false }"
     >
       <UDashboardGroup unit="rem" storage="local">
@@ -155,6 +156,7 @@ import type { message } from './types'
 import OverlayVoiceChat from './components/overlay/OverlayVoiceChat.vue'
 import OverlayHelpAndSupport from './components/overlay/OverlayHelpAndSupport.vue'
 import OverlayAbout from './components/overlay/OverlayAbout.vue'
+import { zh_cn } from '@nuxt/ui/locale'
 
 let voiceChatInviteToastId = null
 let matchTimer = null

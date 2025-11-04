@@ -2,7 +2,7 @@
   <div
     class="absolute top-0 right-0 bottom-0 left-0 flex flex-col items-center justify-center bg-[url(/images/bg.jpg)] bg-cover bg-center bg-no-repeat p-4"
   >
-    <div class="bg-elevated w-full max-w-[30rem] rounded-xl p-4">
+    <div class="bg-elevated w-full max-w-120 rounded-xl p-4">
       <div class="relative flex items-center justify-center">
         <UButton
           @click="backToLogin"
@@ -229,7 +229,7 @@
 
     <div
       v-if="isLogin"
-      class="mt-4 flex w-full max-w-[30rem] flex-col items-center gap-y-4 p-4"
+      class="mt-4 flex w-full max-w-120 flex-col items-center gap-y-4 p-4"
     >
       <USeparator label="or" />
       <div class="text-sm">

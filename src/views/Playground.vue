@@ -55,7 +55,8 @@
                 )
               "
               :ui="{
-                name: 'break-all'
+                name: 'break-all',
+                description: 'line-clamp-1'
               }"
             >
             </UUser>
@@ -64,7 +65,7 @@
             <!-- before:content-[open-quote] after:content-[close-quote] -->
             <div
               v-if="content.text"
-              class="text-base break-words whitespace-pre-wrap"
+              class="text-base break-all whitespace-pre-wrap"
             >
               {{ content.text }}
             </div>

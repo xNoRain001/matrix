@@ -3,7 +3,7 @@
     <UPageCard
       title="注销账号"
       description="不再想使用我们的服务？您可以在此处删除您的帐户。此操作不可逆，与此帐户相关的所有信息都将被永久删除。"
-      class="from-error/10 to-default bg-gradient-to-tl from-5%"
+      class="from-error/10 to-default bg-linear-to-tl from-5%"
     >
       <template #footer>
         <UButton label="注销账号" color="error" />

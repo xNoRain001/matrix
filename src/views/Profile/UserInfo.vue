@@ -21,7 +21,7 @@
             class="flex items-center gap-2 not-last:pb-4"
             :ui="{ container: 'flex-1 flex items-center gap-2 justify-end' }"
           >
-            <div class="w-50 truncate text-(--ui-text-dimmed)">
+            <div class="text-dimmed w-50 truncate">
               {{ userInfo.email }}
             </div>
           </UFormField>
@@ -48,10 +48,7 @@
               :src="avatarURL"
               :alt="profileForm.nickname[0]"
             ></UAvatar>
-            <UIcon
-              name="lucide:chevron-right"
-              class="size-5 text-(--ui-text-dimmed)"
-            />
+            <UIcon name="lucide:chevron-right" class="text-dimmed size-5" />
           </UFormField>
           <UFormField
             v-for="{ label, click, key } in profileItems"
@@ -63,7 +60,7 @@
               container: 'flex items-center justify-end gap-2 flex-1 '
             }"
           >
-            <span class="w-50 truncate text-end text-(--ui-text-dimmed)">
+            <span class="text-dimmed w-50 truncate text-end">
               {{
                 key === 'gender'
                   ? useTransformGender(profileForm[key])
@@ -77,10 +74,7 @@
                       : profileForm[key]
               }}
             </span>
-            <UIcon
-              name="lucide:chevron-right"
-              class="size-5 text-(--ui-text-dimmed)"
-            />
+            <UIcon name="lucide:chevron-right" class="text-dimmed size-5" />
           </UFormField>
           <UButton
             label="修改资料"

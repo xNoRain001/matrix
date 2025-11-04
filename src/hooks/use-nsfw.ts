@@ -4,10 +4,10 @@ const useNSFW = async files => {
   return true
 
   if (!model) {
-    const nsfwjs = await import('nsfwjs')
-    model = await nsfwjs.load('/nsfw-model/model.json', {
-      size: 299
-    })
+    // const nsfwjs = await import('nsfwjs')
+    // model = await nsfwjs.load('/nsfw-model/model.json', {
+    //   size: 299
+    // })
   }
 
   const promises = files.map(file => {

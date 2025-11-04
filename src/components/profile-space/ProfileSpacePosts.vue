@@ -37,7 +37,7 @@
         )
       "
     >
-      <p class="text-highlighted break-words whitespace-pre-wrap">
+      <p class="text-highlighted break-all whitespace-pre-wrap">
         {{ text }}
       </p>
       <Carousel

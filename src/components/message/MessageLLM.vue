@@ -47,7 +47,7 @@
             <div v-if="generating" class="mb-1 px-4 py-2">
               <div class="flex h-6 items-center gap-1">
                 <span
-                  class="bg-elevated size-2 animate-[bounce_1s_infinite] rounded-full"
+                  class="bg-elevated size-2 animate-bounce rounded-full"
                 ></span>
                 <span
                   class="bg-elevated size-2 animate-[bounce_1s_0.15s_infinite] rounded-full"
@@ -62,14 +62,14 @@
             <DynamicScrollerItem :item="item" :active="active">
               <div v-if="item.role === 'user'" class="flex justify-end pb-1">
                 <div
-                  class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2 break-all whitespace-pre-wrap"
+                  class="bg-muted max-w-3/4 rounded-xl px-4 py-2 break-all whitespace-pre-wrap"
                 >
                   {{ item.content }}
                 </div>
               </div>
               <div v-else class="pb-1">
                 <div
-                  class="max-w-3/4 rounded-xl bg-(--ui-bg-muted) px-4 py-2 break-all whitespace-pre-wrap"
+                  class="bg-muted max-w-3/4 rounded-xl px-4 py-2 break-all whitespace-pre-wrap"
                 >
                   {{ item.content }}
                 </div>

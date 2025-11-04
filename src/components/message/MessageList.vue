@@ -41,7 +41,7 @@
                     'border-l-2',
                     activeTargetId === id
                       ? 'border-primary bg-primary/10'
-                      : 'hover:border-primary hover:bg-primary/5 border-(--ui-bg)'
+                      : 'hover:border-primary hover:bg-primary/5 border-bg'
                   ]
             "
             @click="onClick(id)"

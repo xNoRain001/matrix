@@ -29,7 +29,7 @@
           <template #description>
             <div
               v-if="content.text"
-              class="text-base break-words whitespace-pre-wrap"
+              class="text-base break-all whitespace-pre-wrap"
             >
               {{ content.text }}
             </div>

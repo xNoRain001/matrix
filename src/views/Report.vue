@@ -15,7 +15,7 @@
             <template v-if="reportTarget === 'post'">
               <div
                 v-if="post.content.text"
-                class="text-base break-words whitespace-pre-wrap"
+                class="text-base break-all whitespace-pre-wrap"
               >
                 {{ post.content.text }}
               </div>
@@ -29,7 +29,7 @@
             <template v-if="reportTarget === 'comment'">
               <div
                 v-if="comment.content.text"
-                class="text-base break-words whitespace-pre-wrap"
+                class="text-base break-all whitespace-pre-wrap"
               >
                 {{ comment.content.text }}
               </div>
@@ -70,7 +70,7 @@
             />
             <div
               v-if="content.text"
-              class="text-base break-words whitespace-pre-wrap"
+              class="text-base break-all whitespace-pre-wrap"
             >
               {{ content.text }}
             </div>
