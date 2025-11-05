@@ -170,6 +170,7 @@ import { voiceChatInviteToastPendingTime } from '@/const'
 import { useRoute } from 'vue-router'
 import { useThrottleFn } from '@vueuse/core'
 import OverlayVoiceChat from '@/components/overlay/OverlayVoiceChat.vue'
+// import OverlayObfuscateImage from '../overlay/OverlayObfuscateImage.vue'
 // import OverlayImageToASCII from '../overlay/OverlayImageToASCII.vue'
 
 let receivingOfflineMsgsTimer = null
@@ -233,6 +234,7 @@ const isContacts = computed(() => route.path === '/contacts')
 const overlay = useOverlay()
 const voiceChatOverlay = overlay.create(OverlayVoiceChat)
 // const imageToASCIIOverlay = overlay.create(OverlayImageToASCII)
+// const obfuscateImageOverlay = overlay.create(OverlayObfuscateImage)
 const prevRoute = route.path
 
 const onSpeak = async () => {
@@ -462,6 +464,11 @@ const collapsibleItems = [
   //   icon: 'lucide:scan-text',
   //   label: '艺术字',
   //   onSelect: () => imageToASCIIOverlay.open()
+  // },
+  // {
+  //   icon: 'lucide:binary',
+  //   label: '混淆',
+  //   onSelect: () => obfuscateImageOverlay.open()
   // }
 ]
 

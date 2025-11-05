@@ -53,7 +53,7 @@
 </template>
 
 <script lang="ts" setup>
-import { useFileToImage } from '@/hooks'
+import { useFileToImage, useImageToImageData } from '@/hooks'
 import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref, useTemplateRef, watch } from 'vue'
@@ -327,16 +327,6 @@ const imageDataToASCII = (image: HTMLImageElement, imageData: ImageData) => {
   return ascii
 }
 
-const imageToImageData = (image: HTMLImageElement) => {
-  const canvas = document.createElement('canvas')
-  const context = canvas.getContext('2d', { willReadFrequently: true })
-  const { width, height } = image
-  canvas.width = width
-  canvas.height = height
-  context.drawImage(image, 0, 0, width, height)
-  return context.getImageData(0, 0, width, height)
-}
-
 const imageToASCII = async () => {
   if (!file.value) {
     return toast.add({
@@ -346,8 +336,12 @@ const imageToASCII = async () => {
     })
   }
 
+  const canvas = canvasRef.value
+  const ctx = canvas.getContext('2d')
+  const { width, height } = canvas
+  ctx.clearRect(0, 0, width, height)
   const img = await useFileToImage(file.value)
-  const imageData = imageToImageData(img)
+  const imageData = useImageToImageData(img)
   const ascii = imageDataToASCII(img, imageData)
   asciiToCanvas(img, ascii)
 }

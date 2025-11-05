@@ -54,8 +54,10 @@ import useComputeZodiacSign from './use-compute-zodiac-sign'
 import useNSFW from './use-nsfw'
 import useFixSoftKeyboardInIOS from './use-fix-soft-keyboard-in-ios'
 import useFileToImage from './use-file-to-image'
+import useImageToImageData from './use-image-to-image-data'
 
 export {
+  useImageToImageData,
   useFileToImage,
   useFixSoftKeyboardInIOS,
   useNSFW,
