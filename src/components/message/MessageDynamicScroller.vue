@@ -348,7 +348,7 @@
           <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
               <UIcon name="lucide:smile" class="size-5"></UIcon>
-              同意了你的好友请求
+              {{ item.content }}
             </div>
             <UAvatar
               v-if="item.separator"
@@ -370,6 +370,47 @@
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
               <UIcon name="lucide:smile" class="size-5"></UIcon>
               同意了你的好友请求
+            </div>
+          </div>
+        </template>
+        <template v-else-if="item.type === 'random'">
+          <!-- 打包时扫描所有可能 -->
+          <UIcon name="lucide:dice-1" hidden></UIcon>
+          <UIcon name="lucide:dice-2" hidden></UIcon>
+          <UIcon name="lucide:dice-3" hidden></UIcon>
+          <UIcon name="lucide:dice-4" hidden></UIcon>
+          <UIcon name="lucide:dice-5" hidden></UIcon>
+          <UIcon name="lucide:dice-6" hidden></UIcon>
+
+          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
+            <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
+              <UIcon
+                :name="`lucide:dice-${item.content}`"
+                class="size-16"
+              ></UIcon>
+            </div>
+            <UAvatar
+              v-if="item.separator"
+              :src="avatarURL"
+              :alt="userInfo.profile.nickname[0] || ''"
+              size="xl"
+            />
+            <div v-else class="w-10"></div>
+          </div>
+          <div v-else class="flex items-start gap-3 pb-1">
+            <UAvatar
+              data-type="avatar"
+              v-if="item.separator"
+              :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
+              :alt="targetProfile.nickname"
+              size="xl"
+            />
+            <div v-else class="w-10"></div>
+            <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
+              <UIcon
+                :name="`lucide:dice-${item.content}`"
+                class="size-16"
+              ></UIcon>
             </div>
           </div>
         </template>

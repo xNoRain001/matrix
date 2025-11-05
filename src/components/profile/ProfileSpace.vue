@@ -1,5 +1,9 @@
 <template>
-  <div class="h-screen w-full">
+  <!-- 
+    浮动按钮需要相对于容器进行定位，正常情况下不添加 translate-z-0" 也是正常的，
+    由于 PC 端可以直接点击好友，显示空间，此时容器需要添加 translate-z-0
+  -->
+  <div class="h-screen w-full translate-z-0">
     <div ref="containerRef" class="relative h-full overflow-y-auto">
       <!-- 顶部导航 -->
       <UDashboardNavbar
@@ -40,14 +44,20 @@
       </UDashboardNavbar>
       <!-- 背景图片，由于移动端有 pb-16，所有高度全部使用 50vh，而不是 50% -->
       <!-- 灰色滤镜：grayscale-50 filter -->
-      <div
+      <Placeholder
+        v-if="isError"
+        :class="isMatch ? '' : '-mt-16'"
+        class="sticky -top-[calc(50vh-4rem)] z-10 h-[50vh] border-none"
+      >
+      </Placeholder>
+      <img
+        v-else
         @click="viewerOverlay.open({ urls: [{ url: bgURL }] })"
-        :class="[isSelf ? 'cursor-pointer' : '', isMatch ? '' : '-mt-16']"
-        :style="{
-          'background-image': `url(${bgURL})`
-        }"
-        class="sticky -top-[calc(50vh-4rem)] z-10 h-[50vh] cursor-pointer bg-cover bg-center bg-no-repeat"
-      ></div>
+        :src="bgURL"
+        :class="isMatch ? '' : '-mt-16'"
+        class="sticky -top-[calc(50vh-4rem)] z-10 h-[50vh] cursor-pointer object-cover"
+        @error="isError = true"
+      />
       <!-- 个人资料卡片 -->
       <UPageCard
         class="absolute top-[50vh] right-4 left-4 z-20 -translate-y-[calc(100%+1rem)] sm:right-6 sm:left-6 sm:-translate-y-[calc(100%+1.5rem)]"
@@ -111,8 +121,7 @@
                 ]
               })
             "
-            class="absolute top-0 -translate-y-1/2 cursor-pointer"
-            :class="isSelf ? 'cursor-pointer' : ''"
+            class="ring-muted absolute top-0 -translate-y-1/2 cursor-pointer ring-2"
             :src="isSelf ? avatarURL : `${VITE_OSS_BASE_URL}avatar/${targetId}`"
             :alt="targetProfile.nickname[0]"
             size="3xl"
@@ -433,6 +442,7 @@ const mbtiItems = [
   'ENTJ'
 ]
 const tagRef = useTemplateRef('tagRef')
+const isError = ref(false)
 
 const computeDays = timestamp =>
   Math.ceil((Date.now() - timestamp) / (1000 * 60 * 60 * 24))

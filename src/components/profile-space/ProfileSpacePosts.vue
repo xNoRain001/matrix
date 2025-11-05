@@ -9,7 +9,7 @@
       </div>
     </div>
   </div>
-  <div v-if="postMap[targetId]?.posts?.length">
+  <div v-if="postMap[targetId]?.posts?.length" clas>
     <UPageCard
       v-for="(
         {

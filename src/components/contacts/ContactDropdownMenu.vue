@@ -1,7 +1,7 @@
 <template>
   <USlideover
     v-if="isMobile"
-    title="好友信息"
+    title="操作"
     description=" "
     :ui="{ content: 'max-w-none', body: 'space-y-4', description: 'hidden' }"
   >

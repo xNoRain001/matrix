@@ -80,17 +80,13 @@
       <UCollapsible v-model:open="expanded">
         <template #content>
           <div class="grid grid-cols-4 gap-4 pt-4">
-            <div class="flex flex-col items-center">
-              <UButton
-                icon="lucide:file-image"
-                size="xl"
-                @click="onOpenFileSelector(inputRef)"
-              ></UButton>
-              <div class="mt-2 text-xs">图片</div>
-            </div>
-            <div class="flex flex-col items-center">
-              <UButton icon="lucide:phone" size="xl" @click="onCall"></UButton>
-              <div class="mt-2 text-xs">语音</div>
+            <div
+              class="flex flex-col items-center"
+              v-for="({ icon, label, onSelect }, index) in collapsibleItems"
+              :key="index"
+            >
+              <UButton :icon="icon" size="xl" @click="onSelect"></UButton>
+              <div class="mt-2 text-xs">{{ label }}</div>
             </div>
           </div>
         </template>
@@ -119,19 +115,12 @@
             :elm="textareaRef"
             :input-ref="inputRef"
           ></Emoji>
-          <UTooltip text="图片">
-            <UButton
-              variant="ghost"
-              icon="lucide:file-image"
-              @click="onOpenFileSelector(inputRef)"
-            ></UButton>
-          </UTooltip>
-          <UTooltip text="语音">
-            <UButton
-              variant="ghost"
-              icon="lucide:phone"
-              @click="onCall"
-            ></UButton>
+          <UTooltip
+            :text="label"
+            v-for="({ icon, label, onSelect }, index) in collapsibleItems"
+            :key="index"
+          >
+            <UButton variant="ghost" :icon="icon" @click="onSelect"></UButton>
           </UTooltip>
         </div>
         <UButton @click="onSendMsg" icon="lucide:send" label="发送"></UButton>
@@ -423,6 +412,52 @@ const onCall = async () => {
   )
 }
 
+const onRandom = async () => {
+  try {
+    await useSendMsg(
+      'random',
+      String(Math.floor(Math.random() * 6) + 1),
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      props.targetId,
+      userInfo,
+      globalSocket,
+      messageList,
+      lastMsgList,
+      lastMsgMap,
+      matchRes,
+      indexMap,
+      unreadMsgCounter,
+      msgContainerRef,
+      true
+    )
+  } catch {
+    toast.add({ title: '发送失败', color: 'error', icon: 'lucide:annoyed' })
+  }
+}
+
+const collapsibleItems = [
+  {
+    icon: 'lucide:file-image',
+    label: '图片',
+    onSelect: () => inputRef.value.click()
+  },
+  {
+    icon: 'lucide:phone',
+    label: '语音',
+    onSelect: onCall
+  },
+  {
+    icon: 'lucide:dices',
+    label: '骰子',
+    onSelect: onRandom
+  }
+]
+
 const onOpenEmoji = () => {
   const v = !isEmojiOpen.value
   isEmojiOpen.value = v
@@ -455,8 +490,6 @@ const onFocus = ({ target }) => {
   isEmojiOpen.value = false
   // 不需要修改 isRecord，因为能聚焦时一定没有进行发送语音行为
 }
-
-const onOpenFileSelector = target => target.click()
 
 const onInputChange = async () => {
   const input = inputRef.value

@@ -20,7 +20,7 @@ const getMessages = async (id, lastFetchedId, hashToBlobURLMap, targetId) => {
   }
 
   let counter = 0
-  while (cursor && counter < 20) {
+  while (cursor && counter < 30) {
     messages.unshift(cursor.value)
     counter++
     cursor = await cursor.continue()
