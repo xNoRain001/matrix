@@ -53,8 +53,10 @@ import useComputeAge from './use-compute-age'
 import useComputeZodiacSign from './use-compute-zodiac-sign'
 import useNSFW from './use-nsfw'
 import useFixSoftKeyboardInIOS from './use-fix-soft-keyboard-in-ios'
+import useFileToImage from './use-file-to-image'
 
 export {
+  useFileToImage,
   useFixSoftKeyboardInIOS,
   useNSFW,
   useComputeZodiacSign,

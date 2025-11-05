@@ -74,6 +74,7 @@
             ></UButton>
             <img
               v-if="item.url"
+              data-type="image"
               class="max-w-3/4 rounded-lg"
               :width="item.width"
               :height="item.height"

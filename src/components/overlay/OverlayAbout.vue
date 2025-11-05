@@ -1,11 +1,14 @@
 <template>
   <USlideover
     v-if="isMobile"
-    :class="isMobile ? 'max-w-none' : ''"
+    class="max-w-none"
     :close="{ onClick: () => emit('close', false) }"
     :title="title"
     :description="description"
-    :ui="{ body: 'flex flex-col gap-4 justify-center items-center' }"
+    :ui="{
+      body: 'flex flex-col gap-4 justify-center items-center',
+      description: 'hidden'
+    }"
   >
     <template #body>
       <svg

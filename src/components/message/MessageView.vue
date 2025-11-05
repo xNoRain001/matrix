@@ -170,6 +170,7 @@ import { voiceChatInviteToastPendingTime } from '@/const'
 import { useRoute } from 'vue-router'
 import { useThrottleFn } from '@vueuse/core'
 import OverlayVoiceChat from '@/components/overlay/OverlayVoiceChat.vue'
+// import OverlayImageToASCII from '../overlay/OverlayImageToASCII.vue'
 
 let receivingOfflineMsgsTimer = null
 let startTime = 0
@@ -231,6 +232,7 @@ const isCancelRecordTipShow = ref(false)
 const isContacts = computed(() => route.path === '/contacts')
 const overlay = useOverlay()
 const voiceChatOverlay = overlay.create(OverlayVoiceChat)
+// const imageToASCIIOverlay = overlay.create(OverlayImageToASCII)
 const prevRoute = route.path
 
 const onSpeak = async () => {
@@ -456,6 +458,11 @@ const collapsibleItems = [
     label: '骰子',
     onSelect: onRandom
   }
+  // {
+  //   icon: 'lucide:scan-text',
+  //   label: '艺术字',
+  //   onSelect: () => imageToASCIIOverlay.open()
+  // }
 ]
 
 const onOpenEmoji = () => {
