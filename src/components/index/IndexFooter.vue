@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="bg-default fixed bottom-0 h-16 w-full border-t border-t-(--ui-border)"
-  >
+  <div class="bg-default border-t-default fixed bottom-0 h-16 w-full border-t">
     <UTabs
       v-model="activeTab"
       variant="link"
@@ -13,21 +11,21 @@
       :content="false"
       :items="mobileNavs"
     >
-      <template #trailing="{ item: { to } }">
+      <template #trailing="{ item: { value } }">
         <UBadge
-          v-if="to === '/message' && unreadMsgCounter"
+          v-if="value === '/message' && unreadMsgCounter"
           class="absolute top-0 right-0"
           :label="unreadMsgCounter"
           size="sm"
         />
         <UBadge
-          v-if="to === '/contacts' && unreadContactNotificationCount"
+          v-if="value === '/contacts' && unreadContactNotificationCount"
           class="absolute top-0 right-0"
           :label="unreadContactNotificationCount"
           size="sm"
         />
         <UBadge
-          v-if="to === '/' && unreadHomeNotificationCount"
+          v-if="value === '/' && unreadHomeNotificationCount"
           class="absolute top-0 right-0"
           :label="unreadHomeNotificationCount"
           size="sm"
@@ -51,31 +49,26 @@ const mobileNavs = [
   {
     label: '大厅',
     icon: 'lucide:house',
-    to: '/',
     value: '/' // tab 的值，默认值为索引
   },
   {
     label: '广场',
     icon: 'lucide:rose',
-    to: '/playground',
     value: '/playground'
   },
   {
     label: '好友',
     icon: 'lucide:users-round',
-    to: '/contacts',
     value: '/contacts'
   },
   {
     label: '消息',
     icon: 'lucide:message-circle',
-    to: '/message',
     value: '/message'
   },
   {
     label: '我的',
     icon: 'lucide:user-round-cog',
-    to: '/profile',
     value: '/profile'
   }
 ]

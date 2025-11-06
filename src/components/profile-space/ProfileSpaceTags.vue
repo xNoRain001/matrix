@@ -19,7 +19,7 @@
   ></UBadge>
   <UBadge
     v-if="targetProfile.college"
-    icon="lucide:university"
+    icon="lucide:graduation-cap"
     :label="targetProfile.college"
     color="warning"
   ></UBadge>

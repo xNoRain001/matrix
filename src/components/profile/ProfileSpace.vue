@@ -121,7 +121,7 @@
                 ]
               })
             "
-            class="ring-muted absolute top-0 -translate-y-1/2 cursor-pointer ring-2"
+            class="ring-default absolute top-0 -translate-y-1/2 cursor-pointer ring-2"
             :src="isSelf ? avatarURL : `${VITE_OSS_BASE_URL}avatar/${targetId}`"
             :alt="targetProfile.nickname[0]"
             size="3xl"
@@ -332,17 +332,17 @@ const cards = [
   [
     {
       icon: 'lucide:user-round',
-      label: '个人资料',
+      label: '人设经营',
       onSelect: () => (isUserInfoSlideoverOpen.value = true)
     },
     {
       icon: 'lucide:bell',
-      label: '通知',
+      label: '通知管理',
       onSelect: () => (isNotificationSlideoverOpen.value = true)
     },
     {
       icon: 'lucide:palette',
-      label: '主题',
+      label: '主题管理',
       onSelect: () => (isThemeSlideoverOpen.value = true)
     }
   ],
@@ -371,7 +371,7 @@ const cards = [
     },
     {
       icon: 'lucide:info',
-      label: '关于',
+      label: '关于我们',
       onSelect: () => aboutOverlay.open()
     }
   ],

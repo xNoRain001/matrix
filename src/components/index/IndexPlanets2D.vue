@@ -31,6 +31,7 @@
         :text="profile.nickname"
         :delay-duration="0"
       >
+        <!-- lg:hover:ring-inverted  -->
         <div
           @click="
             profileSpaceOverlay.open({
@@ -38,7 +39,14 @@
               targetProfile: profile
             })
           "
-          class="avatar bg-elevated ring-default lg:hover:ring-inverted absolute top-1/2 left-1/2 size-7 rounded-full text-center text-xl text-(--color) ring-2 transition"
+          :class="
+            profile.gender === 'male'
+              ? 'ring-sky-400'
+              : profile.gender === 'female'
+                ? 'ring-pink-400'
+                : 'ring-default'
+          "
+          class="avatar text-muted bg-elevated absolute top-1/2 left-1/2 size-7 rounded-full text-center text-xl ring-2 transition"
           tabindex="-1"
           :style="{
             '--color': color,

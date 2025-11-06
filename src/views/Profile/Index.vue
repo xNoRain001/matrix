@@ -40,33 +40,33 @@ const links = [
   [
     {
       icon: 'lucide:user-round',
-      label: '空间',
+      label: '情绪切片',
       to: '/profile/space',
       exact: true
     },
     {
       icon: 'lucide:user-round',
-      label: '资料',
+      label: '人设经营',
       to: '/profile/user-info'
     },
     {
       icon: 'lucide:bell',
-      label: '通知',
+      label: '通知管理',
       to: '/profile/notifications'
     },
     {
       icon: 'lucide:palette',
-      label: '主题',
+      label: '主题管理',
       to: '/profile/theme'
     },
     {
       icon: 'lucide:database',
-      label: '数据',
+      label: '数据管理',
       to: '/profile/data-manager'
     }
     // {
     //   icon: 'lucide:shield',
-    //   label: '密码',
+    //   label: '修改密码',
     //   to: '/profile/update-password'
     // }
   ],
@@ -77,7 +77,7 @@ const links = [
     //   to: '/profile/logoff'
     // },
     {
-      label: '登出',
+      label: '退出登录',
       icon: 'lucide:log-out',
       onSelect: () => logoutOverlay.open()
     }

@@ -108,6 +108,7 @@
     <!-- 注册登录和重置密码等内容 -->
     <UApp v-else :toaster="{ position: 'top-center', progress: false }">
       <RouterView />
+      <SkyBg v-if="config.theme.starsBg"></SkyBg>
     </UApp>
   </Suspense>
 </template>
@@ -255,44 +256,45 @@ const navs = [
       type: 'trigger',
       children: [
         {
-          label: '空间',
+          label: '情绪切片',
           to: '/profile/space',
           exact: true
         },
         {
-          label: '资料',
+          label: '人设经营',
           to: '/profile/user-info'
         },
         {
-          label: '通知',
+          label: '通知管理',
           to: '/profile/notifications'
         },
         {
-          label: '主题',
+          label: '主题管理',
           to: '/profile/theme'
         },
         {
-          label: '数据',
+          label: '数据管理',
           to: '/profile/data-manager'
         },
-        {
-          label: '密码',
-          to: '/profile/update-password'
-        },
+        // {
+        //   label: '修改密码',
+        //   to: '/profile/update-password'
+        // },
         // {
         //   label: '注销账号',
         //   to: '/profile/logoff'
         // },
         {
-          label: '登出',
+          label: '退出登录',
           onSelect: () => logoutOverlay.open()
         }
       ]
     }
   ],
+
   [
     {
-      label: '反馈',
+      label: '建议',
       icon: 'lucide:message-circle',
       onSelect: () => publisherOverlay.open({ action: 'feedback' })
     },
@@ -302,7 +304,7 @@ const navs = [
       onSelect: () => helpAndSupportOverlay.open()
     },
     {
-      label: '关于',
+      label: '关于我们',
       icon: 'lucide:info',
       onSelect: () => abouttOverlay.open()
     },
