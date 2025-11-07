@@ -4,6 +4,9 @@
     :close="{ onClick: () => emit('close', false) }"
     :title="title"
     :description="description"
+    :ui="{
+      description: 'hidden'
+    }"
   >
     <template #footer>
       <UButton
@@ -20,6 +23,9 @@
     :close="{ onClick: () => emit('close', false) }"
     :title="title"
     :description="description"
+    :ui="{
+      description: 'hidden'
+    }"
   >
     <template #footer>
       <UButton

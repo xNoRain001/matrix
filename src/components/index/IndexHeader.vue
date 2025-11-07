@@ -14,6 +14,11 @@
         @click="onScreenSize"
       ></UButton>
       <UButton
+        icon="lucide:calendar-check"
+        variant="ghost"
+        @click="isDailyQuestsSlideoverOpen = true"
+      ></UButton>
+      <UButton
         color="neutral"
         variant="ghost"
         square
@@ -52,6 +57,7 @@
       <img src="/images/fullscreen.webp" />
     </template>
   </USlideover>
+  <IndexDailyQuestsSlideover v-model="isDailyQuestsSlideoverOpen" />
 </template>
 
 <script lang="ts" setup>
@@ -63,6 +69,7 @@ import { ref, watch } from 'vue'
 
 const isFullScreen = ref(false)
 const isFullscreenSlideoverOpen = ref(false)
+const isDailyQuestsSlideoverOpen = ref(false)
 const isFilterOverlayOpen = defineModel<boolean>()
 const { userInfo, onlineCount, isMobile } = storeToRefs(useUserStore())
 const { unreadHomeNotificationCount } = storeToRefs(useNotificationsStore())

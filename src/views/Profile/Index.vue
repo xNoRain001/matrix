@@ -46,7 +46,7 @@ const links = [
     },
     {
       icon: 'lucide:user-round',
-      label: '人设经营',
+      label: '个人资料',
       to: '/profile/user-info'
     },
     {

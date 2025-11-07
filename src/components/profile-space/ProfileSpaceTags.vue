@@ -7,7 +7,7 @@
   ></UBadge>
   <UBadge
     v-if="targetProfile.birthday"
-    icon="lucide:cake"
+    icon="lucide:cake-slice"
     :label="useComputeAge(targetProfile.birthday)"
     color="warning"
   ></UBadge>

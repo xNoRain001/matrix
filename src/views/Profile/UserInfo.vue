@@ -47,7 +47,7 @@
             <UAvatar
               size="2xs"
               :src="avatarURL"
-              :alt="profileForm.nickname[0]"
+              :alt="userInfo.profile.nickname[0]"
             ></UAvatar>
             <UIcon name="lucide:chevron-right" class="text-dimmed size-5" />
           </UFormField>
@@ -72,7 +72,9 @@
                     : key === 'region'
                       ? profileForm.province +
                         `${profileForm.city ? ` - ${profileForm.city}` : ''}`
-                      : profileForm[key]
+                      : key === 'nickname'
+                        ? userInfo.profile.nickname
+                        : profileForm[key]
               }}
             </span>
             <UIcon name="lucide:chevron-right" class="text-dimmed size-5" />
@@ -86,34 +88,6 @@
         </UPageCard>
       </template>
     </USlideover>
-
-    <UDrawer
-      v-model:open="isOpenNicknameDrawer"
-      title="修改昵称"
-      description=" "
-      :ui="{
-        description: 'hidden'
-      }"
-    >
-      <template #body>
-        <UFormField>
-          <UInput v-model="profileForm.nickname" class="w-full" maxlength="16">
-            <template v-if="profileForm.nickname" #trailing>
-              <div class="text-muted text-xs tabular-nums">
-                {{ profileForm.nickname.length }}/16
-              </div>
-              <UButton
-                color="neutral"
-                variant="link"
-                size="sm"
-                icon="lucide:circle-x"
-                @click="profileForm.nickname = ''"
-              />
-            </template>
-          </UInput>
-        </UFormField>
-      </template>
-    </UDrawer>
 
     <UDrawer
       v-model:open="isOpenGenderDrawer"
@@ -229,25 +203,19 @@
       <UPageCard variant="subtle">
         <UFormField
           name="name"
-          label="昵称"
-          description="填写你的昵称"
+          label="角色"
+          description="选择你的角色"
           class="flex items-start justify-between gap-4"
           :ui="{ container: 'w-3/5' }"
         >
-          <UInput class="w-full" v-model="profileForm.nickname" maxlength="16">
-            <template v-if="profileForm.nickname" #trailing>
-              <div class="text-muted text-xs tabular-nums">
-                {{ profileForm.nickname.length }}/16
-              </div>
-              <UButton
-                color="neutral"
-                variant="link"
-                size="sm"
-                icon="lucide:circle-x"
-                @click="profileForm.nickname = ''"
-              />
-            </template>
-          </UInput>
+          <div class="flex items-center gap-3">
+            <UInput
+              class="flex-1"
+              disabled
+              v-model="userInfo.profile.nickname"
+            />
+            <UButton label="选择" @click="avatarOverlay.open()"></UButton>
+          </div>
         </UFormField>
         <USeparator />
         <UFormField
@@ -322,7 +290,7 @@
               @click="viewerOverlay.open({ urls: [{ url: avatarURL }] })"
               class="cursor-pointer"
               :src="avatarURL"
-              :alt="profileForm.nickname[0]"
+              :alt="userInfo.profile.nickname[0]"
               size="lg"
             />
             <UButton label="选择" @click="avatarRef.click()" />
@@ -381,13 +349,13 @@ import { storeToRefs } from 'pinia'
 import { ref, shallowRef, watch } from 'vue'
 import { parseDate } from '@internationalized/date'
 import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
+import OverlayAvatar from '@/components/overlay/OverlayAvatar.vue'
 
 const isUserInfoSlideoverOpen = defineModel<boolean>({ required: false })
 const toast = useToast()
 const isOpenGenderDrawer = ref(false)
 const isOpenBirthdayDrawer = ref(false)
 const isOpenRegionDrawer = ref(false)
-const isOpenNicknameDrawer = ref(false)
 const isOpenCollegeDrawer = ref(false)
 const { isMobile, userInfo, avatarURL, globalSocket } =
   storeToRefs(useUserStore())
@@ -412,9 +380,9 @@ const genderOptions = [
 ]
 const profileItems = [
   {
-    label: '昵称',
+    label: '角色',
     key: 'nickname',
-    click: () => (isOpenNicknameDrawer.value = true)
+    click: () => avatarOverlay.open()
   },
   {
     label: '性别',
@@ -442,6 +410,7 @@ const date = shallowRef(
 )
 const overlay = useOverlay()
 const viewerOverlay = overlay.create(OverlayViewer)
+const avatarOverlay = overlay.create(OverlayAvatar)
 const avatarRef = ref(null)
 
 const onFileChange = e =>
@@ -454,6 +423,11 @@ const getUserInfoDiff = (userInfo, _profileForm) => {
 
   for (let i = 0, l = keys.length; i < l; i++) {
     const key = keys[i]
+
+    if (key === 'nickname') {
+      continue
+    }
+
     const value = _profileForm[key]
 
     if (value !== profile[key]) {

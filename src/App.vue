@@ -261,7 +261,7 @@ const navs = [
           exact: true
         },
         {
-          label: '人设经营',
+          label: '个人资料',
           to: '/profile/user-info'
         },
         {

@@ -1,7 +1,7 @@
 <template>
   <UPageSection
     title="矩阵"
-    description="欢迎进入 Z 世代的多元宇宙：我们的灵魂拒绝印刷，你的灵魂，由你定义。"
+    description="欢迎进入 Z 世代的多元宇宙：你的灵魂，由你定义。"
     :features="features"
     :links="links"
   />
