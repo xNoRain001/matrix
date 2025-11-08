@@ -73,6 +73,9 @@ const addMsgToView = (
     msgContainerRef
   )
 
+  // 为了防止伪造其他人的消息，需要在服务器中提供这两个字段
+  delete payload.sender
+  delete payload.contact
   return [indexdbLabel, indexdbMessageRecord, payload, messageRecord]
 }
 

@@ -45,7 +45,7 @@ import {
   useWebRTCStore
 } from '@/store'
 import { storeToRefs } from 'pinia'
-import { useGenRoomId, useRefreshOnline } from '@/hooks'
+import { useGenRoomId, useRefreshOnlineStatus } from '@/hooks'
 
 let timer = null
 const router = useRouter()
@@ -78,7 +78,9 @@ onMounted(async () => {
     matchRes.value.id
   ))
   globalSocket.value.emit('bidirectional-web-rtc', _roomId)
-  timer = useRefreshOnline(globalSocket, 'matchTarget', [activeTargetId.value])
+  timer = useRefreshOnlineStatus(globalSocket, 'matchTarget', [
+    activeTargetId.value
+  ])
 })
 
 onBeforeUnmount(() => {

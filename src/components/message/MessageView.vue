@@ -257,7 +257,6 @@ import {
   onBeforeUnmount,
   onMounted,
   ref,
-  computed,
   watch,
   onBeforeMount,
   useTemplateRef
@@ -327,7 +326,6 @@ const route = useRoute()
 const isRecord = ref(false)
 const recording = ref(false)
 const isCancelRecordTipShow = ref(false)
-const isContacts = computed(() => route.path === '/contacts')
 const overlay = useOverlay()
 const voiceChatOverlay = overlay.create(OverlayVoiceChat)
 // const imageToASCIIOverlay = overlay.create(OverlayImageToASCII)
@@ -814,8 +812,8 @@ props.isMatch
     )
 
 onMounted(() => {
-  // message list 组件会更新 time ago，不需要处理该页面的聊天界面的 time ago
-  if (props.isMatch || isContacts.value) {
+  // MessageList 组件中会更新
+  if (route.path !== '/message') {
     updateTimeAgo()
     timer = setInterval(updateTimeAgo, 1000 * 60)
   }

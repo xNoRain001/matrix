@@ -35,7 +35,7 @@ import {
   useUserStore
 } from '@/store'
 import { storeToRefs } from 'pinia'
-import { useRefreshOnline } from '@/hooks'
+import { useRefreshOnlineStatus } from '@/hooks'
 
 let timer = null
 const router = useRouter()
@@ -58,7 +58,9 @@ if (isOpen.value) {
 }
 
 onMounted(async () => {
-  timer = useRefreshOnline(globalSocket, 'matchTarget', [activeTargetId.value])
+  timer = useRefreshOnlineStatus(globalSocket, 'matchTarget', [
+    activeTargetId.value
+  ])
 })
 
 onBeforeUnmount(() => {

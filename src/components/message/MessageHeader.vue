@@ -7,9 +7,9 @@
     }"
   >
     <template #title>
-      <span @click="toSpace" class="cursor-pointer truncate">{{
-        targetProfile.nickname
-      }}</span>
+      <span @click="toSpace" class="cursor-pointer truncate">
+        {{ targetProfile.nickname }}
+      </span>
     </template>
     <template #leading>
       <UButton

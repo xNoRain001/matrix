@@ -35,7 +35,7 @@ import useClearMessageRecord from './use-clear-message-record'
 import useDeleteContact from './use-delete-contact'
 import useAddContact from './use-add-contact'
 import useInitLabelAndSeparator from './use-init-label-and-separator'
-import useRefreshOnline from './use-refresh-online'
+import useRefreshOnlineStatus from './use-refresh-online-status'
 import useSendMsg from './use-send-msg'
 import useIsDeviceOpen from './use-is-device-open'
 import useUpdateLastMsgToDB from './use-update-last-msg-to-db'
@@ -78,7 +78,7 @@ export {
   useUpdateLastMsgToDB,
   useIsDeviceOpen,
   useSendMsg,
-  useRefreshOnline,
+  useRefreshOnlineStatus,
   useInitLabelAndSeparator,
   useAddContact,
   useDeleteContact,

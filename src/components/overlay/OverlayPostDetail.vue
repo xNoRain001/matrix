@@ -37,29 +37,22 @@
           <p class="text-toned text-sm">
             {{ useFormatTimeAgo(postMap[targetId].activePost.createdAt) }}
           </p>
-          <div>
-            <UButton
-              variant="ghost"
-              icon="lucide:message-circle"
-              :label="String(postMap[targetId].activePost.commentCount || '')"
-            ></UButton>
-            <UButton
-              variant="ghost"
-              :color="
-                postMap[targetId].activePost.liked ? 'secondary' : 'primary'
-              "
-              icon="lucide:heart"
-              :label="String(postMap[targetId].activePost.likes || '')"
-              @click="
-                useLike(
-                  toast,
-                  postMap[targetId].activePost,
-                  postMap[targetId].activePostId,
-                  'post'
-                )
-              "
-            ></UButton>
-          </div>
+          <UButton
+            variant="ghost"
+            :color="
+              postMap[targetId].activePost.liked ? 'secondary' : 'primary'
+            "
+            icon="lucide:heart"
+            :label="String(postMap[targetId].activePost.likes || '')"
+            @click="
+              useLike(
+                toast,
+                postMap[targetId].activePost,
+                postMap[targetId].activePostId,
+                'post'
+              )
+            "
+          ></UButton>
         </div>
       </UPageCard>
       <div
@@ -82,7 +75,9 @@
         />
       </div>
       <div v-else class="flex items-center justify-between px-4 sm:px-6">
-        <div class="text-highlighted font-semibold">评论</div>
+        <div class="text-highlighted font-semibold">
+          {{ `评论 ${postMap[targetId].activePost.commentCount}` }}
+        </div>
         <UTabs
           size="xs"
           v-model="sortBy"

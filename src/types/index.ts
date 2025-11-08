@@ -40,7 +40,10 @@ export type userInfo = {
       | 'ENTJ'
     tags: string[]
     createdAt: number
-    online?: boolean
+    onlineStatus?: {
+      isOnline: boolean
+      lastOnline: number
+    }
   }
   ipInfo: {
     province: string

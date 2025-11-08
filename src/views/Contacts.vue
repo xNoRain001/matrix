@@ -61,7 +61,7 @@
 
 <script setup lang="ts">
 import { getContacts } from '@/apis/contact'
-import { useRefreshContacts, useRefreshOnline } from '@/hooks'
+import { useRefreshContacts } from '@/hooks'
 import {
   useNotificationsStore,
   useRecentContactsStore,
@@ -69,17 +69,16 @@ import {
 } from '@/store'
 import type { userInfo } from '@/types'
 import { storeToRefs } from 'pinia'
-import { onMounted, ref, onBeforeUnmount, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
-let timer = null
 const toast = useToast()
 const isNotificationsSlideoverOpen = ref(false)
-const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
+const { isMobile, userInfo } = storeToRefs(useUserStore())
 const { activeTargetId, activeTargetProfile, contactList, contactProfileMap } =
   storeToRefs(useRecentContactsStore())
 const { unreadContactNotificationCount } = storeToRefs(useNotificationsStore())
 
-const initContactList = async () => {
+const refreshContactsProfile = async () => {
   const now = Date.now()
   const expired =
     now >
@@ -116,11 +115,6 @@ watch(isNotificationsSlideoverOpen, v => {
 })
 
 onMounted(async () => {
-  await initContactList()
-  timer = useRefreshOnline(globalSocket, 'contactList', contactList.value)
-})
-
-onBeforeUnmount(() => {
-  clearInterval(timer)
+  await refreshContactsProfile()
 })
 </script>

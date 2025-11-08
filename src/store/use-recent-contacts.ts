@@ -52,7 +52,9 @@ const useRecentContactsStore = defineStore('recentContactsStore', () => {
       >
     >({}),
     lastMsgList: ref<string[]>([]),
-    unreadMsgCounter: ref(0)
+    unreadMsgCounter: ref(0),
+    isFirstGetContactsOnlineStatus: ref(true),
+    isFirstGetChatsOnlineStatus: ref(true)
   }
 })
 

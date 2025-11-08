@@ -214,7 +214,9 @@ const {
   contactProfileMap,
   hashToBlobURLMap,
   indexMap,
-  isReceivingOfflineMsgs
+  isReceivingOfflineMsgs,
+  isFirstGetContactsOnlineStatus,
+  isFirstGetChatsOnlineStatus
 } = storeToRefs(useRecentContactsStore())
 const {
   contactNotifications,
@@ -362,7 +364,7 @@ const floatingBtnY = ref(Number(localStorage.getItem('floatingBtnY') || 40))
 const voiceChatOverlay = overlay.create(OverlayVoiceChat)
 const helpAndSupportOverlay = overlay.create(OverlayHelpAndSupport)
 const abouttOverlay = overlay.create(OverlayAbout)
-const { VITE_OSS_BASE_URL } = import.meta.env
+const { VITE_ENV, VITE_VERSION, VITE_OSS_BASE_URL } = import.meta.env
 
 const initFloatingBtnPosition = (currentTarget, clientX, clientY) => {
   const { left, top, width, height } = currentTarget.getBoundingClientRect()
@@ -1264,23 +1266,34 @@ const onRefreshNotifications = notifications => {
   }
 }
 
-const onOnline = (type, res) => {
-  const _lastMsgMap = lastMsgMap.value
-  const _contactProfileMap = contactProfileMap.value
+const onGetOnlineStatus = (type, res) => {
   const ids = Object.keys(res)
+  const isMessageList = type === 'messageList'
 
-  if (type === 'messageList') {
+  if (isMessageList || type === 'contactList') {
+    const map = isMessageList ? lastMsgMap.value : contactProfileMap.value
+
     for (let i = 0, l = ids.length; i < l; i++) {
       const id = ids[i]
-      _lastMsgMap[id].profile.online = res[id]
+      const onlineStatus = res[id]
+      const { profile } = map[id]
+
+      // 只有状态发生改变时才更新
+      if (profile?.onlineStatus?.isOnline !== onlineStatus.isOnline) {
+        profile.onlineStatus = onlineStatus
+      }
     }
-  } else if (type === 'contactList') {
-    for (let i = 0, l = ids.length; i < l; i++) {
-      const id = ids[i]
-      _contactProfileMap[id].profile.online = res[id]
-    }
+
+    isMessageList
+      ? (isFirstGetChatsOnlineStatus.value = false)
+      : (isFirstGetContactsOnlineStatus.value = false)
   } else if (type === 'matchTarget') {
-    matchRes.value.profile.online = res[ids[0]]
+    const { profile } = matchRes.value
+    const onlineStatus = res[ids[0]]
+
+    if (profile?.onlineStatus?.isOnline !== onlineStatus.isOnline) {
+      profile.onlineStatus = onlineStatus
+    }
   }
 }
 
@@ -1290,6 +1303,8 @@ const onRefreshToken = token => {
   localStorage.setItem('token', token)
   location.reload()
 }
+
+const onRefreshVersion = () => location.reload()
 
 const onAgreeWebRTCButNoPermission = () => {
   voiceChatOverlay.close()
@@ -1308,6 +1323,7 @@ const createSocket = (emit = null) => {
     {
       reconnectionAttempts: maxReconnectionAttempts,
       auth: {
+        version: VITE_VERSION,
         token: localStorage.getItem('token')
       }
     }
@@ -1368,9 +1384,10 @@ const initSocket = socket => {
   // 通知
   socket.on('refresh-notifications', onRefreshNotifications)
   // 在线状态
-  socket.on('online', onOnline)
+  socket.on('get-online-status', onGetOnlineStatus)
   socket.on('get-online-count', onGetOnlineCount)
   socket.on('refresh-token', onRefreshToken)
+  socket.on('refresh-version', onRefreshVersion)
   socket.emit('ready')
 }
 
@@ -1436,13 +1453,17 @@ onBeforeMount(async () => {
     await initLastMsgs()
     await initAvatarURL()
     await initChatBgURL()
-    const {
-      data: { province, city }
-    } = await getGeoInfoAPI()
-    userInfo.value.ipInfo = {
-      province,
-      city
+
+    if (VITE_ENV === 'production') {
+      const {
+        data: { province, city }
+      } = await getGeoInfoAPI()
+      userInfo.value.ipInfo = {
+        province,
+        city
+      }
     }
+
     // 拉取离线数据后，更新本地数据库中的数据和内存中的数据
     initSocket(socket)
   }

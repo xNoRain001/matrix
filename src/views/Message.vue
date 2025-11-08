@@ -64,7 +64,7 @@
 
 <script setup lang="ts">
 import { getProfiles } from '@/apis/profile'
-import { useGetDB, useRefreshOnline } from '@/hooks'
+import { useGetDB } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { onMounted, onBeforeUnmount, ref } from 'vue'
@@ -82,7 +82,7 @@ import { onMounted, onBeforeUnmount, ref } from 'vue'
 // const activeTab = ref('message')
 let timer = null
 const toast = useToast()
-const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
+const { isMobile, userInfo } = storeToRefs(useUserStore())
 const {
   unreadMsgCounter,
   activeTargetId,
@@ -108,7 +108,7 @@ const onResetMsgCounter = async () => {
   unreadMsgCounter.value = 0
 }
 
-const initProfiles = async () => {
+const refreshChatsProfile = async () => {
   const now = Date.now()
   const { id } = userInfo.value
   const expired =
@@ -156,8 +156,7 @@ const initProfiles = async () => {
 }
 
 onMounted(async () => {
-  await initProfiles()
-  timer = useRefreshOnline(globalSocket, 'messageList', lastMsgList.value)
+  await refreshChatsProfile()
 })
 
 onBeforeUnmount(() => {

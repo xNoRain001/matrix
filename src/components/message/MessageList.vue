@@ -6,7 +6,22 @@
     }"
   >
     <div class="divide-default divide-y overflow-y-auto">
+      <template v-if="isFirstGetChatsOnlineStatus">
+        <div
+          v-for="i in 5"
+          :key="i"
+          class="flex items-center gap-2.5 p-4 sm:px-6"
+        >
+          <USkeleton class="size-10 rounded-full" />
+
+          <div class="grid flex-1 gap-2">
+            <USkeleton class="h-4 w-full" />
+            <USkeleton class="h-4 w-4/5" />
+          </div>
+        </div>
+      </template>
       <div
+        v-else
         v-for="id in lastMsgList"
         :key="id"
         @contextmenu="contextmenuId = id"
@@ -53,7 +68,9 @@
               }"
               size="xl"
               :chip="{
-                color: lastMsgMap[id].profile.online ? 'primary' : 'error'
+                color: lastMsgMap[id].profile?.onlineStatus?.isOnline
+                  ? 'primary'
+                  : 'error'
               }"
               :ui="{
                 wrapper: 'flex-1 min-w-0',
@@ -90,7 +107,11 @@
 </template>
 
 <script setup lang="ts">
-import { useFormatTimeAgo, useHideMessageList } from '@/hooks'
+import {
+  useFormatTimeAgo,
+  useHideMessageList,
+  useRefreshOnlineStatus
+} from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref, onBeforeUnmount, onMounted, watch } from 'vue'
@@ -99,9 +120,10 @@ import useDeleteMessageList from '@/hooks/use-delete-message-list'
 import OverlayMessageView from '../overlay/OverlayMessageView.vue'
 
 let timer = null
+let timer2 = null
 let contextmenuId = ''
 const { VITE_OSS_BASE_URL } = import.meta.env
-const { isMobile, userInfo } = storeToRefs(useUserStore())
+const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
 const {
   lastMsgMap,
   lastMsgList,
@@ -112,7 +134,8 @@ const {
   lastFetchedId,
   contactProfileMap,
   indexMap,
-  unreadMsgCounter
+  unreadMsgCounter,
+  isFirstGetChatsOnlineStatus
 } = storeToRefs(useRecentContactsStore())
 const contextMenuItems = ref<ContextMenuItem[][]>([
   [
@@ -262,9 +285,15 @@ defineShortcuts({
 onMounted(() => {
   updateTimeAgo()
   timer = setInterval(updateTimeAgo, 2 * 1000 * 60)
+  timer2 = useRefreshOnlineStatus(
+    globalSocket,
+    'messageList',
+    lastMsgList.value
+  )
 })
 
 onBeforeUnmount(() => {
   clearInterval(timer)
+  clearInterval(timer2)
 })
 </script>
