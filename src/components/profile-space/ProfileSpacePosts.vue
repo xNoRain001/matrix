@@ -46,7 +46,7 @@
         @click.stop="useNoop"
         :items="images"
         :active-index="0"
-      ></Carousel>
+      />
       <div
         :class="text && !images.length ? '' : 'mt-2'"
         class="flex items-center justify-between"
@@ -68,7 +68,7 @@
                 postDetailOverlay
               )
             "
-          ></UButton>
+          />
           <UButton
             variant="ghost"
             :color="liked ? 'secondary' : 'primary'"
@@ -77,19 +77,19 @@
             @click.stop="
               useLike(toast, postMap[targetId].posts[index], _id, 'post')
             "
-          ></UButton>
+          />
           <UButton
             v-if="isMobile"
             variant="ghost"
             icon="lucide:ellipsis"
             @click.stop="onOpenDropdownMenu(_id, index)"
-          ></UButton>
+          />
           <UDropdownMenu v-else :items="dropdownMenuItems">
             <UButton
               variant="ghost"
               icon="lucide:ellipsis"
               @click.stop="onOpenDropdownMenu(_id, index)"
-            ></UButton>
+            />
           </UDropdownMenu>
         </div>
       </div>
@@ -112,17 +112,13 @@
       }"
     >
       <template #footer>
-        <UButton
-          label="编辑"
-          @click="onEditPost"
-          class="justify-center"
-        ></UButton>
+        <UButton label="编辑" @click="onEditPost" class="justify-center" />
         <UButton
           label="删除"
           @click="onDeletePost"
           class="justify-center"
           color="error"
-        ></UButton>
+        />
       </template>
     </UDrawer>
     <!-- 滚动到顶部浮动按钮 -->
@@ -140,7 +136,7 @@
           variant="outline"
           color="neutral"
           icon="lucide:arrow-up"
-        ></UButton>
+        />
       </div>
     </Transition>
   </div>
@@ -161,12 +157,12 @@ import {
   useOpenPostDetailOverlay,
   useURLToBlob
 } from '@/hooks'
-import OverlayPostDetail from '../overlay/OverlayPostDetail.vue'
+import OverlayPostDetail from '@/components/overlay/OverlayPostDetail.vue'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { deletePostAPI, getPostsAPI, getSelfPostsAPI } from '@/apis/post'
 import { storeToRefs } from 'pinia'
 import { useFooterStore, usePostStore, useUserStore } from '@/store'
-import OverlayPublisher from '../overlay/OverlayPublisher.vue'
+import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
 import { useThrottleFn } from '@vueuse/core'
 
 const props = defineProps<{

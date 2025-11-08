@@ -7,20 +7,29 @@
     v-model:open="isOpen"
     :ui="{ content: 'flex-row', description: 'hidden' }"
   >
-    <template #content>
-      <MessageView
-        @close="isOpen = false"
-        :is-match="true"
-        :target-id="activeTargetId"
-        :target-profile="activeTargetProfile"
-      />
+    <!-- 规定时间内对方没接通时会清除 matchRes，因此需要使用到 v-if -->
+    <template v-if="isOpen" #content>
+      <div class="relative flex w-full flex-col">
+        <ChatHeader
+          @close="isOpen = false"
+          :is-match="true"
+          :target-id="activeTargetId"
+          :target-profile="activeTargetProfile"
+        />
+        <VoiceChatCall
+          :is-match="true"
+          :target-id="activeTargetId"
+          :target-profile="activeTargetProfile"
+          class="m-4 sm:m-6"
+        />
+      </div>
       <ProfileSpace
         v-if="!isMobile"
         class="max-w-md"
         :is-match="true"
         :target-id="activeTargetId"
         :target-profile="activeTargetProfile"
-      ></ProfileSpace>
+      />
     </template>
   </UModal>
 </template>
@@ -32,43 +41,53 @@ import {
   useMatchStore,
   usePostStore,
   useRecentContactsStore,
-  useUserStore
+  useUserStore,
+  useWebRTCStore
 } from '@/store'
 import { storeToRefs } from 'pinia'
-import { useRefreshOnlineStatus } from '@/hooks'
+import { useGenRoomId, useRefreshOnlineStatus } from '@/hooks'
 
 let timer = null
 const router = useRouter()
-const { isMobile, globalSocket } = storeToRefs(useUserStore())
+const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
 const { matchRes } = storeToRefs(useMatchStore())
 const { activeTargetIds, activeTargetId, activeTargetProfile } = storeToRefs(
   useRecentContactsStore()
 )
 const { postMap } = storeToRefs(usePostStore())
+const { roomId, isVoiceChatMatch, webRTCTargetId, webRTCTargetProfile } =
+  storeToRefs(useWebRTCStore())
 const isOpen = ref(
-  Boolean(matchRes.value?.type === 'chat' && matchRes.value?.profile)
+  Boolean(matchRes.value?.type === 'voice-chat' && matchRes.value?.profile)
 )
 
 if (isOpen.value) {
   const { id, profile } = matchRes.value
   activeTargetId.value = id
   activeTargetProfile.value = profile
+  webRTCTargetId.value = id
+  webRTCTargetProfile.value = profile
 } else {
   await router.replace('/')
 }
 
 onMounted(async () => {
+  isVoiceChatMatch.value = true
+  const _roomId = (roomId.value = useGenRoomId(
+    userInfo.value.id,
+    matchRes.value.id
+  ))
+  globalSocket.value.emit('bidirectional-web-rtc', _roomId)
   timer = useRefreshOnlineStatus(globalSocket, 'matchTarget', [
     activeTargetId.value
   ])
 })
 
 onBeforeUnmount(() => {
-  clearInterval(timer)
-
   activeTargetIds.value.delete(activeTargetId.value)
   delete postMap.value[activeTargetId.value]
   activeTargetId.value = ''
   activeTargetProfile.value = null
+  clearInterval(timer)
 })
 </script>

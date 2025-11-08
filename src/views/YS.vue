@@ -5,25 +5,21 @@
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
-        <template #trailing
-          ><UBadge v-if="onlineCount" :label="onlineCount"></UBadge>
+        <template #trailing>
+          <UBadge v-if="onlineCount" :label="onlineCount" />
         </template>
         <template #right>
           <UButton
             icon="lucide:refresh-cw"
             variant="ghost"
             @click="onRefresh"
-          ></UButton>
-          <UButton
-            icon="lucide:bell"
-            variant="ghost"
-            @click="onClick"
-          ></UButton>
+          />
+          <UButton icon="lucide:bell" variant="ghost" @click="onClick" />
           <UButton
             icon="lucide:pencil-line"
             variant="ghost"
             @click="isPublishSlideoverOpen = true"
-          ></UButton>
+          />
         </template>
       </UDashboardNavbar>
     </template>
@@ -38,16 +34,14 @@
           value-key="value"
           :items="selectMenuItems"
           class="flex-1 sm:w-48"
-        >
-        </USelectMenu>
+        />
         <USelect
           icon="lucide:clock"
           placeholder="时间排序"
           v-model="filterState.createdAt"
           :items="orderItems"
           class="flex-1 sm:w-48"
-        >
-        </USelect>
+        />
       </UForm>
       <div v-if="helpItems.length">
         <UPageCard
@@ -113,24 +107,24 @@
                   color="error"
                   class="absolute top-28 left-1/2 -translate-x-1/2 -translate-y-full"
                   :label="` Lv.${avatarLevel} | 库存：${count}`"
-                ></UBadge>
+                />
               </div>
               <div class="flex flex-wrap items-start gap-2">
                 <UBadge
                   v-if="record[user]"
                   label="已请求过支援"
                   color="warning"
-                ></UBadge>
-                <UBadge :label="`Lv.${level}`"></UBadge>
-                <UBadge :label="`世界等级 ${worldLevel}`"></UBadge>
-                <UBadge :label="`成就数 ${finishAchievementNum}`"></UBadge>
+                />
+                <UBadge :label="`Lv.${level}`" />
+                <UBadge :label="`世界等级 ${worldLevel}`" />
+                <UBadge :label="`成就数 ${finishAchievementNum}`" />
                 <UBadge
                   :label="`深渊 ${towerFloorIndex}-${towerLevelIndex} | ${towerStarIndex}⭐`"
-                ></UBadge>
+                />
                 <UBadge
                   :label="`幽境危战 ${stygianIndex} | ${stygianSeconds}秒`"
-                ></UBadge>
-                <UBadge :label="`满好感度角色数量 ${fetterCount}`"></UBadge>
+                />
+                <UBadge :label="`满好感度角色数量 ${fetterCount}`" />
               </div>
             </div>
             <p class="text-muted mt-2 text-sm">
@@ -192,7 +186,7 @@
                 color="error"
                 @click="onCancelAssist(index, _id)"
                 loading-auto
-              ></UButton>
+              />
             </template>
             <template #description>
               <span>剩余次数：{{ count }}</span>
@@ -217,23 +211,21 @@
         variant="naked"
         orientation="horizontal"
         :class="isMobile ? '' : 'mb-4'"
-      >
-      </UPageCard>
+      />
       <USelectMenu
         virtualize
         v-model="assistState.avatar"
         value-key="value"
         :items="publishMenuItems"
         class="w-full"
-      >
-      </USelectMenu>
+      />
       <UPageCard
         title="UID"
         description="填写你的 UID"
         variant="naked"
         orientation="horizontal"
         :class="isMobile ? '' : 'mb-4'"
-      ></UPageCard>
+      />
       <UInput :maxlength="9" v-model="assistState.uid" class="w-full">
         <template v-if="assistState.uid.length" #trailing>
           <div class="text-muted text-xs tabular-nums">
@@ -257,7 +249,7 @@
         :ui="{
           container: 'lg:grid-cols-1'
         }"
-      ></UPageCard>
+      />
       <UInputNumber
         class="w-full"
         v-model="assistState.count"
@@ -271,7 +263,7 @@
         type="submit"
         @click="onAssist"
         loading-auto
-      ></UButton>
+      />
     </template>
   </USlideover>
   <!-- 确认求助 -->

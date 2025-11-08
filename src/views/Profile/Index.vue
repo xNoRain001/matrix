@@ -4,7 +4,7 @@
     v-if="isMobile"
     :target-id="userInfo.id"
     :target-profile="userInfo.profile"
-  ></ProfileSpace>
+  />
   <UDashboardPanel v-else id="settings" :ui="{ body: 'lg:py-12' }">
     <template #header>
       <UDashboardNavbar title="我的">

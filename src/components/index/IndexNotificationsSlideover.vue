@@ -35,11 +35,7 @@
                     : ''
               }}</time
             >
-            <UBadge
-              label="删除"
-              color="error"
-              @click="onDelete(index)"
-            ></UBadge>
+            <UBadge label="删除" color="error" @click="onDelete(index)" />
           </template>
         </UUser>
       </div>

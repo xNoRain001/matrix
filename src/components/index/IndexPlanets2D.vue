@@ -69,7 +69,7 @@
 import type { userInfo } from '@/types'
 import { useElementSize } from '@vueuse/core'
 import { computed, ref } from 'vue'
-import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
+import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 
 const props = withDefaults(
   defineProps<{

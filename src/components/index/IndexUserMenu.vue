@@ -46,7 +46,7 @@ import { storeToRefs } from 'pinia'
 import { computed, reactive } from 'vue'
 import { appConfig as _appConfig } from '@/const'
 import { useUpdateTheme } from '@/hooks'
-import OverlayLogout from '../overlay/OverlayLogout.vue'
+import OverlayLogout from '@/components/overlay/OverlayLogout.vue'
 import colors from 'tailwindcss/colors'
 
 defineProps<{

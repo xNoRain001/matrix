@@ -18,8 +18,7 @@
             variant="naked"
             orientation="horizontal"
             class="mb-4"
-          >
-          </UPageCard>
+          />
           <USelect
             class="w-full"
             v-model="reportTargetType"
@@ -32,8 +31,7 @@
           variant="naked"
           orientation="horizontal"
           class="mb-4"
-        >
-        </UPageCard>
+        />
         <URadioGroup
           color="primary"
           variant="table"
@@ -47,8 +45,7 @@
         variant="naked"
         orientation="horizontal"
         class="mb-4"
-      >
-      </UPageCard>
+      />
       <UTextarea
         :placeholder="
           isReply ? `回复：${replyTargetNickname}` : '善语结缘，温暖常伴...'
@@ -83,8 +80,7 @@
         :ui="{
           container: 'lg:grid-cols-1'
         }"
-      >
-      </UPageCard>
+      />
       <UFileUpload
         ref="fileUploadRef"
         @update:model-value="onUpdateFile"
@@ -96,8 +92,7 @@
         :ui="{
           files: 'grid-cols-3'
         }"
-      >
-      </UFileUpload>
+      />
       <template v-if="isPost">
         <div class="text-primary text-center text-sm" @click="onTextToImage">
           没有图片？试试 AI 生成图片
@@ -123,7 +118,7 @@
           v-if="(isPost || isFeedback) && (payload.text || files.length)"
           label="草稿箱"
           @click="onDraft"
-        ></UButton>
+        />
         <UButton
           :disabled="!payload.text && !files.length"
           class="ml-2"
@@ -146,7 +141,7 @@
                           ? onFeedback()
                           : onReport()
           "
-        ></UButton>
+        />
       </div>
     </template>
   </USlideover>

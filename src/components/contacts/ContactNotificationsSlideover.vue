@@ -45,13 +45,13 @@
                 label="拒绝"
                 icon="lucide:x"
                 size="xs"
-              ></UButton>
+              />
               <UButton
                 @click.stop="onAgree(id, profile)"
                 label="同意"
                 icon="lucide:check"
                 size="xs"
-              ></UButton>
+              />
             </div>
             <UButton
               v-else
@@ -59,7 +59,7 @@
               color="error"
               label="删除"
               size="xs"
-            ></UButton>
+            />
           </template>
           <template #description>
             <span class="flex-1 truncate">{{ content }}</span>
@@ -84,7 +84,7 @@ import {
 } from '@/store'
 import { useFormatTimeAgo, useSendMsg } from '@/hooks'
 import { agreeCandidate, refuseCandidate } from '@/apis/contact'
-import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
+import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 
 const { VITE_OSS_BASE_URL } = import.meta.env
 const isNotificationsSlideoverOpen = defineModel<boolean>()

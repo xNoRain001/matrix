@@ -11,11 +11,7 @@
     }"
   >
     <template #body>
-      <Carousel
-        :items="urls"
-        :active-index="_activeIndex"
-        :viewer="true"
-      ></Carousel>
+      <Carousel :items="urls" :active-index="_activeIndex" :viewer="true" />
     </template>
     <!-- <template #footer>
       <UButton

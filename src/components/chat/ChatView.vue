@@ -1,17 +1,17 @@
 <template>
   <UDashboardPanel id="message-2" :ui="{ root: 'translate-z-0' }">
-    <MessageHeader
+    <ChatHeader
       @close="emits('close')"
       :is-match="isMatch"
       :target-id="targetId"
       :target-profile="targetProfile"
-    ></MessageHeader>
+    />
     <!-- 聊天内容 -->
-    <MessageDynamicScroller
+    <ChatBody
       :is-match="isMatch"
       :target-id="targetId"
       :target-profile="targetProfile"
-    ></MessageDynamicScroller>
+    />
     <!-- 移动端输入框 -->
     <div class="border-default relative border-t p-4" v-if="isMobile">
       <div class="flex items-end gap-2">
@@ -20,13 +20,13 @@
           @click="onSpeak"
           variant="ghost"
           icon="lucide:mic"
-        ></UButton>
+        />
         <UButton
           v-if="!recording && isRecord"
           @click="isRecord = !isRecord"
           variant="ghost"
           icon="lucide:keyboard"
-        ></UButton>
+        />
         <div
           v-if="recording"
           :class="isCancelRecordTipShow ? 'text-error' : ''"
@@ -165,7 +165,7 @@
           variant="ghost"
           :icon="expanded ? 'lucide:circle-x' : 'lucide:circle-plus'"
           @click="onExpand"
-        ></UButton>
+        />
       </div>
       <Emoji
         v-model="message"
@@ -173,7 +173,7 @@
         :elm="mobileTextareaRef"
         :input-ref="inputRef"
         @send="onSendMsg"
-      ></Emoji>
+      />
       <UCollapsible v-model:open="expanded">
         <template #content>
           <div class="grid grid-cols-4 gap-4 pt-4">
@@ -182,7 +182,7 @@
               v-for="({ icon, label, onSelect }, index) in collapsibleItems"
               :key="index"
             >
-              <UButton :icon="icon" size="xl" @click="onSelect"></UButton>
+              <UButton :icon="icon" size="xl" @click="onSelect" />
               <div class="mt-2 text-xs">{{ label }}</div>
             </div>
           </div>
@@ -202,25 +202,20 @@
         autoresize
         variant="none"
         :ui="{ base: 'p-0' }"
-      >
-      </UTextarea>
+      />
 
       <div class="flex justify-between">
         <div class="space-x-2">
-          <Emoji
-            v-model="message"
-            :elm="textareaRef"
-            :input-ref="inputRef"
-          ></Emoji>
+          <Emoji v-model="message" :elm="textareaRef" :input-ref="inputRef" />
           <UTooltip
             :text="label"
             v-for="({ icon, label, onSelect }, index) in collapsibleItems"
             :key="index"
           >
-            <UButton variant="ghost" :icon="icon" @click="onSelect"></UButton>
+            <UButton variant="ghost" :icon="icon" @click="onSelect" />
           </UTooltip>
         </div>
-        <UButton @click="onSendMsg" icon="lucide:send" label="发送"></UButton>
+        <UButton @click="onSendMsg" icon="lucide:send" label="发送" />
       </div>
     </UPageCard>
   </UDashboardPanel>
@@ -266,8 +261,8 @@ import { voiceChatInviteToastPendingTime } from '@/const'
 import { useRoute } from 'vue-router'
 import { useThrottleFn } from '@vueuse/core'
 import OverlayVoiceChat from '@/components/overlay/OverlayVoiceChat.vue'
-// import OverlayObfuscateImage from '../overlay/OverlayObfuscateImage.vue'
-// import OverlayImageToASCII from '../overlay/OverlayImageToASCII.vue'
+// import OverlayObfuscateImage from '@/components/overlay/OverlayObfuscateImage.vue'
+// import OverlayImageToASCII from '@/components/overlay/OverlayImageToASCII.vue'
 
 let receivingOfflineMsgsTimer = null
 let startTime = 0
@@ -813,7 +808,7 @@ props.isMatch
 
 onMounted(() => {
   // MessageList 组件中会更新
-  if (route.path !== '/message') {
+  if (route.path !== '/messages') {
     updateTimeAgo()
     timer = setInterval(updateTimeAgo, 1000 * 60)
   }
@@ -843,7 +838,7 @@ onBeforeUnmount(() => {
 
   // 处理 message 页面未关闭聊天界面切换到其他页面和通过空间打开聊天界面后，关闭聊天
   // 界面时不关闭空间
-  if (activeTargetIds.value.size === 1 && prevRoute === '/message') {
+  if (activeTargetIds.value.size === 1 && prevRoute === '/messages') {
     activeTargetIds.value.delete(props.targetId)
     delete postMap.value[props.targetId]
     activeTargetId.value = ''

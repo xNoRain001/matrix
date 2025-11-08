@@ -21,7 +21,7 @@ const useFooterStore = defineStore('footerStore', () => ({
     {
       label: '消息',
       icon: 'lucide:message-circle',
-      value: '/message'
+      value: '/messages'
     },
     {
       label: '我的',

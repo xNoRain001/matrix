@@ -71,8 +71,7 @@
                 wrapper: 'flex-1 min-w-0',
                 name: 'truncate'
               }"
-            >
-            </UUser>
+            />
           </div>
         </SlideItem>
       </div>
@@ -87,7 +86,7 @@ import type { ContextMenuItem } from '@nuxt/ui'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useDeleteContact, useRefreshOnlineStatus } from '@/hooks'
 import type { userInfo } from '@/types'
-import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
+import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 
 let timer = null
 let contextmenuId = ''

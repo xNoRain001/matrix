@@ -6,17 +6,17 @@ const router = createRouter({
     {
       path: '/',
       meta: { auth: true },
-      component: () => import('@/views/Index.vue'),
+      component: () => import('@/views/Index/Index.vue'),
       children: [
         {
           path: 'chat',
           meta: { requireRoomId: true },
-          component: () => import('@/views/Chat.vue')
+          component: () => import('@/views/Index/Chat.vue')
         },
         {
           path: 'voice-chat',
           meta: { requireRoomId: true },
-          component: () => import('@/views/VoiceChat.vue')
+          component: () => import('@/views/Index/VoiceChat.vue')
         }
       ]
     },
@@ -56,9 +56,9 @@ const router = createRouter({
       ]
     },
     {
-      path: '/message',
+      path: '/messages',
       meta: { auth: true },
-      component: () => import('@/views/Message.vue')
+      component: () => import('@/views/Messages.vue')
     },
     {
       path: '/contacts',

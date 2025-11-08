@@ -12,7 +12,7 @@
         @close="emit('close', false)"
         :target-id="targetId"
         :target-profile="targetProfile"
-      ></ProfileSpace>
+      />
     </template>
   </USlideover>
 </template>

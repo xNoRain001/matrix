@@ -24,7 +24,7 @@
           class="flex items-center justify-between gap-2 not-last:pb-4"
           @click="onSelect"
         >
-          <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
+          <UIcon name="lucide:chevron-right" class="size-5" />
         </UFormField>
       </UPageCard>
     </template>
@@ -58,7 +58,7 @@
     :description="description"
   >
     <template #footer>
-      <reuseOverlayTemplate></reuseOverlayTemplate>
+      <reuseOverlayTemplate />
     </template>
   </UDrawer>
   <UModal
@@ -68,7 +68,7 @@
     :description="description"
   >
     <template #footer>
-      <reuseOverlayTemplate></reuseOverlayTemplate>
+      <reuseOverlayTemplate />
     </template>
   </UModal>
 </template>
@@ -86,7 +86,7 @@ import { createReusableTemplate } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import OverlayPublisher from '../overlay/OverlayPublisher.vue'
+import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -119,7 +119,7 @@ const isFriend = computed(() =>
 const route = useRoute()
 const isConfirmOverlayOpen = ref(false)
 const isOverlayOpen = ref(false)
-const isMessage = computed(() => route.path === '/message')
+const isMessage = computed(() => route.path === '/messages')
 const title = ref('')
 const description = ref(' ')
 const deleteList = {

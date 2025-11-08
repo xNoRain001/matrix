@@ -1,7 +1,7 @@
 <template>
   <UDashboardPanel id="home">
     <template #header>
-      <IndexHeader v-model="isFilterOverlayOpen"></IndexHeader>
+      <IndexHeader v-model="isFilterOverlayOpen" />
     </template>
 
     <template #body>
@@ -15,7 +15,7 @@
           <IndexPlanets2D
             :planets="planets"
             :paused="!isPlanetsInView || isPlanetsHovered"
-          ></IndexPlanets2D>
+          />
         </div>
       </div>
       <!-- class="from-primary/10 to-default bg-gradient-to-tl from-5%" -->
@@ -32,7 +32,7 @@
       >
         <!-- <img src="/images/tailwindcss-v4.svg" alt="Tailwind CSS" class="w-full" /> -->
       </UPageCard>
-      <router-view v-if="!showCards"></router-view>
+      <router-view v-if="!showCards" />
     </template>
 
     <template v-if="isMobile" #footer>
@@ -61,7 +61,7 @@
           color="error"
           icon="lucide:wifi-off"
           label="重新匹配"
-        ></UButton>
+        />
         <div v-else class="flex flex-col items-center text-sm">
           <svg
             class="text-primary size-16"
@@ -106,9 +106,9 @@
     </template>
   </UModal>
   <!-- 需要提前获取到 icon，否则断网时，icon 加载不出来 -->
-  <UIcon hidden name="lucide:wifi-off"></UIcon>
+  <UIcon hidden name="lucide:wifi-off" />
   <!-- 过滤器 -->
-  <IndexFilter v-model="isFilterOverlayOpen"></IndexFilter>
+  <IndexFilter v-model="isFilterOverlayOpen" />
 </template>
 
 <script lang="ts" setup>

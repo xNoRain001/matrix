@@ -2,7 +2,7 @@
   <div class="flex justify-center">
     <div
       ref="divRef"
-      class="h-[calc(100vw-2rem)] bg-(--ui-bg) sm:h-[50vh]"
+      class="bg-default h-[calc(100vw-2rem)] sm:h-[50vh]"
       @mousedown="onMouseDown"
       @mousemove="onMouseMove"
       @mouseup="onMouseUp"
@@ -44,7 +44,7 @@ import * as THREE from 'three'
 // } from 'three'
 import { onMounted, useTemplateRef } from 'vue'
 import { getRandomProfilesAPI } from '@/apis/profile'
-import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
+import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 
 let renderer = null
 let camera = null

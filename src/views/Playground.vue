@@ -1,7 +1,7 @@
 <template>
   <UDashboardPanel id="playground" :ui="{ body: 'p-0 sm:p-0' }">
     <template #header>
-      <PlaygroundHeader v-model="allPostLoaded"></PlaygroundHeader>
+      <PlaygroundHeader v-model="allPostLoaded" />
     </template>
     <template #body>
       <!-- <UTabs ref="tabsRef" :items="tabItems" v-model="activeTab">
@@ -58,8 +58,7 @@
                 name: 'break-all',
                 description: 'line-clamp-1'
               }"
-            >
-            </UUser>
+            />
           </template>
           <template #description>
             <!-- before:content-[open-quote] after:content-[close-quote] -->
@@ -74,7 +73,7 @@
               :class="content.text ? 'mt-2' : ''"
               :items="content.images"
               :active-index="0"
-            ></Carousel>
+            />
             <div
               :class="content.text && !content.images.length ? '' : 'mt-2'"
               class="flex items-center justify-between"
@@ -97,7 +96,7 @@
                       postDetailOverlay
                     )
                   "
-                ></UButton>
+                />
                 <UButton
                   variant="ghost"
                   :color="liked ? 'secondary' : 'primary'"
@@ -106,19 +105,19 @@
                   @click="
                     useLike(toast, postMap[activeTab].posts[index], _id, 'post')
                   "
-                ></UButton>
+                />
                 <UButton
                   v-if="isMobile"
                   variant="ghost"
                   icon="lucide:ellipsis"
                   @click.stop="onOpenDropdownMenu(user, _id)"
-                ></UButton>
+                />
                 <UDropdownMenu v-else :items="dropdownMenuItems">
                   <UButton
                     variant="ghost"
                     icon="lucide:ellipsis"
                     @click.stop="onOpenDropdownMenu(user, _id)"
-                  ></UButton>
+                  />
                 </UDropdownMenu>
               </div>
             </div>
@@ -143,7 +142,7 @@
               variant="outline"
               color="neutral"
               icon="lucide:arrow-up"
-            ></UButton>
+            />
           </div>
         </Transition>
       </div>
@@ -176,7 +175,7 @@
         class="justify-center"
         color="error"
         @click="onReport"
-      ></UButton>
+      />
     </template>
   </UDrawer>
 </template>

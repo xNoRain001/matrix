@@ -89,8 +89,7 @@
                   :show="Boolean(lastMsgMap[id].unreadMsgs)"
                   :label="lastMsgMap[id].unreadMsgs"
                   size="sm"
-                >
-                </UBadge>
+                />
               </template>
               <template #description>
                 <span class="flex-1 truncate">{{
@@ -117,7 +116,7 @@ import { storeToRefs } from 'pinia'
 import { ref, onBeforeUnmount, onMounted, watch } from 'vue'
 import type { ContextMenuItem } from '@nuxt/ui'
 import useDeleteMessageList from '@/hooks/use-delete-message-list'
-import OverlayMessageView from '../overlay/OverlayMessageView.vue'
+import OverlayChat from '@/components/overlay/OverlayChat.vue'
 
 let timer = null
 let timer2 = null
@@ -176,7 +175,7 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
   ]
 ])
 const overlay = useOverlay()
-const messageViewOverlay = overlay.create(OverlayMessageView)
+const chatOverlay = overlay.create(OverlayChat)
 
 const onClick = id => {
   if (activeTargetId.value === id) {
@@ -240,12 +239,12 @@ watch(activeTargetId, v => {
   }
 
   if (v) {
-    messageViewOverlay.open({
+    chatOverlay.open({
       targetId: activeTargetId.value,
       targetProfile: activeTargetProfile.value
     })
   } else {
-    messageViewOverlay.close()
+    chatOverlay.close()
   }
 })
 

@@ -20,11 +20,11 @@
     }"
   >
     <template #body>
-      <ReuseSlideoverBodyTemplate></ReuseSlideoverBodyTemplate>
+      <ReuseSlideoverBodyTemplate />
     </template>
   </USlideover>
   <template v-else>
-    <ReuseSlideoverBodyTemplate></ReuseSlideoverBodyTemplate>
+    <ReuseSlideoverBodyTemplate />
   </template>
 </template>
 

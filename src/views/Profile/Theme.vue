@@ -19,7 +19,7 @@
             v-if="name === 'chatBg'"
             name="lucide:chevron-right"
             class="size-5"
-          ></UIcon>
+          />
           <USwitch
             v-else
             v-model="config.theme[name]"
@@ -38,7 +38,7 @@
     :ui="{ body: 'flex flex-col gap-4 sm:gap-6', description: 'hidden' }"
   >
     <template #body>
-      <ReuseSlideoverBodyTemplate></ReuseSlideoverBodyTemplate>
+      <ReuseSlideoverBodyTemplate />
       <div>
         <UPageCard title="控制台" variant="naked" class="mb-4" />
         <UPageCard
@@ -55,7 +55,7 @@
       </div>
     </template>
   </USlideover>
-  <ReuseSlideoverBodyTemplate v-else></ReuseSlideoverBodyTemplate>
+  <ReuseSlideoverBodyTemplate v-else />
   <input
     @change="onUpdateChatBg"
     ref="chatBgRef"

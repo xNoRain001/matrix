@@ -84,7 +84,7 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, useTemplateRef } from 'vue'
-import OverlayViewer from '../overlay/OverlayViewer.vue'
+import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
 import { storeToRefs } from 'pinia'
 import { useUserStore } from '@/store'
 

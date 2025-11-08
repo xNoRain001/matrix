@@ -40,10 +40,7 @@
             variant="ghost"
             @click="isSettingSlideoverOpen = true"
           />
-          <ContactDropdownMenu
-            v-if="!isSelf"
-            :target-id="targetId"
-          ></ContactDropdownMenu>
+          <ContactDropdownMenu v-if="!isSelf" :target-id="targetId" />
         </template>
       </UDashboardNavbar>
       <!-- 背景图片，由于移动端有 pb-16，所有高度全部使用 50vh，而不是 50% -->
@@ -52,8 +49,7 @@
         v-if="isError"
         :class="isMatch ? '' : '-mt-16'"
         class="sticky -top-[calc(50vh-4rem)] z-10 h-[50vh] border-none"
-      >
-      </Placeholder>
+      />
       <img
         v-else
         @click="viewerOverlay.open({ urls: [{ url: bgURL }] })"
@@ -78,22 +74,22 @@
             ></UButton> -->
             <UButton
               v-if="!isSelf && !inView"
-              @click="messageViewOverlay.open({ targetId, targetProfile })"
+              @click="chatOverlay.open({ targetId, targetProfile })"
               icon="lucide:message-circle-more"
               label="聊天"
               size="xs"
-            ></UButton>
+            />
             <UBadge
               icon="lucide:calendar"
               :label="`${computeDays(targetProfile.createdAt)} 天`"
-            ></UBadge>
+            />
             <UButton
               v-if="isSelf"
               @click="spaceBgRef.click()"
               icon="lucide:camera"
               label="背景"
               size="xs"
-            ></UButton>
+            />
           </div>
         </template>
         <template #description>
@@ -101,15 +97,13 @@
             <span>{{ targetProfile.bio }} </span>
           </div>
           <div class="mt-2 space-y-2 space-x-2">
-            <ProfileSpaceTags
-              :target-profile="targetProfile"
-            ></ProfileSpaceTags>
+            <ProfileSpaceTags :target-profile="targetProfile" />
             <UBadge
               v-if="isSelf"
               icon="lucide:circle-plus"
               label="标签"
               @click="onOpenTagSlideover"
-            ></UBadge>
+            />
           </div>
         </template>
         <template #header>
@@ -129,7 +123,7 @@
             :src="isSelf ? avatarURL : `${VITE_OSS_BASE_URL}avatar/${targetId}`"
             :alt="targetProfile.nickname[0]"
             size="3xl"
-          ></UAvatar>
+          />
         </template>
       </UPageCard>
       <!-- 动态 -->
@@ -137,7 +131,7 @@
         :is-match="isMatch"
         :target-id="targetId"
         :container="containerRef"
-      ></ProfileSpacePosts>
+      />
     </div>
 
     <!-- 选择背景图片 -->
@@ -186,12 +180,12 @@
     </USlideover>
     <!-- 移动端二级设置界面，不放入 slider 的 body 中，因为会导致 not-last:mb-4 失效 -->
     <template v-if="isMobile && isSelf">
-      <UserInfo v-model="isUserInfoSlideoverOpen"></UserInfo>
-      <UpdatePassword v-model="isUpdatePasswordSlideoverOpen"></UpdatePassword>
-      <Notifications v-model="isNotificationSlideoverOpen"></Notifications>
-      <DataManager v-model="isDataManagerSlideoverOpen"></DataManager>
-      <Logoff v-model="isLogoffSlideoverOpen"></Logoff>
-      <Theme v-model="isThemeSlideoverOpen"></Theme>
+      <UserInfo v-model="isUserInfoSlideoverOpen" />
+      <UpdatePassword v-model="isUpdatePasswordSlideoverOpen" />
+      <Notifications v-model="isNotificationSlideoverOpen" />
+      <DataManager v-model="isDataManagerSlideoverOpen" />
+      <Logoff v-model="isLogoffSlideoverOpen" />
+      <Theme v-model="isThemeSlideoverOpen" />
     </template>
     <!-- 标签 -->
     <USlideover
@@ -209,8 +203,7 @@
           variant="naked"
           orientation="horizontal"
           :class="isMobile ? '' : 'mb-4'"
-        >
-        </UPageCard>
+        />
         <UInput
           :maxlength="12"
           placeholder="输入标签"
@@ -240,20 +233,20 @@
           variant="naked"
           orientation="horizontal"
           :class="isMobile ? '' : 'mb-4'"
-        ></UPageCard>
+        />
         <USelect
           v-model="mbti"
           :items="mbtiItems"
           class="w-full"
           placeholder="选择你的 MBTI"
-        ></USelect>
+        />
         <UPageCard
           :title="`我的标签（${tags.length} / 10）`"
           description="通过拖拽修改标签位置"
           variant="naked"
           orientation="horizontal"
           :class="isMobile ? '' : 'mb-4'"
-        ></UPageCard>
+        />
         <UPageCard>
           <div ref="tagRef" class="flex flex-wrap gap-2">
             <UBadge
@@ -262,14 +255,14 @@
               :label="tag"
               :key="tag"
               @click="onDeleteTag(index)"
-            ></UBadge>
+            />
           </div>
         </UPageCard>
         <UButton
           class="w-full justify-center"
           label="确认"
           @click="onUpdateTag"
-        ></UButton>
+        />
       </template>
     </USlideover>
   </div>
@@ -299,7 +292,7 @@ import OverlayLogout from '@/components/overlay/OverlayLogout.vue'
 import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
 import OverlayHelpAndSupport from '@/components/overlay/OverlayHelpAndSupport.vue'
 import OverlayAbout from '@/components/overlay/OverlayAbout.vue'
-import OverlayMessageView from '@/components/overlay/OverlayMessageView.vue'
+import OverlayChat from '@/components/overlay/OverlayChat.vue'
 import type { userInfo } from '@/types'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import { updateProfile } from '@/apis/profile'
@@ -398,7 +391,7 @@ const route = useRoute()
 // 在聊天界面中打开对方空间或匹配到对方显示的空间不需要显示聊天按钮
 const inView = computed(() => {
   const { path } = route
-  return path === '/message' || path === '/chat' || path === '/voice-chat'
+  return path === '/messages' || path === '/chat' || path === '/voice-chat'
 })
 const bgBlob = isSelf
   ? (
@@ -421,7 +414,7 @@ const logoutOverlay = overlay.create(OverlayLogout)
 const publisherOverlay = overlay.create(OverlayPublisher)
 const helpAndSupportOverlay = overlay.create(OverlayHelpAndSupport)
 const aboutOverlay = overlay.create(OverlayAbout)
-const messageViewOverlay = overlay.create(OverlayMessageView)
+const chatOverlay = overlay.create(OverlayChat)
 const prevRoute = route.path
 const isTagSlideoverOpen = ref(false)
 const tag = ref('')
@@ -549,7 +542,7 @@ onBeforeUnmount(() => {
     !activeTargetIds.value.size ||
     // 页面只打开了一个空间时，关闭空间时不需要重置数据，否则会将聊天界面也关闭
     (activeTargetIds.value.size === 1 &&
-      (prevRoute === '/message' ||
+      (prevRoute === '/messages' ||
         // PC 端聊天匹配可以在这里处理，但语音匹配不可以，同时移动端聊天和语音都不可以，
         // 虽然不会关闭聊天界面，但是需要的数据被重置了，因此在匹配页面销毁时
         // 进行处理

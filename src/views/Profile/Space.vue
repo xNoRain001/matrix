@@ -17,7 +17,7 @@
         @close="router.replace('/profile/user-info')"
         :target-id="userInfo.id"
         :target-profile="userInfo.profile"
-      ></ProfileSpace>
+      />
     </template>
   </UModal>
 </template>

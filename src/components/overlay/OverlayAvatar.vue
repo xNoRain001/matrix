@@ -26,7 +26,7 @@
               @click="onSelectItem(name)"
               :label="name"
               class="flex justify-center"
-            ></UButton>
+            />
           </div>
         </template>
       </UTabs>
@@ -44,7 +44,7 @@
               @click="onSelectAvatar(name)"
               :label="name"
               class="flex justify-center"
-            ></UButton>
+            />
           </div>
         </template>
       </USlideover>
@@ -75,11 +75,11 @@
                 icon="lucide:dices"
                 variant="ghost"
                 @click="onGenRandomAvatar"
-              ></UButton>
+              />
             </template>
           </UPageCard>
           <div class="flex items-center justify-center">
-            <UAvatar class="size-32" :src="src"></UAvatar>
+            <UAvatar class="size-32" :src="src" />
           </div>
           <UPageCard
             :description="
@@ -101,7 +101,7 @@
                 icon="lucide:dices"
                 variant="ghost"
                 @click="activeAvatar = getRandomAvatar()"
-              ></UButton>
+              />
             </template>
           </UPageCard>
           <UInput
@@ -109,8 +109,7 @@
             class="w-full"
             v-model="activeAvatar"
             disabled
-          >
-          </UInput>
+          />
           <UInput v-else class="w-full" v-model="name">
             <template v-if="name" #trailing>
               <div class="text-muted text-xs tabular-nums">
@@ -163,7 +162,7 @@
             :disabled="!activeAvatar && !name"
             label="确认"
             @click="onUpdateAvatar"
-          ></UButton>
+          />
         </template>
       </USlideover>
       <input
@@ -175,8 +174,8 @@
       />
     </template>
     <template #footer>
-      <UButton label="随机角色" @click="onSelectRandomAvatar"></UButton>
-      <UButton label="自定义角色" @click="onOpenConfirmSlideover"></UButton>
+      <UButton label="随机角色" @click="onSelectRandomAvatar" />
+      <UButton label="自定义角色" @click="onOpenConfirmSlideover" />
     </template>
   </USlideover>
 </template>

@@ -1,5 +1,9 @@
 <template>
-  <UDashboardPanel id="report" :ui="{ body: 'p-0 sm:p-0' }">
+  <UDashboardPanel
+    id="report"
+    :class="isMobile ? 'pb-16' : ''"
+    :ui="{ body: 'p-0 sm:p-0' }"
+  >
     <template #body>
       <div>
         <UPageCard
@@ -24,7 +28,7 @@
                 :class="post.content.text ? 'mt-2' : ''"
                 :items="post.content.images"
                 :active-index="0"
-              ></Carousel>
+              />
             </template>
             <template v-if="reportTarget === 'comment'">
               <div
@@ -38,7 +42,7 @@
                 :class="comment.content.text ? 'mt-2' : ''"
                 :items="comment.content.images"
                 :active-index="0"
-              ></Carousel>
+              />
             </template>
             <template v-else-if="reportTarget === 'avatar'">
               <img
@@ -93,12 +97,12 @@
                     comment?._id
                   )
                 "
-              ></UButton>
+              />
               <UButton
                 class="ml-2"
                 label="正常"
                 @click="onReadReport(_id, index)"
-              ></UButton>
+              />
             </div>
           </template>
         </UPageCard>
@@ -113,8 +117,11 @@ import {
   adminReadReportAPI,
   adminResetProfileAPI
 } from '@/apis/admin'
+import { useUserStore } from '@/store'
+import { storeToRefs } from 'pinia'
 import { onMounted, ref } from 'vue'
 
+const { isMobile } = storeToRefs(useUserStore())
 const reports = ref([])
 const { VITE_OSS_BASE_URL } = import.meta.env
 const toast = useToast()

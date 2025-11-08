@@ -17,8 +17,7 @@
         :max-value="maxDate"
         class="p-2"
         :weekStartsOn="0"
-      >
-      </UCalendar>
+      />
     </template>
   </UPopover>
 </template>

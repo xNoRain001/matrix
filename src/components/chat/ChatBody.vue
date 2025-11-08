@@ -33,7 +33,7 @@
               icon="lucide:circle-alert"
               variant="ghost"
               color="error"
-            ></UButton>
+            />
             <div
               class="bg-muted max-w-3/4 rounded-xl px-4 py-2 break-all whitespace-pre-wrap"
             >
@@ -71,7 +71,7 @@
               icon="lucide:circle-alert"
               variant="ghost"
               color="error"
-            ></UButton>
+            />
             <img
               v-if="item.url"
               data-type="image"
@@ -84,7 +84,7 @@
               v-else
               class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2"
             >
-              <UIcon name="lucide:image-off" class="size-5"></UIcon>
+              <UIcon name="lucide:image-off" class="size-5" />
               图片已失效
             </div>
             <UAvatar
@@ -116,7 +116,7 @@
               v-else
               class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2"
             >
-              <UIcon name="lucide:image-off" class="size-5"></UIcon>
+              <UIcon name="lucide:image-off" class="size-5" />
               图片已失效
             </div>
           </div>
@@ -129,7 +129,7 @@
               icon="lucide:circle-alert"
               variant="ghost"
               color="error"
-            ></UButton>
+            />
             <div
               v-if="item.url"
               @click="onPlayAudio(item.url)"
@@ -143,7 +143,7 @@
                       : 'lucide:circle-play'
                   "
                   class="size-5"
-                ></UIcon>
+                />
                 <svg
                   v-if="playingURL === item.url"
                   class="size-5"
@@ -265,7 +265,7 @@
               v-else
               class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2"
             >
-              <UIcon name="lucide:volume-off" class="size-5"></UIcon>
+              <UIcon name="lucide:volume-off" class="size-5" />
               音频已失效
             </div>
 
@@ -298,15 +298,15 @@
                     : 'lucide:circle-play'
                 "
                 class="size-5"
-              ></UIcon>
-              <UIcon name="lucide:audio-lines" class="size-5"></UIcon>
+              />
+              <UIcon name="lucide:audio-lines" class="size-5" />
               <span>{{ item.duration }}''</span>
             </div>
             <div
               v-else
               class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2"
             >
-              <UIcon name="lucide:volume-off" class="size-5"></UIcon>
+              <UIcon name="lucide:volume-off" class="size-5" />
               音频已失效
             </div>
           </div>
@@ -314,7 +314,7 @@
         <template v-else-if="item.type === 'voiceChatCallTip'">
           <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon name="lucide:phone" class="size-5"></UIcon>
+              <UIcon name="lucide:phone" class="size-5" />
               发起了语音通话
             </div>
             <UAvatar
@@ -335,7 +335,7 @@
             />
             <div v-else class="w-10"></div>
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon name="lucide:phone" class="size-5"></UIcon>
+              <UIcon name="lucide:phone" class="size-5" />
               发起了语音通话
             </div>
           </div>
@@ -343,7 +343,7 @@
         <template v-else-if="item.type === 'voiceChatCallOffTip'">
           <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon name="lucide:phone-missed" class="size-5"></UIcon>
+              <UIcon name="lucide:phone-missed" class="size-5" />
               结束了语音通话
             </div>
             <UAvatar
@@ -364,7 +364,7 @@
             />
             <div v-else class="w-10"></div>
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon name="lucide:phone-missed" class="size-5"></UIcon>
+              <UIcon name="lucide:phone-missed" class="size-5" />
               结束了语音通话
             </div>
           </div>
@@ -372,7 +372,7 @@
         <template v-else-if="item.type === 'voiceChatRefuseTip'">
           <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon name="lucide:phone-missed" class="size-5"></UIcon>
+              <UIcon name="lucide:phone-missed" class="size-5" />
               拒绝了语音通话
             </div>
             <UAvatar
@@ -393,7 +393,7 @@
             />
             <div v-else class="w-10"></div>
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon name="lucide:phone-missed" class="size-5"></UIcon>
+              <UIcon name="lucide:phone-missed" class="size-5" />
               拒绝了语音通话
             </div>
           </div>
@@ -401,7 +401,7 @@
         <template v-else-if="item.type === 'voiceChatAgreeTip'">
           <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon name="lucide:phone" class="size-5"></UIcon>
+              <UIcon name="lucide:phone" class="size-5" />
               同意了语音通话
             </div>
             <UAvatar
@@ -422,7 +422,7 @@
             />
             <div v-else class="w-10"></div>
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon name="lucide:phone" class="size-5"></UIcon>
+              <UIcon name="lucide:phone" class="size-5" />
               同意了语音通话
             </div>
           </div>
@@ -430,7 +430,7 @@
         <template v-else-if="item.type === 'voiceChatAgreeButNoPermissionTip'">
           <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon name="lucide:phone-missed" class="size-5"></UIcon>
+              <UIcon name="lucide:phone-missed" class="size-5" />
               权限不足
             </div>
             <UAvatar
@@ -451,7 +451,7 @@
             />
             <div v-else class="w-10"></div>
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon name="lucide:phone-missed" class="size-5"></UIcon>
+              <UIcon name="lucide:phone-missed" class="size-5" />
               权限不足
             </div>
           </div>
@@ -459,7 +459,7 @@
         <template v-else-if="item.type === 'contactAgreeTip'">
           <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon name="lucide:smile" class="size-5"></UIcon>
+              <UIcon name="lucide:smile" class="size-5" />
               {{ item.content }}
             </div>
             <UAvatar
@@ -480,26 +480,23 @@
             />
             <div v-else class="w-10"></div>
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon name="lucide:smile" class="size-5"></UIcon>
+              <UIcon name="lucide:smile" class="size-5" />
               同意了你的好友请求
             </div>
           </div>
         </template>
         <template v-else-if="item.type === 'random'">
           <!-- 打包时扫描所有可能 -->
-          <UIcon name="lucide:dice-1" hidden></UIcon>
-          <UIcon name="lucide:dice-2" hidden></UIcon>
-          <UIcon name="lucide:dice-3" hidden></UIcon>
-          <UIcon name="lucide:dice-4" hidden></UIcon>
-          <UIcon name="lucide:dice-5" hidden></UIcon>
-          <UIcon name="lucide:dice-6" hidden></UIcon>
+          <UIcon name="lucide:dice-1" hidden />
+          <UIcon name="lucide:dice-2" hidden />
+          <UIcon name="lucide:dice-3" hidden />
+          <UIcon name="lucide:dice-4" hidden />
+          <UIcon name="lucide:dice-5" hidden />
+          <UIcon name="lucide:dice-6" hidden />
 
           <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon
-                :name="`lucide:dice-${item.content}`"
-                class="size-16"
-              ></UIcon>
+              <UIcon :name="`lucide:dice-${item.content}`" class="size-16" />
             </div>
             <UAvatar
               v-if="item.separator"
@@ -519,10 +516,7 @@
             />
             <div v-else class="w-10"></div>
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon
-                :name="`lucide:dice-${item.content}`"
-                class="size-16"
-              ></UIcon>
+              <UIcon :name="`lucide:dice-${item.content}`" class="size-16" />
             </div>
           </div>
         </template>
@@ -543,7 +537,7 @@
         color="neutral"
         icon="lucide:arrow-down"
         @click="(msgContainerRef as any).scrollToBottom()"
-      ></UButton>
+      />
     </div>
   </Transition>
 

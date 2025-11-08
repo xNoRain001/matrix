@@ -26,7 +26,7 @@
       <UProgress :max="6" v-model="value" />
     </template>
     <template #footer>
-      <UButton label="领取奖励"></UButton>
+      <UButton label="领取奖励" />
     </template>
   </USlideover>
 </template>

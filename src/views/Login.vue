@@ -11,7 +11,7 @@
           variant="soft"
           color="neutral"
           icon="lucide:chevron-left"
-        ></UButton>
+        />
         <div class="text-center font-semibold">
           {{
             isLogin

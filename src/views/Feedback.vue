@@ -1,5 +1,9 @@
 <template>
-  <UDashboardPanel id="feedback" :ui="{ body: 'p-0 sm:p-0' }">
+  <UDashboardPanel
+    id="feedback"
+    :class="isMobile ? 'pb-16' : ''"
+    :ui="{ body: 'p-0 sm:p-0' }"
+  >
     <template #body>
       <div>
         <UPageCard
@@ -23,8 +27,7 @@
               :ui="{
                 name: 'break-all'
               }"
-            >
-            </UUser>
+            />
           </template>
           <template #description>
             <div
@@ -38,7 +41,7 @@
               :class="content.text ? 'mt-2' : ''"
               :items="content.images"
               :active-index="0"
-            ></Carousel>
+            />
             <div
               :class="content.text && !content.images.length ? '' : 'mt-2'"
               class="flex items-center justify-between"
@@ -51,7 +54,7 @@
               @click="onReadFeedback(user, _id, index)"
               class="mt-2"
               label="确认"
-            ></UButton>
+            />
           </template>
         </UPageCard>
       </div>
@@ -62,8 +65,11 @@
 <script lang="ts" setup>
 import { adminGetFeedbacksAPI, adminReadFeedbackAPI } from '@/apis/admin'
 import { useFormatTimeAgo } from '@/hooks'
+import { useUserStore } from '@/store'
+import { storeToRefs } from 'pinia'
 import { onMounted, ref } from 'vue'
 
+const { isMobile } = storeToRefs(useUserStore())
 const feedbacks = ref([])
 const { VITE_OSS_BASE_URL } = import.meta.env
 const toast = useToast()

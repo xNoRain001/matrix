@@ -14,8 +14,7 @@
           description="这些信息仅你可见"
           variant="naked"
           orientation="horizontal"
-        >
-        </UPageCard>
+        />
         <UPageCard variant="subtle">
           <UFormField
             label="邮箱"
@@ -33,7 +32,7 @@
           description="这些信息将公开展示"
           variant="naked"
           orientation="horizontal"
-        ></UPageCard>
+        />
         <UPageCard
           variant="subtle"
           :ui="{ container: 'divide-y divide-default' }"
@@ -48,7 +47,7 @@
               size="2xs"
               :src="avatarURL"
               :alt="profileForm.nickname[0]"
-            ></UAvatar>
+            />
             <UIcon name="lucide:chevron-right" class="text-dimmed size-5" />
           </UFormField>
           <UFormField
@@ -82,7 +81,7 @@
             class="flex justify-center"
             @click="onUpdateProfile"
             loading-auto
-          ></UButton>
+          />
         </UPageCard>
       </template>
     </USlideover>
@@ -113,7 +112,7 @@
       }"
     >
       <template #body>
-        <DatePicker v-model="date"></DatePicker>
+        <DatePicker v-model="date" />
       </template>
     </UDrawer>
 
@@ -201,8 +200,7 @@
         variant="naked"
         orientation="horizontal"
         class="mb-4"
-      >
-      </UPageCard>
+      />
       <UPageCard variant="subtle">
         <UFormField
           label="邮箱"
@@ -210,7 +208,7 @@
           class="flex items-start justify-between gap-4"
           :ui="{ container: 'w-3/5' }"
         >
-          <UInput disabled class="w-full" v-model="userInfo.email"></UInput>
+          <UInput disabled class="w-full" v-model="userInfo.email" />
         </UFormField>
       </UPageCard>
     </UForm>
@@ -275,7 +273,7 @@
             <UButton
               label="选择"
               @click="avatarOverlay.open({ profileForm })"
-            ></UButton>
+            />
           </div>
         </UFormField>
         <USeparator />
@@ -330,7 +328,7 @@
           class="flex items-start justify-between gap-4"
           :ui="{ container: 'w-3/5' }"
         >
-          <DatePicker v-model="date"></DatePicker>
+          <DatePicker v-model="date" />
         </UFormField>
         <USeparator />
         <UFormField

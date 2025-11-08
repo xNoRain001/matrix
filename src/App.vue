@@ -76,11 +76,11 @@
         <UDashboardSearch :groups="groups" />
         <RouterView />
         <!-- 移动端底部导航栏 -->
-        <IndexFooter v-if="isMobile"></IndexFooter>
+        <IndexFooter v-if="isMobile" />
       </UDashboardGroup>
 
       <!-- 需要提前获取到断网重连时 icon，否则断网时，icon 加载不出来 -->
-      <UIcon hidden name="i-lucide-loader"></UIcon>
+      <UIcon hidden name="i-lucide-loader" />
       <!-- 语音通话浮动按钮 -->
       <UButton
         v-if="roomId"
@@ -97,18 +97,18 @@
           top: `${floatingBtnY}px`,
           left: `${floatingBtnX}px`
         }"
-      ></UButton>
+      />
       <!-- 音频 -->
       <audio hidden ref="localAudioRef" muted></audio>
       <audio hidden ref="remoteAudioRef" autoplay></audio>
       <audio hidden ref="beepAudioRef"></audio>
-      <SkyBg v-if="config.theme.starsBg"></SkyBg>
+      <IndexSkyBg v-if="config.theme.starsBg" />
     </UApp>
 
     <!-- 注册登录和重置密码等内容 -->
     <UApp v-else :toaster="{ position: 'top-center', progress: false }">
       <RouterView />
-      <SkyBg v-if="config.theme.starsBg"></SkyBg>
+      <IndexSkyBg v-if="config.theme.starsBg" />
     </UApp>
   </Suspense>
 </template>
@@ -248,7 +248,7 @@ const navs = [
     {
       label: '消息',
       icon: 'lucide:message-circle',
-      to: '/message',
+      to: '/messages',
       slot: 'message'
     },
     {
@@ -294,10 +294,9 @@ const navs = [
       ]
     }
   ],
-
   [
     {
-      label: '建议',
+      label: '反馈',
       icon: 'lucide:message-circle',
       onSelect: () => publisherOverlay.open({ action: 'feedback' })
     },

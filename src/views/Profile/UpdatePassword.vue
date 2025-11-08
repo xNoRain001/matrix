@@ -105,8 +105,8 @@
           class="flex justify-center"
           loading-auto
           type="submit"
-          >修改密码</UButton
-        >
+          label="修改密码"
+        />
       </UPageCard>
     </UForm>
   </DefineSlideoverBodyTemplate>
@@ -120,11 +120,11 @@
     }"
   >
     <template #body>
-      <ReuseSlideoverBodyTemplate></ReuseSlideoverBodyTemplate>
+      <ReuseSlideoverBodyTemplate />
     </template>
   </USlideover>
   <template v-else>
-    <ReuseSlideoverBodyTemplate></ReuseSlideoverBodyTemplate>
+    <ReuseSlideoverBodyTemplate />
   </template>
 </template>
 

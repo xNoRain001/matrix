@@ -7,11 +7,11 @@
     :ui="{ body: 'flex', description: 'hidden' }"
   >
     <template #body>
-      <MessageVoice
+      <VoiceChatCall
         :close="() => emit('close', false)"
         :target-id="webRTCTargetId"
         :target-profile="webRTCTargetProfile"
-      ></MessageVoice>
+      />
     </template>
   </UModal>
 </template>

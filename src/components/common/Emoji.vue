@@ -9,13 +9,13 @@
         icon="lucide:smile"
         variant="ghost"
         :color="activeTab === 'emoji' ? 'primary' : 'neutral'"
-      ></UButton>
+      />
       <UButton
         @click="activeTab = 'favorite'"
         icon="lucide:heart"
         variant="ghost"
         :color="activeTab === 'favorite' ? 'primary' : 'neutral'"
-      ></UButton>
+      />
     </div>
     <template v-if="activeTab === 'emoji'">
       <div
@@ -35,8 +35,8 @@
         v-if="isMobile"
         class="fixed right-6 bottom-6 flex items-center gap-2 sm:right-8 sm:bottom-8"
       >
-        <UButton icon="lucide:delete" @click="onDelete"></UButton>
-        <UButton label="发送" @click="emits('send')"></UButton>
+        <UButton icon="lucide:delete" @click="onDelete" />
+        <UButton label="发送" @click="emits('send')" />
       </div>
     </template>
     <div
@@ -58,7 +58,7 @@
           class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
           icon="lucide:plus"
           size="xl"
-        ></UButton>
+        />
         <img class="opacity-0" :src="favoriteEmojis[0].blobURL" />
       </div>
       <div
@@ -71,7 +71,7 @@
         <img class="rounded-lg" :src="blobURL" />
       </div>
       <template v-else>
-        <UButton @click="onAddEmoji" icon="lucide:plus" size="xl"></UButton>
+        <UButton @click="onAddEmoji" icon="lucide:plus" size="xl" />
         <div class="mt-2 text-xs">点击添加自定义表情</div>
       </template>
       <input
@@ -85,7 +85,7 @@
   </DefineEmojiTemplate>
   <UCollapsible v-model:open="isEmojiOpen" v-if="isMobile">
     <template #content>
-      <ReuseEmojiTemplate></ReuseEmojiTemplate>
+      <ReuseEmojiTemplate />
     </template>
   </UCollapsible>
   <UPopover v-else v-model:open="isSlideroverOpen">
@@ -98,7 +98,7 @@
       />
     </UTooltip>
     <template #content>
-      <ReuseEmojiTemplate></ReuseEmojiTemplate>
+      <ReuseEmojiTemplate />
     </template>
   </UPopover>
 </template>

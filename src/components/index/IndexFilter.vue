@@ -304,12 +304,7 @@
         </UForm>
       </template>
     </UTabs>
-    <UButton
-      loading-auto
-      @click="onUpdateFilter"
-      class="mt-4"
-      label="确定"
-    ></UButton>
+    <UButton loading-auto @click="onUpdateFilter" class="mt-4" label="确定" />
   </DefineFilterBodyTemplate>
   <UDrawer
     v-if="isMobile"
@@ -321,7 +316,7 @@
     v-model:open="isFilterOverlayOpen"
   >
     <template #body>
-      <ReuseFilterBodyTemplate></ReuseFilterBodyTemplate>
+      <ReuseFilterBodyTemplate />
     </template>
   </UDrawer>
   <UModal
@@ -334,7 +329,7 @@
     v-model:open="isFilterOverlayOpen"
   >
     <template #body>
-      <ReuseFilterBodyTemplate></ReuseFilterBodyTemplate>
+      <ReuseFilterBodyTemplate />
     </template>
   </UModal>
 </template>

@@ -9,12 +9,12 @@
         icon="lucide:refresh-cw"
         variant="ghost"
         @click="getLatestData"
-      ></UButton>
+      />
       <UButton
         icon="lucide:bell"
         variant="ghost"
         @click="isNotificationSlideoverOpen = true"
-      ></UButton>
+      />
       <UButton
         icon="lucide:pencil-line"
         variant="ghost"
@@ -42,8 +42,7 @@
         v-model="activeTab"
         class="p-4 sm:p-6"
         :content="false"
-      >
-      </UTabs>
+      />
       <template v-if="activeTab === 'like'">
         <div
           v-if="likeNotifications.length"
@@ -144,7 +143,7 @@
 <script lang="ts" setup>
 import { useFormatTimeAgo } from '@/hooks'
 import { ref } from 'vue'
-import OverlayPublisher from '../overlay/OverlayPublisher.vue'
+import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
 import { storeToRefs } from 'pinia'
 import { useNotificationsStore, usePostStore, useUserStore } from '@/store'
 import { getPlaygroundPostsAPI } from '@/apis/playground'

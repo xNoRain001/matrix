@@ -16,26 +16,23 @@
         variant="naked"
         orientation="horizontal"
         class="mb-4"
-      >
-      </UPageCard>
+      />
       <UFileUpload
         v-model="file"
         :dropzone="false"
         accept="image/png, image/jpeg, image/gif"
         class="min-h-48"
-      >
-      </UFileUpload>
+      />
       <UPageCard
         title="参数"
         description="调整参数"
         variant="naked"
         orientation="horizontal"
         class="mb-4"
-      >
-      </UPageCard>
+      />
       <div class="flex gap-2">
-        <USwitch label="彩色" v-model="isColorful"></USwitch>
-        <USwitch label="反转" v-model="isReverse"></USwitch>
+        <USwitch label="彩色" v-model="isColorful" />
+        <USwitch label="反转" v-model="isReverse" />
       </div>
       <UPageCard
         title="结果"
@@ -47,7 +44,7 @@
       <canvas ref="canvasRef" class="w-full rounded-lg"></canvas>
     </template>
     <template #footer>
-      <UButton label="确认" @click="onDone"></UButton>
+      <UButton label="确认" @click="onDone" />
     </template>
   </USlideover>
 </template>

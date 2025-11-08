@@ -14,7 +14,7 @@
     >
       <template #trailing="{ item: { value } }">
         <UBadge
-          v-if="value === '/message' && unreadMsgCounter"
+          v-if="value === '/messages' && unreadMsgCounter"
           class="absolute top-0 right-0"
           :label="unreadMsgCounter"
           size="sm"

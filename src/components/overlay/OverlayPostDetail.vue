@@ -24,7 +24,7 @@
           v-if="postMap[targetId].activePost.content.images.length"
           :items="postMap[targetId].activePost.content.images"
           :active-index="0"
-        ></Carousel>
+        />
         <div
           :class="
             postMap[targetId].activePost.content.text &&
@@ -52,7 +52,7 @@
                 'post'
               )
             "
-          ></UButton>
+          />
         </div>
       </UPageCard>
       <div
@@ -153,11 +153,11 @@
                   "
                   >{{ profile.nickname }}</span
                 >
-                <UBadge v-if="userInfo.id === owner" label="我"></UBadge>
+                <UBadge v-if="userInfo.id === owner" label="我" />
                 <UBadge
                   v-else-if="postMap[targetId].activePost.user === owner"
                   label="作者"
-                ></UBadge>
+                />
               </template>
               <template #description>
                 <div class="text-base break-all whitespace-pre-wrap">
@@ -203,11 +203,8 @@
                           'comment'
                         )
                       "
-                    ></UButton>
-                    <UButton
-                      variant="ghost"
-                      icon="lucide:heart-crack"
-                    ></UButton>
+                    />
+                    <UButton variant="ghost" icon="lucide:heart-crack" />
                     <template
                       v-if="
                         owner === userInfo.id ||
@@ -228,7 +225,7 @@
                             true
                           )
                         "
-                      ></UButton>
+                      />
                       <UDropdownMenu v-else :items="dropdownMenuItems">
                         <UButton
                           variant="ghost"
@@ -243,7 +240,7 @@
                               true
                             )
                           "
-                        ></UButton>
+                        />
                       </UDropdownMenu>
                     </template>
                   </div>
@@ -327,16 +324,13 @@
                                 }`
                               }}
                             </span>
-                            <UBadge
-                              v-if="userInfo.id === user"
-                              label="我"
-                            ></UBadge>
+                            <UBadge v-if="userInfo.id === user" label="我" />
                             <UBadge
                               v-else-if="
                                 postMap[targetId].activePost.user === user
                               "
                               label="作者"
-                            ></UBadge>
+                            />
                           </template>
                           <template #description>
                             <div
@@ -402,11 +396,11 @@
                                       'comment'
                                     )
                                   "
-                                ></UButton>
+                                />
                                 <UButton
                                   variant="ghost"
                                   icon="lucide:heart-crack"
-                                ></UButton>
+                                />
                                 <template
                                   v-if="
                                     user === userInfo.id ||
@@ -431,7 +425,7 @@
                                         false
                                       )
                                     "
-                                  ></UButton>
+                                  />
                                   <UDropdownMenu
                                     v-else
                                     :items="replydropdownMenuItems"
@@ -451,7 +445,7 @@
                                           false
                                         )
                                       "
-                                    ></UButton>
+                                    />
                                   </UDropdownMenu>
                                 </template>
                               </div>
@@ -522,23 +516,19 @@
         }"
       >
         <template #footer>
-          <UButton
-            label="编辑"
-            @click="onEditComment"
-            class="justify-center"
-          ></UButton>
+          <UButton label="编辑" @click="onEditComment" class="justify-center" />
           <UButton
             label="删除"
             @click="onDeleteComment"
             class="justify-center"
             color="error"
-          ></UButton>
+          />
           <UButton
             label="举报"
             @click="onReport"
             class="justify-center"
             color="error"
-          ></UButton>
+          />
         </template>
       </UDrawer>
       <UDrawer
@@ -551,23 +541,19 @@
         }"
       >
         <template #footer>
-          <UButton
-            label="编辑"
-            @click="onEditReply"
-            class="justify-center"
-          ></UButton>
+          <UButton label="编辑" @click="onEditReply" class="justify-center" />
           <UButton
             label="删除"
             @click="onDeleteReply"
             class="justify-center"
             color="error"
-          ></UButton>
+          />
           <UButton
             label="举报"
             @click="onReport"
             class="justify-center"
             color="error"
-          ></UButton>
+          />
         </template>
       </UDrawer>
     </template>
@@ -582,8 +568,7 @@
             targetId
           })
         "
-      >
-      </UInput>
+      />
     </template>
   </USlideover>
 </template>

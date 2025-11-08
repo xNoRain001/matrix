@@ -15,7 +15,7 @@
         :loading="reconnecting"
         loading-icon="i-lucide-loader"
         @click="onReconnect(emit)"
-      ></UButton>
+      />
       <UButton label="刷新" class="justify-center" @click="onReload" />
     </template>
   </UModal>

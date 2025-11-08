@@ -39,7 +39,7 @@
               v-if="value === config.notification.beep"
               name="lucide:circle-check"
               class="text-primary size-5"
-            ></UIcon>
+            />
           </div>
         </template>
       </URadioGroup>
@@ -54,10 +54,10 @@
     :ui="{ body: 'flex flex-col gap-4 sm:gap-6', description: 'hidden' }"
   >
     <template #body>
-      <ReuseSlideoverBodyTemplate></ReuseSlideoverBodyTemplate>
+      <ReuseSlideoverBodyTemplate />
     </template>
   </USlideover>
-  <ReuseSlideoverBodyTemplate v-else></ReuseSlideoverBodyTemplate>
+  <ReuseSlideoverBodyTemplate v-else />
   <audio hidden ref="audioRef"></audio>
 </template>
 

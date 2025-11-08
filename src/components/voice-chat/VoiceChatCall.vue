@@ -66,7 +66,7 @@
         :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
         :alt="targetProfile.nickname[0]"
         class="size-24 text-5xl"
-      ></UAvatar>
+      />
       <div class="text-center">{{ targetProfile.nickname }}</div>
       <div class="text-sm">
         {{ rtcConnected ? '通话中...' : '等待对方接通...' }}
@@ -83,7 +83,7 @@
             variant="ghost"
             :color="isMicOpen ? 'neutral' : 'info'"
             :ui="{ label: 'mt-4', leadingIcon: 'size-10' }"
-          ></UButton>
+          />
           <div class="mt-4 flex items-center">
             <div class="text-sm">{{ isMicOpen ? '开启' : '关闭' }}</div>
           </div>
@@ -96,7 +96,7 @@
             variant="ghost"
             color="error"
             :ui="{ label: 'mt-4', leadingIcon: 'size-10' }"
-          ></UButton>
+          />
           <div class="text-error mt-4 text-sm">取消</div>
         </div>
         <div class="flex flex-col items-center justify-center">
@@ -107,7 +107,7 @@
             variant="ghost"
             :color="isSpeakerOpen ? 'neutral' : 'info'"
             :ui="{ label: 'mt-4', leadingIcon: 'size-10' }"
-          ></UButton>
+          />
           <div class="mt-4 text-sm">
             {{ isSpeakerOpen ? '开启' : '关闭' }}
           </div>

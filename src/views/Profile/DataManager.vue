@@ -11,7 +11,7 @@
           class="flex items-center justify-between gap-2 not-last:pb-4"
           @click="onSelect"
         >
-          <UIcon name="lucide:chevron-right" class="size-5"></UIcon>
+          <UIcon name="lucide:chevron-right" class="size-5" />
         </UFormField>
       </UPageCard>
     </div>
@@ -25,10 +25,10 @@
     :ui="{ body: 'flex flex-col gap-4', description: 'hidden' }"
   >
     <template #body>
-      <ReuseSlideoverBodyTemplate></ReuseSlideoverBodyTemplate>
+      <ReuseSlideoverBodyTemplate />
     </template>
   </USlideover>
-  <ReuseSlideoverBodyTemplate v-else></ReuseSlideoverBodyTemplate>
+  <ReuseSlideoverBodyTemplate v-else />
   <UDrawer
     v-if="isMobile"
     v-model:open="isDataManagerModalOpen"

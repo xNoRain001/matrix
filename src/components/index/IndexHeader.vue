@@ -3,8 +3,8 @@
     <template #leading>
       <UDashboardSidebarCollapse />
     </template>
-    <template #trailing
-      ><UBadge v-if="onlineCount" :label="onlineCount"></UBadge>
+    <template #trailing>
+      <UBadge v-if="onlineCount" :label="onlineCount" />
     </template>
     <template #right>
       <UButton
@@ -12,7 +12,7 @@
         :icon="isFullScreen ? 'lucide:minimize' : 'lucide:maximize'"
         variant="ghost"
         @click="onScreenSize"
-      ></UButton>
+      />
       <!-- <UButton
         icon="lucide:calendar-check"
         variant="ghost"
@@ -32,13 +32,13 @@
         @click="isFilterOverlayOpen = true"
         icon="lucide:filter"
         variant="ghost"
-      ></UButton>
-      <IndexThemePicker></IndexThemePicker>
+      />
+      <IndexThemePicker />
       <UButton
         @click="startViewTransition"
         :icon="nextTheme === 'dark' ? 'lucide:moon' : 'lucide:sun'"
         variant="ghost"
-      ></UButton>
+      />
     </template>
   </UDashboardNavbar>
 
