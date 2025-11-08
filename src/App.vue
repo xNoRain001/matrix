@@ -89,7 +89,7 @@
         @touchstart="onTouchstart"
         @touchmove.prevent="onTouchmove"
         @touchend="onSaveFloatingBtnPosition"
-        @click="!moving && voiceChatOverlay.open()"
+        @click="!moving && talkOverlay.open()"
         icon="lucide:phone"
         size="xl"
         class="absolute cursor-pointer"
@@ -154,7 +154,7 @@ import OverlayOffline from './components/overlay/OverlayOffline.vue'
 import { useThrottleFn } from '@vueuse/core'
 import OverlayPublisher from './components/overlay/OverlayPublisher.vue'
 import type { message } from './types'
-import OverlayVoiceChat from './components/overlay/OverlayVoiceChat.vue'
+import OverlayTalk from './components/overlay/OverlayTalk.vue'
 import OverlayHelpAndSupport from './components/overlay/OverlayHelpAndSupport.vue'
 import OverlayAbout from './components/overlay/OverlayAbout.vue'
 import { zh_cn } from '@nuxt/ui/locale'
@@ -259,13 +259,13 @@ const navs = [
       type: 'trigger',
       children: [
         {
-          label: '情绪切片',
-          to: '/profile/space',
+          label: '个人资料',
+          to: '/profile/user-info',
           exact: true
         },
         {
-          label: '个人资料',
-          to: '/profile/user-info'
+          label: '情绪切片',
+          to: '/profile/space'
         },
         {
           label: '通知管理',
@@ -360,7 +360,7 @@ const rtcConfiguration: RTCConfiguration = {
 const beepAudioRef = ref(null)
 const floatingBtnX = ref(Number(localStorage.getItem('floatingBtnX') || 40))
 const floatingBtnY = ref(Number(localStorage.getItem('floatingBtnY') || 40))
-const voiceChatOverlay = overlay.create(OverlayVoiceChat)
+const talkOverlay = overlay.create(OverlayTalk)
 const helpAndSupportOverlay = overlay.create(OverlayHelpAndSupport)
 const abouttOverlay = overlay.create(OverlayAbout)
 const { VITE_ENV, VITE_VERSION, VITE_OSS_BASE_URL } = import.meta.env
@@ -647,8 +647,8 @@ const onConnect = emit => {
 const onJoined = async (_roomId, _polite) => {
   roomId.value = _roomId
 
-  if (!voiceChatOverlay.isOpen) {
-    voiceChatOverlay.open()
+  if (!talkOverlay.isOpen) {
+    talkOverlay.open()
   } else if (_polite) {
     // 处理匹配语音通话时其中一方刷新页面后，能够恢复通话
     // 先进来的一方，规定时间内无法等到对方加入，判断为对方离开了房间
@@ -1057,7 +1057,7 @@ const onInviteWebRTC = (roomId, targetId, targetProfile) => {
 
 const onInviteWebRTCFailed = msg => {
   roomId.value = ''
-  voiceChatOverlay.close()
+  talkOverlay.close()
   clearTimeout(leaveRoomTimer.value)
   toast.add({
     title: msg,
@@ -1068,7 +1068,7 @@ const onInviteWebRTCFailed = msg => {
 
 const onRefuseWebRTC = () => {
   globalSocket.value.emit('leave', roomId.value)
-  voiceChatOverlay.close()
+  talkOverlay.close()
   roomId.value = ''
   clearTimeout(leaveRoomTimer.value)
   toast.add({
@@ -1171,7 +1171,7 @@ const onMatched = async data => {
     matching.value = false
 
     // TODO: 处理匹配结果是好友的情况
-    if (_matchRes.type === 'voice-chat') {
+    if (_matchRes.type === 'talk') {
       const _lastMsgMap = lastMsgMap.value
       const targetId = _matchRes.id
       await useInitLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
@@ -1182,7 +1182,7 @@ const onMatched = async data => {
       )
     }
 
-    router.replace(`/${_matchRes.type}`)
+    router.replace(`/match-to-${_matchRes.type}`)
   }
 }
 
@@ -1206,7 +1206,7 @@ const onBye = _roomId => {
     router.replace('/')
   }
 
-  voiceChatOverlay.close()
+  talkOverlay.close()
 }
 
 const onCancelWebRTC = () => {
@@ -1306,7 +1306,7 @@ const onRefreshToken = token => {
 const onRefreshVersion = () => location.reload()
 
 const onAgreeWebRTCButNoPermission = () => {
-  voiceChatOverlay.close()
+  talkOverlay.close()
   roomId.value = ''
   clearTimeout(leaveRoomTimer.value)
   toast.add({

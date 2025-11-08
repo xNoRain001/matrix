@@ -41,7 +41,7 @@
         variant="ghost"
         @click="open = !open"
       />
-      <ChatDropdownMenu
+      <MatchToChatChatDropdownMenu
         @close="emits('close')"
         :is-match="isMatch"
         :target-id="targetId"

@@ -44,7 +44,7 @@ const useMatchStore = defineStore('matchStore', () => {
     filter: ref<typeof defaultFilter>(_filter),
     matchRes: ref<
       | (Omit<userInfo, 'tokenVersion' | 'email'> & {
-          type: 'chat' | 'voice-chat'
+          type: 'chat' | 'talk'
         })
       | null
     >(JSON.parse(localStorage.getItem(`matchRes-${id}`)) || null) // 匹配结果

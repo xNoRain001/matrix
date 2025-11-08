@@ -8,7 +8,7 @@
     }"
   >
     <template #content>
-      <ChatView
+      <MatchToChatChat
         @close="emit('close', false)"
         :target-id="targetId"
         :target-profile="targetProfile"

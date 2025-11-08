@@ -1,32 +1,27 @@
 <template>
-  <UModal
-    :overlay="false"
-    fullscreen
-    default-open
+  <USlideover
+    v-model:open="isSlideoverOpen"
     title=" "
     description=" "
     :ui="{
-      content:
-        'flex items-center bg-[url(/images/bg.jpg)] bg-cover bg-center bg-no-repeat',
       description: 'hidden'
     }"
   >
     <template #content>
       <ProfileSpace
-        class="max-w-xl"
-        @close="router.replace('/profile/user-info')"
+        @close="isSlideoverOpen = false"
         :target-id="userInfo.id"
         :target-profile="userInfo.profile"
       />
     </template>
-  </UModal>
+  </USlideover>
 </template>
 
 <script lang="ts" setup>
 import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
+import { ref } from 'vue'
 
-const router = useRouter()
+const isSlideoverOpen = ref(true)
 const { userInfo } = storeToRefs(useUserStore())
 </script>

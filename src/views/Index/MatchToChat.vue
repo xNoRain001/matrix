@@ -8,7 +8,7 @@
     :ui="{ content: 'flex-row', description: 'hidden' }"
   >
     <template #content>
-      <ChatView
+      <MatchToChatChat
         @close="isOpen = false"
         :is-match="true"
         :target-id="activeTargetId"

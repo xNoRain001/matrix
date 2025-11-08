@@ -40,14 +40,14 @@ const links = [
   [
     {
       icon: 'lucide:user-round',
-      label: '情绪切片',
-      to: '/profile/space',
+      label: '个人资料',
+      to: '/profile/user-info',
       exact: true
     },
     {
       icon: 'lucide:user-round',
-      label: '个人资料',
-      to: '/profile/user-info'
+      label: '情绪切片',
+      to: '/profile/space'
     },
     {
       icon: 'lucide:bell',

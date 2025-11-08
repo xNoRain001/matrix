@@ -129,14 +129,14 @@ const list = [
     title: '匹配聊天',
     desc: '遇见同频的伙伴',
     matchType: 'chat',
-    to: '/chat'
+    to: '/match-to-chat'
   },
   {
     icon: 'lucide:phone',
     title: '语音聊天',
     desc: '高清音质，实时畅聊无延迟',
-    matchType: 'voice-chat',
-    to: '/voice-chat'
+    matchType: 'talk',
+    to: '/match-to-talk'
   }
   // {
   //   icon: 'lucide:video',
@@ -224,7 +224,7 @@ const onMatch = async (_matchType, to) => {
     return
   }
 
-  if (_matchType === 'voice-chat') {
+  if (_matchType === 'talk') {
     if (roomId.value) {
       return toast.add({
         title: '匹配失败，当前正在语音中',

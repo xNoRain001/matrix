@@ -7,7 +7,7 @@
     :ui="{ body: 'flex', description: 'hidden' }"
   >
     <template #body>
-      <VoiceChatCall
+      <MatchToTalkCall
         :close="() => emit('close', false)"
         :target-id="webRTCTargetId"
         :target-profile="webRTCTargetProfile"

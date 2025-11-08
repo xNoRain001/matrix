@@ -1,13 +1,13 @@
 <template>
   <UDashboardPanel id="message-2" :ui="{ root: 'translate-z-0' }">
-    <ChatHeader
+    <MatchToChatChatHeader
       @close="emits('close')"
       :is-match="isMatch"
       :target-id="targetId"
       :target-profile="targetProfile"
     />
     <!-- 聊天内容 -->
-    <ChatBody
+    <MatchToChatChatBody
       :is-match="isMatch"
       :target-id="targetId"
       :target-profile="targetProfile"
@@ -260,7 +260,7 @@ import type { message, userInfo } from '@/types'
 import { voiceChatInviteToastPendingTime } from '@/const'
 import { useRoute } from 'vue-router'
 import { useThrottleFn } from '@vueuse/core'
-import OverlayVoiceChat from '@/components/overlay/OverlayVoiceChat.vue'
+import OverlayTalk from '@/components/overlay/OverlayTalk.vue'
 // import OverlayObfuscateImage from '@/components/overlay/OverlayObfuscateImage.vue'
 // import OverlayImageToASCII from '@/components/overlay/OverlayImageToASCII.vue'
 
@@ -322,7 +322,7 @@ const isRecord = ref(false)
 const recording = ref(false)
 const isCancelRecordTipShow = ref(false)
 const overlay = useOverlay()
-const voiceChatOverlay = overlay.create(OverlayVoiceChat)
+const talkOverlay = overlay.create(OverlayTalk)
 // const imageToASCIIOverlay = overlay.create(OverlayImageToASCII)
 // const obfuscateImageOverlay = overlay.create(OverlayObfuscateImage)
 const prevRoute = route.path
@@ -472,7 +472,7 @@ const onCall = async () => {
   globalSocket.value.emit('unidirectional-web-rtc', _roomId, _targetId)
   leaveRoomTimer.value = setTimeout(() => {
     globalSocket.value.emit('leave', roomId.value)
-    voiceChatOverlay.close()
+    talkOverlay.close()
     roomId.value = ''
     clearTimeout(leaveRoomTimer.value)
     toast.add({

@@ -10,13 +10,13 @@
     <!-- 规定时间内对方没接通时会清除 matchRes，因此需要使用到 v-if -->
     <template v-if="isOpen" #content>
       <div class="relative flex w-full flex-col">
-        <ChatHeader
+        <MatchToChatChatHeader
           @close="isOpen = false"
           :is-match="true"
           :target-id="activeTargetId"
           :target-profile="activeTargetProfile"
         />
-        <VoiceChatCall
+        <MatchToTalkCall
           :is-match="true"
           :target-id="activeTargetId"
           :target-profile="activeTargetProfile"
@@ -58,7 +58,7 @@ const { postMap } = storeToRefs(usePostStore())
 const { roomId, isVoiceChatMatch, webRTCTargetId, webRTCTargetProfile } =
   storeToRefs(useWebRTCStore())
 const isOpen = ref(
-  Boolean(matchRes.value?.type === 'voice-chat' && matchRes.value?.profile)
+  Boolean(matchRes.value?.type === 'talk' && matchRes.value?.profile)
 )
 
 if (isOpen.value) {

@@ -9,14 +9,14 @@ const router = createRouter({
       component: () => import('@/views/Index/Index.vue'),
       children: [
         {
-          path: 'chat',
+          path: 'match-to-chat',
           meta: { requireRoomId: true },
-          component: () => import('@/views/Index/Chat.vue')
+          component: () => import('@/views/Index/MatchToChat.vue')
         },
         {
-          path: 'voice-chat',
+          path: 'match-to-talk',
           meta: { requireRoomId: true },
-          component: () => import('@/views/Index/VoiceChat.vue')
+          component: () => import('@/views/Index/MatchToTalk.vue')
         }
       ]
     },

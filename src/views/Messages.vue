@@ -18,7 +18,7 @@
   </UDashboardPanel>
   <template v-if="!isMobile">
     <!-- 由于并不依赖模态框，因此需要手动修改 targetId -->
-    <ChatView
+    <MatchToChatChat
       v-if="activeTargetId"
       @close="activeTargetId = ''"
       :target-id="activeTargetId"
