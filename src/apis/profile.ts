@@ -13,3 +13,5 @@ export const updateProfile = async userInfo =>
 
 export const getRandomProfilesAPI = async () =>
   HTTP.request(`${prefix}/get-random-profiles`)
+
+export const getGeoInfoAPI = async () => HTTP.request(`${prefix}/get-geo-info`)

@@ -42,6 +42,10 @@ export type userInfo = {
     createdAt: number
     online?: boolean
   }
+  ipInfo: {
+    province: string
+    city: string
+  }
 }
 
 export type message = {

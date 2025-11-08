@@ -158,6 +158,7 @@ import OverlayVoiceChat from './components/overlay/OverlayVoiceChat.vue'
 import OverlayHelpAndSupport from './components/overlay/OverlayHelpAndSupport.vue'
 import OverlayAbout from './components/overlay/OverlayAbout.vue'
 import { zh_cn } from '@nuxt/ui/locale'
+import { getGeoInfoAPI } from './apis/profile'
 
 let voiceChatInviteToastId = null
 let matchTimer = null
@@ -1435,6 +1436,13 @@ onBeforeMount(async () => {
     await initLastMsgs()
     await initAvatarURL()
     await initChatBgURL()
+    const {
+      data: { province, city }
+    } = await getGeoInfoAPI()
+    userInfo.value.ipInfo = {
+      province,
+      city
+    }
     // 拉取离线数据后，更新本地数据库中的数据和内存中的数据
     initSocket(socket)
   }

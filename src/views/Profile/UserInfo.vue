@@ -282,7 +282,7 @@
         <UFormField
           name="bio"
           label="背景故事"
-          description="编辑背景故事"
+          description="修改背景故事"
           class="flex items-start justify-between gap-4"
           :ui="{ container: 'w-3/5' }"
         >
