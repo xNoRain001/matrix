@@ -47,7 +47,7 @@
             <UAvatar
               size="2xs"
               :src="avatarURL"
-              :alt="userInfo.profile.nickname[0]"
+              :alt="profileForm.nickname[0]"
             ></UAvatar>
             <UIcon name="lucide:chevron-right" class="text-dimmed size-5" />
           </UFormField>
@@ -72,9 +72,7 @@
                     : key === 'region'
                       ? profileForm.province +
                         `${profileForm.city ? ` - ${profileForm.city}` : ''}`
-                      : key === 'nickname'
-                        ? userInfo.profile.nickname
-                        : profileForm[key]
+                      : profileForm[key]
               }}
             </span>
             <UIcon name="lucide:chevron-right" class="text-dimmed size-5" />
@@ -161,6 +159,39 @@
         </div>
       </template>
     </UDrawer>
+
+    <UDrawer
+      v-model:open="isOpenBioDrawer"
+      title="修改背景故事"
+      description=" "
+      :ui="{
+        description: 'hidden'
+      }"
+    >
+      <template #body>
+        <UTextarea
+          v-model="profileForm.bio"
+          :rows="5"
+          autoresize
+          class="w-full"
+          maxlength="30"
+          :ui="{ trailing: 'flex items-end' }"
+        >
+          <template v-if="profileForm.bio" #trailing>
+            <div class="text-muted py-1.5 text-xs tabular-nums">
+              {{ profileForm.bio.length }}/30
+            </div>
+            <UButton
+              color="neutral"
+              variant="link"
+              size="sm"
+              icon="lucide:circle-x"
+              @click="profileForm.bio = ''"
+            />
+          </template>
+        </UTextarea>
+      </template>
+    </UDrawer>
   </template>
   <template v-else>
     <UForm>
@@ -202,6 +233,24 @@
       </UPageCard>
       <UPageCard variant="subtle">
         <UFormField
+          name="avatar"
+          label="头像"
+          description="修改头像，图片最大尺寸为 10 MB"
+          class="flex items-start justify-between gap-4"
+        >
+          <div class="flex items-center gap-3">
+            <UAvatar
+              @click="viewerOverlay.open({ urls: [{ url: avatarURL }] })"
+              class="cursor-pointer"
+              :src="avatarURL"
+              :alt="profileForm.nickname[0]"
+              size="lg"
+            />
+            <UButton label="选择" @click="avatarRef.click()" />
+          </div>
+        </UFormField>
+        <USeparator />
+        <UFormField
           name="name"
           label="角色"
           description="选择你的角色"
@@ -209,13 +258,55 @@
           :ui="{ container: 'w-3/5' }"
         >
           <div class="flex items-center gap-3">
-            <UInput
-              class="flex-1"
-              disabled
-              v-model="userInfo.profile.nickname"
-            />
-            <UButton label="选择" @click="avatarOverlay.open()"></UButton>
+            <UInput class="flex-1" v-model="profileForm.nickname">
+              <template v-if="profileForm.nickname" #trailing>
+                <div class="text-muted text-xs tabular-nums">
+                  {{ profileForm.nickname.length }}/16
+                </div>
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  size="sm"
+                  icon="lucide:circle-x"
+                  @click="profileForm.nickname = ''"
+                />
+              </template>
+            </UInput>
+            <UButton
+              label="选择"
+              @click="avatarOverlay.open({ profileForm })"
+            ></UButton>
           </div>
+        </UFormField>
+        <USeparator />
+        <UFormField
+          name="bio"
+          label="背景故事"
+          description="编辑背景故事"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
+        >
+          <UTextarea
+            v-model="profileForm.bio"
+            :rows="5"
+            autoresize
+            class="w-full"
+            maxlength="30"
+            :ui="{ trailing: 'flex items-end' }"
+          >
+            <template v-if="profileForm.bio" #trailing>
+              <div class="text-muted py-1.5 text-xs tabular-nums">
+                {{ profileForm.bio.length }}/30
+              </div>
+              <UButton
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="lucide:circle-x"
+                @click="profileForm.bio = ''"
+              />
+            </template>
+          </UTextarea>
         </UFormField>
         <USeparator />
         <UFormField
@@ -278,54 +369,6 @@
             />
           </div>
         </UFormField>
-        <USeparator />
-        <UFormField
-          name="avatar"
-          label="头像"
-          description="修改头像，图片最大尺寸为 10 MB"
-          class="flex items-start justify-between gap-4"
-        >
-          <div class="flex items-center gap-3">
-            <UAvatar
-              @click="viewerOverlay.open({ urls: [{ url: avatarURL }] })"
-              class="cursor-pointer"
-              :src="avatarURL"
-              :alt="userInfo.profile.nickname[0]"
-              size="lg"
-            />
-            <UButton label="选择" @click="avatarRef.click()" />
-          </div>
-        </UFormField>
-        <USeparator />
-        <UFormField
-          name="bio"
-          label="签名"
-          description="用一句话表达自己的想法"
-          class="flex items-start justify-between gap-4"
-          :ui="{ container: 'w-3/5' }"
-        >
-          <UTextarea
-            v-model="profileForm.bio"
-            :rows="5"
-            autoresize
-            class="w-full"
-            maxlength="30"
-            :ui="{ trailing: 'flex items-end' }"
-          >
-            <template v-if="profileForm.bio" #trailing>
-              <div class="text-muted py-1.5 text-xs tabular-nums">
-                {{ profileForm.bio.length }}/30
-              </div>
-              <UButton
-                color="neutral"
-                variant="link"
-                size="sm"
-                icon="lucide:circle-x"
-                @click="profileForm.bio = ''"
-              />
-            </template>
-          </UTextarea>
-        </UFormField>
       </UPageCard>
     </UForm>
   </template>
@@ -357,6 +400,7 @@ const isOpenGenderDrawer = ref(false)
 const isOpenBirthdayDrawer = ref(false)
 const isOpenRegionDrawer = ref(false)
 const isOpenCollegeDrawer = ref(false)
+const isOpenBioDrawer = ref(false)
 const { isMobile, userInfo, avatarURL, globalSocket } =
   storeToRefs(useUserStore())
 const profileForm = ref({ ...userInfo.value.profile })
@@ -382,7 +426,12 @@ const profileItems = [
   {
     label: '角色',
     key: 'nickname',
-    click: () => avatarOverlay.open()
+    click: () => avatarOverlay.open({ profileForm: profileForm.value })
+  },
+  {
+    label: '背景故事',
+    key: 'bio',
+    click: () => (isOpenBioDrawer.value = true)
   },
   {
     label: '性别',
@@ -423,11 +472,6 @@ const getUserInfoDiff = (userInfo, _profileForm) => {
 
   for (let i = 0, l = keys.length; i < l; i++) {
     const key = keys[i]
-
-    if (key === 'nickname') {
-      continue
-    }
-
     const value = _profileForm[key]
 
     if (value !== profile[key]) {
@@ -459,6 +503,17 @@ const onUpdateProfile = async () => {
   }
 
   const diff = getUserInfoDiff(userInfo, _profileForm)
+  const _isMobile = isMobile.value
+
+  // PC 端可以直接修改角色名
+  if (!_isMobile && diff.hasOwnProperty('nickname') && !diff.nickname) {
+    toast.add({
+      title: '角色名不能为空',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+    return
+  }
 
   if (!Object.keys(diff).length) {
     toast.add({
@@ -466,7 +521,7 @@ const onUpdateProfile = async () => {
       icon: 'lucide:smile'
     })
 
-    if (isMobile.value) {
+    if (_isMobile) {
       isUserInfoSlideoverOpen.value = false
     }
 

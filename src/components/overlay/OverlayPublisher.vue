@@ -373,7 +373,7 @@ const reportTargetTypes = [
     value: 'nickname'
   },
   {
-    label: '签名',
+    label: '背景故事',
     value: 'bio'
   },
   {
