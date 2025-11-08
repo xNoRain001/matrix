@@ -130,7 +130,10 @@
       enter-active-class="animate-[fade-in_200ms_ease-out]"
       leave-active-class="animate-[fade-out_200ms_ease-in]"
     >
-      <div v-if="isAutoScrollBtnShow" class="fixed top-5/6 right-0 left-0">
+      <div
+        v-if="!isMobile && isAutoScrollBtnShow"
+        class="fixed top-5/6 right-0 left-0"
+      >
         <UButton
           @click="onScrollToTop"
           class="absolute left-1/2 -translate-x-1/2 rounded-full"
@@ -152,6 +155,7 @@
 import {
   useFormatTimeAgo,
   useGetDB,
+  useInitAutoScrollBtn,
   useLike,
   useNoop,
   useOpenPostDetailOverlay,
@@ -161,7 +165,7 @@ import OverlayPostDetail from '../overlay/OverlayPostDetail.vue'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { deletePostAPI, getPostsAPI, getSelfPostsAPI } from '@/apis/post'
 import { storeToRefs } from 'pinia'
-import { usePostStore, useUserStore } from '@/store'
+import { useFooterStore, usePostStore, useUserStore } from '@/store'
 import OverlayPublisher from '../overlay/OverlayPublisher.vue'
 import { useThrottleFn } from '@vueuse/core'
 
@@ -176,6 +180,7 @@ const postDetailOverlay = overlay.create(OverlayPostDetail)
 const publisherOverlay = overlay.create(OverlayPublisher)
 const { userInfo } = storeToRefs(useUserStore())
 const { postMap, lastFetchedPostId } = storeToRefs(usePostStore())
+const { footerNavs } = storeToRefs(useFooterStore())
 const isSelf = props.targetId === userInfo.value.id
 const allPostLoaded = ref(false)
 const toast = useToast()
@@ -239,7 +244,31 @@ const onScroll = useThrottleFn(
   async () => {
     const { scrollTop, scrollHeight, clientHeight } = props.container
 
-    isAutoScrollBtnShow.value = scrollTop > 400
+    useInitAutoScrollBtn(
+      scrollTop,
+      isMobile,
+      footerNavs,
+      'profile',
+      isAutoScrollBtnShow
+    )
+
+    const _isMobile = isMobile.value
+
+    if (scrollTop > 400) {
+      if (_isMobile) {
+        footerNavs.value[4].label = '顶部'
+        footerNavs.value[4].icon = 'lucide:rocket'
+      } else {
+        isAutoScrollBtnShow.value = true
+      }
+    } else {
+      if (_isMobile) {
+        footerNavs.value[4].label = '我的'
+        footerNavs.value[4].icon = 'lucide:user-round-cog'
+      } else {
+        isAutoScrollBtnShow.value = false
+      }
+    }
 
     if (allPostLoaded.value) {
       return

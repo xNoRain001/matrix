@@ -133,7 +133,10 @@
           enter-active-class="animate-[fade-in_200ms_ease-out]"
           leave-active-class="animate-[fade-out_200ms_ease-in]"
         >
-          <div v-if="isAutoScrollBtnShow" class="absolute top-5/6 w-full">
+          <div
+            v-if="!isMobile && isAutoScrollBtnShow"
+            class="absolute top-5/6 w-full"
+          >
             <UButton
               @click="onScrollToTop"
               class="absolute left-1/2 -translate-x-1/2 rounded-full"
@@ -185,11 +188,17 @@ import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
 import {
   useFormatTimeAgo,
+  useInitAutoScrollBtn,
   useLike,
   useOpenPostDetailOverlay,
   useOpenSpace
 } from '@/hooks'
-import { usePostStore, useRecentContactsStore, useUserStore } from '@/store'
+import {
+  useFooterStore,
+  usePostStore,
+  useRecentContactsStore,
+  useUserStore
+} from '@/store'
 import { useThrottleFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref, watch } from 'vue'
@@ -216,6 +225,7 @@ const activeTab = ref<'latest' | 'friend' | 'hot'>('latest')
 // ]
 const { postMap } = storeToRefs(usePostStore())
 const { activeTargetIds } = storeToRefs(useRecentContactsStore())
+const { footerNavs } = storeToRefs(useFooterStore())
 const dropdownMenuItems = [
   [
     {
@@ -297,7 +307,13 @@ const onScroll = useThrottleFn(
   async e => {
     const { scrollTop, scrollHeight, clientHeight } = e.target
 
-    isAutoScrollBtnShow.value = scrollTop > 400
+    useInitAutoScrollBtn(
+      scrollTop,
+      isMobile,
+      footerNavs,
+      'playground',
+      isAutoScrollBtnShow
+    )
 
     if (allPostLoaded.value) {
       return

@@ -4,7 +4,11 @@
     由于 PC 端可以直接点击好友，显示空间，此时容器需要添加 translate-z-0
   -->
   <div class="h-screen w-full translate-z-0">
-    <div ref="containerRef" class="relative h-full overflow-y-auto">
+    <div
+      id="post-scroller"
+      ref="containerRef"
+      class="relative h-full overflow-y-auto"
+    >
       <!-- 顶部导航 -->
       <UDashboardNavbar
         v-if="!isMatch"
