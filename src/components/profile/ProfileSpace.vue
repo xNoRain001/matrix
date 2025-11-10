@@ -17,8 +17,8 @@
           root: 'border-none sticky top-0 z-30'
         }"
       >
-        <!-- 返回 -->
-        <template v-if="!isSelf || (isSelf && !isMobile)" #leading>
+        <!-- 返回按钮，只有在移动端并处于我的页面时，才不显示 -->
+        <template v-if="!isSetting" #leading>
           <UButton
             icon="lucide:chevron-left"
             color="neutral"
@@ -35,18 +35,22 @@
             @click="publisherOverlay.open({ action: 'post', targetId })"
           />
           <UButton
-            v-if="isSelf && isMobile"
+            v-if="isSetting"
             icon="lucide:settings"
             variant="ghost"
             @click="isSettingSlideoverOpen = true"
           />
-          <ContactDropdownMenu v-if="!isSelf" :target-id="targetId" />
+          <ProfileSpaceDropdownMenu
+            v-if="!isSelf"
+            :target-id="targetId"
+            :target-profile="targetProfile"
+          />
         </template>
       </UDashboardNavbar>
       <!-- 背景图片，由于移动端有 pb-16，所有高度全部使用 50vh，而不是 50% -->
       <!-- 灰色滤镜：grayscale-50 filter -->
       <Placeholder
-        v-if="isError"
+        v-if="isPlaceholderShow"
         :class="isMatch ? '' : '-mt-16'"
         class="sticky -top-[calc(50vh-4rem)] z-10 h-[50vh] border-none"
       />
@@ -56,7 +60,7 @@
         :src="bgURL"
         :class="isMatch ? '' : '-mt-16'"
         class="sticky -top-[calc(50vh-4rem)] z-10 h-[50vh] cursor-pointer object-cover"
-        @error="isError = true"
+        @error="isPlaceholderShow = true"
       />
       <!-- 个人资料卡片 -->
       <UPageCard
@@ -73,7 +77,18 @@
               size="xs"
             ></UButton> -->
             <UButton
-              v-if="!isSelf && !inView"
+              v-if="
+                !(
+                  // 自己的空间不显示
+                  (
+                    isSelf ||
+                    // PC 端的匹配聊天界面不显示
+                    (isMatch && !isMobile) ||
+                    // 消息界面的一级空间不显示，因为是先打开聊天界面，再打开一级空间
+                    isChatBtnShow
+                  )
+                )
+              "
               @click="chatOverlay.open({ targetId, targetProfile })"
               icon="lucide:message-circle-more"
               label="聊天"
@@ -271,14 +286,7 @@
 <script lang="ts" setup>
 import { usePostStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import {
-  computed,
-  onBeforeMount,
-  onBeforeUnmount,
-  ref,
-  useTemplateRef,
-  watch
-} from 'vue'
+import { onBeforeMount, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
 import { useGetDB, useUpdateStaticNameFile } from '@/hooks'
 import { useRoute } from 'vue-router'
 import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
@@ -321,10 +329,10 @@ const spaceBgRef = ref(null)
 const toast = useToast()
 const { isMobile, userInfo, avatarURL, globalSocket } =
   storeToRefs(useUserStore())
-const { activeTargetIds, activeTargetId, activeTargetProfile } = storeToRefs(
+const { postMap } = storeToRefs(usePostStore())
+const { activeSpaceTargetIds, activeTargetIds } = storeToRefs(
   useRecentContactsStore()
 )
-const { postMap } = storeToRefs(usePostStore())
 const cards = [
   [
     {
@@ -386,13 +394,7 @@ const cards = [
   ]
 ]
 const isSelf = props.targetId === userInfo.value.id
-const isContacts = computed(() => route.path === '/contacts')
 const route = useRoute()
-// 在聊天界面中打开对方空间或匹配到对方显示的空间不需要显示聊天按钮
-const inView = computed(() => {
-  const { path } = route
-  return path === '/messages' || path === '/chat' || path === '/voice-chat'
-})
 const bgBlob = isSelf
   ? (
       await (
@@ -415,7 +417,6 @@ const publisherOverlay = overlay.create(OverlayPublisher)
 const helpAndSupportOverlay = overlay.create(OverlayHelpAndSupport)
 const aboutOverlay = overlay.create(OverlayAbout)
 const chatOverlay = overlay.create(OverlayChat)
-const prevRoute = route.path
 const isTagSlideoverOpen = ref(false)
 const tag = ref('')
 const tags = ref(JSON.parse(JSON.stringify(props.targetProfile.tags)))
@@ -439,7 +440,12 @@ const mbtiItems = [
   'ENTJ'
 ]
 const tagRef = useTemplateRef('tagRef')
-const isError = ref(false)
+const isPlaceholderShow = ref(false)
+const t = activeTargetIds.value.size === 1
+const { path } = route
+const isChatBtnShow = path === '/messages' && t
+const isSetting = path === '/profile' && t
+const isContacts = path === '/contacts'
 
 const computeDays = timestamp =>
   Math.ceil((Date.now() - timestamp) / (1000 * 60 * 60 * 24))
@@ -526,52 +532,23 @@ const onSpaceBgChange = e =>
 watch(
   () => props.targetId,
   v => {
-    // PC 端 contact 页面允许无缝切换空间操作，需要更新背景
-    if (v && isContacts.value && !isMobile.value) {
+    // PC 端允许无缝切换空间操作，需要更新背景，不需要添加是否是 PC 端判断，因为
+    // props.targetId 能发生变化时，肯定是 PC 端
+    if (v && isContacts) {
       bgURL.value = `${VITE_OSS_BASE_URL}spaceBg/${v}`
     }
   }
 )
 
 onBeforeMount(() => {
-  activeTargetIds.value.add(props.targetId)
+  activeSpaceTargetIds.value.add(props.targetId)
 })
 
 onBeforeUnmount(() => {
-  if (
-    !activeTargetIds.value.size ||
-    // 页面只打开了一个空间时，关闭空间时不需要重置数据，否则会将聊天界面也关闭
-    (activeTargetIds.value.size === 1 &&
-      (prevRoute === '/messages' ||
-        // PC 端聊天匹配可以在这里处理，但语音匹配不可以，同时移动端聊天和语音都不可以，
-        // 虽然不会关闭聊天界面，但是需要的数据被重置了，因此在匹配页面销毁时
-        // 进行处理
-        prevRoute === '/chat' ||
-        prevRoute === '/voice-chat'))
-  ) {
-    return
-  }
-
-  // 匹配时离开页面会同时触发空间和聊天视图的销毁行为，选择在这里更新，因为语音匹配
-  // 没有聊天视图
-
-  activeTargetIds.value.delete(props.targetId)
+  activeSpaceTargetIds.value.delete(props.targetId)
 
   if (!isSelf) {
     delete postMap.value[props.targetId]
-  }
-
-  if (activeTargetIds.value.size === 0) {
-    // PC 端可能直接从好友界面切换到其他页面，此时 activeTargetIds 的数量可能为 0，也
-    // 可能为 1，取决于当前有没有打开空间，contact 销毁前触发这里，此时
-    // activeTargetIds 的数量一定为 0，如果销毁前打开了空间，再回来时由于
-    // activeTargetId 并没有重置，会有异常，需要重置 activeContactId，可以在
-    // contact 的 onBeforeUnmount 中重置，但由于相关操作都在这里，因此在这里重置
-
-    // 手动关闭空间，PC 端直接在 close 事件中重置了 activeContactId，移动端需要
-    // 手动修改，同时要考虑 PC 端切换到其他页面，因此不需要 isMobile 条件
-    activeTargetId.value = ''
-    activeTargetProfile.value = null
   }
 })
 </script>

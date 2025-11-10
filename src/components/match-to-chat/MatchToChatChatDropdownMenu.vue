@@ -102,6 +102,7 @@ const emits = defineEmits(['close'])
 const toast = useToast()
 const [defineOverlayTemplate, reuseOverlayTemplate] = createReusableTemplate()
 const {
+  isChatOpen,
   activeTargetId,
   activeTargetIds,
   contactProfileMap,
@@ -113,13 +114,10 @@ const {
   unreadMsgCounter
 } = storeToRefs(useRecentContactsStore())
 const { globalSocket, userInfo, isMobile } = storeToRefs(useUserStore())
-const isFriend = computed(() =>
-  Boolean(contactProfileMap.value[props.targetId])
-)
 const route = useRoute()
 const isConfirmOverlayOpen = ref(false)
 const isOverlayOpen = ref(false)
-const isMessage = computed(() => route.path === '/messages')
+const isMessage = route.path === '/messages'
 const title = ref('')
 const description = ref(' ')
 const deleteList = {
@@ -167,14 +165,14 @@ const reportAvatarOrSpaceBg = {
       reportedUserId: props.targetId
     })
 }
-
+const isListActionShow = activeTargetIds.value.size === 1 && isMessage
 const dropdownItems = computed(() =>
-  isFriend.value
+  contactProfileMap.value[props.targetId]
     ? props.isMatch
       ? isMobile.value
         ? [deleteMessageRecord, report]
         : [deleteMessageRecord, report, reportAvatarOrSpaceBg]
-      : activeTargetIds.value.size === 1 && isMessage.value
+      : isListActionShow
         ? // 只有 message 页面下的一级界面才提供修改列表的选项
           [
             {
@@ -195,7 +193,7 @@ const dropdownItems = computed(() =>
       ? isMobile.value
         ? [addContact, deleteMessageRecord, report]
         : [addContact, deleteMessageRecord, report, reportAvatarOrSpaceBg]
-      : activeTargetIds.value.size === 1 && isMessage.value
+      : isListActionShow
         ? [addContact, deleteList, deleteMessageRecord, report]
         : [addContact, deleteMessageRecord, report]
 )
@@ -214,7 +212,8 @@ const onDeleteList = async () => {
       lastMsgList,
       lastMsgMap,
       messageList,
-      activeTargetId,
+      activeTargetIds,
+      isChatOpen,
       lastFetchedId,
       false,
       isMobile.value,
@@ -239,7 +238,8 @@ const onHideList = async () => {
       indexMap,
       lastMsgList,
       lastMsgMap,
-      activeTargetId,
+      activeTargetIds,
+      isChatOpen,
       false,
       isMobile.value,
       emits

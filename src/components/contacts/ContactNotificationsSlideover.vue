@@ -18,6 +18,7 @@
         :key="id"
         class="bg-elevated/50 border-b-accented/50 cursor-pointer rounded-none border-b p-4 sm:p-6"
         @click="
+          !activeSpaceTargetIds.has(id) &&
           profileSpaceOverlay.open({
             targetId: id,
             targetProfile: profile
@@ -98,7 +99,8 @@ const {
   lastMsgMap,
   indexMap,
   unreadMsgCounter,
-  msgContainerRef
+  msgContainerRef,
+  activeSpaceTargetIds
 } = storeToRefs(useRecentContactsStore())
 const { contactNotifications } = storeToRefs(useNotificationsStore())
 const overlay = useOverlay()

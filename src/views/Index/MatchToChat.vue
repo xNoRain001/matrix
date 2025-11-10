@@ -11,15 +11,15 @@
       <MatchToChatChat
         @close="isOpen = false"
         :is-match="true"
-        :target-id="activeTargetId"
-        :target-profile="activeTargetProfile"
+        :target-id="targetId"
+        :target-profile="targetProfile"
       />
       <ProfileSpace
         v-if="!isMobile"
         class="max-w-md"
         :is-match="true"
-        :target-id="activeTargetId"
-        :target-profile="activeTargetProfile"
+        :target-id="targetId"
+        :target-profile="targetProfile"
       />
     </template>
   </UModal>
@@ -28,12 +28,7 @@
 <script lang="ts" setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import {
-  useMatchStore,
-  usePostStore,
-  useRecentContactsStore,
-  useUserStore
-} from '@/store'
+import { useMatchStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { useRefreshOnlineStatus } from '@/hooks'
 
@@ -41,34 +36,25 @@ let timer = null
 const router = useRouter()
 const { isMobile, globalSocket } = storeToRefs(useUserStore())
 const { matchRes } = storeToRefs(useMatchStore())
-const { activeTargetIds, activeTargetId, activeTargetProfile } = storeToRefs(
-  useRecentContactsStore()
-)
-const { postMap } = storeToRefs(usePostStore())
+const targetId = ref('')
+const targetProfile = ref(null)
 const isOpen = ref(
   Boolean(matchRes.value?.type === 'chat' && matchRes.value?.profile)
 )
 
 if (isOpen.value) {
   const { id, profile } = matchRes.value
-  activeTargetId.value = id
-  activeTargetProfile.value = profile
+  targetId.value = id
+  targetProfile.value = profile
 } else {
   await router.replace('/')
 }
 
 onMounted(async () => {
-  timer = useRefreshOnlineStatus(globalSocket, 'matchTarget', [
-    activeTargetId.value
-  ])
+  timer = useRefreshOnlineStatus(globalSocket, 'matchTarget', [targetId.value])
 })
 
 onBeforeUnmount(() => {
   clearInterval(timer)
-
-  activeTargetIds.value.delete(activeTargetId.value)
-  delete postMap.value[activeTargetId.value]
-  activeTargetId.value = ''
-  activeTargetProfile.value = null
 })
 </script>

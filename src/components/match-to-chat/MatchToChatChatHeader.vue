@@ -7,7 +7,16 @@
     }"
   >
     <template #title>
-      <span @click="toSpace" class="cursor-pointer truncate">
+      <span
+        @click="
+          !activeSpaceTargetIds.has(targetId) &&
+          profileSpaceOverlay.open({
+            targetId,
+            targetProfile
+          })
+        "
+        class="cursor-pointer truncate"
+      >
         {{ targetProfile.nickname }}
       </span>
     </template>
@@ -63,7 +72,13 @@
     "
     v-model:open="open"
     class="border-default cursor-pointer border-b"
-    @click="toSpace"
+    @click="
+      !activeSpaceTargetIds.has(targetId) &&
+      profileSpaceOverlay.open({
+        targetId,
+        targetProfile
+      })
+    "
     :ui="{
       content: 'space-y-4 sm:space-y-6 p-4 sm:p-6 bg-elevated/50'
     }"
@@ -80,7 +95,6 @@
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
-import { useRoute } from 'vue-router'
 import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 import type { userInfo } from '@/types'
 
@@ -97,17 +111,9 @@ const props = withDefaults(
 const emits = defineEmits(['close'])
 const open = ref(props.isMatch ? true : false)
 const { isMobile, userInfo } = storeToRefs(useUserStore())
-const { unreadMsgCounter } = storeToRefs(useRecentContactsStore())
-const route = useRoute()
+const { unreadMsgCounter, activeSpaceTargetIds } = storeToRefs(
+  useRecentContactsStore()
+)
 const overlay = useOverlay()
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
-
-const toSpace = () => {
-  if (route.path !== '/contacts' && !(props.isMatch && !isMobile.value)) {
-    profileSpaceOverlay.open({
-      targetId: props.targetId,
-      targetProfile: props.targetProfile
-    })
-  }
-}
 </script>

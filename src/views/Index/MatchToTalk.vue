@@ -13,13 +13,13 @@
         <MatchToChatChatHeader
           @close="isOpen = false"
           :is-match="true"
-          :target-id="activeTargetId"
-          :target-profile="activeTargetProfile"
+          :target-id="targetId"
+          :target-profile="targetProfile"
         />
         <MatchToTalkCall
           :is-match="true"
-          :target-id="activeTargetId"
-          :target-profile="activeTargetProfile"
+          :target-id="targetId"
+          :target-profile="targetProfile"
           class="m-4 sm:m-6"
         />
       </div>
@@ -27,8 +27,8 @@
         v-if="!isMobile"
         class="max-w-md"
         :is-match="true"
-        :target-id="activeTargetId"
-        :target-profile="activeTargetProfile"
+        :target-id="targetId"
+        :target-profile="targetProfile"
       />
     </template>
   </UModal>
@@ -37,13 +37,7 @@
 <script lang="ts" setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import {
-  useMatchStore,
-  usePostStore,
-  useRecentContactsStore,
-  useUserStore,
-  useWebRTCStore
-} from '@/store'
+import { useMatchStore, useUserStore, useWebRTCStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { useGenRoomId, useRefreshOnlineStatus } from '@/hooks'
 
@@ -51,10 +45,8 @@ let timer = null
 const router = useRouter()
 const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
 const { matchRes } = storeToRefs(useMatchStore())
-const { activeTargetIds, activeTargetId, activeTargetProfile } = storeToRefs(
-  useRecentContactsStore()
-)
-const { postMap } = storeToRefs(usePostStore())
+const targetId = ref('')
+const targetProfile = ref(null)
 const { roomId, isVoiceChatMatch, webRTCTargetId, webRTCTargetProfile } =
   storeToRefs(useWebRTCStore())
 const isOpen = ref(
@@ -63,8 +55,8 @@ const isOpen = ref(
 
 if (isOpen.value) {
   const { id, profile } = matchRes.value
-  activeTargetId.value = id
-  activeTargetProfile.value = profile
+  targetId.value = id
+  targetProfile.value = profile
   webRTCTargetId.value = id
   webRTCTargetProfile.value = profile
 } else {
@@ -78,16 +70,10 @@ onMounted(async () => {
     matchRes.value.id
   ))
   globalSocket.value.emit('bidirectional-web-rtc', _roomId)
-  timer = useRefreshOnlineStatus(globalSocket, 'matchTarget', [
-    activeTargetId.value
-  ])
+  timer = useRefreshOnlineStatus(globalSocket, 'matchTarget', [targetId.value])
 })
 
 onBeforeUnmount(() => {
-  activeTargetIds.value.delete(activeTargetId.value)
-  delete postMap.value[activeTargetId.value]
-  activeTargetId.value = ''
-  activeTargetProfile.value = null
   clearInterval(timer)
 })
 </script>

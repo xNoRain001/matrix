@@ -40,6 +40,7 @@
               {{ item.content }}
             </div>
             <UAvatar
+              data-type="avatar-self"
               v-if="item.separator"
               :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
@@ -88,6 +89,7 @@
               图片已失效
             </div>
             <UAvatar
+              data-type="avatar-self"
               v-if="item.separator"
               :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
@@ -268,8 +270,8 @@
               <UIcon name="lucide:volume-off" class="size-5" />
               音频已失效
             </div>
-
             <UAvatar
+              data-type="avatar-self"
               v-if="item.separator"
               :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
@@ -318,6 +320,7 @@
               发起了语音通话
             </div>
             <UAvatar
+              data-type="avatar-self"
               v-if="item.separator"
               :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
@@ -347,6 +350,7 @@
               结束了语音通话
             </div>
             <UAvatar
+              data-type="avatar-self"
               v-if="item.separator"
               :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
@@ -376,6 +380,7 @@
               拒绝了语音通话
             </div>
             <UAvatar
+              data-type="avatar-self"
               v-if="item.separator"
               :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
@@ -405,6 +410,7 @@
               同意了语音通话
             </div>
             <UAvatar
+              data-type="avatar-self"
               v-if="item.separator"
               :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
@@ -434,6 +440,7 @@
               权限不足
             </div>
             <UAvatar
+              data-type="avatar-self"
               v-if="item.separator"
               :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
@@ -463,6 +470,7 @@
               {{ item.content }}
             </div>
             <UAvatar
+              data-type="avatar-self"
               v-if="item.separator"
               :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
@@ -499,6 +507,7 @@
               <UIcon :name="`lucide:dice-${item.content}`" class="size-16" />
             </div>
             <UAvatar
+              data-type="avatar-self"
               v-if="item.separator"
               :src="avatarURL"
               :alt="userInfo.profile.nickname[0] || ''"
@@ -540,23 +549,24 @@
       />
     </div>
   </Transition>
-
   <!-- 音频播放器 -->
   <audio @ended="onEnded" ref="audioRef" hidden></audio>
 </template>
 
 <script lang="ts" setup>
-import { useGetMessages } from '@/hooks'
+import { useFormatTimeAgo, useGetDB, useGetMessages } from '@/hooks'
 import { sendMsg } from '@/hooks/use-send-msg'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { useThrottleFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { computed, onBeforeUnmount, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
 import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 import type { userInfo } from '@/types'
 
+let timer = null
+let receivingOfflineMsgsTimer = null
+let first = true
 const { VITE_OSS_BASE_URL } = import.meta.env
 const playingURL = ref('')
 const props = defineProps<{
@@ -564,16 +574,18 @@ const props = defineProps<{
   targetId: string
   targetProfile: userInfo['profile']
 }>()
-const { config, isMobile, userInfo, avatarURL } = storeToRefs(useUserStore())
+const { config, userInfo, avatarURL } = storeToRefs(useUserStore())
 const {
   lastMsgMap,
   hashToBlobURLMap,
   msgContainerRef,
   messageList,
   lastFetchedId,
-  skipUnshiftMessageRecord
+  skipUnshiftMessageRecord,
+  unreadMsgCounter,
+  isReceivingOfflineMsgs,
+  activeSpaceTargetIds
 } = storeToRefs(useRecentContactsStore())
-const route = useRoute()
 const items = ref([])
 const search = ref('')
 const updateParts = ref({
@@ -582,14 +594,6 @@ const updateParts = ref({
   visibleStartIdx: 0,
   visibleEndIdx: 0
 })
-const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
-  // year: 'numeric',
-  // month: 'long',
-  // day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-  weekday: 'long'
-}
 const filteredItems = computed(() => {
   if (!search.value) {
     return messageList.value
@@ -682,7 +686,14 @@ const onUpdate = (
 
 const formatTimestamp = (timestamp: number) => {
   // TODO: 更久远的记录显示日期甚至年份
-  return new Date(timestamp).toLocaleString('zh-CN', dateTimeFormatOptions)
+  return new Date(timestamp).toLocaleString('zh-CN', {
+    // year: 'numeric',
+    // month: 'long',
+    // day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    weekday: 'long'
+  })
 }
 
 const onClick = e => {
@@ -694,23 +705,119 @@ const onClick = e => {
   if (type === 'image') {
     const { src, width, height } = target
     viewerOverlay.open({ urls: [{ url: src, width, height }] })
-  } else if (
-    type &&
-    // 如果 contacts 中点击用户打开的空间中打开了聊天界面，聊天界面中点击
-    // 对方头像不显示对方空间
-    route.path !== '/contacts' &&
-    // PC 端的匹配聊天界面中点击对方头像不显示对方空间
-    !(props.isMatch && !isMobile.value)
-  ) {
-    profileSpaceOverlay.open({
-      targetId: props.targetId,
-      targetProfile: props.targetProfile
-    })
+  } else if (type === 'avatar') {
+    const { targetId, targetProfile } = props
+    !activeSpaceTargetIds.value.has(targetId) &&
+      profileSpaceOverlay.open({
+        targetId,
+        targetProfile
+      })
+  } else if (type === 'avatar-self') {
+    const { id, profile } = userInfo.value
+    !activeSpaceTargetIds.value.has(id) &&
+      profileSpaceOverlay.open({
+        targetId: id,
+        targetProfile: profile
+      })
   }
 }
 
+const updateTimeAgo = () => {
+  const item = lastMsgMap.value[props.targetId]
+
+  if (item) {
+    if (item.timestamp) {
+      item.timeAgo = useFormatTimeAgo(item.timestamp)
+    }
+  }
+}
+
+const resetUnreadMsgs = async targetId => {
+  const item = lastMsgMap.value[targetId]
+  // 如果当前打开的是非消息列表中对象的聊天界面，item 值为 undefined
+  const unreadMsgs = item?.unreadMsgs
+
+  if (item && unreadMsgs) {
+    unreadMsgCounter.value -= unreadMsgs
+    item.unreadMsgs = 0
+    const db = await useGetDB(userInfo.value.id)
+    await db.put('lastMessages', JSON.parse(JSON.stringify(item)))
+  }
+}
+
+const initMessages = async () => {
+  const _targetId = props.targetId
+  await useGetMessages(
+    userInfo.value.id,
+    hashToBlobURLMap,
+    messageList,
+    lastFetchedId,
+    _targetId
+  )
+  ;(msgContainerRef.value as any).scrollToBottom()
+  resetUnreadMsgs(_targetId)
+}
+
+const initMessagesInMatch = async () => {
+  if (!isReceivingOfflineMsgs.value) {
+    initMessages()
+  } else {
+    receivingOfflineMsgsTimer = setInterval(async () => {
+      if (!isReceivingOfflineMsgs.value) {
+        clearInterval(receivingOfflineMsgsTimer)
+        initMessages()
+      }
+    }, 1000)
+  }
+}
+
+props.isMatch
+  ? initMessagesInMatch()
+  : watch(
+      // PC 端可能无缝切换聊天对象
+      () => props.targetId,
+      async v => {
+        if (v) {
+          // PC 端可能不关闭聊天界面点击其他用户列表的情况，如果不先重置 messageList 会
+          // 造成切换后滚动条不一定在底部的问题，通过清空聊天记录，将 scrollTop 恢复
+          // 为 0
+          messageList.value = []
+
+          // scrollTop 为 0 时，会触发拉取消息的行为，需要跳过，当组件未销毁时切换
+          // targetId 会执行里面的逻辑
+          if (!first) {
+            skipUnshiftMessageRecord.value = true
+          }
+
+          if (first) {
+            first = false
+          }
+
+          // PC 端可能存在不关闭聊天界面点击其他用户列表的情况，组件不会销毁，此时需要重置
+          // lastFetchedId，这里就不加 isMobile 判断了
+          lastFetchedId.value = Infinity
+          initMessages()
+          // 需要重置为 false，恢复拉取消息
+          skipUnshiftMessageRecord.value = false
+        }
+      },
+      { immediate: true }
+    )
+
+onMounted(() => {
+  // MessageList 组件中会更新所有聊天的时间，只有不在其中的聊天才需要在这里更新时间，
+  // TODO: 但是发送消息后就出现在消息列表中了，会造成重复更新
+  if (!lastMsgMap.value[props.targetId]) {
+    updateTimeAgo()
+    timer = setInterval(updateTimeAgo, 1000 * 60)
+  }
+})
+
 onBeforeUnmount(() => {
+  clearInterval(timer)
   ;(msgContainerRef.value as any).$el.removeEventListener('scroll', onScroll)
   msgContainerRef.value = null
+  messageList.value = []
+  lastFetchedId.value = Infinity
 })
 </script>

@@ -19,8 +19,8 @@
   <template v-if="!isMobile">
     <!-- 由于并不依赖模态框，因此需要手动修改 targetId -->
     <MatchToChatChat
-      v-if="activeTargetId"
-      @close="activeTargetId = ''"
+      v-if="isChatOpen"
+      @close="isChatOpen = false"
       :target-id="activeTargetId"
       :target-profile="activeTargetProfile"
     />
@@ -40,8 +40,13 @@ import { onMounted, onBeforeUnmount } from 'vue'
 let timer = null
 const toast = useToast()
 const { isMobile, userInfo } = storeToRefs(useUserStore())
-const { activeTargetId, activeTargetProfile, lastMsgMap, lastMsgList } =
-  storeToRefs(useRecentContactsStore())
+const {
+  isChatOpen,
+  activeTargetId,
+  activeTargetProfile,
+  lastMsgMap,
+  lastMsgList
+} = storeToRefs(useRecentContactsStore())
 
 const refreshChatsProfile = async () => {
   const now = Date.now()
@@ -96,5 +101,11 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   clearInterval(timer)
+
+  if (isChatOpen.value) {
+    isChatOpen.value = false
+    activeTargetId.value = ''
+    activeTargetProfile.value = null
+  }
 })
 </script>

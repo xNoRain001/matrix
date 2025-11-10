@@ -69,25 +69,22 @@ import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
+import type { userInfo } from '@/types'
 
-const props = defineProps<{ targetId: string }>()
+const props = defineProps<{
+  targetId: string
+  targetProfile: userInfo['profile']
+}>()
 const toast = useToast()
 const [defineOverlayTemplate, reuseOverlayTemplate] = createReusableTemplate()
 const isOverlayOpen = ref(false)
 const title = ref('')
-const {
-  activeTargetId,
-  activeTargetIds,
-  activeTargetProfile,
-  contactProfileMap,
-  contactList
-} = storeToRefs(useRecentContactsStore())
+const { isSpaceOpen, activeSpaceTargetIds, contactProfileMap, contactList } =
+  storeToRefs(useRecentContactsStore())
 const { globalSocket, userInfo, isMobile } = storeToRefs(useUserStore())
-const isFriend = computed(() =>
-  Boolean(contactProfileMap.value[props.targetId])
-)
 const route = useRoute()
-const isContacts = computed(() => route.path === '/contacts')
+const isDeleteContactActionInList =
+  activeSpaceTargetIds.value.size === 1 && route.path === '/contacts'
 const addContact = {
   label: '添加好友',
   icon: 'lucide:circle-plus',
@@ -115,9 +112,9 @@ const report = {
   }
 }
 const dropdownItems = computed(() =>
-  isFriend.value
+  contactProfileMap.value[props.targetId]
     ? // 只有 contacts 页面下的一级界面才提供删除好友的选项
-      activeTargetIds.value.size === 1 && isContacts.value
+      isDeleteContactActionInList
       ? [deleteContact, report]
       : [report]
     : [addContact, report]
@@ -132,8 +129,8 @@ const onDeleteContact = async () => {
       contactProfileMap,
       globalSocket,
       toast,
-      activeTargetId,
-      activeTargetProfile
+      activeSpaceTargetIds,
+      isSpaceOpen
     )
   } catch {
   } finally {

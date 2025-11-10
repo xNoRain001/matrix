@@ -83,7 +83,7 @@
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import type { ContextMenuItem } from '@nuxt/ui'
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useDeleteContact, useRefreshOnlineStatus } from '@/hooks'
 import type { userInfo } from '@/types'
 import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
@@ -93,9 +93,10 @@ let contextmenuId = ''
 const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
 const {
+  isSpaceOpen,
   activeTargetId,
   activeTargetProfile,
-  activeTargetIds,
+  activeSpaceTargetIds,
   contactList,
   contactProfileMap,
   isFirstGetContactsOnlineStatus
@@ -114,8 +115,8 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
           contactProfileMap,
           globalSocket,
           toast,
-          activeTargetId,
-          activeTargetProfile
+          activeSpaceTargetIds,
+          isSpaceOpen
         )
     }
   ]
@@ -129,19 +130,33 @@ const hour = 60 * minute
 const day = 24 * hour
 const haldAnHour = 1000 * 60 * 30
 
-const onClick = id => {
-  if (activeTargetId.value === id) {
-    return
+const updateTarget = targetId => {
+  activeTargetId.value = targetId
+  activeTargetProfile.value = contactProfileMap.value[targetId].profile
+
+  const _activeSpaceTargetIds = activeSpaceTargetIds.value
+
+  // 无缝切换时，还需要手动更新 activeSpaceTargetIds 为新激活的项
+  if (_activeSpaceTargetIds.size === 1) {
+    _activeSpaceTargetIds.clear()
+    _activeSpaceTargetIds.add(targetId)
   }
 
-  activeTargetId.value = id
-  activeTargetProfile.value = contactProfileMap.value[id].profile
+  isSpaceOpen.value = true
+}
 
-  // pc 端可以无缝切换好友，如果在打开了空间时点击其他联系人，由于空间没有销毁，因此
-  // 需要手动更新 id
-  if (!isMobile.value && activeTargetIds.value.size) {
-    activeTargetIds.value.clear()
-    activeTargetIds.value.add(id)
+const onClick = targetId => {
+  const targetProfile = contactProfileMap.value[targetId].profile
+
+  if (isMobile.value) {
+    profileSpaceOverlay.open({
+      targetId,
+      targetProfile
+    })
+  } else {
+    activeTargetId.value = targetId
+    activeTargetProfile.value = targetProfile
+    isSpaceOpen.value = true
   }
 }
 
@@ -153,8 +168,8 @@ const onDeleteContact = id =>
     contactProfileMap,
     globalSocket,
     toast,
-    activeTargetId,
-    activeTargetProfile
+    activeSpaceTargetIds,
+    isSpaceOpen
   )
 
 const formatLastOnline = timestamp => {
@@ -180,50 +195,25 @@ const formatLastOnline = timestamp => {
               })}`
 }
 
-watch(activeTargetId, v => {
-  if (!isMobile.value) {
-    return
-  }
-
-  if (v) {
-    profileSpaceOverlay.open({
-      targetId: activeTargetId.value,
-      targetProfile: activeTargetProfile.value
-    })
-  } else {
-    profileSpaceOverlay.close()
-  }
-})
-
 defineShortcuts({
   arrowdown: () => {
     const _contactList = contactList.value
-    const _contactProfileMap = contactProfileMap.value
     const index = _contactList.findIndex(id => id === activeTargetId.value)
 
     if (index === -1) {
-      const _targetId = _contactList[0]
-      activeTargetId.value = _targetId
-      activeTargetProfile.value = _contactProfileMap[_targetId].profile
+      updateTarget(_contactList[0])
     } else if (index < _contactList.length - 1) {
-      const _targetId = _contactList[index + 1]
-      activeTargetId.value = _targetId
-      activeTargetProfile.value = _contactProfileMap[_targetId].profile
+      updateTarget(_contactList[index + 1])
     }
   },
   arrowup: () => {
     const _contactList = contactList.value
-    const _contactProfileMap = contactProfileMap.value
     const index = _contactList.findIndex(id => id === activeTargetId.value)
 
     if (index === -1) {
-      const _targetId = _contactList[_contactList.length - 1]
-      activeTargetId.value = _targetId
-      activeTargetProfile.value = _contactProfileMap[_targetId].profile
+      updateTarget(_contactList[_contactList.length - 1])
     } else if (index > 0) {
-      const _targetId = _contactList[index - 1]
-      activeTargetId.value = _targetId
-      activeTargetProfile.value = _contactProfileMap[_targetId].profile
+      updateTarget(_contactList[index - 1])
     }
   }
 })

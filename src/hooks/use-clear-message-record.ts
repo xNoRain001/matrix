@@ -4,7 +4,7 @@ const clearMessageRecord = async (
   userInfo,
   targetId,
   messageList,
-  _targetId,
+  activeTargetIds,
   lastFetchedId,
   item,
   pure
@@ -34,7 +34,7 @@ const clearMessageRecord = async (
 
   // TODO: 删除列表时，先删除列表，聊天界面销毁时会清空内存中的聊天记录，这里不需要再
   // 次清空
-  if (_targetId.value === targetId) {
+  if (activeTargetIds.value.has(targetId)) {
     messageList.value = []
     lastFetchedId.value = Infinity
   }
@@ -45,9 +45,9 @@ const useClearMessageRecord = async (
   targetId,
   messageList,
   lastMsgMap,
-  _targetId,
+  activeTargetIds,
   lastFetchedId,
-  pure = true // 值为 false 说明在执行前已经删除了聊天列表
+  pure = true // 值为 false 说明在执行前已经删除了聊天列表，不需要再处理 lastMessages
 ) => {
   const item = pure ? lastMsgMap.value[targetId] : null
 
@@ -61,7 +61,7 @@ const useClearMessageRecord = async (
     userInfo,
     targetId,
     messageList,
-    _targetId,
+    activeTargetIds,
     lastFetchedId,
     item,
     pure

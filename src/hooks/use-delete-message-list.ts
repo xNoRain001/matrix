@@ -9,7 +9,8 @@ const useDeleteMessageList = async (
   lastMsgList,
   lastMsgMap,
   messageList,
-  _targetId,
+  activeTargetIds,
+  isChatOpen,
   lastFetchedId,
   isSlide,
   isMobile,
@@ -22,7 +23,8 @@ const useDeleteMessageList = async (
     indexMap,
     lastMsgList,
     lastMsgMap,
-    _targetId,
+    activeTargetIds,
+    isChatOpen,
     isSlide,
     isMobile,
     emits
@@ -32,7 +34,7 @@ const useDeleteMessageList = async (
     targetId,
     messageList,
     lastMsgMap,
-    _targetId,
+    activeTargetIds,
     lastFetchedId,
     false
   )

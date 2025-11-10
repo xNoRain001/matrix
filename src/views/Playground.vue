@@ -46,13 +46,11 @@
               :description="profile.bio"
               size="xl"
               @click="
-                useOpenSpace(
-                  profileSpaceOverlay,
-                  userInfo,
-                  activeTargetIds,
-                  user,
-                  profile
-                )
+                !activeSpaceTargetIds.has(user) &&
+                profileSpaceOverlay.open({
+                  targetId: user,
+                  targetProfile: profile
+                })
               "
               :ui="{
                 name: 'break-all',
@@ -189,8 +187,7 @@ import {
   useFormatTimeAgo,
   useInitAutoScrollBtn,
   useLike,
-  useOpenPostDetailOverlay,
-  useOpenSpace
+  useOpenPostDetailOverlay
 } from '@/hooks'
 import {
   useFooterStore,
@@ -205,7 +202,7 @@ import { onMounted, ref, watch } from 'vue'
 let reportedUserId = null
 let reportPostId = null
 const { VITE_OSS_BASE_URL } = import.meta.env
-const { isMobile, userInfo } = storeToRefs(useUserStore())
+const { isMobile } = storeToRefs(useUserStore())
 const activeTab = ref<'latest' | 'friend' | 'hot'>('latest')
 // const tabItems = [
 //   {
@@ -223,7 +220,7 @@ const activeTab = ref<'latest' | 'friend' | 'hot'>('latest')
 //   }
 // ]
 const { postMap } = storeToRefs(usePostStore())
-const { activeTargetIds } = storeToRefs(useRecentContactsStore())
+const { activeSpaceTargetIds } = storeToRefs(useRecentContactsStore())
 const { footerNavs } = storeToRefs(useFooterStore())
 const dropdownMenuItems = [
   [

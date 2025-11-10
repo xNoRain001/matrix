@@ -113,7 +113,7 @@ import {
 } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { ref, onBeforeUnmount, onMounted, watch } from 'vue'
+import { ref, onBeforeUnmount, onMounted } from 'vue'
 import type { ContextMenuItem } from '@nuxt/ui'
 import useDeleteMessageList from '@/hooks/use-delete-message-list'
 import OverlayChat from '@/components/overlay/OverlayChat.vue'
@@ -124,11 +124,12 @@ let contextmenuId = ''
 const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
 const {
+  isChatOpen,
   lastMsgMap,
   lastMsgList,
   activeTargetId,
-  activeTargetProfile,
   activeTargetIds,
+  activeTargetProfile,
   messageList,
   lastFetchedId,
   contactProfileMap,
@@ -149,7 +150,8 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
           indexMap,
           lastMsgList,
           lastMsgMap,
-          activeTargetId,
+          activeTargetIds,
+          isChatOpen,
           false,
           false
         )
@@ -166,7 +168,8 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
           lastMsgList,
           lastMsgMap,
           messageList,
-          activeTargetId,
+          activeTargetIds,
+          isChatOpen,
           lastFetchedId,
           false,
           false
@@ -177,17 +180,33 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
 const overlay = useOverlay()
 const chatOverlay = overlay.create(OverlayChat)
 
-const onClick = id => {
-  if (activeTargetId.value === id) {
-    return
+const updateTarget = targetId => {
+  activeTargetId.value = targetId
+  activeTargetProfile.value = lastMsgMap.value[targetId].profile
+
+  const _activeTargetIds = activeTargetIds.value
+
+  // 无缝切换时，还需要手动更新 activeTargetIds 为新激活的项
+  if (_activeTargetIds.size === 1) {
+    _activeTargetIds.clear()
+    _activeTargetIds.add(targetId)
   }
 
-  activeTargetId.value = id
-  activeTargetProfile.value = lastMsgMap.value[id].profile
+  isChatOpen.value = true
+}
 
-  if (!isMobile.value && activeTargetIds.value.size) {
-    activeTargetIds.value.clear()
-    activeTargetIds.value.add(id)
+const onClick = targetId => {
+  const targetProfile = lastMsgMap.value[targetId].profile
+
+  if (isMobile.value) {
+    chatOverlay.open({
+      targetId,
+      targetProfile
+    })
+  } else {
+    activeTargetId.value = targetId
+    activeTargetProfile.value = targetProfile
+    isChatOpen.value = true
   }
 }
 
@@ -214,7 +233,8 @@ const onDeleteMessageList = id =>
     lastMsgList,
     lastMsgMap,
     messageList,
-    activeTargetId,
+    activeTargetIds,
+    isChatOpen,
     lastFetchedId,
     true,
     true
@@ -228,55 +248,37 @@ const onHideMessageList = id =>
     indexMap,
     lastMsgList,
     lastMsgMap,
-    activeTargetId,
+    activeTargetIds,
+    isChatOpen,
     true,
     true
   )
 
-watch(activeTargetId, v => {
-  if (!isMobile.value) {
-    return
-  }
-
-  if (v) {
-    chatOverlay.open({
-      targetId: activeTargetId.value,
-      targetProfile: activeTargetProfile.value
-    })
-  } else {
-    chatOverlay.close()
-  }
-})
-
 defineShortcuts({
   arrowdown: () => {
     const _lastMsgList = lastMsgList.value
-    const _lastMsgMap = lastMsgMap.value
     const index = _lastMsgList.findIndex(id => id === activeTargetId.value)
 
     if (index === -1) {
-      const _targetId = _lastMsgList[0]
-      activeTargetId.value = _targetId
-      activeTargetProfile.value = _lastMsgMap[_targetId].profile
+      // 在没有打开任何聊天时，按向下箭头，此时 index 为 -1, index + 1 表示激活列表中
+      // 的第一个
+      updateTarget(_lastMsgList[0])
     } else if (index < _lastMsgList.length - 1) {
-      const _targetId = _lastMsgList[index + 1]
-      activeTargetId.value = _targetId
-      activeTargetProfile.value = _lastMsgMap[_targetId].profile
+      // index >= 0 时，index + 1 表示激活列表中的下一个
+      updateTarget(_lastMsgList[index + 1])
     }
   },
   arrowup: () => {
     const _lastMsgList = lastMsgList.value
-    const _lastMsgMap = lastMsgMap.value
     const index = _lastMsgList.findIndex(id => id === activeTargetId.value)
 
     if (index === -1) {
-      const _targetId = _lastMsgList[_lastMsgList.length - 1]
-      activeTargetId.value = _targetId
-      activeTargetProfile.value = _lastMsgMap[_targetId].profile
+      // 在没有打开任何聊天时，按向上箭头，此时 index 为 -1,
+      // _lastMsgList.length - 1 表示激活列表中的最后一个
+      updateTarget(_lastMsgList[_lastMsgList.length - 1])
     } else if (index > 0) {
-      const _targetId = _lastMsgList[index - 1]
-      activeTargetId.value = _targetId
-      activeTargetProfile.value = _lastMsgMap[_targetId].profile
+      // index >= 0 时，index - 1 表示激活列表中的上一个
+      updateTarget(_lastMsgList[index - 1])
     }
   }
 })

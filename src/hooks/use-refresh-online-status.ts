@@ -5,7 +5,10 @@ const useRefreshOnlineStatus = (globalSocket, type, ids) => {
 
   const timer = setInterval(
     () => {
-      socket.emit('get-online-status', type, ids)
+      // 如果列表为空，不获取在线状态
+      if (!ids.length) {
+        socket.emit('get-online-status', type, ids)
+      }
     },
     2 * 60 * 1000
   )

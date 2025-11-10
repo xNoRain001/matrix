@@ -7,8 +7,8 @@ const useDeleteContact = async (
   contactProfileMap,
   globalSocket,
   toast,
-  activeTargetId,
-  activeTargetProfile
+  activeSpaceTargetIds,
+  isSpaceOpen
 ) => {
   try {
     await deleteContact(targetId)
@@ -29,9 +29,8 @@ const useDeleteContact = async (
     }
     globalSocket.value.emit('delete-contact', targetId)
 
-    if (targetId === activeTargetId.value) {
-      activeTargetId.value = ''
-      activeTargetProfile.value = null
+    if (activeSpaceTargetIds.value.has(targetId)) {
+      isSpaceOpen.value = false
     }
   } catch (error) {
     toast.add({

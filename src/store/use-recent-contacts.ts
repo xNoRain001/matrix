@@ -27,10 +27,14 @@ const useRecentContactsStore = defineStore('recentContactsStore', () => {
     msgContainerRef: ref<HTMLElement | null>(null), // 聊天记录容器
     pinId: ref(''), // 置顶对象的 id
     skipUnshiftMessageRecord: ref(false),
-    activeTargetIds: reactive(new Set()),
+    isSpaceOpen: ref(false),
+    isChatOpen: ref(false),
     activeTargetId: ref(''),
     activeTargetProfile: ref<userInfo['profile']>(null),
+    activeTargetIds: reactive(new Set()),
+    activeSpaceTargetIds: reactive(new Set()),
     indexMap: ref({}),
+    messageRecordMap: ref<Record<string, []>>({}),
     messageList: ref([]),
     isReceivingOfflineMsgs: ref(true),
     lastFetchedId: ref(Infinity),

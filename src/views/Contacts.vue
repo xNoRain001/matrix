@@ -18,8 +18,8 @@
   </UDashboardPanel>
   <template v-if="!isMobile">
     <ProfileSpace
-      v-if="activeTargetId"
-      @close="activeTargetId = ''"
+      v-if="isSpaceOpen"
+      @close="isSpaceOpen = false"
       :target-id="activeTargetId"
       :target-profile="activeTargetProfile"
     />
@@ -32,21 +32,20 @@
 <script setup lang="ts">
 import { getContacts } from '@/apis/contact'
 import { useRefreshContacts } from '@/hooks'
-import {
-  useNotificationsStore,
-  useRecentContactsStore,
-  useUserStore
-} from '@/store'
+import { useRecentContactsStore, useUserStore } from '@/store'
 import type { userInfo } from '@/types'
 import { storeToRefs } from 'pinia'
-import { onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted } from 'vue'
 
 const toast = useToast()
-const isNotificationsSlideoverOpen = ref(false)
 const { isMobile, userInfo } = storeToRefs(useUserStore())
-const { activeTargetId, activeTargetProfile, contactList, contactProfileMap } =
-  storeToRefs(useRecentContactsStore())
-const { unreadContactNotificationCount } = storeToRefs(useNotificationsStore())
+const {
+  isSpaceOpen,
+  activeTargetId,
+  activeTargetProfile,
+  contactList,
+  contactProfileMap
+} = storeToRefs(useRecentContactsStore())
 
 const refreshContactsProfile = async () => {
   const now = Date.now()
@@ -74,17 +73,15 @@ const refreshContactsProfile = async () => {
   }
 }
 
-watch(isNotificationsSlideoverOpen, v => {
-  if (v && unreadContactNotificationCount.value) {
-    unreadContactNotificationCount.value = 0
-    localStorage.setItem(
-      `unreadContactNotificationCount-${userInfo.value.id}`,
-      '0'
-    )
-  }
-})
-
 onMounted(async () => {
   await refreshContactsProfile()
+})
+
+onBeforeUnmount(() => {
+  if (isSpaceOpen.value) {
+    isSpaceOpen.value = false
+    activeTargetId.value = ''
+    activeTargetProfile.value = null
+  }
 })
 </script>

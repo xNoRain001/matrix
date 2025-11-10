@@ -44,6 +44,7 @@
 
   <!-- 通知 -->
   <IndexNotificationsSlideover v-model="isNotificationsSlideoverOpen" />
+  <!-- 全屏 -->
   <USlideover
     v-if="isMobile"
     title="开启全屏"
@@ -57,6 +58,9 @@
       <img src="/images/fullscreen.webp" />
     </template>
   </USlideover>
+  <!-- 过滤器 -->
+  <IndexFilter v-model="isFilterOverlayOpen" />
+  <!-- 每日任务 -->
   <!-- <IndexDailyQuestsSlideover v-model="isDailyQuestsSlideoverOpen" /> -->
 </template>
 
@@ -70,7 +74,7 @@ import { ref, watch } from 'vue'
 const isFullScreen = ref(false)
 const isFullscreenSlideoverOpen = ref(false)
 // const isDailyQuestsSlideoverOpen = ref(false)
-const isFilterOverlayOpen = defineModel<boolean>()
+const isFilterOverlayOpen = ref(false)
 const { userInfo, onlineCount, isMobile } = storeToRefs(useUserStore())
 const { unreadHomeNotificationCount } = storeToRefs(useNotificationsStore())
 const { store } = useColorMode()

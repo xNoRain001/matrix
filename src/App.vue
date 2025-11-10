@@ -46,7 +46,7 @@
                   :label="unreadHomeNotificationCount"
                   size="sm"
               /></template>
-              <template #message-trailing>
+              <template #messages-trailing>
                 <UBadge
                   v-if="unreadMsgCounter"
                   :label="unreadMsgCounter"
@@ -217,6 +217,7 @@ const {
   isReceivingOfflineMsgs,
   isFirstGetContactsOnlineStatus,
   isFirstGetChatsOnlineStatus
+  // activeTargetIds
 } = storeToRefs(useRecentContactsStore())
 const {
   contactNotifications,
@@ -249,7 +250,7 @@ const navs = [
       label: '消息',
       icon: 'lucide:message-circle',
       to: '/messages',
-      slot: 'message'
+      slot: 'messages'
     },
     {
       label: '我的',

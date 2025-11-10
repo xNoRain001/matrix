@@ -122,13 +122,11 @@
               <template #avatar>
                 <div
                   @click="
-                    useOpenSpace(
-                      profileSpaceOverlay,
-                      userInfo,
-                      activeTargetIds,
-                      owner,
-                      profile
-                    )
+                    !activeSpaceTargetIds.has(owner) &&
+                    profileSpaceOverlay.open({
+                      targetId: owner,
+                      targetProfile: profile
+                    })
                   "
                   class="text-muted bg-elevated flex size-10 items-center justify-center rounded-full text-xl font-medium"
                 >
@@ -143,13 +141,11 @@
               <template #name>
                 <span
                   @click="
-                    useOpenSpace(
-                      profileSpaceOverlay,
-                      userInfo,
-                      activeTargetIds,
-                      owner,
-                      profile
-                    )
+                    !activeSpaceTargetIds.has(owner) &&
+                    profileSpaceOverlay.open({
+                      targetId: owner,
+                      targetProfile: profile
+                    })
                   "
                   >{{ profile.nickname }}</span
                 >
@@ -286,13 +282,11 @@
                           <template #avatar>
                             <div
                               @click="
-                                useOpenSpace(
-                                  profileSpaceOverlay,
-                                  userInfo,
-                                  activeTargetIds,
-                                  user,
-                                  profile
-                                )
+                                !activeSpaceTargetIds.has(owner) &&
+                                profileSpaceOverlay.open({
+                                  targetId: user,
+                                  targetProfile: profile
+                                })
                               "
                               class="text-muted bg-elevated size-5 rounded-full text-center text-xs font-medium"
                             >
@@ -307,13 +301,11 @@
                           <template #name>
                             <span
                               @click="
-                                useOpenSpace(
-                                  profileSpaceOverlay,
-                                  userInfo,
-                                  activeTargetIds,
-                                  user,
-                                  profile
-                                )
+                                !activeSpaceTargetIds.has(owner) &&
+                                profileSpaceOverlay.open({
+                                  targetId: user,
+                                  targetProfile: profile
+                                })
                               "
                             >
                               {{
@@ -578,7 +570,7 @@ import { usePostStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import OverlayPublisher from './OverlayPublisher.vue'
-import { useFormatTimeAgo, useLike, useOpenSpace } from '@/hooks'
+import { useFormatTimeAgo, useLike } from '@/hooks'
 import { getPostLikesAPI } from '@/apis/like'
 import {
   deleteCommentAPI,
@@ -596,7 +588,7 @@ const props = defineProps<{ targetId: string }>()
 const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const { postMap } = storeToRefs(usePostStore())
-const { activeTargetIds } = storeToRefs(useRecentContactsStore())
+const { activeSpaceTargetIds } = storeToRefs(useRecentContactsStore())
 const overlay = useOverlay()
 const publisherOverlay = overlay.create(OverlayPublisher)
 const viewerOverlay = overlay.create(OverlayViewer)
