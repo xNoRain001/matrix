@@ -132,6 +132,7 @@ import {
 import { storeToRefs } from 'pinia'
 import {
   useMatchStore,
+  useMessagesStore,
   useRecentContactsStore,
   useUserStore,
   useWebRTCStore
@@ -164,17 +165,12 @@ const {
   isMicOpen,
   isSpeakerOpen
 } = storeToRefs(useWebRTCStore())
-const {
-  messageList,
-  lastMsgList,
-  lastMsgMap,
-  indexMap,
-  unreadMsgCounter,
-  msgContainerRef
-} = storeToRefs(useRecentContactsStore())
+const { lastMsgList, lastMsgMap, indexMap, unreadMsgCounter, activeTargetIds } =
+  storeToRefs(useRecentContactsStore())
 const { matchRes } = storeToRefs(useMatchStore())
 const { isMobile, globalPC, globalSocket, userInfo } =
   storeToRefs(useUserStore())
+const { messageRecordMap } = storeToRefs(useMessagesStore())
 const audioInputs = await useGetAudioInputs()
 const audioInputLabels = audioInputs.map(
   (item, index) => item.label || `麦克风设备 ${index}`
@@ -259,14 +255,13 @@ const onCancel = () => {
       _targetId,
       userInfo,
       globalSocket,
-      messageList,
+      messageRecordMap,
       lastMsgList,
       lastMsgMap,
       matchRes,
       indexMap,
       unreadMsgCounter,
-      msgContainerRef,
-      _targetId === props.targetId && msgContainerRef.value
+      activeTargetIds.value.has(_targetId)
     )
   }
 }

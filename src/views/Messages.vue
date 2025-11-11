@@ -20,7 +20,7 @@
     <!-- 由于并不依赖模态框，因此需要手动修改 targetId -->
     <MatchToChatChat
       v-if="isChatOpen"
-      @close="isChatOpen = false"
+      @close="onClose"
       :target-id="activeTargetId"
       :target-profile="activeTargetProfile"
     />
@@ -95,6 +95,12 @@ const refreshChatsProfile = async () => {
   }
 }
 
+const onClose = () => {
+  isChatOpen.value = false
+  activeTargetId.value = ''
+  activeTargetProfile.value = null
+}
+
 onMounted(async () => {
   await refreshChatsProfile()
 })
@@ -103,9 +109,7 @@ onBeforeUnmount(() => {
   clearInterval(timer)
 
   if (isChatOpen.value) {
-    isChatOpen.value = false
-    activeTargetId.value = ''
-    activeTargetProfile.value = null
+    onClose()
   }
 })
 </script>

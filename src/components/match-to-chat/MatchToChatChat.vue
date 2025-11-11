@@ -12,7 +12,7 @@
       :target-id="targetId"
       :target-profile="targetProfile"
     />
-    <MatchToChatFooter
+    <MatchToChatChatFooter
       :is-match="isMatch"
       :target-id="targetId"
       :target-profile="targetProfile"

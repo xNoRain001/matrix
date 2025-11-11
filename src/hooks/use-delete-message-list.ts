@@ -8,10 +8,11 @@ const useDeleteMessageList = async (
   indexMap,
   lastMsgList,
   lastMsgMap,
-  messageList,
+  messageRecordMap,
   activeTargetIds,
   isChatOpen,
-  lastFetchedId,
+  activeTargetId,
+  activeTargetProfile,
   isSlide,
   isMobile,
   emits = null
@@ -25,6 +26,8 @@ const useDeleteMessageList = async (
     lastMsgMap,
     activeTargetIds,
     isChatOpen,
+    activeTargetId,
+    activeTargetProfile,
     isSlide,
     isMobile,
     emits
@@ -32,10 +35,9 @@ const useDeleteMessageList = async (
   await useClearMessageRecord(
     userInfo,
     targetId,
-    messageList,
+    messageRecordMap,
     lastMsgMap,
     activeTargetIds,
-    lastFetchedId,
     false
   )
   // 不需要在这里重置 store 中的 targetId，因为上面函数的内部会重置

@@ -225,6 +225,7 @@ import {
 } from '@/hooks'
 import {
   useMatchStore,
+  useMessagesStore,
   useRecentContactsStore,
   useUserStore,
   useWebRTCStore
@@ -259,9 +260,7 @@ const props = withDefaults(
 )
 const message = ref('')
 const {
-  msgContainerRef,
   unreadMsgCounter,
-  messageList,
   lastMsgMap,
   lastMsgList,
   hashToBlobURLMap,
@@ -275,6 +274,7 @@ const {
   webRTCTargetProfile
 } = storeToRefs(useWebRTCStore())
 const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
+const { messageRecordMap } = storeToRefs(useMessagesStore())
 const { matchRes } = storeToRefs(useMatchStore())
 const toast = useToast()
 const inputRef = ref<HTMLInputElement | null>(null)
@@ -327,13 +327,12 @@ const initMediaRecorder = async () => {
             props.targetId,
             userInfo,
             globalSocket,
-            messageList,
+            messageRecordMap,
             lastMsgList,
             lastMsgMap,
             matchRes,
             indexMap,
             unreadMsgCounter,
-            msgContainerRef,
             true
           )
           const db = await useGetDB(userInfo.value.id)
@@ -456,13 +455,12 @@ const onCall = async () => {
     props.targetId,
     userInfo,
     globalSocket,
-    messageList,
+    messageRecordMap,
     lastMsgList,
     lastMsgMap,
     matchRes,
     indexMap,
     unreadMsgCounter,
-    msgContainerRef,
     true
   )
 }
@@ -481,13 +479,12 @@ const onRandom = async () => {
       props.targetId,
       userInfo,
       globalSocket,
-      messageList,
+      messageRecordMap,
       lastMsgList,
       lastMsgMap,
       matchRes,
       indexMap,
       unreadMsgCounter,
-      msgContainerRef,
       true
     )
   } catch {
@@ -589,13 +586,12 @@ const onInputChange = async () => {
         props.targetId,
         userInfo,
         globalSocket,
-        messageList,
+        messageRecordMap,
         lastMsgList,
         lastMsgMap,
         matchRes,
         indexMap,
         unreadMsgCounter,
-        msgContainerRef,
         true
       )
 
@@ -670,16 +666,16 @@ const onSendMsg = async () => {
       props.targetId,
       userInfo,
       globalSocket,
-      messageList,
+      messageRecordMap,
       lastMsgList,
       lastMsgMap,
       matchRes,
       indexMap,
       unreadMsgCounter,
-      msgContainerRef,
       true
     )
-  } catch {
+  } catch (err) {
+    console.log(err)
     toast.add({ title: '发送失败', color: 'error', icon: 'lucide:annoyed' })
   } finally {
     message.value = ''
@@ -689,7 +685,7 @@ const onSendMsg = async () => {
 onMounted(() => {
   cb = useFixSoftKeyboardInIOS(
     document.querySelector('#dashboard-panel-message-2'),
-    msgContainerRef.value
+    messageRecordMap.value[props.targetId].scroller
   )
 })
 

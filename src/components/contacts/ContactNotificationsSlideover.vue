@@ -79,6 +79,7 @@
 import { storeToRefs } from 'pinia'
 import {
   useMatchStore,
+  useMessagesStore,
   useNotificationsStore,
   useRecentContactsStore,
   useUserStore
@@ -94,15 +95,14 @@ const { matchRes } = storeToRefs(useMatchStore())
 const {
   contactList,
   contactProfileMap,
-  messageList,
   lastMsgList,
   lastMsgMap,
   indexMap,
   unreadMsgCounter,
-  msgContainerRef,
   activeSpaceTargetIds
 } = storeToRefs(useRecentContactsStore())
 const { contactNotifications } = storeToRefs(useNotificationsStore())
+const { messageRecordMap } = storeToRefs(useMessagesStore())
 const overlay = useOverlay()
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 const toast = useToast()
@@ -185,13 +185,12 @@ const onAgree = async (targetId, targetProfile) => {
       targetId,
       userInfo,
       globalSocket,
-      messageList,
+      messageRecordMap,
       lastMsgList,
       lastMsgMap,
       matchRes,
       indexMap,
       unreadMsgCounter,
-      msgContainerRef,
       false
     )
   } catch (error) {

@@ -1,9 +1,9 @@
 <template>
   <DynamicScroller
-    :items="filteredItems"
+    :items="filteredMessageRecords"
     :min-item-size="44"
     :emit-update="true"
-    ref="msgContainerRef"
+    ref="scrollerRef"
     class="relative h-full p-4 sm:p-6"
     :class="chatBg ? 'bg-cover bg-center bg-no-repeat' : ''"
     :style="chatBg ? { 'background-image': `url(${chatBg})` } : {}"
@@ -23,7 +23,7 @@
     <template #default="{ item, active }">
       <DynamicScrollerItem :item="item" :active="active">
         <div v-if="item.type === 'label'" class="pt-3 pb-4 text-center text-sm">
-          {{ formatTimestamp(item.timestamp) }}
+          {{ useFormatTimestamp(item.timestamp) }}
         </div>
         <template v-else-if="item.type === 'text'">
           <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
@@ -545,7 +545,7 @@
         variant="outline"
         color="neutral"
         icon="lucide:arrow-down"
-        @click="(msgContainerRef as any).scrollToBottom()"
+        @click="(scrollerRef as any).scrollToBottom()"
       />
     </div>
   </Transition>
@@ -554,19 +554,27 @@
 </template>
 
 <script lang="ts" setup>
-import { useFormatTimeAgo, useGetDB, useGetMessages } from '@/hooks'
+import { useFormatTimeAgo, useFormatTimestamp, useGetDB } from '@/hooks'
 import { sendMsg } from '@/hooks/use-send-msg'
-import { useRecentContactsStore, useUserStore } from '@/store'
+import { useMessagesStore, useRecentContactsStore, useUserStore } from '@/store'
 import { useThrottleFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  useTemplateRef,
+  watch
+} from 'vue'
 import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
 import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 import type { userInfo } from '@/types'
 
 let timer = null
 let receivingOfflineMsgsTimer = null
-let first = true
+let lastFetchedMsgId = Number.MAX_SAFE_INTEGER
+let skipUnshiftMessageRecord = false
 const { VITE_OSS_BASE_URL } = import.meta.env
 const playingURL = ref('')
 const props = defineProps<{
@@ -578,31 +586,24 @@ const { config, userInfo, avatarURL } = storeToRefs(useUserStore())
 const {
   lastMsgMap,
   hashToBlobURLMap,
-  msgContainerRef,
-  messageList,
-  lastFetchedId,
-  skipUnshiftMessageRecord,
   unreadMsgCounter,
   isReceivingOfflineMsgs,
   activeSpaceTargetIds
 } = storeToRefs(useRecentContactsStore())
-const items = ref([])
-const search = ref('')
+const { messageRecordMap } = storeToRefs(useMessagesStore())
+const keyword = ref('')
 const updateParts = ref({
   viewStartIdx: 0,
   viewEndIdx: 0,
   visibleStartIdx: 0,
   visibleEndIdx: 0
 })
-const filteredItems = computed(() => {
-  if (!search.value) {
-    return messageList.value
+const filteredMessageRecords = computed(() => {
+  if (!keyword.value) {
+    return messageRecordMap.value[props.targetId]?.messages || []
   }
 
-  const lowerCaseSearch = search.value.toLowerCase()
-  return items.value.filter(i =>
-    i.message.toLowerCase().includes(lowerCaseSearch)
-  )
+  // const lowerCaseKeyword = keyword.value.toLowerCase()
 })
 const audioRef = ref(null)
 const toast = useToast()
@@ -614,6 +615,7 @@ const chatBg = computed(() => {
   return isChatBgOpen && chatBg
 })
 const isAutoScrollBtnShow = ref(false)
+const scrollerRef = useTemplateRef('scrollerRef')
 
 const onResendMsg = messageRecord => {
   if (!messageRecord.resendArgs) {
@@ -649,22 +651,13 @@ const onScroll = useThrottleFn(
   async ({ target: { scrollHeight, clientHeight, scrollTop } }) => {
     isAutoScrollBtnShow.value = scrollHeight - clientHeight - scrollTop > 400
 
-    if (
-      !skipUnshiftMessageRecord.value &&
-      scrollTop === 0 &&
-      lastFetchedId.value
-    ) {
-      const unshiftCount = await useGetMessages(
-        userInfo.value.id,
-        hashToBlobURLMap,
-        messageList,
-        lastFetchedId,
-        props.targetId,
-        true
-      )
+    if (!skipUnshiftMessageRecord && scrollTop === 0 && lastFetchedMsgId) {
+      const messages = await getMessages(true)
+      const { length } = messages
+      messageRecordMap.value[props.targetId].messages.unshift(...messages)
 
-      if (unshiftCount) {
-        ;(msgContainerRef.value as any).scrollToItem(unshiftCount)
+      if (length) {
+        ;(scrollerRef.value as any).scrollToItem(length)
       }
     }
   },
@@ -682,18 +675,6 @@ const onUpdate = (
   updateParts.value.viewEndIdx = viewEndIndex
   updateParts.value.visibleStartIdx = visibleStartIndex
   updateParts.value.visibleEndIdx = visibleEndIndex
-}
-
-const formatTimestamp = (timestamp: number) => {
-  // TODO: 更久远的记录显示日期甚至年份
-  return new Date(timestamp).toLocaleString('zh-CN', {
-    // year: 'numeric',
-    // month: 'long',
-    // day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    weekday: 'long'
-  })
 }
 
 const onClick = e => {
@@ -732,8 +713,8 @@ const updateTimeAgo = () => {
   }
 }
 
-const resetUnreadMsgs = async targetId => {
-  const item = lastMsgMap.value[targetId]
+const resetUnreadMsgs = async () => {
+  const item = lastMsgMap.value[props.targetId]
   // 如果当前打开的是非消息列表中对象的聊天界面，item 值为 undefined
   const unreadMsgs = item?.unreadMsgs
 
@@ -745,17 +726,86 @@ const resetUnreadMsgs = async targetId => {
   }
 }
 
-const initMessages = async () => {
-  const _targetId = props.targetId
-  await useGetMessages(
-    userInfo.value.id,
-    hashToBlobURLMap,
-    messageList,
-    lastFetchedId,
-    _targetId
+const formatMessages = async (id, data, hashToBlobURLMap) => {
+  const db = await useGetDB(id)
+  const tx = db.transaction('files', 'readonly')
+  const _hashToBlobURLMap = hashToBlobURLMap.value
+
+  for (let i = 0, l = data.length; i < l; i++) {
+    const item = data[i]
+    const { type, hash } = item
+
+    if (type === 'image') {
+      if (_hashToBlobURLMap.has(hash)) {
+        item.url = _hashToBlobURLMap.get(hash)
+        continue
+      }
+
+      try {
+        const record = await tx.objectStore('files').get(hash)
+        const url = URL.createObjectURL(record.blob)
+        item.url = url
+        if (_hashToBlobURLMap.size < 100) {
+          _hashToBlobURLMap.set(hash, url)
+        }
+      } catch {}
+    } else if (type === 'audio') {
+      try {
+        const record = await tx.objectStore('files').get(hash)
+        const url = URL.createObjectURL(record.blob)
+        item.url = url
+      } catch {}
+    }
+  }
+
+  await tx.done
+
+  return data
+}
+
+const getMessages = async (unshift = false) => {
+  const { targetId } = props
+  const { id } = userInfo.value
+  const messages = []
+  const db = await useGetDB(id)
+  const transaction = db.transaction('messages', 'readonly')
+  const store = transaction.objectStore('messages')
+  const index = store.index('contact_id')
+  let cursor = await index.openCursor(
+    IDBKeyRange.bound([targetId, 0], [targetId, lastFetchedMsgId], false, true),
+    'prev'
   )
-  ;(msgContainerRef.value as any).scrollToBottom()
-  resetUnreadMsgs(_targetId)
+
+  // 第一次获取时没有数据或者倒数第二次正好获取了全部，最后一次获取时就没有数据了
+  if (!cursor) {
+    lastFetchedMsgId = 0
+    return messages
+  }
+
+  let counter = 0
+  while (cursor && counter < 30) {
+    messages.unshift(cursor.value)
+    counter++
+    cursor = await cursor.continue()
+  }
+
+  lastFetchedMsgId = messages[0].id
+  await formatMessages(id, messages, hashToBlobURLMap)
+
+  if (unshift) {
+    // 如果正好获取了 30 条，即时已经全部获取完了，还有机会额外触发一次
+    if (messages.length < 30) {
+      lastFetchedMsgId = 0
+    }
+  }
+
+  return messages
+}
+
+const initMessages = async () => {
+  messageRecordMap.value[props.targetId].messages = await getMessages()
+  ;(scrollerRef.value as any).scrollToBottom()
+  await resetUnreadMsgs()
 }
 
 const initMessagesInMatch = async () => {
@@ -771,53 +821,38 @@ const initMessagesInMatch = async () => {
   }
 }
 
-props.isMatch
-  ? initMessagesInMatch()
-  : watch(
-      // PC 端可能无缝切换聊天对象
-      () => props.targetId,
-      async v => {
-        if (v) {
-          // PC 端可能不关闭聊天界面点击其他用户列表的情况，如果不先重置 messageList 会
-          // 造成切换后滚动条不一定在底部的问题，通过清空聊天记录，将 scrollTop 恢复
-          // 为 0
-          messageList.value = []
+const initScroller = id => {
+  messageRecordMap.value[id] = {}
+  messageRecordMap.value[id].scroller = scrollerRef.value
+}
 
-          // scrollTop 为 0 时，会触发拉取消息的行为，需要跳过，当组件未销毁时切换
-          // targetId 会执行里面的逻辑
-          if (!first) {
-            skipUnshiftMessageRecord.value = true
-          }
-
-          if (first) {
-            first = false
-          }
-
-          // PC 端可能存在不关闭聊天界面点击其他用户列表的情况，组件不会销毁，此时需要重置
-          // lastFetchedId，这里就不加 isMobile 判断了
-          lastFetchedId.value = Infinity
-          initMessages()
-          // 需要重置为 false，恢复拉取消息
-          skipUnshiftMessageRecord.value = false
-        }
-      },
-      { immediate: true }
-    )
+// PC 端可能无缝切换聊天对象
+watch(
+  () => props.targetId,
+  async (v, oldValue) => {
+    if (v) {
+      delete messageRecordMap.value[oldValue]
+      // 无缝切换到其他用户时，记录中不存在该用户，需要初始化
+      initScroller(v)
+      // 切换为其他用户时，scrollTop 会先重置为 0 ，从而触发拉取消息的行为，需要跳过
+      skipUnshiftMessageRecord = true
+      lastFetchedMsgId = Number.MAX_SAFE_INTEGER
+      await initMessages()
+      // 恢复拉取消息行为
+      skipUnshiftMessageRecord = false
+    }
+  }
+)
 
 onMounted(() => {
-  // MessageList 组件中会更新所有聊天的时间，只有不在其中的聊天才需要在这里更新时间，
-  // TODO: 但是发送消息后就出现在消息列表中了，会造成重复更新
-  if (!lastMsgMap.value[props.targetId]) {
-    updateTimeAgo()
-    timer = setInterval(updateTimeAgo, 1000 * 60)
-  }
+  initScroller(props.targetId)
+  props.isMatch ? initMessagesInMatch() : initMessages()
+  updateTimeAgo()
+  timer = setInterval(updateTimeAgo, 1000 * 60)
 })
 
 onBeforeUnmount(() => {
   clearInterval(timer)
-  ;(msgContainerRef.value as any).$el.removeEventListener('scroll', onScroll)
-  msgContainerRef.value = null
-  messageList.value = []
-  lastFetchedId.value = Infinity
+  delete messageRecordMap.value[props.targetId]
 })
 </script>

@@ -92,10 +92,10 @@
                 />
               </template>
               <template #description>
-                <span class="flex-1 truncate">{{
-                  lastMsgMap[id].content
-                }}</span>
-                <time>{{ lastMsgMap[id].timeAgo }}</time>
+                <span class="flex-1 truncate">
+                  {{ lastMsgMap[id].content }}
+                </span>
+                <time>{{ useFormatTimestamp(lastMsgMap[id].timestamp) }}</time>
               </template>
             </UUser>
           </div>
@@ -107,11 +107,11 @@
 
 <script setup lang="ts">
 import {
-  useFormatTimeAgo,
+  useFormatTimestamp,
   useHideMessageList,
   useRefreshOnlineStatus
 } from '@/hooks'
-import { useRecentContactsStore, useUserStore } from '@/store'
+import { useMessagesStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref, onBeforeUnmount, onMounted } from 'vue'
 import type { ContextMenuItem } from '@nuxt/ui'
@@ -119,7 +119,6 @@ import useDeleteMessageList from '@/hooks/use-delete-message-list'
 import OverlayChat from '@/components/overlay/OverlayChat.vue'
 
 let timer = null
-let timer2 = null
 let contextmenuId = ''
 const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
@@ -130,13 +129,12 @@ const {
   activeTargetId,
   activeTargetIds,
   activeTargetProfile,
-  messageList,
-  lastFetchedId,
   contactProfileMap,
   indexMap,
   unreadMsgCounter,
   isFirstGetChatsOnlineStatus
 } = storeToRefs(useRecentContactsStore())
+const { messageRecordMap } = storeToRefs(useMessagesStore())
 const contextMenuItems = ref<ContextMenuItem[][]>([
   [
     {
@@ -152,6 +150,8 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
           lastMsgMap,
           activeTargetIds,
           isChatOpen,
+          activeTargetId,
+          activeTargetProfile,
           false,
           false
         )
@@ -167,10 +167,11 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
           indexMap,
           lastMsgList,
           lastMsgMap,
-          messageList,
+          messageRecordMap,
           activeTargetIds,
           isChatOpen,
-          lastFetchedId,
+          activeTargetId,
+          activeTargetProfile,
           false,
           false
         )
@@ -210,20 +211,6 @@ const onClick = targetId => {
   }
 }
 
-const updateTimeAgo = () => {
-  const _lastMsgList = lastMsgList.value
-  const _lastMsgMap = lastMsgMap.value
-
-  for (let i = 0, l = _lastMsgList.length; i < l; i++) {
-    const item = _lastMsgMap[_lastMsgList[i]]
-    const { timestamp } = item
-
-    if (timestamp) {
-      item.timeAgo = useFormatTimeAgo(timestamp)
-    }
-  }
-}
-
 const onDeleteMessageList = id =>
   useDeleteMessageList(
     userInfo,
@@ -232,10 +219,11 @@ const onDeleteMessageList = id =>
     indexMap,
     lastMsgList,
     lastMsgMap,
-    messageList,
+    messageRecordMap,
     activeTargetIds,
     isChatOpen,
-    lastFetchedId,
+    activeTargetId,
+    activeTargetProfile,
     true,
     true
   )
@@ -250,6 +238,8 @@ const onHideMessageList = id =>
     lastMsgMap,
     activeTargetIds,
     isChatOpen,
+    activeTargetId,
+    activeTargetProfile,
     true,
     true
   )
@@ -284,17 +274,10 @@ defineShortcuts({
 })
 
 onMounted(() => {
-  updateTimeAgo()
-  timer = setInterval(updateTimeAgo, 2 * 1000 * 60)
-  timer2 = useRefreshOnlineStatus(
-    globalSocket,
-    'messageList',
-    lastMsgList.value
-  )
+  timer = useRefreshOnlineStatus(globalSocket, 'messageList', lastMsgList.value)
 })
 
 onBeforeUnmount(() => {
   clearInterval(timer)
-  clearInterval(timer2)
 })
 </script>

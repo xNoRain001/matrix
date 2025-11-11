@@ -1,6 +1,6 @@
 import { reactive, ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { userInfo, message } from '@/types'
+import type { userInfo } from '@/types'
 import useUserStore from './use-user-store'
 import { useInitLocalStorage } from '@/hooks'
 
@@ -24,9 +24,7 @@ const useRecentContactsStore = defineStore('recentContactsStore', () => {
         }
       >
     >(_contactProfileMap),
-    msgContainerRef: ref<HTMLElement | null>(null), // 聊天记录容器
     pinId: ref(''), // 置顶对象的 id
-    skipUnshiftMessageRecord: ref(false),
     isSpaceOpen: ref(false),
     isChatOpen: ref(false),
     activeTargetId: ref(''),
@@ -35,11 +33,8 @@ const useRecentContactsStore = defineStore('recentContactsStore', () => {
     activeSpaceTargetIds: reactive(new Set()),
     indexMap: ref({}),
     messageRecordMap: ref<Record<string, []>>({}),
-    messageList: ref([]),
     isReceivingOfflineMsgs: ref(true),
-    lastFetchedId: ref(Infinity),
     hashToBlobURLMap: ref<Map<string, string>>(new Map()),
-    messageListMap: ref<{ [x: string]: message[] }>({}),
     lastMsgMap: ref<
       Record<
         string,

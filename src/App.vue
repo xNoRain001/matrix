@@ -117,6 +117,7 @@
 import { storeToRefs } from 'pinia'
 import {
   useMatchStore,
+  useMessagesStore,
   useNotificationsStore,
   useRecentContactsStore,
   useUserStore,
@@ -204,10 +205,7 @@ const {
   webRTCTargetProfile
 } = storeToRefs(useWebRTCStore())
 const {
-  msgContainerRef,
   unreadMsgCounter,
-  activeTargetId,
-  messageList,
   lastMsgMap,
   lastMsgList,
   contactList,
@@ -216,9 +214,10 @@ const {
   indexMap,
   isReceivingOfflineMsgs,
   isFirstGetContactsOnlineStatus,
-  isFirstGetChatsOnlineStatus
-  // activeTargetIds
+  isFirstGetChatsOnlineStatus,
+  activeTargetIds
 } = storeToRefs(useRecentContactsStore())
+const { messageRecordMap } = storeToRefs(useMessagesStore())
 const {
   contactNotifications,
   homeNotifications,
@@ -748,7 +747,7 @@ const onReceiveMsg = async (messageRecord: message) => {
   const isNotMedia = type !== 'image' && type !== 'audio'
   const isImage = type === 'image'
   const isAudio = type === 'audio'
-  const inView = activeTargetId.value === id && msgContainerRef.value
+  const inView = activeTargetIds.value.has(id)
   const url = await replaceOSSURLToURL(isImage, isAudio, hash, messageRecord)
   messageRecord.sent = false
   const label = useInitLabelAndSeparator(messageRecord, _lastMsgMap, id)
@@ -757,13 +756,7 @@ const onReceiveMsg = async (messageRecord: message) => {
     messageRecord
   )
   useAddPropsForMessageRecord(messageRecord, label, url)
-  useAddMessageRecordToView(
-    inView,
-    label,
-    messageRecord,
-    messageList,
-    msgContainerRef
-  )
+  useAddMessageRecordToView(inView, label, messageRecord, messageRecordMap, id)
   await useInitLastMsg(_lastMsgMap, lastMsgList, matchRes, id)
   const item = useUpdateLastMsgToView(
     indexMap,
@@ -900,7 +893,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
     const offlineMsgs = grouped[id]
     const offlineMsgsLength = offlineMsgs.length
     // 接收离线消息时可能处于匹配聊天界面中，需要更新视图
-    const inView = activeTargetId.value === id && msgContainerRef.value
+    const inView = activeTargetIds.value.has(id)
     const __lastMsgMap: Record<string, { sent: boolean; timestamp: number }> = {
       [id]: (_lastMsgMap[id] as any) || {}
     }
@@ -989,14 +982,13 @@ const acceptWebRTC = async (targetProfile, roomId, now, isAccept: boolean) => {
         _targetId,
         userInfo,
         globalSocket,
-        messageList,
+        messageRecordMap,
         lastMsgList,
         lastMsgMap,
         matchRes,
         indexMap,
         unreadMsgCounter,
-        msgContainerRef,
-        _targetId === activeTargetId.value && msgContainerRef.value
+        activeTargetIds.value.has(_targetId)
       )
     } else {
       socket.emit('refuse-web-rtc', roomId)
@@ -1012,14 +1004,13 @@ const acceptWebRTC = async (targetProfile, roomId, now, isAccept: boolean) => {
         _targetId,
         userInfo,
         globalSocket,
-        messageList,
+        messageRecordMap,
         lastMsgList,
         lastMsgMap,
         matchRes,
         indexMap,
         unreadMsgCounter,
-        msgContainerRef,
-        _targetId === activeTargetId.value && msgContainerRef.value
+        activeTargetIds.value.has(_targetId)
       )
     }
   } else {

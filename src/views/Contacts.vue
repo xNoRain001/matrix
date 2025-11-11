@@ -19,7 +19,7 @@
   <template v-if="!isMobile">
     <ProfileSpace
       v-if="isSpaceOpen"
-      @close="isSpaceOpen = false"
+      @close="onClose"
       :target-id="activeTargetId"
       :target-profile="activeTargetProfile"
     />
@@ -73,15 +73,19 @@ const refreshContactsProfile = async () => {
   }
 }
 
+const onClose = () => {
+  isSpaceOpen.value = false
+  activeTargetId.value = ''
+  activeTargetProfile.value = null
+}
+
 onMounted(async () => {
   await refreshContactsProfile()
 })
 
 onBeforeUnmount(() => {
   if (isSpaceOpen.value) {
-    isSpaceOpen.value = false
-    activeTargetId.value = ''
-    activeTargetProfile.value = null
+    onClose()
   }
 })
 </script>

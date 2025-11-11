@@ -3,9 +3,8 @@ import useGetDB from './use-get-db'
 const clearMessageRecord = async (
   userInfo,
   targetId,
-  messageList,
+  messageRecordMap,
   activeTargetIds,
-  lastFetchedId,
   item,
   pure
 ) => {
@@ -32,21 +31,19 @@ const clearMessageRecord = async (
     cursor = await cursor.continue()
   }
 
-  // TODO: 删除列表时，先删除列表，聊天界面销毁时会清空内存中的聊天记录，这里不需要再
-  // 次清空
+  // 删除列表时，会关闭聊天界面，聊天界面销毁时会删除内存中的聊天记录和
+  // activeTargetId，因此下面的代码不会被执行
   if (activeTargetIds.value.has(targetId)) {
-    messageList.value = []
-    lastFetchedId.value = Infinity
+    messageRecordMap.value[targetId].messages = []
   }
 }
 
 const useClearMessageRecord = async (
   userInfo,
   targetId,
-  messageList,
+  messageRecordMap,
   lastMsgMap,
   activeTargetIds,
-  lastFetchedId,
   pure = true // 值为 false 说明在执行前已经删除了聊天列表，不需要再处理 lastMessages
 ) => {
   const item = pure ? lastMsgMap.value[targetId] : null
@@ -60,9 +57,8 @@ const useClearMessageRecord = async (
   await clearMessageRecord(
     userInfo,
     targetId,
-    messageList,
+    messageRecordMap,
     activeTargetIds,
-    lastFetchedId,
     item,
     pure
   )

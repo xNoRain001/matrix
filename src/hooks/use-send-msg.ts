@@ -21,9 +21,8 @@ const addMsgToView = (
   url,
   duration,
   targetId,
-  messageList,
+  messageRecordMap,
   _lastMsgMap,
-  msgContainerRef,
   inView
 ) => {
   const timestamp = Date.now()
@@ -69,8 +68,8 @@ const addMsgToView = (
     inView,
     label,
     messageRecord,
-    messageList,
-    msgContainerRef
+    messageRecordMap,
+    targetId
   )
 
   // 为了防止伪造其他人的消息，需要在服务器中提供这两个字段
@@ -158,13 +157,12 @@ const useSendMsg = async (
   targetId,
   userInfo,
   globalSocket,
-  messageList,
+  messageRecordMap,
   lastMsgList,
   lastMsgMap,
   matchRes,
   indexMap,
   unreadMsgCounter,
-  msgContainerRef,
   inView
 ) => {
   const isNotMedia = type !== 'image' && type !== 'audio'
@@ -185,9 +183,8 @@ const useSendMsg = async (
       url,
       duration,
       targetId,
-      messageList,
+      messageRecordMap,
       _lastMsgMap,
-      msgContainerRef,
       inView
     )
   // 初始化消息列表

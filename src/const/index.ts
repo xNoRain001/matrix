@@ -6,6 +6,14 @@ export const received = '接收完成...'
 export const voiceChatInviteToastPendingTime = 15000 // 发起方持续 15 s
 export const voiceChatInviteToastExpireTime = 13000 // 接收方持续 13 s
 
+export const minute = 60 * 1000
+export const fiveMinutes = 5 * minute
+export const tenMinutes = 10 * minute
+export const haldAnHour = 1000 * 60 * 30
+export const hour = 60 * minute
+export const day = 24 * hour
+export const week = 7 * day
+
 const radius = localStorage.getItem('nuxt-ui-radius')
 export const appConfig = {
   theme: {

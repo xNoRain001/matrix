@@ -80,7 +80,7 @@ import {
   useHideMessageList
 } from '@/hooks'
 import useDeleteMessageList from '@/hooks/use-delete-message-list'
-import { useRecentContactsStore, useUserStore } from '@/store'
+import { useMessagesStore, useRecentContactsStore, useUserStore } from '@/store'
 import type { userInfo } from '@/types'
 import { createReusableTemplate } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
@@ -104,16 +104,16 @@ const [defineOverlayTemplate, reuseOverlayTemplate] = createReusableTemplate()
 const {
   isChatOpen,
   activeTargetId,
+  activeTargetProfile,
   activeTargetIds,
   contactProfileMap,
   lastMsgMap,
   lastMsgList,
-  messageList,
-  lastFetchedId,
   indexMap,
   unreadMsgCounter
 } = storeToRefs(useRecentContactsStore())
 const { globalSocket, userInfo, isMobile } = storeToRefs(useUserStore())
+const { messageRecordMap } = storeToRefs(useMessagesStore())
 const route = useRoute()
 const isConfirmOverlayOpen = ref(false)
 const isOverlayOpen = ref(false)
@@ -211,10 +211,11 @@ const onDeleteList = async () => {
       indexMap,
       lastMsgList,
       lastMsgMap,
-      messageList,
+      messageRecordMap,
       activeTargetIds,
       isChatOpen,
-      lastFetchedId,
+      activeTargetId,
+      activeTargetProfile,
       false,
       isMobile.value,
       emits
@@ -240,6 +241,8 @@ const onHideList = async () => {
       lastMsgMap,
       activeTargetIds,
       isChatOpen,
+      activeTargetId,
+      activeTargetProfile,
       false,
       isMobile.value,
       emits
@@ -256,10 +259,9 @@ const onDeleteMessageRecord = async () => {
     await useClearMessageRecord(
       userInfo,
       props.targetId,
-      messageList,
+      messageRecordMap,
       lastMsgMap,
-      activeTargetId,
-      lastFetchedId
+      activeTargetIds
     )
     toast.add({ title: '删除聊天记录成功', icon: 'lucide:smile' })
   } catch {

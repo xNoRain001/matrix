@@ -84,9 +84,14 @@ import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import type { ContextMenuItem } from '@nuxt/ui'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { useDeleteContact, useRefreshOnlineStatus } from '@/hooks'
+import {
+  useDeleteContact,
+  useFormatTimestamp,
+  useRefreshOnlineStatus
+} from '@/hooks'
 import type { userInfo } from '@/types'
 import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
+import { day, fiveMinutes, haldAnHour, hour, tenMinutes } from '@/const'
 
 let timer = null
 let contextmenuId = ''
@@ -123,12 +128,6 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
 ])
 const overlay = useOverlay()
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
-const minute = 60 * 1000
-const fiveMinutes = 5 * minute
-const tenMinutes = 10 * minute
-const hour = 60 * minute
-const day = 24 * hour
-const haldAnHour = 1000 * 60 * 30
 
 const updateTarget = targetId => {
   activeTargetId.value = targetId
@@ -190,9 +189,7 @@ const formatLastOnline = timestamp => {
           ? '1 小时内在线'
           : diff < day
             ? '24 小时内在线'
-            : `最后在线于：${new Date(timestamp).toLocaleString('zh-CN', {
-                day: '2-digit'
-              })}`
+            : `最后在线于：${useFormatTimestamp(timestamp)}`
 }
 
 defineShortcuts({

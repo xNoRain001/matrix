@@ -19,7 +19,6 @@ import useTransformGender from './use-transform-gender'
 import useBackToProfile from './use-back-to-profile'
 import useRefreshRoomInfo from './use-refresh-room-info'
 import useVisibilityChange from './use-visibility-change'
-import useGetMessages from './use-get-messages'
 import useGenRoomId from './use-gen-room-id'
 import useInitLastMsg from './use-init-last-msg'
 import useGetTargetIdByRoomId from './use-get-target-id-by-roomId'
@@ -55,8 +54,10 @@ import useFixSoftKeyboardInIOS from './use-fix-soft-keyboard-in-ios'
 import useFileToImage from './use-file-to-image'
 import useImageToImageData from './use-image-to-image-data'
 import useInitAutoScrollBtn from './use-init-auto-scroll-btn'
+import useFormatTimestamp from './use-format-timestamp'
 
 export {
+  useFormatTimestamp,
   useInitAutoScrollBtn,
   useImageToImageData,
   useFileToImage,
@@ -92,7 +93,6 @@ export {
   useGetTargetIdByRoomId,
   useInitLastMsg,
   useGenRoomId,
-  useGetMessages,
   useVisibilityChange,
   useRefreshRoomInfo,
   useBackToProfile,

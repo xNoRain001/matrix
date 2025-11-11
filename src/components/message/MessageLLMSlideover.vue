@@ -307,14 +307,18 @@ const initMessages = async () => {
   let counter = 0
   const data = []
 
-  while (cursor && counter < 10) {
+  while (cursor && counter < 30) {
     data.unshift(cursor.value)
     counter++
     cursor = await cursor.continue()
   }
 
-  messages.value.unshift(...data)
   id = data[0].id
+  messages.value.unshift(...data)
+
+  if (data.length < 30) {
+    id = 0
+  }
 
   return data.length
 }

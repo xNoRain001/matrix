@@ -9,6 +9,8 @@ const useHideMessageList = async (
   lastMsgMap,
   activeTargetIds,
   isChatOpen,
+  activeTargetId,
+  activeTargetProfile,
   isSlide,
   isMobile,
   emits = null
@@ -44,6 +46,8 @@ const useHideMessageList = async (
       // 通过右键菜单隐藏了当前聊天（此时 activeTargetIds 只有一项，因为只有一项时，
       // 才能操作聊天列表）
       isChatOpen.value = false
+      activeTargetId.value = ''
+      activeTargetProfile.value = null
     }
   }
 }
