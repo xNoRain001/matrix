@@ -181,7 +181,7 @@
       ref="textareaRef"
       placeholder="Ctrl + Enter 换行"
       @keydown.enter.prevent="onKeydown"
-      class="relative w-full"
+      class="w-full"
       v-model="message"
       :rows="3"
       :maxrows="3"
@@ -201,7 +201,7 @@
           <UButton variant="ghost" :icon="icon" @click="onSelect" />
         </UTooltip>
       </div>
-      <UButton @click="onSendMsg" icon="lucide:send" label="发送" />
+      <UButton @click="onSendMsg" class="rounded-full" icon="lucide:arrow-up" />
     </div>
   </UPageCard>
   <!-- 图片选择器 -->
@@ -674,8 +674,7 @@ const onSendMsg = async () => {
       unreadMsgCounter,
       true
     )
-  } catch (err) {
-    console.log(err)
+  } catch {
     toast.add({ title: '发送失败', color: 'error', icon: 'lucide:annoyed' })
   } finally {
     message.value = ''

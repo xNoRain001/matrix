@@ -167,7 +167,7 @@ const updateParts = ref({
   visibleStartIdx: 0,
   visibleEndIdx: 0
 })
-const scrollerRef = useTemplateRef('scrollerRef')
+const scrollerRef = useTemplateRef<any>('scrollerRef')
 const tip = {
   role: 'assistant',
   content: '您好，今天我能为您提供什么帮助？'
@@ -244,7 +244,7 @@ const onChat = async () => {
     const db = await useGetDB(userInfo.value.id)
     await db.add('llm', { role: question.role, content: question.content })
     await db.add('llm', { role: answer.role, content: answer.content })
-    ;(scrollerRef.value as any).scrollToBottom()
+    scrollerRef.value.scrollToBottom()
   } catch {
     _messages.pop()
     toast.add({ title: '处理失败', color: 'error', icon: 'lucide:annoyed' })
@@ -327,7 +327,7 @@ const initScroller = () => {
   setTimeout(() => {
     const dashboardPanel = document.querySelector('#dashboard-panel-llm')
     cb = useFixSoftKeyboardInIOS(dashboardPanel, dashboardPanel.children[1])
-    ;(scrollerRef.value as any).scrollToBottom()
+    scrollerRef.value.scrollToBottom()
   })
 }
 

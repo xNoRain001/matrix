@@ -4,7 +4,7 @@
     :min-item-size="44"
     :emit-update="true"
     ref="scrollerRef"
-    class="relative h-full p-4 sm:p-6"
+    class="h-full p-4 sm:p-6"
     :class="chatBg ? 'bg-cover bg-center bg-no-repeat' : ''"
     :style="chatBg ? { 'background-image': `url(${chatBg})` } : {}"
     @update="onUpdate"
@@ -532,20 +532,37 @@
       </DynamicScrollerItem>
     </template>
   </DynamicScroller>
+  <!-- 滚动到底部 -->
+  <Transition
+    enter-active-class="animate-[fade-in_200ms_ease-out]"
+    leave-active-class="animate-[fade-out_200ms_ease-in]"
+  >
+    <div v-if="isAutoScrollBtnShow" class="fixed top-16 right-0 left-0">
+      <UButton
+        class="absolute top-4 right-4 rounded-full sm:top-6 sm:right-6"
+        variant="outline"
+        color="neutral"
+        icon="lucide:arrow-down"
+        @click="scrollerRef.scrollToBottom()"
+      />
+    </div>
+  </Transition>
+  <!-- 收到新消息 -->
   <Transition
     enter-active-class="animate-[fade-in_200ms_ease-out]"
     leave-active-class="animate-[fade-out_200ms_ease-in]"
   >
     <div
-      v-if="isAutoScrollBtnShow"
-      class="fixed right-0 bottom-30 left-0 sm:bottom-50"
+      v-if="messageRecordMap[targetId]?.newMessageCount"
+      class="fixed top-16 right-0 left-0"
     >
       <UButton
-        class="absolute left-1/2 -translate-x-1/2 rounded-full"
+        class="absolute top-4 right-4 rounded-full sm:top-6 sm:right-6"
         variant="outline"
         color="neutral"
         icon="lucide:arrow-down"
-        @click="(scrollerRef as any).scrollToBottom()"
+        :label="`收到 ${messageRecordMap[targetId].newMessageCount} 条新消息`"
+        @click="onScrollToBottom"
       />
     </div>
   </Transition>
@@ -615,7 +632,12 @@ const chatBg = computed(() => {
   return isChatBgOpen && chatBg
 })
 const isAutoScrollBtnShow = ref(false)
-const scrollerRef = useTemplateRef('scrollerRef')
+const scrollerRef = useTemplateRef<any>('scrollerRef')
+
+const onScrollToBottom = () => {
+  messageRecordMap.value[props.targetId].newMessageCount = 0
+  scrollerRef.value.scrollToBottom()
+}
 
 const onResendMsg = messageRecord => {
   if (!messageRecord.resendArgs) {
@@ -649,12 +671,17 @@ const onPlayAudio = url => {
 
 const onScroll = useThrottleFn(
   async ({ target: { scrollHeight, clientHeight, scrollTop } }) => {
+    const t = messageRecordMap.value[props.targetId]
     isAutoScrollBtnShow.value = scrollHeight - clientHeight - scrollTop > 400
+
+    if (scrollHeight - clientHeight - scrollTop < 10 && t.newMessageCount) {
+      t.newMessageCount = 0
+    }
 
     if (!skipUnshiftMessageRecord && scrollTop === 0 && lastFetchedMsgId) {
       const messages = await getMessages(true)
       const { length } = messages
-      messageRecordMap.value[props.targetId].messages.unshift(...messages)
+      t.messages.unshift(...messages)
 
       if (length) {
         ;(scrollerRef.value as any).scrollToItem(length)
@@ -793,7 +820,7 @@ const getMessages = async (unshift = false) => {
   await formatMessages(id, messages, hashToBlobURLMap)
 
   if (unshift) {
-    // 如果正好获取了 30 条，即时已经全部获取完了，还有机会额外触发一次
+    // 如果正好获取了 30 条，即使已经全部获取完了，还有机会额外触发一次
     if (messages.length < 30) {
       lastFetchedMsgId = 0
     }
@@ -804,7 +831,7 @@ const getMessages = async (unshift = false) => {
 
 const initMessages = async () => {
   messageRecordMap.value[props.targetId].messages = await getMessages()
-  ;(scrollerRef.value as any).scrollToBottom()
+  scrollerRef.value.scrollToBottom()
   await resetUnreadMsgs()
 }
 
@@ -823,7 +850,7 @@ const initMessagesInMatch = async () => {
 
 const initScroller = id => {
   messageRecordMap.value[id] = {}
-  messageRecordMap.value[id].scroller = scrollerRef.value
+  messageRecordMap.value[id].scroller = scrollerRef.value as HTMLElement
 }
 
 // PC 端可能无缝切换聊天对象
@@ -831,11 +858,12 @@ watch(
   () => props.targetId,
   async (v, oldValue) => {
     if (v) {
+      // 切换为其他用户时，由于清空了消息，scrollTop 会先重置为 0 ，从而触发拉取消息
+      // 的行为，需要跳过
+      skipUnshiftMessageRecord = true
       delete messageRecordMap.value[oldValue]
       // 无缝切换到其他用户时，记录中不存在该用户，需要初始化
       initScroller(v)
-      // 切换为其他用户时，scrollTop 会先重置为 0 ，从而触发拉取消息的行为，需要跳过
-      skipUnshiftMessageRecord = true
       lastFetchedMsgId = Number.MAX_SAFE_INTEGER
       await initMessages()
       // 恢复拉取消息行为

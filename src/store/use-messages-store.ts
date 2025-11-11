@@ -8,7 +8,8 @@ const useMessagesStore = defineStore('messagesStore', () => ({
       string,
       {
         messages?: message[]
-        scroller?: HTMLElement
+        scroller?: any
+        newMessageCount?: number
       }
     >
   >({})

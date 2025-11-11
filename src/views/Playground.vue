@@ -136,7 +136,7 @@
           >
             <UButton
               @click="onScrollToTop"
-              class="absolute left-1/2 -translate-x-1/2 rounded-full"
+              class="absolute right-4 rounded-full sm:right-6"
               variant="outline"
               color="neutral"
               icon="lucide:arrow-up"

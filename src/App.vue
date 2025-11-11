@@ -756,7 +756,14 @@ const onReceiveMsg = async (messageRecord: message) => {
     messageRecord
   )
   useAddPropsForMessageRecord(messageRecord, label, url)
-  useAddMessageRecordToView(inView, label, messageRecord, messageRecordMap, id)
+  useAddMessageRecordToView(
+    inView,
+    label,
+    messageRecord,
+    messageRecordMap,
+    id,
+    true
+  )
   await useInitLastMsg(_lastMsgMap, lastMsgList, matchRes, id)
   const item = useUpdateLastMsgToView(
     indexMap,

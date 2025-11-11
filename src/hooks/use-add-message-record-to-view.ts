@@ -3,20 +3,34 @@ const useAddMessageRecordToView = (
   label,
   messageRecord,
   messageRecordMap,
-  id
+  id,
+  isReceive = false
 ) => {
   if (!inView) {
     return
   }
 
-  const { messages, scroller } = messageRecordMap.value[id]
+  const t = messageRecordMap.value[id]
+  const { messages, scroller } = t
 
   if (label) {
     messages.push(label)
   }
 
   messages.push(messageRecord)
-  scroller.scrollToBottom()
+
+  if (isReceive) {
+    const { clientHeight, scrollHeight, scrollTop } = scroller.$el
+
+    if (scrollHeight - clientHeight - scrollTop < 10) {
+      scroller.scrollToBottom()
+    } else {
+      t.newMessageCount = t.newMessageCount || 0
+      t.newMessageCount++
+    }
+  } else {
+    scroller.scrollToBottom()
+  }
 }
 
 export default useAddMessageRecordToView
