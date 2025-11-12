@@ -1,9 +1,5 @@
 <template>
-  <!-- 
-    浮动按钮需要相对于容器进行定位，正常情况下不添加 translate-z-0" 也是正常的，
-    由于 PC 端可以直接点击好友，显示空间，此时容器需要添加 translate-z-0
-  -->
-  <div class="h-screen w-full translate-z-0">
+  <div class="h-screen w-full">
     <div
       id="post-scroller"
       ref="containerRef"
@@ -117,7 +113,7 @@
               v-if="isSelf"
               icon="lucide:circle-plus"
               label="标签"
-              @click="onOpenTagSlideover"
+              @click="isTagSlideoverOpen = true"
             />
           </div>
         </template>
@@ -203,83 +199,12 @@
       <Theme v-model="isThemeSlideoverOpen" />
     </template>
     <!-- 标签 -->
-    <USlideover
+    <ProfileSpaceTagsSlideover
       v-if="isSelf"
-      :class="isMobile ? 'max-w-none' : ''"
-      v-model:open="isTagSlideoverOpen"
-      title="标签"
-      description=" "
-      :ui="{ body: 'space-y-4 sm:space-y-6', description: 'hidden' }"
-    >
-      <template #body>
-        <UPageCard
-          title="新标签"
-          description="创建你的新标签"
-          variant="naked"
-          orientation="horizontal"
-          :class="isMobile ? '' : 'mb-4'"
-        />
-        <UInput
-          :maxlength="12"
-          placeholder="输入标签"
-          v-model="tag"
-          class="w-full"
-          enterkeyhint="done"
-          @keydown.enter="onAddTag"
-          :ui="{ trailing: 'pe-1' }"
-        >
-          <template v-if="tag.length" #trailing>
-            <div class="text-muted text-xs tabular-nums">
-              {{ tag.length }}/12
-            </div>
-            <UButton
-              color="neutral"
-              variant="link"
-              size="sm"
-              icon="lucide:circle-x"
-              @click="tag = ''"
-            />
-            <UButton size="xs" label="确认" @click="onAddTag" />
-          </template>
-        </UInput>
-        <UPageCard
-          title="MBTI"
-          description="选择你的 MBTI"
-          variant="naked"
-          orientation="horizontal"
-          :class="isMobile ? '' : 'mb-4'"
-        />
-        <USelect
-          v-model="mbti"
-          :items="mbtiItems"
-          class="w-full"
-          placeholder="选择你的 MBTI"
-        />
-        <UPageCard
-          :title="`我的标签（${tags.length} / 10）`"
-          description="通过拖拽修改标签位置"
-          variant="naked"
-          orientation="horizontal"
-          :class="isMobile ? '' : 'mb-4'"
-        />
-        <UPageCard>
-          <div ref="tagRef" class="flex flex-wrap gap-2">
-            <UBadge
-              trailing-icon="lucide:circle-x"
-              v-for="(tag, index) in tags"
-              :label="tag"
-              :key="tag"
-              @click="onDeleteTag(index)"
-            />
-          </div>
-        </UPageCard>
-        <UButton
-          class="w-full justify-center"
-          label="确认"
-          @click="onUpdateTag"
-        />
-      </template>
-    </USlideover>
+      v-model="isTagSlideoverOpen"
+      :target-id="targetId"
+      :target-profile="targetProfile"
+    />
   </div>
 </template>
 
@@ -302,8 +227,6 @@ import OverlayHelpAndSupport from '@/components/overlay/OverlayHelpAndSupport.vu
 import OverlayAbout from '@/components/overlay/OverlayAbout.vue'
 import OverlayChat from '@/components/overlay/OverlayChat.vue'
 import type { userInfo } from '@/types'
-import { useSortable } from '@vueuse/integrations/useSortable'
-import { updateProfile } from '@/apis/profile'
 
 const overlay = useOverlay()
 const props = withDefaults(
@@ -327,8 +250,7 @@ const isLogoffSlideoverOpen = ref(false)
 const isThemeSlideoverOpen = ref(false)
 const spaceBgRef = ref(null)
 const toast = useToast()
-const { isMobile, userInfo, avatarURL, globalSocket } =
-  storeToRefs(useUserStore())
+const { isMobile, userInfo, avatarURL } = storeToRefs(useUserStore())
 const { postMap } = storeToRefs(usePostStore())
 const { activeSpaceTargetIds, activeTargetIds } = storeToRefs(
   useRecentContactsStore()
@@ -418,113 +340,14 @@ const helpAndSupportOverlay = overlay.create(OverlayHelpAndSupport)
 const aboutOverlay = overlay.create(OverlayAbout)
 const chatOverlay = overlay.create(OverlayChat)
 const isTagSlideoverOpen = ref(false)
-const tag = ref('')
-const tags = ref(JSON.parse(JSON.stringify(props.targetProfile.tags)))
-const mbti = ref(props.targetProfile.mbti)
-const mbtiItems = [
-  'ISTJ',
-  'ISFJ',
-  'INFJ',
-  'INTJ',
-  'ISTP',
-  'ISFP',
-  'INFP',
-  'INTP',
-  'ESTP',
-  'ESFP',
-  'ENFP',
-  'ENTP',
-  'ESTJ',
-  'ESFJ',
-  'ENFJ',
-  'ENTJ'
-]
-const tagRef = useTemplateRef('tagRef')
 const isPlaceholderShow = ref(false)
-const t = activeTargetIds.value.size === 1
 const { path } = route
-const isChatBtnShow = path === '/messages' && t
-const isSetting = path === '/profile' && t
+const isChatBtnShow = path === '/messages' && activeTargetIds.value.size === 1
+const isSetting = path === '/profile' && activeSpaceTargetIds.value.size === 0
 const isContacts = path === '/contacts'
 
 const computeDays = timestamp =>
   Math.ceil((Date.now() - timestamp) / (1000 * 60 * 60 * 24))
-
-const onUpdateTag = async () => {
-  const _mbti = mbti.value
-  const _tags = JSON.parse(JSON.stringify(tags.value))
-  const stringifyTags = _tags.join('__separator__')
-  const { profile } = userInfo.value
-  const { mbti: __mbti, tags: __tags } = profile
-  const sameMBTI = _mbti === __mbti
-  const sameTags = stringifyTags === __tags.join('__separator__')
-
-  if (sameMBTI && sameTags) {
-    toast.add({
-      title: '修改资料成功',
-      icon: 'lucide:smile'
-    })
-    isTagSlideoverOpen.value = false
-    return
-  }
-
-  const payload = {
-    ...(!sameMBTI && { mbti: _mbti }),
-    // 值为 __separator__ 表示清空所有标签
-    ...(!sameTags && { tags: stringifyTags || '__separator__' })
-  }
-
-  try {
-    const { data: token } = await updateProfile(payload)
-    localStorage.setItem('token', token)
-    globalSocket.value.emit('refresh-profile', token)
-    profile.mbti = _mbti
-    profile.tags = _tags
-    toast.add({
-      title: '修改资料成功',
-      icon: 'lucide:smile'
-    })
-    isTagSlideoverOpen.value = false
-  } catch (error) {
-    toast.add({
-      title: error.message,
-      color: 'error',
-      icon: 'lucide:annoyed'
-    })
-  }
-}
-
-const onDeleteTag = index => tags.value.splice(index, 1)
-
-const onAddTag = () => {
-  const _tags = tags.value
-
-  if (_tags.length >= 10) {
-    toast.add({
-      title: '标签数量达到上限',
-      color: 'error',
-      icon: 'lucide:annoyed'
-    })
-    return
-  }
-
-  const _tag = tag.value
-
-  if (_tags.includes(_tag)) {
-    toast.add({ title: '标签已经存在', color: 'error', icon: 'lucide:annoyed' })
-    return
-  }
-
-  tags.value.unshift(_tag)
-  tag.value = ''
-}
-
-const onOpenTagSlideover = () => {
-  isTagSlideoverOpen.value = true
-  setTimeout(() => {
-    useSortable(tagRef.value, tags, { animation: 150 })
-  })
-}
 
 const onSpaceBgChange = e =>
   useUpdateStaticNameFile(e, 'spaceBg', userInfo, toast, bgURL)

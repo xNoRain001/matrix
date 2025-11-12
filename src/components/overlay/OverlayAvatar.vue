@@ -23,9 +23,13 @@
           <div class="grid grid-cols-2 gap-4">
             <UButton
               v-for="name in categoryMap[activeTab]"
+              variant="subtle"
               @click="onSelectItem(name)"
               :label="name"
               class="flex justify-center"
+              :ui="{
+                label: 'overflow-visible whitespace-normal'
+              }"
             />
           </div>
         </template>
@@ -41,9 +45,13 @@
           <div class="grid grid-cols-3 gap-4">
             <UButton
               v-for="name in avatarMap[activeItem]"
+              variant="subtle"
               @click="onSelectAvatar(name)"
               :label="name"
               class="flex justify-center"
+              :ui="{
+                label: 'overflow-visible whitespace-normal'
+              }"
             />
           </div>
         </template>
