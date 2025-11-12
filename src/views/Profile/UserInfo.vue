@@ -76,13 +76,15 @@
             </span>
             <UIcon name="lucide:chevron-right" class="text-dimmed size-5" />
           </UFormField>
-          <UButton
-            label="修改资料"
-            class="flex justify-center"
-            @click="onUpdateProfile"
-            loading-auto
-          />
         </UPageCard>
+      </template>
+      <template #footer>
+        <UButton
+          label="修改资料"
+          class="w-full justify-center"
+          @click="onUpdateProfile"
+          loading-auto
+        />
       </template>
     </USlideover>
 
@@ -405,12 +407,7 @@ const profileForm = ref({ ...userInfo.value.profile })
 const sourceProvinceOptions = Object.keys(provinceCityMap)
 const provinceOptions = ref(sourceProvinceOptions)
 const cityOptions = ref(provinceCityMap[profileForm.value.province] || [])
-const unknownGenderOption =
-  userInfo.value.profile.gender === 'other'
-    ? [{ label: '未知', value: 'other' }]
-    : []
 const genderOptions = [
-  ...unknownGenderOption,
   {
     label: '男',
     value: 'male'
@@ -418,6 +415,10 @@ const genderOptions = [
   {
     label: '女',
     value: 'female'
+  },
+  {
+    label: '保密',
+    value: 'other'
   }
 ]
 const profileItems = [

@@ -9,8 +9,8 @@
       </div>
     </div>
   </div>
-  <div v-if="postMap[targetId]?.posts?.length" clas>
-    <UPageCard
+  <div v-if="postMap[targetId]?.posts?.length">
+    <div
       v-for="(
         {
           _id,
@@ -24,33 +24,18 @@
         index
       ) in postMap[targetId].posts"
       :key="_id"
-      variant="soft"
-      class="border-b-accented/50 cursor-pointer rounded-none border-b"
-      :ui="{ container: 'gap-y-0' }"
-      @click="
-        useOpenPostDetailOverlay(
-          postMap,
-          targetId,
-          _id,
-          index,
-          postDetailOverlay
-        )
-      "
+      class="hover:bg-accented/50 border-b-accented/50 cursor-pointer space-y-2 rounded-none border-b p-4 sm:p-6"
     >
       <p class="text-highlighted break-all whitespace-pre-wrap">
         {{ text }}
       </p>
       <Carousel
         v-if="images.length"
-        :class="text ? 'mt-2' : ''"
         @click.stop="useNoop"
         :items="images"
         :active-index="0"
       />
-      <div
-        :class="text && !images.length ? '' : 'mt-2'"
-        class="flex items-center justify-between"
-      >
+      <div class="flex items-center justify-between">
         <p class="text-toned text-sm">
           {{ useFormatTimeAgo(createdAt) }}
         </p>
@@ -100,7 +85,7 @@
         trailing-icon="lucide:navigation"
         @click="onAppeal"
       ></UBadge> -->
-    </UPageCard>
+    </div>
     <USeparator v-if="allPostLoaded" class="p-4 sm:p-6" label="已经到底了" />
     <UDrawer
       v-model:open="isEditMenuDrawerOpen"

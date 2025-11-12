@@ -167,6 +167,7 @@
         </template>
         <template #footer>
           <UButton
+            class="w-full justify-center"
             :disabled="!activeAvatar && !name"
             label="确认"
             @click="onUpdateAvatar"

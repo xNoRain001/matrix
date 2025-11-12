@@ -76,7 +76,7 @@
             <img
               v-if="item.url"
               data-type="image"
-              class="max-w-3/4 rounded-lg"
+              class="max-w-1/2 rounded-lg"
               :width="item.width"
               :height="item.height"
               :src="item.url"
@@ -109,7 +109,7 @@
             <img
               v-if="item.url"
               data-type="image"
-              class="max-w-3/4 rounded-lg"
+              class="max-w-1/2 rounded-lg"
               :width="item.width"
               :height="item.height"
               :src="item.url"
@@ -684,7 +684,7 @@ const onScroll = useThrottleFn(
       t.messages.unshift(...messages)
 
       if (length) {
-        ;(scrollerRef.value as any).scrollToItem(length)
+        scrollerRef.value.scrollToItem(length)
       }
     }
   },

@@ -271,7 +271,7 @@ const onScroll = useThrottleFn(
       const unshiftCount = await initMessages()
 
       if (unshiftCount) {
-        ;(scrollerRef.value as any).scrollToItem(unshiftCount)
+        scrollerRef.value.scrollToItem(unshiftCount)
       }
     }
   },

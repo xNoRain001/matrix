@@ -45,7 +45,7 @@
       <canvas ref="canvasRef" class="w-full rounded-lg"></canvas>
     </template>
     <template #footer>
-      <UButton label="确认" @click="onDone" />
+      <UButton class="w-full justify-center" label="确认" @click="onDone" />
     </template>
   </USlideover>
 </template>

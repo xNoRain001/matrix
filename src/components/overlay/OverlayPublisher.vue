@@ -5,7 +5,6 @@
     description=" "
     :ui="{
       body: 'space-y-4 sm:space-y-6',
-      footer: 'justify-between flex-row',
       description: 'hidden'
     }"
   >
@@ -110,18 +109,16 @@
       </template>
     </template>
     <template #footer>
-      <div>
-        <!-- <UButton variant="ghost" icon="lucide:smile"></UButton> -->
-      </div>
-      <div>
+      <div class="flex flex-1 gap-2">
         <UButton
           v-if="(isPost || isFeedback) && (payload.text || files.length)"
           label="草稿箱"
+          class="flex-1 justify-center"
           @click="onDraft"
         />
         <UButton
+          class="flex-1 justify-center"
           :disabled="!payload.text && !files.length"
-          class="ml-2"
           :label="title"
           loading-auto
           @click="

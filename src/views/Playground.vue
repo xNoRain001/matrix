@@ -17,7 +17,7 @@
         </div>
       </template>
       <div v-if="postMap[activeTab]?.posts?.length">
-        <UPageCard
+        <div
           v-for="(
             {
               _id,
@@ -32,95 +32,76 @@
             index
           ) in postMap[activeTab].posts"
           :key="_id"
-          variant="soft"
-          class="hover:bg-accented/50 border-b-accented/50 cursor-pointer rounded-none border-b"
-          :ui="{ header: 'mb-2', body: 'w-full' }"
+          class="hover:bg-accented/50 border-b-accented/50 cursor-pointer space-y-2 rounded-none border-b p-4 sm:p-6"
         >
-          <template #header>
-            <UUser
-              :avatar="{
-                src: `${VITE_OSS_BASE_URL}avatar/${user}`,
-                alt: profile.nickname[0]
-              }"
-              :name="profile.nickname"
-              :description="profile.bio"
-              size="xl"
+          <!-- :description="`${useFormatTimeAgo(createdAt)} · 广东`" -->
+          <UUser
+            :avatar="{
+              src: `${VITE_OSS_BASE_URL}avatar/${user}`,
+              alt: profile.nickname[0]
+            }"
+            :name="profile.nickname"
+            :description="useFormatTimeAgo(createdAt)"
+            size="xl"
+            @click="
+              !activeSpaceTargetIds.has(user) &&
+              profileSpaceOverlay.open({
+                targetId: user,
+                targetProfile: profile
+              })
+            "
+            :ui="{
+              avatar: 'group-hover/user:scale-100',
+              name: 'break-all'
+            }"
+          />
+          <div v-if="content.text" class="break-all whitespace-pre-wrap">
+            {{ content.text }}
+          </div>
+          <Carousel
+            v-if="content.images.length"
+            :items="content.images"
+            :active-index="0"
+          />
+          <div class="flex justify-end gap-2">
+            <UButton
+              variant="ghost"
+              icon="lucide:message-circle"
+              :label="String(commentCount || '')"
               @click="
-                !activeSpaceTargetIds.has(user) &&
-                profileSpaceOverlay.open({
-                  targetId: user,
-                  targetProfile: profile
-                })
+                useOpenPostDetailOverlay(
+                  postMap,
+                  activeTab,
+                  _id,
+                  index,
+                  postDetailOverlay
+                )
               "
-              :ui="{
-                name: 'break-all',
-                description: 'line-clamp-1'
-              }"
             />
-          </template>
-          <template #description>
-            <!-- before:content-[open-quote] after:content-[close-quote] -->
-            <div
-              v-if="content.text"
-              class="text-base break-all whitespace-pre-wrap"
-            >
-              {{ content.text }}
-            </div>
-            <Carousel
-              v-if="content.images.length"
-              :class="content.text ? 'mt-2' : ''"
-              :items="content.images"
-              :active-index="0"
+            <UButton
+              variant="ghost"
+              :color="liked ? 'secondary' : 'primary'"
+              icon="lucide:heart"
+              :label="String(likes || '')"
+              @click="
+                useLike(toast, postMap[activeTab].posts[index], _id, 'post')
+              "
             />
-            <div
-              :class="content.text && !content.images.length ? '' : 'mt-2'"
-              class="flex items-center justify-between"
-            >
-              <p class="text-toned text-sm">
-                <!-- · 广东 -->
-                {{ useFormatTimeAgo(createdAt) }}
-              </p>
-              <div>
-                <UButton
-                  variant="ghost"
-                  icon="lucide:message-circle"
-                  :label="String(commentCount || '')"
-                  @click="
-                    useOpenPostDetailOverlay(
-                      postMap,
-                      activeTab,
-                      _id,
-                      index,
-                      postDetailOverlay
-                    )
-                  "
-                />
-                <UButton
-                  variant="ghost"
-                  :color="liked ? 'secondary' : 'primary'"
-                  icon="lucide:heart"
-                  :label="String(likes || '')"
-                  @click="
-                    useLike(toast, postMap[activeTab].posts[index], _id, 'post')
-                  "
-                />
-                <UButton
-                  v-if="isMobile"
-                  variant="ghost"
-                  icon="lucide:ellipsis"
-                  @click.stop="onOpenDropdownMenu(user, _id)"
-                />
-                <UDropdownMenu v-else :items="dropdownMenuItems">
-                  <UButton
-                    variant="ghost"
-                    icon="lucide:ellipsis"
-                    @click.stop="onOpenDropdownMenu(user, _id)"
-                  />
-                </UDropdownMenu>
-              </div>
-            </div>
-          </template>
-        </UPageCard>
+            <UButton
+              v-if="isMobile"
+              variant="ghost"
+              icon="lucide:ellipsis"
+              @click.stop="onOpenDropdownMenu(user, _id)"
+            />
+            <UDropdownMenu v-else :items="dropdownMenuItems">
+              <UButton
+                variant="ghost"
+                icon="lucide:ellipsis"
+                @click.stop="onOpenDropdownMenu(user, _id)"
+              />
+            </UDropdownMenu>
+          </div>
+        </div>
         <USeparator
           v-if="allPostLoaded"
           class="p-4 sm:p-6"

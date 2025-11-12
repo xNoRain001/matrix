@@ -55,17 +55,15 @@
         orientation="horizontal"
         :class="isMobile ? '' : 'mb-4'"
       />
-      <UPageCard>
-        <div ref="tagRef" class="flex flex-wrap gap-2">
-          <UBadge
-            trailing-icon="lucide:circle-x"
-            v-for="(tag, index) in tags"
-            :label="tag"
-            :key="tag"
-            @click="onDeleteTag(tag, index)"
-          />
-        </div>
-      </UPageCard>
+      <div ref="tagRef" class="flex flex-wrap gap-2">
+        <UButton
+          trailing-icon="lucide:circle-x"
+          v-for="(tag, index) in tags"
+          :label="tag"
+          :key="tag"
+          @click="onDeleteTag(tag, index)"
+        />
+      </div>
       <UTabs
         v-model="activeTab"
         variant="pill"
@@ -87,6 +85,8 @@
           </div>
         </template>
       </UTabs>
+    </template>
+    <template #footer>
       <UButton
         class="w-full justify-center"
         label="保存"

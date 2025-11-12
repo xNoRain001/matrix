@@ -16,7 +16,7 @@
     <!-- <template #footer>
       <UButton
         label="下载"
-        class="flex w-full justify-center"
+        class="w-full justify-center"
         icon="lucide:cloud-download"
       />
     </template> -->
