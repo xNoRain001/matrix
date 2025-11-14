@@ -9,7 +9,7 @@
     }"
   >
     <template #body>
-      <div class="space-y-2 p-4 sm:p-6">
+      <div ref="contentRef" class="space-y-2 p-4 sm:p-6">
         <p class="text-highlighted break-all whitespace-pre-wrap">
           {{ postMap[targetId].activePost.content.text }}
         </p>
@@ -72,142 +72,138 @@
         />
       </div>
       <div v-if="activeTab === 'comment'">
-        <div
-          v-for="(
-            {
-              _id,
-              user: owner,
-              profile,
-              content,
-              createdAt,
-              likes,
-              replyCount,
-              liked,
-              replyComments,
-              visibleReplyCount
-            },
-            index
-          ) in postMap[targetId].comments"
-          :key="_id"
-          class="border-b-accented/50 cursor-pointer space-y-2 rounded-none border-b p-4 sm:p-6"
-        >
-          <UUser
-            size="xl"
-            :ui="{
-              root: 'items-start',
-              wrapper: 'flex-1',
-              name: 'gap-2 flex items-start',
-              description: 'flex flex-col justify-between'
-            }"
+        <div v-if="loadingComments" class="space-y-4 p-4 sm:p-6">
+          <div v-for="i in 5" :key="i" class="flex items-center gap-4">
+            <USkeleton class="h-12 w-12 rounded-full" />
+
+            <div class="grid flex-1 gap-2">
+              <USkeleton class="h-4 w-full" />
+              <USkeleton class="h-4 w-4/5" />
+            </div>
+          </div>
+        </div>
+        <div v-if="postMap[targetId].comments">
+          <div
+            v-for="(
+              {
+                _id,
+                user: owner,
+                profile,
+                content,
+                createdAt,
+                likes,
+                replyCount,
+                liked,
+                replyComments,
+                visibleReplyCount
+              },
+              index
+            ) in postMap[targetId].comments"
+            :key="_id"
+            class="border-b-accented/50 cursor-pointer space-y-2 rounded-none border-b p-4 sm:p-6"
           >
-            <template #avatar>
-              <div
-                @click="
-                  !activeSpaceTargetIds.has(owner) &&
-                  profileSpaceOverlay.open({
-                    targetId: owner,
-                    targetProfile: profile
-                  })
-                "
-                class="text-muted bg-elevated flex size-10 items-center justify-center rounded-full text-xl font-medium"
-              >
-                <img
-                  class="size-full rounded-full object-cover"
-                  :src="`${VITE_OSS_BASE_URL}avatar/${owner}`"
-                  :alt="profile.nickname[0]"
-                  @error="onError"
+            <UUser
+              size="xl"
+              :ui="{
+                root: 'items-start',
+                wrapper: 'flex-1',
+                name: 'gap-2 flex items-start',
+                description: 'flex flex-col justify-between'
+              }"
+            >
+              <template #avatar>
+                <div
+                  @click="
+                    !activeSpaceTargetIds.has(owner) &&
+                    profileSpaceOverlay.open({
+                      targetId: owner,
+                      targetProfile: profile
+                    })
+                  "
+                  class="text-muted bg-elevated flex size-10 items-center justify-center rounded-full text-xl font-medium"
+                >
+                  <img
+                    class="size-full rounded-full object-cover"
+                    :src="`${VITE_OSS_BASE_URL}avatar/${owner}`"
+                    :alt="profile.nickname[0]"
+                    @error="onError"
+                  />
+                </div>
+              </template>
+              <template #name>
+                <span
+                  class="text-toned break-all"
+                  @click="
+                    !activeSpaceTargetIds.has(owner) &&
+                    profileSpaceOverlay.open({
+                      targetId: owner,
+                      targetProfile: profile
+                    })
+                  "
+                  >{{ profile.nickname }}</span
+                >
+                <UBadge v-if="userInfo.id === owner" label="我" />
+                <UBadge
+                  v-else-if="postMap[targetId].activePost.user === owner"
+                  label="作者"
                 />
-              </div>
-            </template>
-            <template #name>
-              <span
-                class="text-toned break-all"
-                @click="
-                  !activeSpaceTargetIds.has(owner) &&
-                  profileSpaceOverlay.open({
-                    targetId: owner,
-                    targetProfile: profile
-                  })
-                "
-                >{{ profile.nickname }}</span
-              >
-              <UBadge v-if="userInfo.id === owner" label="我" />
-              <UBadge
-                v-else-if="postMap[targetId].activePost.user === owner"
-                label="作者"
-              />
-            </template>
-            <template #description>
-              <div
-                class="text-highlighted text-base break-all whitespace-pre-wrap"
-              >
-                {{ content.text }}
-              </div>
-              <div
-                v-if="content.images.length"
-                @click="viewerOverlay.open({ urls: content.images })"
-                class="flex"
-              >
-                <!-- 
+              </template>
+              <template #description>
+                <div
+                  class="text-highlighted text-base break-all whitespace-pre-wrap"
+                >
+                  {{ content.text }}
+                </div>
+                <div
+                  v-if="content.images.length"
+                  @click="viewerOverlay.open({ urls: content.images })"
+                  class="flex"
+                >
+                  <!-- 
                     设置 crossorigin="anonymous" 时，浏览器通过 JS 获取图片时请求头
                     才会携带上 Origin 字段  
                   -->
-                <img
-                  crossorigin="anonymous"
-                  class="size-11 rounded-lg"
-                  v-for="image in content.images"
-                  :src="VITE_OSS_BASE_URL + image.url"
-                />
-              </div>
-              <div class="flex items-center justify-between">
-                <p class="text-toned items-center">
-                  <!-- · 广东 -->
-                  <span>{{ useFormatTimeAgo(createdAt) }}</span>
-                  <span
-                    class="ml-2"
-                    @click="onReply(owner, _id, index, profile.nickname)"
-                    >回复</span
-                  >
-                </p>
-                <div>
-                  <UButton
-                    variant="ghost"
-                    :color="liked ? 'secondary' : 'primary'"
-                    icon="lucide:heart"
-                    :label="String(likes || '')"
-                    @click="
-                      useLike(
-                        toast,
-                        postMap[targetId].comments[index],
-                        _id,
-                        'comment'
-                      )
-                    "
+                  <img
+                    crossorigin="anonymous"
+                    class="size-11 rounded-lg"
+                    v-for="image in content.images"
+                    :src="VITE_OSS_BASE_URL + image.url"
                   />
-                  <UButton variant="ghost" icon="lucide:heart-crack" />
-                  <template
-                    v-if="
-                      owner === userInfo.id ||
-                      postMap[targetId].activePost.user === userInfo.id
-                    "
-                  >
+                </div>
+                <div class="flex items-center justify-between">
+                  <p class="text-toned items-center">
+                    <!-- · 广东 -->
+                    <span>{{ useFormatTimeAgo(createdAt) }}</span>
+                    <span
+                      class="ml-2"
+                      @click="onReply(owner, _id, index, profile.nickname)"
+                      >回复</span
+                    >
+                  </p>
+                  <div>
                     <UButton
-                      v-if="isMobile"
                       variant="ghost"
-                      icon="lucide:ellipsis"
+                      :color="liked ? 'secondary' : 'primary'"
+                      icon="lucide:heart"
+                      :label="String(likes || '')"
                       @click="
-                        onOpenDropdownMenu(
-                          owner === userInfo.id,
-                          owner,
+                        useLike(
+                          toast,
+                          postMap[targetId].comments[index],
                           _id,
-                          index,
-                          content,
-                          true
+                          'comment'
                         )
                       "
                     />
-                    <UDropdownMenu v-else :items="dropdownMenuItems">
+                    <UButton variant="ghost" icon="lucide:heart-crack" />
+                    <template
+                      v-if="
+                        owner === userInfo.id ||
+                        postMap[targetId].activePost.user === userInfo.id
+                      "
+                    >
                       <UButton
+                        v-if="isMobile"
                         variant="ghost"
                         icon="lucide:ellipsis"
                         @click="
@@ -221,183 +217,182 @@
                           )
                         "
                       />
-                    </UDropdownMenu>
-                  </template>
-                </div>
-              </div>
-              <UCollapsible
-                v-if="replyCount"
-                v-model:open="
-                  postMap[targetId].isCommentCollapsibleOpenMap[_id]
-                "
-              >
-                <template #content>
-                  <div
-                    v-for="(
-                      {
-                        owner: replyOwner,
-                        _id: replyId,
-                        profile,
-                        content,
-                        createdAt,
-                        user,
-                        liked,
-                        likes,
-                        replyTargetProfile
-                      },
-                      replyIndex
-                    ) in replyComments"
-                    :key="replyId"
-                  >
-                    <UUser
-                      size="xl"
-                      :ui="{
-                        root: 'items-start',
-                        wrapper: 'flex-1',
-                        name: 'gap-2 flex items-start',
-                        description: 'flex flex-col justify-between'
-                      }"
-                    >
-                      <template #avatar>
-                        <div
+                      <UDropdownMenu v-else :items="dropdownMenuItems">
+                        <UButton
+                          variant="ghost"
+                          icon="lucide:ellipsis"
                           @click="
-                            !activeSpaceTargetIds.has(owner) &&
-                            profileSpaceOverlay.open({
-                              targetId: user,
-                              targetProfile: profile
-                            })
+                            onOpenDropdownMenu(
+                              owner === userInfo.id,
+                              owner,
+                              _id,
+                              index,
+                              content,
+                              true
+                            )
                           "
-                          class="text-muted bg-elevated size-5 rounded-full text-center text-xs font-medium"
-                        >
-                          <img
-                            class="size-full rounded-full object-cover"
-                            :src="`${VITE_OSS_BASE_URL}avatar/${user}`"
-                            :alt="profile.nickname[0]"
-                            @error="onError"
-                          />
-                        </div>
-                      </template>
-                      <template #name>
-                        <span
-                          class="text-toned break-all"
-                          @click="
-                            !activeSpaceTargetIds.has(owner) &&
-                            profileSpaceOverlay.open({
-                              targetId: user,
-                              targetProfile: profile
-                            })
-                          "
-                        >
-                          {{
-                            `${profile.nickname}${
-                              replyTargetProfile?.nickname
-                                ? ` ▸ ${replyTargetProfile?.nickname}`
-                                : ''
-                            }`
-                          }}
-                        </span>
-                        <UBadge v-if="userInfo.id === user" label="我" />
-                        <UBadge
-                          v-else-if="postMap[targetId].activePost.user === user"
-                          label="作者"
                         />
-                      </template>
-                      <template #description>
-                        <div
-                          class="text-highlighted text-base break-all whitespace-pre-wrap"
-                        >
-                          {{ content.text }}
-                        </div>
-                        <div
-                          v-if="replyComments[replyIndex].content.images.length"
-                          class="flex"
-                        >
-                          <img
-                            crossorigin="anonymous"
-                            class="size-11 rounded-lg"
+                      </UDropdownMenu>
+                    </template>
+                  </div>
+                </div>
+                <UCollapsible
+                  v-if="replyCount"
+                  v-model:open="
+                    postMap[targetId].isCommentCollapsibleOpenMap[_id]
+                  "
+                >
+                  <template #content>
+                    <div
+                      v-for="(
+                        {
+                          owner: replyOwner,
+                          _id: replyId,
+                          profile,
+                          content,
+                          createdAt,
+                          user,
+                          liked,
+                          likes,
+                          replyTargetProfile
+                        },
+                        replyIndex
+                      ) in replyComments"
+                      :key="replyId"
+                    >
+                      <UUser
+                        size="xl"
+                        :ui="{
+                          root: 'items-start',
+                          wrapper: 'flex-1',
+                          name: 'gap-2 flex items-start',
+                          description: 'flex flex-col justify-between'
+                        }"
+                      >
+                        <template #avatar>
+                          <div
                             @click="
-                              viewerOverlay.open({
-                                urls: replyComments[replyIndex].content.images
+                              !activeSpaceTargetIds.has(owner) &&
+                              profileSpaceOverlay.open({
+                                targetId: user,
+                                targetProfile: profile
                               })
                             "
-                            v-for="image in replyComments[replyIndex].content
-                              .images"
-                            :src="VITE_OSS_BASE_URL + image.url"
+                            class="text-muted bg-elevated size-5 rounded-full text-center text-xs font-medium"
+                          >
+                            <img
+                              class="size-full rounded-full object-cover"
+                              :src="`${VITE_OSS_BASE_URL}avatar/${user}`"
+                              :alt="profile.nickname[0]"
+                              @error="onError"
+                            />
+                          </div>
+                        </template>
+                        <template #name>
+                          <span
+                            class="text-toned break-all"
+                            @click="
+                              !activeSpaceTargetIds.has(owner) &&
+                              profileSpaceOverlay.open({
+                                targetId: user,
+                                targetProfile: profile
+                              })
+                            "
+                          >
+                            {{
+                              `${profile.nickname}${
+                                replyTargetProfile?.nickname
+                                  ? ` ▸ ${replyTargetProfile?.nickname}`
+                                  : ''
+                              }`
+                            }}
+                          </span>
+                          <UBadge v-if="userInfo.id === user" label="我" />
+                          <UBadge
+                            v-else-if="
+                              postMap[targetId].activePost.user === user
+                            "
+                            label="作者"
                           />
-                        </div>
-                        <div class="flex items-center justify-between">
-                          <p class="text-toned">
-                            <span>
-                              <!-- · 广东 -->
-                              {{ useFormatTimeAgo(createdAt) }}
-                            </span>
-                            <span
-                              class="ml-2"
+                        </template>
+                        <template #description>
+                          <div
+                            class="text-highlighted text-base break-all whitespace-pre-wrap"
+                          >
+                            {{ content.text }}
+                          </div>
+                          <div
+                            v-if="
+                              replyComments[replyIndex].content.images.length
+                            "
+                            class="flex"
+                          >
+                            <img
+                              crossorigin="anonymous"
+                              class="size-11 rounded-lg"
                               @click="
-                                onReplyTarget(
-                                  owner,
-                                  user,
-                                  profile.nickname,
-                                  _id,
-                                  index,
-                                  replyId,
-                                  replyIndex,
-                                  content
-                                )
+                                viewerOverlay.open({
+                                  urls: replyComments[replyIndex].content.images
+                                })
                               "
-                              >回复</span
-                            >
-                          </p>
-                          <div>
-                            <UButton
-                              variant="ghost"
-                              icon="lucide:heart"
-                              :color="liked ? 'secondary' : 'primary'"
-                              :label="String(likes || '')"
-                              @click="
-                                useLike(
-                                  toast,
-                                  postMap[targetId].comments[index]
-                                    .replyComments[replyIndex],
-                                  replyId,
-                                  'comment'
-                                )
-                              "
+                              v-for="image in replyComments[replyIndex].content
+                                .images"
+                              :src="VITE_OSS_BASE_URL + image.url"
                             />
-                            <UButton
-                              variant="ghost"
-                              icon="lucide:heart-crack"
-                            />
-                            <template
-                              v-if="
-                                user === userInfo.id ||
-                                postMap[targetId].activePost.user ===
-                                  userInfo.id ||
-                                replyOwner === userInfo.id
-                              "
-                            >
-                              <UButton
-                                v-if="isMobile"
-                                variant="ghost"
-                                icon="lucide:ellipsis"
+                          </div>
+                          <div class="flex items-center justify-between">
+                            <p class="text-toned">
+                              <span>
+                                <!-- · 广东 -->
+                                {{ useFormatTimeAgo(createdAt) }}
+                              </span>
+                              <span
+                                class="ml-2"
                                 @click="
-                                  onOpenReplyDropdownMenu(
-                                    user === userInfo.id,
+                                  onReplyTarget(
+                                    owner,
                                     user,
-                                    replyId,
-                                    replyIndex,
-                                    content,
+                                    profile.nickname,
                                     _id,
                                     index,
-                                    false
+                                    replyId,
+                                    replyIndex,
+                                    content
+                                  )
+                                "
+                                >回复</span
+                              >
+                            </p>
+                            <div>
+                              <UButton
+                                variant="ghost"
+                                icon="lucide:heart"
+                                :color="liked ? 'secondary' : 'primary'"
+                                :label="String(likes || '')"
+                                @click="
+                                  useLike(
+                                    toast,
+                                    postMap[targetId].comments[index]
+                                      .replyComments[replyIndex],
+                                    replyId,
+                                    'comment'
                                   )
                                 "
                               />
-                              <UDropdownMenu
-                                v-else
-                                :items="replydropdownMenuItems"
+                              <UButton
+                                variant="ghost"
+                                icon="lucide:heart-crack"
+                              />
+                              <template
+                                v-if="
+                                  user === userInfo.id ||
+                                  postMap[targetId].activePost.user ===
+                                    userInfo.id ||
+                                  replyOwner === userInfo.id
+                                "
                               >
                                 <UButton
+                                  v-if="isMobile"
                                   variant="ghost"
                                   icon="lucide:ellipsis"
                                   @click="
@@ -413,63 +408,123 @@
                                     )
                                   "
                                 />
-                              </UDropdownMenu>
-                            </template>
+                                <UDropdownMenu
+                                  v-else
+                                  :items="replydropdownMenuItems"
+                                >
+                                  <UButton
+                                    variant="ghost"
+                                    icon="lucide:ellipsis"
+                                    @click="
+                                      onOpenReplyDropdownMenu(
+                                        user === userInfo.id,
+                                        user,
+                                        replyId,
+                                        replyIndex,
+                                        content,
+                                        _id,
+                                        index,
+                                        false
+                                      )
+                                    "
+                                  />
+                                </UDropdownMenu>
+                              </template>
+                            </div>
                           </div>
-                        </div>
-                      </template>
-                    </UUser>
-                  </div>
-                </template>
-              </UCollapsible>
-              <UButton
-                v-if="replyCount && visibleReplyCount < replyCount"
-                @click="onLoadReplies(_id, index, visibleReplyCount)"
-                :label="`—— 展开${postMap[targetId].isCommentCollapsibleOpenMap[_id] ? '更多' : ` ${replyCount} 条回复`}`"
-                color="neutral"
-                variant="ghost"
-                trailing-icon="i-lucide-chevron-down"
-              />
-              <UButton
-                v-if="postMap[targetId].isCommentCollapsibleOpenMap[_id]"
-                @click="onCollipse(_id, index)"
-                label="收起"
-                color="neutral"
-                variant="ghost"
-                trailing-icon="i-lucide-chevron-up"
-              />
-            </template>
-          </UUser>
+                        </template>
+                      </UUser>
+                    </div>
+                  </template>
+                </UCollapsible>
+                <UButton
+                  v-if="replyCount && visibleReplyCount < replyCount"
+                  @click="onLoadReplies(_id, index, visibleReplyCount)"
+                  :label="`—— 展开${postMap[targetId].isCommentCollapsibleOpenMap[_id] ? '更多' : ` ${replyCount} 条回复`}`"
+                  color="neutral"
+                  variant="ghost"
+                  trailing-icon="i-lucide-chevron-down"
+                />
+                <UButton
+                  v-if="postMap[targetId].isCommentCollapsibleOpenMap[_id]"
+                  @click="onCollipse(_id, index)"
+                  label="收起"
+                  color="neutral"
+                  variant="ghost"
+                  trailing-icon="i-lucide-chevron-up"
+                />
+              </template>
+            </UUser>
+          </div>
+          <USeparator
+            v-if="allCommentsLoaded"
+            class="p-4 sm:p-6"
+            label="已经到底了"
+          />
         </div>
-        <USeparator class="p-4 sm:p-6" label="已经到底了" />
+        <USeparator
+          v-if="!loadingComments && !postMap[targetId].comments"
+          class="p-4 sm:p-6"
+          label="空空如也"
+        />
       </div>
       <div v-else>
-        <div
-          v-for="{ user, profile, createdAt } in likes"
-          :key="user"
-          class="bg-elevated/50 border-b-accented/50 rounded-none border-b p-4 sm:p-6"
-        >
-          <UUser
-            :name="profile.nickname"
-            :avatar="{
-              src: `${VITE_OSS_BASE_URL}avatar/${user}`,
-              alt: profile.nickname[0]
-            }"
-            size="xl"
-            :ui="{
-              root: 'items-start',
-              wrapper: 'flex-1 min-w-0',
-              name: 'truncate',
-              description: 'flex justify-between'
-            }"
-          >
-            <template #description>
-              <span>点赞了你的内容</span>
-              <time>{{ useFormatTimeAgo(createdAt) }}</time>
-            </template>
-          </UUser>
+        <div v-if="loadingLikes" class="space-y-4 p-4 sm:p-6">
+          <div v-for="i in 5" :key="i" class="flex items-center gap-4">
+            <USkeleton class="h-12 w-12 rounded-full" />
+
+            <div class="grid flex-1 gap-2">
+              <USkeleton class="h-4 w-full" />
+              <USkeleton class="h-4 w-4/5" />
+            </div>
+          </div>
         </div>
-        <USeparator class="p-4 sm:p-6" label="已经到底了" />
+        <div v-if="likes.length">
+          <div
+            v-for="{ user, profile, createdAt } in likes"
+            :key="user"
+            class="bg-elevated/50 border-b-accented/50 rounded-none border-b p-4 sm:p-6"
+          >
+            <UUser
+              :name="profile.nickname"
+              :avatar="{
+                src: `${VITE_OSS_BASE_URL}avatar/${user}`,
+                alt: profile.nickname[0]
+              }"
+              size="xl"
+              :ui="{
+                root: 'items-start',
+                wrapper: 'flex-1 min-w-0',
+                name: 'truncate',
+                description: 'flex justify-between'
+              }"
+            >
+              <template #description>
+                <span>点赞了你的内容</span>
+                <time>{{ useFormatTimeAgo(createdAt) }}</time>
+              </template>
+            </UUser>
+          </div>
+          <USeparator
+            v-if="allLikesLoaded"
+            class="p-4 sm:p-6"
+            label="已经到底了"
+          />
+          <div v-else class="mt-4 flex justify-center sm:mt-6">
+            <UButton
+              @click="onLoadLikes"
+              label="—— 加载更多"
+              color="neutral"
+              variant="ghost"
+              trailing-icon="i-lucide-chevron-down"
+            />
+          </div>
+        </div>
+        <USeparator
+          v-if="!loadingLikes && likes.length === 0"
+          class="p-4 sm:p-6"
+          label="空空如也"
+        />
       </div>
       <UDrawer
         v-model:open="isEditMenuDrawerOpen"
@@ -541,7 +596,14 @@
 <script lang="ts" setup>
 import { usePostStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  useTemplateRef,
+  watch
+} from 'vue'
 import OverlayPublisher from './OverlayPublisher.vue'
 import { useFormatTimeAgo, useLike } from '@/hooks'
 import { getPostLikesAPI } from '@/apis/like'
@@ -554,9 +616,11 @@ import {
 import type { userInfo } from '@/types'
 import OverlayViewer from './OverlayViewer.vue'
 import OverlayProfileSpace from './OverlayProfileSpace.vue'
+import { useThrottleFn } from '@vueuse/core'
 
 let isComment = false
 let reportedUserId = ''
+const pageSize = 10
 const props = defineProps<{ targetId: string }>()
 const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile, userInfo } = storeToRefs(useUserStore())
@@ -566,11 +630,21 @@ const overlay = useOverlay()
 const publisherOverlay = overlay.create(OverlayPublisher)
 const viewerOverlay = overlay.create(OverlayViewer)
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
+const contentRef = useTemplateRef('contentRef')
+const loadingLikes = ref(true)
+const loadingComments = ref(true)
+const allLikesLoaded = ref(false)
+const allCommentsLoaded = ref(false)
 const likes = ref<
-  { createdAt: number; user: string; profile: userInfo['profile'] }[]
+  {
+    _id: string
+    createdAt: number
+    user: string
+    profile: userInfo['profile']
+  }[]
 >([])
 const toast = useToast()
-const tabItems = [
+const tabItems = computed(() => [
   {
     label: `评论 ${postMap.value[props.targetId].activePost.commentCount}`,
     value: 'comment'
@@ -579,7 +653,7 @@ const tabItems = [
     label: `赞 ${postMap.value[props.targetId].activePost.likes}`,
     value: 'like'
   }
-]
+])
 const activeTab = ref('comment')
 const sortBy = ref('hot')
 const items = [
@@ -642,6 +716,21 @@ const replydropdownMenuItems = computed(() => {
       ]
     : [[common, report]]
 })
+
+const onLoadLikes = async () => {
+  const _likes = likes.value
+  const { data } = await getPostLikesAPI(
+    postMap.value[props.targetId].activePostId,
+    _likes[_likes.length - 1]._id
+  )
+  const { length } = data
+
+  if (length) {
+    _likes.push(...data)
+  }
+
+  allLikesLoaded.value = length < pageSize
+}
 
 const onSort = v => {
   sortBy.value = v
@@ -819,7 +908,8 @@ const onCollipse = (commentId, index) => {
 }
 
 const onLoadReplies = async (commentId, index, visibleReplyCount) => {
-  const comment = postMap.value[props.targetId].comments[index]
+  const postMeta = postMap.value[props.targetId]
+  const comment = postMeta.comments[index]
   const { replyComments } = comment
   const replyCommentsLength = replyComments.length
 
@@ -836,42 +926,87 @@ const onLoadReplies = async (commentId, index, visibleReplyCount) => {
     comment.visibleReplyCount += data.length
   }
 
-  postMap.value[props.targetId].isCommentCollapsibleOpenMap[commentId] = true
+  postMeta.isCommentCollapsibleOpenMap[commentId] = true
 }
 
-const initComments = async () => {
-  const { data } = await getCommentsAPI(
-    postMap.value[props.targetId].activePostId
-  )
+const getComments = async (lastId = '') => {
+  const postMeta = postMap.value[props.targetId]
+  const { data } = await getCommentsAPI(postMeta.activePostId, lastId)
 
-  postMap.value[props.targetId].isCommentCollapsibleOpenMap = {}
+  if (!postMeta.isCommentCollapsibleOpenMap) {
+    postMeta.isCommentCollapsibleOpenMap = {}
+  }
 
   for (let i = 0, l = data.length; i < l; i++) {
     const item = data[i]
-    postMap.value[props.targetId].isCommentCollapsibleOpenMap[item._id] = false
+    postMeta.isCommentCollapsibleOpenMap[item._id] = false
     item.page = 0
     item.visibleReplyCount = 0
     item.replyComments = []
   }
 
-  postMap.value[props.targetId].comments = data
+  const { length } = data
+
+  if (lastId) {
+    if (length) {
+      postMeta.comments.push(...data)
+    }
+  } else {
+    if (length) {
+      postMeta.comments = data
+    }
+  }
+
+  allCommentsLoaded.value = length < pageSize
+  loadingComments.value = false
+
+  return length
 }
+
+const onScroll = useThrottleFn(
+  e => {
+    console.log('scroll')
+    if (activeTab.value !== 'comment' || allCommentsLoaded.value) {
+      return
+    }
+
+    const { scrollTop, scrollHeight, clientHeight } = e.target
+
+    if (scrollHeight - (scrollTop + clientHeight) < 64) {
+      const { comments } = postMap.value[props.targetId]
+      getComments(comments[comments.length - 1]._id)
+    }
+  },
+  200,
+  true
+)
 
 const unwatch = watch(activeTab, async v => {
   if (v === 'like') {
-    likes.value = (
-      await getPostLikesAPI(postMap.value[props.targetId].activePostId)
-    ).data
+    const { data } = await getPostLikesAPI(
+      postMap.value[props.targetId].activePostId
+    )
+    likes.value = data
+    allLikesLoaded.value = data.length < pageSize
+    loadingLikes.value = false
     unwatch()
   }
 })
 
 onMounted(async () => {
-  await initComments()
+  const length = await getComments()
+
+  // 只有可能有更多评论时才绑定滚动事件
+  if (length === pageSize) {
+    setTimeout(() => {
+      contentRef.value.parentNode.addEventListener('scroll', onScroll)
+    })
+  }
 })
 
 onBeforeUnmount(() => {
-  postMap.value[props.targetId].comments = []
-  postMap.value[props.targetId].isCommentCollapsibleOpenMap = {}
+  const postMeta = postMap.value[props.targetId]
+  postMeta.comments = []
+  postMeta.isCommentCollapsibleOpenMap = {}
 })
 </script>

@@ -9,7 +9,7 @@ const usePostStore = defineStore('postStore', () => ({
       string,
       {
         posts: post[]
-        comments: comment[]
+        comments?: comment[]
         isCommentCollapsibleOpenMap: { [x: string]: boolean }
         canEdit: boolean
         activePost: post

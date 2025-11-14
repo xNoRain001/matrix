@@ -1,20 +1,14 @@
 <template>
   <UBadge
-    v-if="targetProfile.gender !== 'other'"
+    v-if="targetProfile.gender !== 'other' || targetProfile.birthday"
     icon="lucide:user-round"
-    :label="useTransformGender(targetProfile.gender)"
-    color="warning"
-  />
-  <UBadge
-    v-if="targetProfile.birthday"
-    icon="lucide:cake-slice"
-    :label="useComputeAge(targetProfile.birthday)"
+    :label="`${targetProfile.gender !== 'other' ? useTransformGender(targetProfile.gender) : ''}${targetProfile.birthday ? `${targetProfile.gender !== 'other' ? ' · ' : ''}${useComputeAge(targetProfile.birthday)} 岁` : ''}`"
     color="warning"
   />
   <UBadge
     v-if="targetProfile.province"
     icon="lucide:map-pin"
-    :label="`${targetProfile.province}${targetProfile.city ? ` - ${targetProfile.city}` : ''}`"
+    :label="`${targetProfile.province}${targetProfile.city ? ` · ${targetProfile.city}` : ''}`"
     color="warning"
   />
   <UBadge
@@ -36,7 +30,7 @@
     color="secondary"
   />
   <UBadge
-    v-if="targetProfile.tags"
+    v-if="targetProfile.tags.length"
     v-for="tag in targetProfile.tags"
     icon="lucide:tag"
     :key="tag"
