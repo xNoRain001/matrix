@@ -112,6 +112,7 @@ export type comment = {
   visibleReplyCount: number
   page: number
   _id: string
+  hot?: number
   replyComments: (Omit<comment, 'replyCount' | 'replyComments'> & {
     parentId: string
   })[]

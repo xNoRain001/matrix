@@ -50,26 +50,9 @@
           :items="tabItems"
           size="xs"
         />
-        <UTabs
-          v-if="activeTab === 'comment'"
-          size="xs"
-          v-model="sortBy"
-          :content="false"
-          :items="items"
-          @update:model-value="onSort"
-        />
       </div>
-      <div v-else class="flex items-center justify-between px-4 sm:px-6">
-        <div class="text-highlighted font-semibold">
-          {{ `评论 ${postMap[targetId].activePost.commentCount}` }}
-        </div>
-        <UTabs
-          size="xs"
-          v-model="sortBy"
-          :content="false"
-          :items="items"
-          @update:model-value="onSort"
-        />
+      <div v-else class="text-highlighted px-4 font-semibold sm:px-6">
+        {{ `评论 ${postMap[targetId].activePost.commentCount}` }}
       </div>
       <div v-if="activeTab === 'comment'">
         <div v-if="loadingComments" class="space-y-4 p-4 sm:p-6">
@@ -655,17 +638,6 @@ const tabItems = computed(() => [
   }
 ])
 const activeTab = ref('comment')
-const sortBy = ref('hot')
-const items = [
-  {
-    label: '热度',
-    value: 'hot'
-  },
-  {
-    label: '时间',
-    value: 'time'
-  }
-]
 const isEditMenuDrawerOpen = ref(false)
 const isEditReplyMenuDrawerOpen = ref(false)
 const report = {
@@ -730,10 +702,6 @@ const onLoadLikes = async () => {
   }
 
   allLikesLoaded.value = length < pageSize
-}
-
-const onSort = v => {
-  sortBy.value = v
 }
 
 const onReport = () => {
@@ -929,9 +897,9 @@ const onLoadReplies = async (commentId, index, visibleReplyCount) => {
   postMeta.isCommentCollapsibleOpenMap[commentId] = true
 }
 
-const getComments = async (lastId = '') => {
+const getComments = async (lastId = '', lastHot = 0) => {
   const postMeta = postMap.value[props.targetId]
-  const { data } = await getCommentsAPI(postMeta.activePostId, lastId)
+  const { data } = await getCommentsAPI(postMeta.activePostId, lastId, lastHot)
 
   if (!postMeta.isCommentCollapsibleOpenMap) {
     postMeta.isCommentCollapsibleOpenMap = {}
@@ -965,7 +933,6 @@ const getComments = async (lastId = '') => {
 
 const onScroll = useThrottleFn(
   e => {
-    console.log('scroll')
     if (activeTab.value !== 'comment' || allCommentsLoaded.value) {
       return
     }
@@ -974,7 +941,8 @@ const onScroll = useThrottleFn(
 
     if (scrollHeight - (scrollTop + clientHeight) < 64) {
       const { comments } = postMap.value[props.targetId]
-      getComments(comments[comments.length - 1]._id)
+      const { _id, hot } = comments[comments.length - 1]
+      getComments(_id, hot)
     }
   },
   200,

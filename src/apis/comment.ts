@@ -2,8 +2,8 @@ import HTTP from './http'
 
 const prefix = '/comment'
 
-export const getCommentsAPI = async (postId, lastId) =>
-  HTTP.request(`${prefix}?postId=${postId}&lastId=${lastId}`)
+export const getCommentsAPI = async (postId, lastId, lastHot) =>
+  HTTP.request(`${prefix}?postId=${postId}&lastId=${lastId}&lastHot=${lastHot}`)
 
 export const publishCommentAPI = async data =>
   HTTP.request(`${prefix}`, {
@@ -15,7 +15,7 @@ export const publishCommentAPI = async data =>
   })
 
 export const updateCommentAPI = async data =>
-  HTTP.request(`${prefix}/`, {
+  HTTP.request(`${prefix}`, {
     data,
     method: 'PATCH',
     headers: {
