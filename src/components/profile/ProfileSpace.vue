@@ -105,7 +105,7 @@
         </template>
         <template #description>
           <div class="flex items-center gap-2">
-            <span>{{ targetProfile.bio }} </span>
+            <span>{{ targetProfile.bio }}一条咸鱼</span>
           </div>
           <div class="mt-2 space-y-2 space-x-2">
             <ProfileSpaceTags :target-profile="targetProfile" />

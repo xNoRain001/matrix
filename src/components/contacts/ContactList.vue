@@ -176,8 +176,7 @@ const formatLastOnline = timestamp => {
     return '最后在线于：7 天前'
   }
 
-  const now = Date.now()
-  const diff = now - timestamp
+  const diff = Date.now() - timestamp
 
   return diff < fiveMinutes
     ? '刚刚在线'

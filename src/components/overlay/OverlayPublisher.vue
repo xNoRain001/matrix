@@ -12,8 +12,8 @@
       <template v-if="isReport">
         <template v-if="reportTarget === 'profile'">
           <UPageCard
-            title="举报对象"
-            description="选择举报对象"
+            title="举报类型"
+            description="选择举报类型"
             variant="naked"
             orientation="horizontal"
             class="mb-4"
@@ -25,8 +25,8 @@
           />
         </template>
         <UPageCard
-          title="违规类型"
-          description="选择对方的违规类型"
+          title="举报理由"
+          description="选择举报理由"
           variant="naked"
           orientation="horizontal"
           class="mb-4"
@@ -269,8 +269,8 @@ const title = isPost
         : isReply
           ? '回复评论'
           : isFeedback
-            ? '提交反馈'
-            : '举报'
+            ? '提交'
+            : '提交'
 const fileUploadRef = useTemplateRef('fileUploadRef')
 const reportType = ref('a')
 const radioGroupitems = [
@@ -353,23 +353,23 @@ const radioGroupitems = [
 const reportTargetType = ref('')
 const reportTargetTypes = [
   {
-    label: '头像',
+    label: '头像违规',
     value: 'avatar'
   },
   {
-    label: '背景',
+    label: '背景违规',
     value: 'spaceBg'
   },
   {
-    label: '昵称',
+    label: '昵称违规',
     value: 'nickname'
   },
   {
-    label: '背景故事',
+    label: '背景故事违规',
     value: 'bio'
   },
   {
-    label: '标签',
+    label: '标签违规',
     value: 'tag'
   }
 ]
@@ -414,7 +414,7 @@ const onTextToImage = async () => {
 const onReport = async () => {
   if (props.reportTarget === 'profile' && reportTargetType.value === '') {
     toast.add({
-      title: '未选择举报对象',
+      title: '未选择举报类型',
       color: 'error',
       icon: 'lucide:annoyed'
     })

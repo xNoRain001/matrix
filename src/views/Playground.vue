@@ -286,7 +286,7 @@ const onScroll = useThrottleFn(
 
     useInitAutoScrollBtn(
       scrollTop,
-      isMobile,
+      isMobile.value,
       footerNavs,
       'playground',
       isAutoScrollBtnShow

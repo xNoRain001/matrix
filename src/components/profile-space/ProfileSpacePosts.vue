@@ -112,7 +112,7 @@
       leave-active-class="animate-[fade-out_200ms_ease-in]"
     >
       <div
-        v-if="!isMobile && isAutoScrollBtnShow"
+        v-if="!isFooterNavsUpdateByScroll && isAutoScrollBtnShow"
         class="fixed top-5/6 right-0 left-0"
       >
         <UButton
@@ -143,12 +143,19 @@ import {
   useURLToBlob
 } from '@/hooks'
 import OverlayPostDetail from '@/components/overlay/OverlayPostDetail.vue'
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { deletePostAPI, getPostsAPI, getSelfPostsAPI } from '@/apis/post'
 import { storeToRefs } from 'pinia'
-import { useFooterStore, usePostStore, useUserStore } from '@/store'
+import {
+  useFooterStore,
+  useMessagesStore,
+  usePostStore,
+  useRecentContactsStore,
+  useUserStore
+} from '@/store'
 import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
 import { useThrottleFn } from '@vueuse/core'
+import { useRoute } from 'vue-router'
 
 const props = defineProps<{
   isMatch?: boolean
@@ -156,12 +163,15 @@ const props = defineProps<{
   container?: HTMLElement
 }>()
 const overlay = useOverlay()
-const { isMobile } = storeToRefs(useUserStore())
+const { isMobile, userInfo } = storeToRefs(useUserStore())
 const postDetailOverlay = overlay.create(OverlayPostDetail)
 const publisherOverlay = overlay.create(OverlayPublisher)
-const { userInfo } = storeToRefs(useUserStore())
 const { postMap, lastFetchedPostId } = storeToRefs(usePostStore())
 const { footerNavs } = storeToRefs(useFooterStore())
+const { activeSpaceTargetIds } = storeToRefs(useRecentContactsStore())
+const route = useRoute()
+const isFooterNavsUpdateByScroll =
+  route.path === '/profile' && activeSpaceTargetIds.value.size === 1
 const isSelf = props.targetId === userInfo.value.id
 const allPostLoaded = ref(false)
 const toast = useToast()
@@ -227,29 +237,11 @@ const onScroll = useThrottleFn(
 
     useInitAutoScrollBtn(
       scrollTop,
-      isMobile,
+      isFooterNavsUpdateByScroll,
       footerNavs,
       'profile',
       isAutoScrollBtnShow
     )
-
-    const _isMobile = isMobile.value
-
-    if (scrollTop > 400) {
-      if (_isMobile) {
-        footerNavs.value[4].label = '顶部'
-        footerNavs.value[4].icon = 'lucide:rocket'
-      } else {
-        isAutoScrollBtnShow.value = true
-      }
-    } else {
-      if (_isMobile) {
-        footerNavs.value[4].label = '我的'
-        footerNavs.value[4].icon = 'lucide:user-round-cog'
-      } else {
-        isAutoScrollBtnShow.value = false
-      }
-    }
 
     if (allPostLoaded.value) {
       return
