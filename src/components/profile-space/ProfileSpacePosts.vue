@@ -143,12 +143,11 @@ import {
   useURLToBlob
 } from '@/hooks'
 import OverlayPostDetail from '@/components/overlay/OverlayPostDetail.vue'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { deletePostAPI, getPostsAPI, getSelfPostsAPI } from '@/apis/post'
 import { storeToRefs } from 'pinia'
 import {
   useFooterStore,
-  useMessagesStore,
   usePostStore,
   useRecentContactsStore,
   useUserStore

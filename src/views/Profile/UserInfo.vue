@@ -26,9 +26,8 @@
             </div>
           </UFormField>
         </UPageCard>
-
         <UPageCard
-          title="编辑个人资料"
+          title="编辑角色资料"
           description="这些信息将公开展示"
           variant="naked"
           orientation="horizontal"
@@ -40,7 +39,7 @@
           <UFormField
             label="头像"
             class="flex items-center gap-2 pb-4"
-            @click="avatarRef.click()"
+            @click="isAvatarSlideoverOpen = true"
             :ui="{ container: 'flex-1 flex items-center gap-2 justify-end' }"
           >
             <UAvatar
@@ -51,7 +50,33 @@
             <UIcon name="lucide:chevron-right" class="text-dimmed size-5" />
           </UFormField>
           <UFormField
-            v-for="{ label, click, key } in profileItems"
+            v-for="{ label, click, key } in profileItems.slice(0, 4)"
+            :key="key"
+            :label="label"
+            class="flex items-center gap-2 not-last:pb-4"
+            @click="click"
+            :ui="{
+              container: 'flex items-center justify-end gap-2 flex-1 '
+            }"
+          >
+            <span class="text-dimmed w-50 truncate text-end">
+              {{ profileForm[key] }}
+            </span>
+            <UIcon name="lucide:chevron-right" class="text-dimmed size-5" />
+          </UFormField>
+        </UPageCard>
+        <UPageCard
+          title="编辑个人资料"
+          description="这些信息将用于匹配"
+          variant="naked"
+          orientation="horizontal"
+        />
+        <UPageCard
+          variant="subtle"
+          :ui="{ container: 'divide-y divide-default' }"
+        >
+          <UFormField
+            v-for="{ label, click, key } in profileItems.slice(4)"
             :key="key"
             :label="label"
             class="flex items-center gap-2 not-last:pb-4"
@@ -82,11 +107,45 @@
         <UButton
           label="修改资料"
           class="w-full justify-center"
-          @click="onUpdateProfile"
+          @click="onUpdateProfile()"
           loading-auto
         />
       </template>
     </USlideover>
+
+    <UDrawer
+      v-model:open="isOpenNicknameDrawer"
+      description=" "
+      :ui="{
+        title: 'justify-between flex items-center',
+        description: 'hidden'
+      }"
+    >
+      <template #title>
+        <span>修改角色</span>
+        <UButton
+          @click="avatarOverlay.open({ profileForm })"
+          label="选择角色"
+          size="xs"
+        />
+      </template>
+      <template #body>
+        <UInput class="w-full" v-model="profileForm.nickname" maxlength="16">
+          <template v-if="profileForm.nickname" #trailing>
+            <div class="text-muted text-xs tabular-nums">
+              {{ profileForm.nickname.length }}/16
+            </div>
+            <UButton
+              color="neutral"
+              variant="link"
+              size="sm"
+              icon="lucide:circle-x"
+              @click="profileForm.nickname = ''"
+            />
+          </template>
+        </UInput>
+      </template>
+    </UDrawer>
 
     <UDrawer
       v-model:open="isOpenGenderDrawer"
@@ -163,7 +222,7 @@
 
     <UDrawer
       v-model:open="isOpenBioDrawer"
-      title="修改背景故事"
+      title="修改角色背景故事"
       description=" "
       :ui="{
         description: 'hidden'
@@ -193,6 +252,58 @@
         </UTextarea>
       </template>
     </UDrawer>
+
+    <UDrawer
+      v-model:open="isOpenOCGenderDrawer"
+      title="修改角色性别"
+      description=" "
+      :ui="{
+        description: 'hidden'
+      }"
+    >
+      <template #body>
+        <UInput class="w-full" v-model="profileForm.ocGender" maxlength="5">
+          <template v-if="profileForm.ocGender" #trailing>
+            <div class="text-muted text-xs tabular-nums">
+              {{ profileForm.ocGender.length }}/5
+            </div>
+            <UButton
+              color="neutral"
+              variant="link"
+              size="sm"
+              icon="lucide:circle-x"
+              @click="profileForm.ocGender = ''"
+            />
+          </template>
+        </UInput>
+      </template>
+    </UDrawer>
+
+    <UDrawer
+      v-model:open="isOpenAgeDrawer"
+      title="修改角色年龄"
+      description=" "
+      :ui="{
+        description: 'hidden'
+      }"
+    >
+      <template #body>
+        <UInput class="w-full" v-model="profileForm.age" maxlength="5">
+          <template v-if="profileForm.age" #trailing>
+            <div class="text-muted text-xs tabular-nums">
+              {{ profileForm.age.length }}/5
+            </div>
+            <UButton
+              color="neutral"
+              variant="link"
+              size="sm"
+              icon="lucide:circle-x"
+              @click="profileForm.age = ''"
+            />
+          </template>
+        </UInput>
+      </template>
+    </UDrawer>
   </template>
   <template v-else>
     <UForm>
@@ -217,7 +328,7 @@
 
     <UForm :state="profileForm">
       <UPageCard
-        title="个人资料"
+        title="角色资料"
         description="这些信息将公开展示"
         variant="naked"
         orientation="horizontal"
@@ -246,7 +357,7 @@
               :alt="profileForm.nickname[0]"
               size="lg"
             />
-            <UButton label="选择" @click="avatarRef.click()" />
+            <UButton label="选择" @click="isAvatarSlideoverOpen = true" />
           </div>
         </UFormField>
         <USeparator />
@@ -280,6 +391,52 @@
         </UFormField>
         <USeparator />
         <UFormField
+          name="name"
+          label="性别"
+          description="选择你的性别"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
+        >
+          <UInput class="w-full" v-model="profileForm.ocGender">
+            <template v-if="profileForm.ocGender" #trailing>
+              <div class="text-muted text-xs tabular-nums">
+                {{ profileForm.ocGender.length }}/5
+              </div>
+              <UButton
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="lucide:circle-x"
+                @click="profileForm.ocGender = ''"
+              />
+            </template>
+          </UInput>
+        </UFormField>
+        <USeparator />
+        <UFormField
+          name="name"
+          label="年龄"
+          description="选择你的年龄"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
+        >
+          <UInput class="w-full" v-model="profileForm.age">
+            <template v-if="profileForm.age" #trailing>
+              <div class="text-muted text-xs tabular-nums">
+                {{ profileForm.age.length }}/5
+              </div>
+              <UButton
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="lucide:circle-x"
+                @click="profileForm.age = ''"
+              />
+            </template>
+          </UInput>
+        </UFormField>
+        <USeparator />
+        <UFormField
           name="bio"
           label="背景故事"
           description="修改背景故事"
@@ -308,7 +465,26 @@
             </template>
           </UTextarea>
         </UFormField>
-        <USeparator />
+      </UPageCard>
+    </UForm>
+
+    <UForm :state="profileForm">
+      <UPageCard
+        title="个人资料"
+        description="这些信息将用于匹配"
+        variant="naked"
+        orientation="horizontal"
+        class="mb-4"
+      >
+        <UButton
+          form="settings"
+          label="保存"
+          type="submit"
+          class="w-fit lg:ms-auto"
+          @click="onUpdateProfile"
+        />
+      </UPageCard>
+      <UPageCard variant="subtle">
         <UFormField
           name="email"
           label="性别"
@@ -372,21 +548,13 @@
       </UPageCard>
     </UForm>
   </template>
-
-  <!-- 选择头像 -->
-  <input
-    @change="onFileChange"
-    ref="avatarRef"
-    hidden
-    type="file"
-    accept="image/png, image/jpeg, image/gif"
-  />
+  <ProfileUserInfoSlideover v-model="isAvatarSlideoverOpen" />
 </template>
 
 <script lang="ts" setup>
 import { updateProfile } from '@/apis/profile'
 import { colleges, provinceCityMap } from '@/const'
-import { useTransformGender, useUpdateStaticNameFile } from '@/hooks'
+import { useTransformGender } from '@/hooks'
 import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref, shallowRef, watch } from 'vue'
@@ -396,11 +564,15 @@ import OverlayAvatar from '@/components/overlay/OverlayAvatar.vue'
 
 const isUserInfoSlideoverOpen = defineModel<boolean>({ required: false })
 const toast = useToast()
+const isOpenNicknameDrawer = ref(false)
 const isOpenGenderDrawer = ref(false)
 const isOpenBirthdayDrawer = ref(false)
 const isOpenRegionDrawer = ref(false)
 const isOpenCollegeDrawer = ref(false)
 const isOpenBioDrawer = ref(false)
+const isOpenOCGenderDrawer = ref(false)
+const isOpenAgeDrawer = ref(false)
+const isAvatarSlideoverOpen = ref(false)
 const { isMobile, userInfo, avatarURL, globalSocket } =
   storeToRefs(useUserStore())
 const profileForm = ref({ ...userInfo.value.profile })
@@ -425,7 +597,17 @@ const profileItems = [
   {
     label: '角色',
     key: 'nickname',
-    click: () => avatarOverlay.open({ profileForm: profileForm.value })
+    click: () => (isOpenNicknameDrawer.value = true)
+  },
+  {
+    label: '性别',
+    key: 'ocGender',
+    click: () => (isOpenOCGenderDrawer.value = true)
+  },
+  {
+    label: '年龄',
+    key: 'age',
+    click: () => (isOpenAgeDrawer.value = true)
   },
   {
     label: '背景故事',
@@ -459,10 +641,6 @@ const date = shallowRef(
 const overlay = useOverlay()
 const viewerOverlay = overlay.create(OverlayViewer)
 const avatarOverlay = overlay.create(OverlayAvatar)
-const avatarRef = ref(null)
-
-const onFileChange = e =>
-  useUpdateStaticNameFile(e, 'avatar', userInfo, toast, avatarURL)
 
 const getUserInfoDiff = (userInfo, _profileForm) => {
   const { profile } = userInfo.value
@@ -490,6 +668,15 @@ const onUpdateProfile = async () => {
   const _profileForm = profileForm.value
   const _date = date.value
 
+  if (!_profileForm.nickname) {
+    toast.add({
+      title: '角色名不能为空',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+    return
+  }
+
   if (_date) {
     const __date = _date.toString()
 
@@ -503,16 +690,6 @@ const onUpdateProfile = async () => {
 
   const diff = getUserInfoDiff(userInfo, _profileForm)
   const _isMobile = isMobile.value
-
-  // PC 端可以直接修改角色名
-  if (!_isMobile && diff.hasOwnProperty('nickname') && !diff.nickname) {
-    toast.add({
-      title: '角色名不能为空',
-      color: 'error',
-      icon: 'lucide:annoyed'
-    })
-    return
-  }
 
   if (!Object.keys(diff).length) {
     toast.add({

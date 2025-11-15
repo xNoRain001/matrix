@@ -14,6 +14,8 @@ export type userInfo = {
   tokenVersion: number
   profile: {
     nickname: string
+    ocGender: string
+    age: string
     gender: 'male' | 'female' | 'other'
     birthday: string
     province: string

@@ -1,6 +1,6 @@
 const useComputeAge = v => {
   if (!v) {
-    return '未知'
+    return '保密'
   }
 
   const date = new Date()

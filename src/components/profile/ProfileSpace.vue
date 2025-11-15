@@ -59,19 +59,20 @@
         @error="isPlaceholderShow = true"
       />
       <!-- 个人资料卡片 -->
-      <UPageCard
-        class="absolute top-[50vh] right-4 left-4 z-20 -translate-y-[calc(100%+1rem)] sm:right-6 sm:left-6 sm:-translate-y-[calc(100%+1.5rem)]"
-        variant="soft"
+      <div
+        class="bg-elevated/50 absolute top-[50vh] right-4 left-4 z-20 -translate-y-[calc(100%+1rem)] rounded-lg p-4 sm:right-6 sm:left-6 sm:-translate-y-[calc(100%+1.5rem)] sm:p-6"
       >
-        <template #title>
-          <div class="flex items-start gap-2">
-            <span class="break-all">{{ targetProfile.nickname }}</span>
-            <!-- <UButton
+        <div class="mt-4 flex items-start justify-between gap-2">
+          <span class="text-highlighted break-all">{{
+            targetProfile.nickname
+          }}</span>
+          <!-- <UButton
               v-if="!isSelf && Boolean(contactProfileMap[targetId])"
               icon="lucide:user-round-pen"
               label="备注"
               size="xs"
             ></UButton> -->
+          <div class="flex gap-2">
             <UButton
               v-if="
                 !(
@@ -102,41 +103,37 @@
               size="xs"
             />
           </div>
-        </template>
-        <template #description>
-          <div class="flex items-center gap-2">
-            <span>{{ targetProfile.bio }}一条咸鱼</span>
-          </div>
-          <div class="mt-2 space-y-2 space-x-2">
-            <ProfileSpaceTags :target-profile="targetProfile" />
-            <UBadge
-              v-if="isSelf"
-              icon="lucide:circle-plus"
-              label="标签"
-              @click="isTagSlideoverOpen = true"
-            />
-          </div>
-        </template>
-        <template #header>
-          <UAvatar
-            @click="
-              viewerOverlay.open({
-                urls: [
-                  {
-                    url: isSelf
-                      ? avatarURL
-                      : `${VITE_OSS_BASE_URL}avatar/${targetId}`
-                  }
-                ]
-              })
-            "
-            class="ring-default absolute top-0 -translate-y-1/2 cursor-pointer ring-2"
-            :src="isSelf ? avatarURL : `${VITE_OSS_BASE_URL}avatar/${targetId}`"
-            :alt="targetProfile.nickname[0]"
-            size="3xl"
+        </div>
+        <div class="text-highlighted mt-2 text-sm">
+          {{ targetProfile.bio }}
+        </div>
+        <div class="mt-2 flex flex-wrap gap-2">
+          <ProfileSpaceTags :target-profile="targetProfile" />
+          <UBadge
+            v-if="isSelf"
+            icon="lucide:circle-plus"
+            label="标签"
+            @click="isTagSlideoverOpen = true"
           />
-        </template>
-      </UPageCard>
+        </div>
+        <UAvatar
+          @click="
+            viewerOverlay.open({
+              urls: [
+                {
+                  url: isSelf
+                    ? avatarURL
+                    : `${VITE_OSS_BASE_URL}avatar/${targetId}`
+                }
+              ]
+            })
+          "
+          class="ring-default absolute top-0 -translate-y-1/2 cursor-pointer ring-2"
+          :src="isSelf ? avatarURL : `${VITE_OSS_BASE_URL}avatar/${targetId}`"
+          :alt="targetProfile.nickname[0]"
+          size="3xl"
+        />
+      </div>
       <!-- 动态 -->
       <ProfileSpacePosts
         :is-match="isMatch"

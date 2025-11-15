@@ -69,27 +69,6 @@
       >
         <template #body>
           <UPageCard
-            description="选择你的头像"
-            variant="naked"
-            orientation="horizontal"
-            class="mb-4"
-            :ui="{
-              title: 'flex items-center gap-2'
-            }"
-          >
-            <template #title>
-              头像
-              <UButton
-                icon="lucide:dices"
-                variant="ghost"
-                @click="onGenRandomAvatar"
-              />
-            </template>
-          </UPageCard>
-          <div class="flex items-center justify-center">
-            <UAvatar class="size-32" :src="src" />
-          </div>
-          <UPageCard
             :description="
               isRandom
                 ? `该角色来自于「${randomCategory === 'game' ? '游戏' : randomCategory === 'anime' ? '动漫' : '小说'}」-「${randomItem}」`
@@ -118,20 +97,70 @@
             v-model="activeAvatar"
             disabled
           />
-          <UInput v-else class="w-full" v-model="name">
-            <template v-if="name" #trailing>
+          <UInput v-else class="w-full" v-model="activeAvatar" maxlength="16">
+            <template v-if="activeAvatar" #trailing>
               <div class="text-muted text-xs tabular-nums">
-                {{ name.length }}/16
+                {{ activeAvatar.length }}/16
               </div>
               <UButton
                 color="neutral"
                 variant="link"
                 size="sm"
                 icon="lucide:circle-x"
-                @click="name = ''"
+                @click="activeAvatar = ''"
               />
             </template>
           </UInput>
+          <UPageCard
+            title="性别"
+            description="填写性别"
+            variant="naked"
+            orientation="horizontal"
+            class="mb-4"
+            :ui="{
+              container: 'lg:grid-cols-none'
+            }"
+          >
+            <UInput class="w-full" v-model="gender" maxlength="5">
+              <template v-if="gender" #trailing>
+                <div class="text-muted text-xs tabular-nums">
+                  {{ gender.length }}/5
+                </div>
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  size="sm"
+                  icon="lucide:circle-x"
+                  @click="gender = ''"
+                />
+              </template>
+            </UInput>
+          </UPageCard>
+          <UPageCard
+            title="年龄"
+            description="填写年龄"
+            variant="naked"
+            orientation="horizontal"
+            class="mb-4"
+            :ui="{
+              container: 'lg:grid-cols-none'
+            }"
+          >
+            <UInput class="w-full" v-model="age" maxlength="5">
+              <template v-if="age" #trailing>
+                <div class="text-muted text-xs tabular-nums">
+                  {{ age.length }}/5
+                </div>
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  size="sm"
+                  icon="lucide:circle-x"
+                  @click="age = ''"
+                />
+              </template>
+            </UInput>
+          </UPageCard>
           <UPageCard
             title="背景故事"
             description="补充背景故事"
@@ -168,23 +197,24 @@
         <template #footer>
           <UButton
             class="w-full justify-center"
-            :disabled="!activeAvatar && !name"
+            :disabled="!activeAvatar"
             label="确认"
             @click="onUpdateAvatar"
           />
         </template>
       </USlideover>
-      <input
-        @change="onFileChange"
-        ref="avatarRef"
-        hidden
-        type="file"
-        accept="image/png, image/jpeg, image/gif"
-      />
     </template>
     <template #footer>
-      <UButton label="随机角色" @click="onSelectRandomAvatar" />
-      <UButton label="自定义角色" @click="onOpenConfirmSlideover" />
+      <UButton
+        class="flex-1 justify-center"
+        label="随机角色"
+        @click="onSelectRandomAvatar"
+      />
+      <UButton
+        class="flex-1 justify-center"
+        label="自定义角色"
+        @click="isConfirmSlideoverOpen = true"
+      />
     </template>
   </USlideover>
 </template>
@@ -192,16 +222,13 @@
 <script lang="ts" setup>
 import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { ref, useTemplateRef, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { updateProfile } from '@/apis/profile'
-import { useUpdateStaticNameFile } from '@/hooks'
 
 const emit = defineEmits<{ close: [boolean] }>()
 const props = defineProps<{ profileForm: any }>()
-const { isMobile, globalSocket, userInfo, avatarURL } =
-  storeToRefs(useUserStore())
+const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
 const toast = useToast()
-const src = ref(avatarURL.value)
 const isSlideoverOpen = ref(false)
 const isConfirmSlideoverOpen = ref(false)
 const activeTab = ref('game')
@@ -211,8 +238,8 @@ const isRandom = ref(false)
 const randomCategory = ref('')
 const randomItem = ref('')
 const keyword = ref('')
-const avatarRef = useTemplateRef('avatarRef')
-const name = ref('')
+const gender = ref('')
+const age = ref('')
 const bio = ref('')
 const items = [
   {
@@ -1518,7 +1545,6 @@ const avatarMap = {
 }
 
 const onAfterLeave = () => {
-  name.value = ''
   activeAvatar.value = ''
   isRandom.value = false
 }
@@ -1540,102 +1566,11 @@ const onSelectRandomAvatar = () => {
   onSelectAvatar(getRandomAvatar())
 }
 
-const base64ToFile = () => {
-  // 移除 URL 前缀
-  const byteString = atob(src.value.split(',')[1])
-  const { length } = byteString
-  const arrayBuffer = new ArrayBuffer(length)
-  const ia = new Uint8Array(arrayBuffer)
-
-  for (let i = 0; i < length; i++) {
-    ia[i] = byteString.charCodeAt(i)
-  }
-
-  const blob = new Blob([arrayBuffer], { type: 'image/png' })
-  const file = new File([blob], 'avatar.png', { type: blob.type })
-
-  return file
-}
-
-const onGenRandomAvatar = async () => {
-  const { createAvatar } = await import('@dicebear/core')
-  const { toPng } = await import('@dicebear/converter')
-  const {
-    adventurer,
-    adventurerNeutral,
-    avataaars,
-    avataaarsNeutral,
-    bigEars,
-    bigEarsNeutral,
-    bigSmile,
-    bottts,
-    botttsNeutral,
-    croodles,
-    croodlesNeutral,
-    dylan,
-    funEmoji,
-    // glass,
-    // icons,
-    // identicon,
-    // initials,
-    lorelei,
-    loreleiNeutral,
-    micah,
-    miniavs,
-    notionists,
-    notionistsNeutral,
-    openPeeps,
-    personas,
-    pixelArt,
-    pixelArtNeutral,
-    // rings,
-    // shapes,
-    thumbs
-  } = await import('@dicebear/collection')
-  const styles = [
-    adventurer,
-    adventurerNeutral,
-    avataaars,
-    avataaarsNeutral,
-    bigEars,
-    bigEarsNeutral,
-    bigSmile,
-    bottts,
-    botttsNeutral,
-    croodles,
-    croodlesNeutral,
-    dylan,
-    funEmoji,
-    lorelei,
-    loreleiNeutral,
-    micah,
-    thumbs,
-    miniavs,
-    notionists,
-    notionistsNeutral,
-    openPeeps,
-    personas,
-    pixelArt,
-    pixelArtNeutral
-  ]
-  const avatar = createAvatar(
-    styles[Math.floor(Math.random() * styles.length)] as any,
-    {
-      size: 128,
-      seed: String(Math.random())
-    }
-  )
-  const png = toPng(avatar)
-  src.value = await png.toDataUri()
-}
-
-const onFileChange = e =>
-  useUpdateStaticNameFile(e, 'avatar', userInfo, toast, avatarURL)
-
 const onUpdateAvatar = async () => {
   const _bio = bio.value
-  const _activeAvatar = activeAvatar.value
-  const _nickname = _activeAvatar || name.value
+  const _ocGender = gender.value
+  const _age = age.value
+  const _nickname = activeAvatar.value
   const { profile } = userInfo.value
   const { profileForm } = props
 
@@ -1646,11 +1581,10 @@ const onUpdateAvatar = async () => {
     })
     localStorage.setItem('token', token)
     globalSocket.value.emit('refresh-profile', token)
-    profile.nickname = _nickname
-    profileForm.nickname = _nickname
-    profile.bio = _bio
-    profileForm.bio = _bio
-
+    profile.nickname = profileForm.nickname = _nickname
+    profile.bio = profileForm.bio = _bio
+    profile.age = profileForm.age = _age
+    profile.ocGender = profileForm.ocGender = _ocGender
     toast.add({
       title: '修改资料成功',
       icon: 'lucide:smile'
@@ -1665,25 +1599,6 @@ const onUpdateAvatar = async () => {
       icon: 'lucide:annoyed'
     })
   }
-
-  if (src.value.startsWith('data:image/')) {
-    const file = base64ToFile()
-    const dataTransfer = new DataTransfer()
-    dataTransfer.items.add(file)
-    const input = avatarRef.value
-    input.files = dataTransfer.files
-    const event = new Event('change')
-    input.dispatchEvent(event)
-  }
-}
-
-const onOpenConfirmSlideover = () => {
-  isConfirmSlideoverOpen.value = true
-
-  // 如果已经创建了角色，那么不生成头像，让用户手动选择是否替换头像
-  if (!userInfo.value.profile.nickname) {
-    onGenRandomAvatar()
-  }
 }
 
 const onSelectItem = name => {
@@ -1693,7 +1608,7 @@ const onSelectItem = name => {
 
 const onSelectAvatar = name => {
   activeAvatar.value = name
-  onOpenConfirmSlideover()
+  isConfirmSlideoverOpen.value = true
 }
 
 watch(keyword, () => {})
