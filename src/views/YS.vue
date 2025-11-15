@@ -100,6 +100,7 @@
             <div class="flex items-start gap-2">
               <div class="relative min-w-28">
                 <img
+                  loading="lazy"
                   :src="`/images/gi-avatars/${avatar}.png`"
                   class="size-28 rounded-lg"
                 />

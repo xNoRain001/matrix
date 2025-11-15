@@ -26,7 +26,7 @@ const useInitAutoScrollBtn = (
       if (isPlayground) {
         const nav = footerNavs.value[1]
         nav.label = '广场'
-        nav.icon = 'lucide:rose'
+        nav.icon = 'lucide:aperture'
       } else {
         const nav = footerNavs.value[4]
         nav.label = '我的'

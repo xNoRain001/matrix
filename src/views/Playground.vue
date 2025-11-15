@@ -16,7 +16,7 @@
           </div>
         </div>
       </template>
-      <div v-if="postMap[activeTab]?.posts?.length">
+      <div v-if="postMap[activeTab]?.posts?.length >= 0">
         <div
           v-for="(
             {
@@ -63,11 +63,20 @@
             :items="content.images"
             :active-index="0"
           />
-          <div class="flex justify-end gap-2">
+          <div class="flex justify-around gap-2">
+            <UButton
+              variant="ghost"
+              :color="liked ? 'secondary' : 'primary'"
+              icon="lucide:heart"
+              :label="String(likes || '赞')"
+              @click="
+                useLike(toast, postMap[activeTab].posts[index], _id, 'post')
+              "
+            />
             <UButton
               variant="ghost"
               icon="lucide:message-circle"
-              :label="String(commentCount || '')"
+              :label="String(commentCount || '回复')"
               @click="
                 useOpenPostDetailOverlay(
                   postMap,
@@ -79,18 +88,10 @@
               "
             />
             <UButton
-              variant="ghost"
-              :color="liked ? 'secondary' : 'primary'"
-              icon="lucide:heart"
-              :label="String(likes || '')"
-              @click="
-                useLike(toast, postMap[activeTab].posts[index], _id, 'post')
-              "
-            />
-            <UButton
               v-if="isMobile"
               variant="ghost"
               icon="lucide:ellipsis"
+              label="操作"
               @click.stop="onOpenDropdownMenu(user, _id)"
             />
             <UDropdownMenu v-else :items="dropdownMenuItems">
@@ -102,10 +103,10 @@
             </UDropdownMenu>
           </div>
         </div>
-        <USeparator
-          v-if="allPostLoaded"
-          class="p-4 sm:p-6"
-          label="已经到底了"
+        <Separator
+          :label="
+            postMap[activeTab].posts.length === 0 ? '空空如也' : '已经到底了'
+          "
         />
         <Transition
           enter-active-class="animate-[fade-in_200ms_ease-out]"
@@ -125,11 +126,6 @@
           </div>
         </Transition>
       </div>
-      <USeparator
-        v-if="postMap[activeTab]?.posts?.length === 0"
-        class="p-4 sm:p-6"
-        label="空空如也"
-      />
       <!-- </template>
       </UTabs> -->
     </template>

@@ -18,6 +18,7 @@
         @select="onSelect"
       >
         <img
+          loading="lazy"
           @click="
             !viewer && viewerOverlay.open({ urls: items, activeIndex: index })
           "
@@ -50,6 +51,7 @@
           @click="select(index)"
         >
           <img
+            loading="lazy"
             :src="
               item.url.startsWith('blob:') || item.url.startsWith('https://')
                 ? item.url
@@ -62,6 +64,7 @@
     </template>
     <img
       v-else
+      loading="lazy"
       @click="!viewer && viewerOverlay.open({ urls: items, activeIndex: 0 })"
       :src="
         items[0].url.startsWith('blob:') || items[0].url.startsWith('https://')

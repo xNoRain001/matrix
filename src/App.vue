@@ -236,7 +236,7 @@ const navs = [
     },
     {
       label: '广场',
-      icon: 'lucide:rose',
+      icon: 'lucide:aperture',
       to: '/playground'
     },
     {

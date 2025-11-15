@@ -106,6 +106,7 @@
                   class="text-muted bg-elevated flex size-10 items-center justify-center rounded-full text-xl font-medium"
                 >
                   <img
+                    loading="lazy"
                     class="size-full rounded-full object-cover"
                     :src="`${VITE_OSS_BASE_URL}avatar/${owner}`"
                     :alt="profile.nickname[0]"
@@ -147,6 +148,7 @@
                     才会携带上 Origin 字段  
                   -->
                   <img
+                    loading="lazy"
                     crossorigin="anonymous"
                     class="size-11 rounded-lg"
                     v-for="image in content.images"
@@ -264,6 +266,7 @@
                             class="text-muted bg-elevated size-5 rounded-full text-center text-xs font-medium"
                           >
                             <img
+                              loading="lazy"
                               class="size-full rounded-full object-cover"
                               :src="`${VITE_OSS_BASE_URL}avatar/${user}`"
                               :alt="profile.nickname[0]"
@@ -311,6 +314,7 @@
                             class="flex"
                           >
                             <img
+                              loading="lazy"
                               crossorigin="anonymous"
                               class="size-11 rounded-lg"
                               @click="
@@ -439,16 +443,10 @@
               </template>
             </UUser>
           </div>
-          <USeparator
-            v-if="allCommentsLoaded"
-            class="p-4 sm:p-6"
-            label="已经到底了"
-          />
         </div>
-        <USeparator
-          v-if="!loadingComments && !postMap[targetId].comments"
-          class="p-4 sm:p-6"
-          label="空空如也"
+        <Separator
+          v-if="allCommentsLoaded"
+          :label="!postMap[targetId].comments ? '空空如也' : '已经到底了'"
         />
       </div>
       <div v-else>
@@ -488,27 +486,22 @@
               </template>
             </UUser>
           </div>
-          <USeparator
-            v-if="allLikesLoaded"
-            class="p-4 sm:p-6"
-            label="已经到底了"
-          />
-          <div v-else class="mt-4 flex justify-center sm:mt-6">
-            <UButton
-              @click="onLoadLikes"
-              label="—— 加载更多"
-              color="neutral"
-              variant="ghost"
-              trailing-icon="i-lucide-chevron-down"
-            />
-          </div>
         </div>
-        <USeparator
-          v-if="!loadingLikes && likes.length === 0"
-          class="p-4 sm:p-6"
-          label="空空如也"
+        <Separator
+          v-if="allLikesLoaded"
+          :label="likes.length === 0 ? '空空如也' : '已经到底了'"
         />
+        <div v-else class="mt-4 flex justify-center sm:mt-6">
+          <UButton
+            @click="onLoadLikes"
+            label="—— 加载更多"
+            color="neutral"
+            variant="ghost"
+            trailing-icon="i-lucide-chevron-down"
+          />
+        </div>
       </div>
+
       <UDrawer
         v-model:open="isEditMenuDrawerOpen"
         :handle="false"

@@ -93,7 +93,7 @@ const initAutoScrollBtn = () => {
 watch(activeTab, (_, oldValue) => {
   if (oldValue === '/playground') {
     footerNavs.value[1].label = '广场'
-    footerNavs.value[1].icon = 'lucide:rose'
+    footerNavs.value[1].icon = 'lucide:aperture'
   } else if (oldValue === '/profile') {
     footerNavs.value[4].label = '我的'
     footerNavs.value[4].icon = 'lucide:user-round-cog'
