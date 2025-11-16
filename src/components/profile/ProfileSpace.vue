@@ -18,6 +18,8 @@
         :target-id="targetId"
         :target-profile="targetProfile"
       />
+      <!-- 日历热力图 -->
+      <ProfileSpaceCalHeatMap />
       <!-- 动态 -->
       <ProfileSpacePosts
         :is-match="isMatch"

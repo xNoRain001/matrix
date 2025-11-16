@@ -9,7 +9,7 @@
     }"
   >
     <template #body>
-      <div ref="contentRef" class="space-y-2 p-4 sm:p-6">
+      <div ref="contentRef" class="bg-elevated/50 space-y-2 p-4 sm:p-6">
         <p class="text-highlighted break-all whitespace-pre-wrap">
           {{ postMap[targetId].activePost.content.text }}
         </p>

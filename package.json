@@ -24,6 +24,7 @@
     "@vueuse/components": "^13.6.0",
     "@vueuse/core": "^13.6.0",
     "axios": "^1.11.0",
+    "cal-heatmap": "^4.2.4",
     "idb": "^8.0.3",
     "nsfwjs": "^4.2.1",
     "pinia": "^3.0.3",
