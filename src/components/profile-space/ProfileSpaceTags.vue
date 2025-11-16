@@ -1,7 +1,17 @@
 <template>
   <UBadge
-    v-if="targetProfile.ocGender || targetProfile.age"
-    :label="`${targetProfile.ocGender}${targetProfile.age ? `${targetProfile.ocGender ? ' · ' : ''}${targetProfile.age} 岁` : ''}`"
+    v-if="targetProfile.ocGender || targetProfile.ocAge"
+    :label="`${targetProfile.ocGender}${targetProfile.ocAge ? `${targetProfile.ocGender ? ' · ' : ''}${targetProfile.ocAge} 岁` : ''}`"
+    color="secondary"
+  />
+  <UBadge
+    v-if="targetProfile.ocHeight || targetProfile.ocWeight"
+    :label="`${targetProfile.ocHeight}${targetProfile.ocWeight ? `${targetProfile.ocHeight ? ' · ' : ''}${targetProfile.ocWeight}` : ''}`"
+    color="secondary"
+  />
+  <UBadge
+    v-if="targetProfile.ocMBTI"
+    :label="targetProfile.ocMBTI"
     color="secondary"
   />
   <UBadge
@@ -10,13 +20,13 @@
     color="warning"
   />
   <UBadge
-    v-if="targetProfile.province"
-    :label="`${targetProfile.province}${targetProfile.city ? ` · ${targetProfile.city}` : ''}`"
+    v-if="targetProfile.height || targetProfile.weight"
+    :label="`${targetProfile.height}${targetProfile.weight ? `${targetProfile.height ? ' · ' : ''}${targetProfile.weight}` : ''}`"
     color="warning"
   />
   <UBadge
-    v-if="targetProfile.college"
-    :label="targetProfile.college"
+    v-if="targetProfile.mbti"
+    :label="targetProfile.mbti"
     color="warning"
   />
   <UBadge
@@ -25,8 +35,13 @@
     color="warning"
   />
   <UBadge
-    v-if="targetProfile.mbti"
-    :label="targetProfile.mbti"
+    v-if="targetProfile.college"
+    :label="targetProfile.college"
+    color="warning"
+  />
+  <UBadge
+    v-if="targetProfile.province"
+    :label="`${targetProfile.province}${targetProfile.city ? ` · ${targetProfile.city}` : ''}`"
     color="warning"
   />
   <UBadge

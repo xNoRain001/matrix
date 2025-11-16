@@ -14,6 +14,25 @@ export const hour = 60 * minute
 export const day = 24 * hour
 export const week = 7 * day
 
+export const mbtiItems = [
+  'ISTJ',
+  'ISFJ',
+  'INFJ',
+  'INTJ',
+  'ISTP',
+  'ISFP',
+  'INFP',
+  'INTP',
+  'ESTP',
+  'ESFP',
+  'ENFP',
+  'ENTP',
+  'ESTJ',
+  'ESFJ',
+  'ENFJ',
+  'ENTJ'
+]
+
 const radius = localStorage.getItem('nuxt-ui-radius')
 export const appConfig = {
   theme: {

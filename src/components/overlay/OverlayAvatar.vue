@@ -97,17 +97,17 @@
             v-model="activeAvatar"
             disabled
           />
-          <UInput v-else class="w-full" v-model="activeAvatar" maxlength="16">
-            <template v-if="activeAvatar" #trailing>
+          <UInput v-else class="w-full" v-model="ocName" maxlength="16">
+            <template v-if="ocName" #trailing>
               <div class="text-muted text-xs tabular-nums">
-                {{ activeAvatar.length }}/16
+                {{ ocName.length }}/16
               </div>
               <UButton
                 color="neutral"
                 variant="link"
                 size="sm"
                 icon="lucide:circle-x"
-                @click="activeAvatar = ''"
+                @click="ocName = ''"
               />
             </template>
           </UInput>
@@ -121,17 +121,17 @@
               container: 'lg:grid-cols-none'
             }"
           >
-            <UInput class="w-full" v-model="gender" maxlength="5">
-              <template v-if="gender" #trailing>
+            <UInput class="w-full" v-model="ocGender" maxlength="5">
+              <template v-if="ocGender" #trailing>
                 <div class="text-muted text-xs tabular-nums">
-                  {{ gender.length }}/5
+                  {{ ocGender.length }}/5
                 </div>
                 <UButton
                   color="neutral"
                   variant="link"
                   size="sm"
                   icon="lucide:circle-x"
-                  @click="gender = ''"
+                  @click="ocGender = ''"
                 />
               </template>
             </UInput>
@@ -146,20 +146,82 @@
               container: 'lg:grid-cols-none'
             }"
           >
-            <UInput class="w-full" v-model="age" maxlength="5">
-              <template v-if="age" #trailing>
+            <UInput class="w-full" v-model="ocAge" maxlength="5">
+              <template v-if="ocAge" #trailing>
                 <div class="text-muted text-xs tabular-nums">
-                  {{ age.length }}/5
+                  {{ ocAge.length }}/5
                 </div>
                 <UButton
                   color="neutral"
                   variant="link"
                   size="sm"
                   icon="lucide:circle-x"
-                  @click="age = ''"
+                  @click="ocAge = ''"
                 />
               </template>
             </UInput>
+          </UPageCard>
+          <UPageCard
+            title="身高"
+            description="填写身高"
+            variant="naked"
+            orientation="horizontal"
+            class="mb-4"
+            :ui="{
+              container: 'lg:grid-cols-none'
+            }"
+          >
+            <UInput class="w-full" v-model="ocHeight" maxlength="5">
+              <template v-if="ocHeight" #trailing>
+                <div class="text-muted text-xs tabular-nums">
+                  {{ ocHeight.length }}/5
+                </div>
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  size="sm"
+                  icon="lucide:circle-x"
+                  @click="ocHeight = ''"
+                />
+              </template>
+            </UInput>
+          </UPageCard>
+          <UPageCard
+            title="体重"
+            description="填写体重"
+            variant="naked"
+            orientation="horizontal"
+            class="mb-4"
+            :ui="{
+              container: 'lg:grid-cols-none'
+            }"
+          >
+            <UInput class="w-full" v-model="ocWeight" maxlength="5">
+              <template v-if="ocWeight" #trailing>
+                <div class="text-muted text-xs tabular-nums">
+                  {{ ocWeight.length }}/5
+                </div>
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  size="sm"
+                  icon="lucide:circle-x"
+                  @click="ocWeight = ''"
+                />
+              </template>
+            </UInput>
+          </UPageCard>
+          <UPageCard
+            title="MBTI"
+            description="填写 MBTI"
+            variant="naked"
+            orientation="horizontal"
+            class="mb-4"
+            :ui="{
+              container: 'lg:grid-cols-none'
+            }"
+          >
+            <USelect class="w-full" v-model="ocMBTI" :items="mbtiItems" />
           </UPageCard>
           <UPageCard
             title="背景故事"
@@ -197,7 +259,7 @@
         <template #footer>
           <UButton
             class="w-full justify-center"
-            :disabled="!activeAvatar"
+            :disabled="!activeAvatar && !ocName"
             label="确认"
             @click="onUpdateAvatar"
           />
@@ -224,6 +286,7 @@ import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
 import { updateProfile } from '@/apis/profile'
+import { mbtiItems } from '@/const'
 
 const emit = defineEmits<{ close: [boolean] }>()
 const props = defineProps<{ profileForm: any }>()
@@ -238,8 +301,12 @@ const isRandom = ref(false)
 const randomCategory = ref('')
 const randomItem = ref('')
 const keyword = ref('')
-const gender = ref('')
-const age = ref('')
+const ocName = ref('')
+const ocGender = ref('')
+const ocAge = ref('')
+const ocHeight = ref('')
+const ocWeight = ref('')
+const ocMBTI = ref('')
 const bio = ref('')
 const items = [
   {
@@ -1567,24 +1634,36 @@ const onSelectRandomAvatar = () => {
 }
 
 const onUpdateAvatar = async () => {
+  const _nickname = activeAvatar.value || ocName.value
+  const _ocGender = ocGender.value
+  const _ocAge = ocAge.value
+  const _ocHeight = ocHeight.value
+  const _ocWeight = ocWeight.value
+  const _ocMBTI = ocMBTI.value as any
   const _bio = bio.value
-  const _ocGender = gender.value
-  const _age = age.value
-  const _nickname = activeAvatar.value
   const { profile } = userInfo.value
   const { profileForm } = props
 
   try {
+    // 不需要 diff，因为需要完全覆盖之前的角色
     const { data: token } = await updateProfile({
       nickname: _nickname,
+      ocGender: _ocGender,
+      ocAge: _ocAge,
+      ocHeight: _ocHeight,
+      ocWeight: _ocWeight,
+      ocMBTI: _ocMBTI,
       bio: _bio
     })
     localStorage.setItem('token', token)
     globalSocket.value.emit('refresh-profile', token)
     profile.nickname = profileForm.nickname = _nickname
-    profile.bio = profileForm.bio = _bio
-    profile.age = profileForm.age = _age
     profile.ocGender = profileForm.ocGender = _ocGender
+    profile.ocAge = profileForm.ocAge = _ocAge
+    profile.ocHeight = profileForm.ocHeight = _ocHeight
+    profile.ocWeight = profileForm.ocWeight = _ocWeight
+    profile.ocMBTI = profileForm.ocMBTI = _ocMBTI
+    profile.bio = profileForm.bio = _bio
     toast.add({
       title: '修改资料成功',
       icon: 'lucide:smile'

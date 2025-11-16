@@ -36,19 +36,6 @@
         </template>
       </UInput>
       <UPageCard
-        title="MBTI"
-        description="选择你的 MBTI"
-        variant="naked"
-        orientation="horizontal"
-        :class="isMobile ? '' : 'mb-4'"
-      />
-      <USelect
-        v-model="mbti"
-        :items="mbtiItems"
-        class="w-full"
-        placeholder="选择你的 MBTI"
-      />
-      <UPageCard
         :title="`我的标签（${tags.length} / 10）`"
         description="通过拖拽修改标签位置"
         variant="naked"
@@ -114,25 +101,6 @@ const toast = useToast()
 const tag = ref('')
 const tags = ref([...props.targetProfile.tags])
 const tagsSet = ref(new Set([...props.targetProfile.tags]))
-const mbti = ref(props.targetProfile.mbti)
-const mbtiItems = [
-  'ISTJ',
-  'ISFJ',
-  'INFJ',
-  'INTJ',
-  'ISTP',
-  'ISFP',
-  'INFP',
-  'INTP',
-  'ESTP',
-  'ESFP',
-  'ENFP',
-  'ENTP',
-  'ESTJ',
-  'ESFJ',
-  'ENFJ',
-  'ENTJ'
-]
 const tagRef = useTemplateRef('tagRef')
 const activeTab = ref('self')
 const items = [
@@ -247,15 +215,13 @@ const categoryMap = {
 }
 
 const onUpdateTag = async () => {
-  const _mbti = mbti.value
   const _tags = JSON.parse(JSON.stringify(tags.value))
   const stringifyTags = _tags.join('__separator__')
   const { profile } = userInfo.value
-  const { mbti: __mbti, tags: __tags } = profile
-  const sameMBTI = _mbti === __mbti
+  const { tags: __tags } = profile
   const sameTags = stringifyTags === __tags.join('__separator__')
 
-  if (sameMBTI && sameTags) {
+  if (sameTags) {
     toast.add({
       title: '修改资料成功',
       icon: 'lucide:smile'
@@ -265,7 +231,6 @@ const onUpdateTag = async () => {
   }
 
   const payload = {
-    ...(!sameMBTI && { mbti: _mbti }),
     // 值为 __separator__ 表示清空所有标签
     ...(!sameTags && { tags: stringifyTags || '__separator__' })
   }
@@ -274,7 +239,6 @@ const onUpdateTag = async () => {
     const { data: token } = await updateProfile(payload)
     localStorage.setItem('token', token)
     globalSocket.value.emit('refresh-profile', token)
-    profile.mbti = _mbti
     profile.tags = _tags
     toast.add({
       title: '修改资料成功',

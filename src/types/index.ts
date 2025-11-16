@@ -8,6 +8,24 @@ declare module 'axios' {
   interface AxiosResponse<T = any> extends BaseResponse<T> {}
 }
 
+type mbti =
+  | 'ISTJ'
+  | 'ISFJ'
+  | 'INFJ'
+  | 'INTJ'
+  | 'ISTP'
+  | 'ISFP'
+  | 'INFP'
+  | 'INTP'
+  | 'ESTP'
+  | 'ESFP'
+  | 'ENFP'
+  | 'ENTP'
+  | 'ESTJ'
+  | 'ESFJ'
+  | 'ENFJ'
+  | 'ENTJ'
+
 export type userInfo = {
   id: string
   email: string
@@ -15,32 +33,22 @@ export type userInfo = {
   profile: {
     nickname: string
     ocGender: string
-    age: string
+    ocAge: string
+    ocHeight: string
+    ocWeight: string
+    ocMBTI: mbti
+    ocTags: string[]
+    bio: string
     gender: 'male' | 'female' | 'other'
     birthday: string
+    height: string
+    weight: string
+    mbti: mbti
+    tags: string[]
+    college: string
     province: string
     city: string
-    bio: string
-    college: string
     role: 'standard'
-    mbti:
-      | 'ISTJ'
-      | 'ISFJ'
-      | 'INFJ'
-      | 'INTJ'
-      | 'ISTP'
-      | 'ISFP'
-      | 'INFP'
-      | 'INTP'
-      | 'ESTP'
-      | 'ESFP'
-      | 'ENFP'
-      | 'ENTP'
-      | 'ESTJ'
-      | 'ESFJ'
-      | 'ENFJ'
-      | 'ENTJ'
-    tags: string[]
     createdAt: number
     onlineStatus?: {
       isOnline: boolean

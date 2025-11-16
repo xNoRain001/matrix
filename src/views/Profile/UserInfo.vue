@@ -50,7 +50,7 @@
             <UIcon name="lucide:chevron-right" class="text-dimmed size-5" />
           </UFormField>
           <UFormField
-            v-for="{ label, click, key } in profileItems.slice(0, 4)"
+            v-for="{ label, click, key } in profileItems.slice(0, 7)"
             :key="key"
             :label="label"
             class="flex items-center gap-2 not-last:pb-4"
@@ -76,7 +76,7 @@
           :ui="{ container: 'divide-y divide-default' }"
         >
           <UFormField
-            v-for="{ label, click, key } in profileItems.slice(4)"
+            v-for="{ label, click, key } in profileItems.slice(7)"
             :key="key"
             :label="label"
             class="flex items-center gap-2 not-last:pb-4"
@@ -114,7 +114,7 @@
     </USlideover>
 
     <UDrawer
-      v-model:open="isOpenNicknameDrawer"
+      v-model:open="isNicknameDrawerOpen"
       description=" "
       :ui="{
         title: 'justify-between flex items-center',
@@ -148,7 +148,7 @@
     </UDrawer>
 
     <UDrawer
-      v-model:open="isOpenGenderDrawer"
+      v-model:open="isGenderDrawerOpen"
       title="修改性别"
       description=" "
       :ui="{
@@ -165,7 +165,7 @@
     </UDrawer>
 
     <UDrawer
-      v-model:open="isOpenBirthdayDrawer"
+      v-model:open="isBirthdayDrawerOpen"
       title="修改生日"
       description=" "
       :ui="{
@@ -178,7 +178,7 @@
     </UDrawer>
 
     <UDrawer
-      v-model:open="isOpenCollegeDrawer"
+      v-model:open="isCollegeDrawerOpen"
       title="修改学校"
       description=" "
       :ui="{
@@ -196,7 +196,7 @@
     </UDrawer>
 
     <UDrawer
-      v-model:open="isOpenRegionDrawer"
+      v-model:open="isRegionDrawerOpen"
       title="修改地区"
       description=" "
       :ui="{
@@ -221,7 +221,7 @@
     </UDrawer>
 
     <UDrawer
-      v-model:open="isOpenBioDrawer"
+      v-model:open="isBioDrawerOpen"
       title="修改角色背景故事"
       description=" "
       :ui="{
@@ -254,7 +254,7 @@
     </UDrawer>
 
     <UDrawer
-      v-model:open="isOpenOCGenderDrawer"
+      v-model:open="isOCGenderDrawerOpen"
       title="修改角色性别"
       description=" "
       :ui="{
@@ -280,7 +280,7 @@
     </UDrawer>
 
     <UDrawer
-      v-model:open="isOpenAgeDrawer"
+      v-model:open="isOCAgeDrawerOpen"
       title="修改角色年龄"
       description=" "
       :ui="{
@@ -288,20 +288,154 @@
       }"
     >
       <template #body>
-        <UInput class="w-full" v-model="profileForm.age" maxlength="5">
-          <template v-if="profileForm.age" #trailing>
+        <UInput class="w-full" v-model="profileForm.ocAge" maxlength="5">
+          <template v-if="profileForm.ocAge" #trailing>
             <div class="text-muted text-xs tabular-nums">
-              {{ profileForm.age.length }}/5
+              {{ profileForm.ocAge.length }}/5
             </div>
             <UButton
               color="neutral"
               variant="link"
               size="sm"
               icon="lucide:circle-x"
-              @click="profileForm.age = ''"
+              @click="profileForm.ocAge = ''"
             />
           </template>
         </UInput>
+      </template>
+    </UDrawer>
+
+    <UDrawer
+      v-model:open="isOCHeightDrawerOpen"
+      title="修改角色身高"
+      description=" "
+      :ui="{
+        description: 'hidden'
+      }"
+    >
+      <template #body>
+        <UInput class="w-full" v-model="profileForm.ocHeight" maxlength="5">
+          <template v-if="profileForm.ocHeight" #trailing>
+            <div class="text-muted text-xs tabular-nums">
+              {{ profileForm.ocHeight.length }}/5
+            </div>
+            <UButton
+              color="neutral"
+              variant="link"
+              size="sm"
+              icon="lucide:circle-x"
+              @click="profileForm.ocHeight = ''"
+            />
+          </template>
+        </UInput>
+      </template>
+    </UDrawer>
+
+    <UDrawer
+      v-model:open="isOCWeightDrawerOpen"
+      title="修改角色体重"
+      description=" "
+      :ui="{
+        description: 'hidden'
+      }"
+    >
+      <template #body>
+        <UInput class="w-full" v-model="profileForm.ocWeight" maxlength="5">
+          <template v-if="profileForm.ocWeight" #trailing>
+            <div class="text-muted text-xs tabular-nums">
+              {{ profileForm.ocWeight.length }}/5
+            </div>
+            <UButton
+              color="neutral"
+              variant="link"
+              size="sm"
+              icon="lucide:circle-x"
+              @click="profileForm.ocWeight = ''"
+            />
+          </template>
+        </UInput>
+      </template>
+    </UDrawer>
+
+    <UDrawer
+      v-model:open="isHeightDrawerOpen"
+      title="修改身高"
+      description=" "
+      :ui="{
+        description: 'hidden'
+      }"
+    >
+      <template #body>
+        <UInput class="w-full" v-model="profileForm.height" maxlength="5">
+          <template v-if="profileForm.height" #trailing>
+            <div class="text-muted text-xs tabular-nums">
+              {{ profileForm.height.length }}/5
+            </div>
+            <UButton
+              color="neutral"
+              variant="link"
+              size="sm"
+              icon="lucide:circle-x"
+              @click="profileForm.height = ''"
+            />
+          </template>
+        </UInput>
+      </template>
+    </UDrawer>
+
+    <UDrawer
+      v-model:open="isWeightDrawerOpen"
+      title="修改体重"
+      description=" "
+      :ui="{
+        description: 'hidden'
+      }"
+    >
+      <template #body>
+        <UInput class="w-full" v-model="profileForm.weight" maxlength="5">
+          <template v-if="profileForm.weight" #trailing>
+            <div class="text-muted text-xs tabular-nums">
+              {{ profileForm.weight.length }}/5
+            </div>
+            <UButton
+              color="neutral"
+              variant="link"
+              size="sm"
+              icon="lucide:circle-x"
+              @click="profileForm.weight = ''"
+            />
+          </template>
+        </UInput>
+      </template>
+    </UDrawer>
+
+    <UDrawer
+      v-model:open="isOCMBTIDrawerOpen"
+      title="修改 MBTI"
+      description=" "
+      :ui="{
+        description: 'hidden'
+      }"
+    >
+      <template #body>
+        <USelect
+          class="w-full"
+          v-model="profileForm.ocMBTI"
+          :items="mbtiItems"
+        />
+      </template>
+    </UDrawer>
+
+    <UDrawer
+      v-model:open="isMBTIDrawerOpen"
+      title="修改 MBTI"
+      description=" "
+      :ui="{
+        description: 'hidden'
+      }"
+    >
+      <template #body>
+        <USelect class="w-full" v-model="profileForm.mbti" :items="mbtiItems" />
       </template>
     </UDrawer>
   </template>
@@ -344,7 +478,6 @@
       </UPageCard>
       <UPageCard variant="subtle">
         <UFormField
-          name="avatar"
           label="头像"
           description="修改头像，图片最大尺寸为 10 MB"
           class="flex items-start justify-between gap-4"
@@ -362,7 +495,6 @@
         </UFormField>
         <USeparator />
         <UFormField
-          name="name"
           label="角色"
           description="选择你的角色"
           class="flex items-start justify-between gap-4"
@@ -391,7 +523,6 @@
         </UFormField>
         <USeparator />
         <UFormField
-          name="name"
           label="性别"
           description="选择你的性别"
           class="flex items-start justify-between gap-4"
@@ -414,30 +545,85 @@
         </UFormField>
         <USeparator />
         <UFormField
-          name="name"
           label="年龄"
           description="选择你的年龄"
           class="flex items-start justify-between gap-4"
           :ui="{ container: 'w-3/5' }"
         >
-          <UInput class="w-full" v-model="profileForm.age">
-            <template v-if="profileForm.age" #trailing>
+          <UInput class="w-full" v-model="profileForm.ocAge">
+            <template v-if="profileForm.ocAge" #trailing>
               <div class="text-muted text-xs tabular-nums">
-                {{ profileForm.age.length }}/5
+                {{ profileForm.ocAge.length }}/5
               </div>
               <UButton
                 color="neutral"
                 variant="link"
                 size="sm"
                 icon="lucide:circle-x"
-                @click="profileForm.age = ''"
+                @click="profileForm.ocAge = ''"
               />
             </template>
           </UInput>
         </UFormField>
         <USeparator />
         <UFormField
-          name="bio"
+          label="身高"
+          description="选择你的身高"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
+        >
+          <UInput class="w-full" v-model="profileForm.ocHeight">
+            <template v-if="profileForm.ocHeight" #trailing>
+              <div class="text-muted text-xs tabular-nums">
+                {{ profileForm.ocHeight.length }}/5
+              </div>
+              <UButton
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="lucide:circle-x"
+                @click="profileForm.ocHeight = ''"
+              />
+            </template>
+          </UInput>
+        </UFormField>
+        <USeparator />
+        <UFormField
+          label="体重"
+          description="选择你的体重"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
+        >
+          <UInput class="w-full" v-model="profileForm.ocWeight">
+            <template v-if="profileForm.ocWeight" #trailing>
+              <div class="text-muted text-xs tabular-nums">
+                {{ profileForm.ocWeight.length }}/5
+              </div>
+              <UButton
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="lucide:circle-x"
+                @click="profileForm.ocWeight = ''"
+              />
+            </template>
+          </UInput>
+        </UFormField>
+        <USeparator />
+        <UFormField
+          label="MBTI"
+          description="选择你的 MBTI"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
+        >
+          <USelect
+            class="w-full"
+            v-model="profileForm.ocMBTI"
+            :items="mbtiItems"
+          />
+        </UFormField>
+        <USeparator />
+        <UFormField
           label="背景故事"
           description="修改背景故事"
           class="flex items-start justify-between gap-4"
@@ -486,7 +672,6 @@
       </UPageCard>
       <UPageCard variant="subtle">
         <UFormField
-          name="email"
           label="性别"
           description="填写你的性别"
           class="flex items-start justify-between gap-4"
@@ -500,7 +685,6 @@
         </UFormField>
         <USeparator />
         <UFormField
-          name="username"
           label="生日"
           description="填写你的生日"
           class="flex items-start justify-between gap-4"
@@ -510,7 +694,63 @@
         </UFormField>
         <USeparator />
         <UFormField
-          name="college"
+          label="身高"
+          description="填写你的身高"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
+        >
+          <UInput class="w-full" v-model="profileForm.height">
+            <template v-if="profileForm.height" #trailing>
+              <div class="text-muted text-xs tabular-nums">
+                {{ profileForm.height.length }}/5
+              </div>
+              <UButton
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="lucide:circle-x"
+                @click="profileForm.height = ''"
+              />
+            </template>
+          </UInput>
+        </UFormField>
+        <USeparator />
+        <UFormField
+          label="体重"
+          description="填写你的体重"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
+        >
+          <UInput class="w-full" v-model="profileForm.weight">
+            <template v-if="profileForm.weight" #trailing>
+              <div class="text-muted text-xs tabular-nums">
+                {{ profileForm.weight.length }}/5
+              </div>
+              <UButton
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="lucide:circle-x"
+                @click="profileForm.weight = ''"
+              />
+            </template>
+          </UInput>
+        </UFormField>
+        <USeparator />
+        <UFormField
+          label="MBTI"
+          description="选择你的 MBTI"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
+        >
+          <USelect
+            class="w-full"
+            v-model="profileForm.mbti"
+            :items="mbtiItems"
+          />
+        </UFormField>
+        <USeparator />
+        <UFormField
           label="大学"
           description="填写你的大学"
           class="flex items-start justify-between gap-4"
@@ -525,7 +765,6 @@
         </UFormField>
         <USeparator />
         <UFormField
-          name="username"
           label="地区"
           description="填写你的地区"
           class="flex items-start justify-between gap-4"
@@ -553,7 +792,7 @@
 
 <script lang="ts" setup>
 import { updateProfile } from '@/apis/profile'
-import { colleges, provinceCityMap } from '@/const'
+import { colleges, mbtiItems, provinceCityMap } from '@/const'
 import { useTransformGender } from '@/hooks'
 import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
@@ -564,14 +803,20 @@ import OverlayAvatar from '@/components/overlay/OverlayAvatar.vue'
 
 const isUserInfoSlideoverOpen = defineModel<boolean>({ required: false })
 const toast = useToast()
-const isOpenNicknameDrawer = ref(false)
-const isOpenGenderDrawer = ref(false)
-const isOpenBirthdayDrawer = ref(false)
-const isOpenRegionDrawer = ref(false)
-const isOpenCollegeDrawer = ref(false)
-const isOpenBioDrawer = ref(false)
-const isOpenOCGenderDrawer = ref(false)
-const isOpenAgeDrawer = ref(false)
+const isNicknameDrawerOpen = ref(false)
+const isGenderDrawerOpen = ref(false)
+const isBirthdayDrawerOpen = ref(false)
+const isRegionDrawerOpen = ref(false)
+const isCollegeDrawerOpen = ref(false)
+const isHeightDrawerOpen = ref(false)
+const isWeightDrawerOpen = ref(false)
+const isMBTIDrawerOpen = ref(false)
+const isBioDrawerOpen = ref(false)
+const isOCGenderDrawerOpen = ref(false)
+const isOCAgeDrawerOpen = ref(false)
+const isOCHeightDrawerOpen = ref(false)
+const isOCWeightDrawerOpen = ref(false)
+const isOCMBTIDrawerOpen = ref(false)
 const isAvatarSlideoverOpen = ref(false)
 const { isMobile, userInfo, avatarURL, globalSocket } =
   storeToRefs(useUserStore())
@@ -597,42 +842,72 @@ const profileItems = [
   {
     label: '角色',
     key: 'nickname',
-    click: () => (isOpenNicknameDrawer.value = true)
+    click: () => (isNicknameDrawerOpen.value = true)
   },
   {
     label: '性别',
     key: 'ocGender',
-    click: () => (isOpenOCGenderDrawer.value = true)
+    click: () => (isOCGenderDrawerOpen.value = true)
   },
   {
     label: '年龄',
-    key: 'age',
-    click: () => (isOpenAgeDrawer.value = true)
+    key: 'ocAge',
+    click: () => (isOCAgeDrawerOpen.value = true)
+  },
+  {
+    label: '身高',
+    key: 'ocHeight',
+    click: () => (isOCHeightDrawerOpen.value = true)
+  },
+  {
+    label: '体重',
+    key: 'ocWeight',
+    click: () => (isOCWeightDrawerOpen.value = true)
+  },
+  {
+    label: 'MBTI',
+    key: 'ocMBTI',
+    click: () => (isOCMBTIDrawerOpen.value = true)
   },
   {
     label: '背景故事',
     key: 'bio',
-    click: () => (isOpenBioDrawer.value = true)
+    click: () => (isBioDrawerOpen.value = true)
   },
   {
     label: '性别',
     key: 'gender',
-    click: () => (isOpenGenderDrawer.value = true)
+    click: () => (isGenderDrawerOpen.value = true)
   },
   {
     label: '生日',
     key: 'birthday',
-    click: () => (isOpenBirthdayDrawer.value = true)
+    click: () => (isBirthdayDrawerOpen.value = true)
+  },
+  {
+    label: '身高',
+    key: 'height',
+    click: () => (isHeightDrawerOpen.value = true)
+  },
+  {
+    label: '体重',
+    key: 'weight',
+    click: () => (isWeightDrawerOpen.value = true)
+  },
+  {
+    label: 'MBTI',
+    key: 'mbti',
+    click: () => (isMBTIDrawerOpen.value = true)
   },
   {
     label: '大学',
     key: 'college',
-    click: () => (isOpenCollegeDrawer.value = true)
+    click: () => (isCollegeDrawerOpen.value = true)
   },
   {
     label: '地区',
     key: 'region',
-    click: () => (isOpenRegionDrawer.value = true)
+    click: () => (isRegionDrawerOpen.value = true)
   }
 ]
 const date = shallowRef(
