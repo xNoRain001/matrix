@@ -51,10 +51,28 @@
               })
             "
             :ui="{
+              wrapper: 'flex-1 min-w-0',
               avatar: 'group-hover/user:scale-100',
-              name: 'break-all'
+              name: 'flex justify-between items-center gap-2'
             }"
-          />
+          >
+            <template #name>
+              <span class="truncate">{{ profile.nickname }}</span>
+              <UButton
+                v-if="isMobile"
+                variant="ghost"
+                icon="lucide:ellipsis"
+                @click.stop="onOpenDropdownMenu(user, _id)"
+              />
+              <UDropdownMenu v-else :items="dropdownMenuItems">
+                <UButton
+                  variant="ghost"
+                  icon="lucide:ellipsis"
+                  @click.stop="onOpenDropdownMenu(user, _id)"
+                />
+              </UDropdownMenu>
+            </template>
+          </UUser>
           <div v-if="content.text" class="break-all whitespace-pre-wrap">
             {{ content.text }}
           </div>
@@ -68,7 +86,7 @@
               variant="ghost"
               :color="liked ? 'secondary' : 'primary'"
               icon="lucide:heart"
-              :label="String(likes || '赞')"
+              :label="String(likes || '点赞')"
               @click="
                 useLike(toast, postMap[activeTab].posts[index], _id, 'post')
               "
@@ -87,20 +105,7 @@
                 )
               "
             />
-            <UButton
-              v-if="isMobile"
-              variant="ghost"
-              icon="lucide:ellipsis"
-              label="操作"
-              @click.stop="onOpenDropdownMenu(user, _id)"
-            />
-            <UDropdownMenu v-else :items="dropdownMenuItems">
-              <UButton
-                variant="ghost"
-                icon="lucide:ellipsis"
-                @click.stop="onOpenDropdownMenu(user, _id)"
-              />
-            </UDropdownMenu>
+            <UButton variant="ghost" icon="lucide:share-2" label="分享" />
           </div>
         </div>
         <Separator

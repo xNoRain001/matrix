@@ -83,14 +83,14 @@
               index
             ) in postMap[targetId].comments"
             :key="_id"
-            class="border-b-accented/50 cursor-pointer space-y-2 rounded-none border-b p-4 sm:p-6"
+            class="bg-elevated/50 cursor-pointer space-y-2 rounded-none p-4 sm:p-6"
           >
             <UUser
               size="xl"
               :ui="{
                 root: 'items-start',
-                wrapper: 'flex-1',
-                name: 'gap-2 flex items-start',
+                wrapper: 'flex-1 min-w-0',
+                name: 'gap-2 flex items-center justify-between',
                 description: 'flex flex-col justify-between'
               }"
             >
@@ -103,7 +103,7 @@
                       targetProfile: profile
                     })
                   "
-                  class="text-muted bg-elevated flex size-10 items-center justify-center rounded-full text-xl font-medium"
+                  class="text-muted bg-elevated relative flex size-10 items-center justify-center rounded-full text-xl font-medium"
                 >
                   <img
                     loading="lazy"
@@ -116,7 +116,7 @@
               </template>
               <template #name>
                 <span
-                  class="text-toned break-all"
+                  class="text-toned truncate"
                   @click="
                     !activeSpaceTargetIds.has(owner) &&
                     profileSpaceOverlay.open({
@@ -124,13 +124,54 @@
                       targetProfile: profile
                     })
                   "
-                  >{{ profile.nickname }}</span
                 >
-                <UBadge v-if="userInfo.id === owner" label="我" />
-                <UBadge
-                  v-else-if="postMap[targetId].activePost.user === owner"
-                  label="作者"
-                />
+                  {{ profile.nickname }}
+                </span>
+                <div class="flex items-center gap-2">
+                  <UBadge v-if="userInfo.id === owner" label="我" />
+                  <UBadge
+                    v-else-if="postMap[targetId].activePost.user === owner"
+                    label="作者"
+                  />
+                  <template
+                    v-if="
+                      owner === userInfo.id ||
+                      postMap[targetId].activePost.user === userInfo.id
+                    "
+                  >
+                    <UButton
+                      v-if="isMobile"
+                      variant="ghost"
+                      icon="lucide:ellipsis"
+                      @click="
+                        onOpenDropdownMenu(
+                          owner === userInfo.id,
+                          owner,
+                          _id,
+                          index,
+                          content,
+                          true
+                        )
+                      "
+                    />
+                    <UDropdownMenu v-else :items="dropdownMenuItems">
+                      <UButton
+                        variant="ghost"
+                        icon="lucide:ellipsis"
+                        @click="
+                          onOpenDropdownMenu(
+                            owner === userInfo.id,
+                            owner,
+                            _id,
+                            index,
+                            content,
+                            true
+                          )
+                        "
+                      />
+                    </UDropdownMenu>
+                  </template>
+                </div>
               </template>
               <template #description>
                 <div
@@ -181,44 +222,6 @@
                       "
                     />
                     <UButton variant="ghost" icon="lucide:heart-crack" />
-                    <template
-                      v-if="
-                        owner === userInfo.id ||
-                        postMap[targetId].activePost.user === userInfo.id
-                      "
-                    >
-                      <UButton
-                        v-if="isMobile"
-                        variant="ghost"
-                        icon="lucide:ellipsis"
-                        @click="
-                          onOpenDropdownMenu(
-                            owner === userInfo.id,
-                            owner,
-                            _id,
-                            index,
-                            content,
-                            true
-                          )
-                        "
-                      />
-                      <UDropdownMenu v-else :items="dropdownMenuItems">
-                        <UButton
-                          variant="ghost"
-                          icon="lucide:ellipsis"
-                          @click="
-                            onOpenDropdownMenu(
-                              owner === userInfo.id,
-                              owner,
-                              _id,
-                              index,
-                              content,
-                              true
-                            )
-                          "
-                        />
-                      </UDropdownMenu>
-                    </template>
                   </div>
                 </div>
                 <UCollapsible
@@ -249,8 +252,8 @@
                         size="xl"
                         :ui="{
                           root: 'items-start',
-                          wrapper: 'flex-1',
-                          name: 'gap-2 flex items-start',
+                          wrapper: 'flex-1 min-w-0',
+                          name: 'gap-2 flex justify-between items-center',
                           description: 'flex flex-col justify-between'
                         }"
                       >
@@ -276,7 +279,7 @@
                         </template>
                         <template #name>
                           <span
-                            class="text-toned break-all"
+                            class="text-toned truncate"
                             @click="
                               !activeSpaceTargetIds.has(owner) &&
                               profileSpaceOverlay.open({
@@ -293,13 +296,62 @@
                               }`
                             }}
                           </span>
-                          <UBadge v-if="userInfo.id === user" label="我" />
-                          <UBadge
-                            v-else-if="
-                              postMap[targetId].activePost.user === user
-                            "
-                            label="作者"
-                          />
+                          <div class="flex items-center gap-2">
+                            <UBadge v-if="userInfo.id === user" label="我" />
+                            <UBadge
+                              v-else-if="
+                                postMap[targetId].activePost.user === user
+                              "
+                              label="作者"
+                            />
+                            <template
+                              v-if="
+                                user === userInfo.id ||
+                                postMap[targetId].activePost.user ===
+                                  userInfo.id ||
+                                replyOwner === userInfo.id
+                              "
+                            >
+                              <UButton
+                                v-if="isMobile"
+                                variant="ghost"
+                                icon="lucide:ellipsis"
+                                @click="
+                                  onOpenReplyDropdownMenu(
+                                    user === userInfo.id,
+                                    user,
+                                    replyId,
+                                    replyIndex,
+                                    content,
+                                    _id,
+                                    index,
+                                    false
+                                  )
+                                "
+                              />
+                              <UDropdownMenu
+                                v-else
+                                :items="replydropdownMenuItems"
+                              >
+                                <UButton
+                                  variant="ghost"
+                                  icon="lucide:ellipsis"
+                                  @click="
+                                    onOpenReplyDropdownMenu(
+                                      user === userInfo.id,
+                                      user,
+                                      replyId,
+                                      replyIndex,
+                                      content,
+                                      _id,
+                                      index,
+                                      false
+                                    )
+                                  "
+                                />
+                              </UDropdownMenu>
+                            </template>
+                          </div>
                         </template>
                         <template #description>
                           <div
@@ -370,53 +422,6 @@
                                 variant="ghost"
                                 icon="lucide:heart-crack"
                               />
-                              <template
-                                v-if="
-                                  user === userInfo.id ||
-                                  postMap[targetId].activePost.user ===
-                                    userInfo.id ||
-                                  replyOwner === userInfo.id
-                                "
-                              >
-                                <UButton
-                                  v-if="isMobile"
-                                  variant="ghost"
-                                  icon="lucide:ellipsis"
-                                  @click="
-                                    onOpenReplyDropdownMenu(
-                                      user === userInfo.id,
-                                      user,
-                                      replyId,
-                                      replyIndex,
-                                      content,
-                                      _id,
-                                      index,
-                                      false
-                                    )
-                                  "
-                                />
-                                <UDropdownMenu
-                                  v-else
-                                  :items="replydropdownMenuItems"
-                                >
-                                  <UButton
-                                    variant="ghost"
-                                    icon="lucide:ellipsis"
-                                    @click="
-                                      onOpenReplyDropdownMenu(
-                                        user === userInfo.id,
-                                        user,
-                                        replyId,
-                                        replyIndex,
-                                        content,
-                                        _id,
-                                        index,
-                                        false
-                                      )
-                                    "
-                                  />
-                                </UDropdownMenu>
-                              </template>
                             </div>
                           </div>
                         </template>
@@ -424,22 +429,26 @@
                     </div>
                   </template>
                 </UCollapsible>
-                <UButton
-                  v-if="replyCount && visibleReplyCount < replyCount"
-                  @click="onLoadReplies(_id, index, visibleReplyCount)"
-                  :label="`—— 展开${postMap[targetId].isCommentCollapsibleOpenMap[_id] ? '更多' : ` ${replyCount} 条回复`}`"
-                  color="neutral"
-                  variant="ghost"
-                  trailing-icon="i-lucide-chevron-down"
-                />
-                <UButton
-                  v-if="postMap[targetId].isCommentCollapsibleOpenMap[_id]"
-                  @click="onCollipse(_id, index)"
-                  label="收起"
-                  color="neutral"
-                  variant="ghost"
-                  trailing-icon="i-lucide-chevron-up"
-                />
+                <div class="flex gap-2">
+                  <UButton
+                    v-if="replyCount && visibleReplyCount < replyCount"
+                    class="flex-1"
+                    @click="onLoadReplies(_id, index, visibleReplyCount)"
+                    :label="`—— 展开${postMap[targetId].isCommentCollapsibleOpenMap[_id] ? '更多' : ` ${replyCount} 条回复`}`"
+                    color="neutral"
+                    variant="ghost"
+                    trailing-icon="i-lucide-chevron-down"
+                  />
+                  <UButton
+                    v-if="postMap[targetId].isCommentCollapsibleOpenMap[_id]"
+                    class="flex-1"
+                    @click="onCollipse(_id, index)"
+                    label="收起"
+                    color="neutral"
+                    variant="ghost"
+                    trailing-icon="i-lucide-chevron-up"
+                  />
+                </div>
               </template>
             </UUser>
           </div>
@@ -464,7 +473,13 @@
           <div
             v-for="{ user, profile, createdAt } in likes"
             :key="user"
-            class="bg-elevated/50 border-b-accented/50 rounded-none border-b p-4 sm:p-6"
+            class="bg-elevated/50 rounded-none p-4 sm:p-6"
+            @click="
+              profileSpaceOverlay.open({
+                targetId: user,
+                targetProfile: profile
+              })
+            "
           >
             <UUser
               :name="profile.nickname"

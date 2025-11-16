@@ -26,6 +26,24 @@
       :key="_id"
       class="hover:bg-accented/50 border-b-accented/50 cursor-pointer space-y-2 rounded-none border-b p-4 sm:p-6"
     >
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-toned truncate text-sm">
+          {{ useFormatTimeAgo(createdAt) }}
+        </span>
+        <UButton
+          v-if="isMobile"
+          variant="ghost"
+          icon="lucide:ellipsis"
+          @click.stop="onOpenDropdownMenu(_id, index)"
+        />
+        <UDropdownMenu v-else :items="dropdownMenuItems">
+          <UButton
+            variant="ghost"
+            icon="lucide:ellipsis"
+            @click.stop="onOpenDropdownMenu(_id, index)"
+          />
+        </UDropdownMenu>
+      </div>
       <p class="text-highlighted break-all whitespace-pre-wrap">
         {{ text }}
       </p>
@@ -35,48 +53,31 @@
         :items="images"
         :active-index="0"
       />
-      <div class="flex items-center justify-between">
-        <p class="text-toned text-sm">
-          {{ useFormatTimeAgo(createdAt) }}
-        </p>
-        <div>
-          <UButton
-            variant="ghost"
-            icon="lucide:message-circle"
-            :label="String(commentCount || '')"
-            @click.stop="
-              useOpenPostDetailOverlay(
-                postMap,
-                targetId,
-                _id,
-                index,
-                postDetailOverlay
-              )
-            "
-          />
-          <UButton
-            variant="ghost"
-            :color="liked ? 'secondary' : 'primary'"
-            icon="lucide:heart"
-            :label="String(likes || '')"
-            @click.stop="
-              useLike(toast, postMap[targetId].posts[index], _id, 'post')
-            "
-          />
-          <UButton
-            v-if="isMobile"
-            variant="ghost"
-            icon="lucide:ellipsis"
-            @click.stop="onOpenDropdownMenu(_id, index)"
-          />
-          <UDropdownMenu v-else :items="dropdownMenuItems">
-            <UButton
-              variant="ghost"
-              icon="lucide:ellipsis"
-              @click.stop="onOpenDropdownMenu(_id, index)"
-            />
-          </UDropdownMenu>
-        </div>
+      <div class="flex justify-around">
+        <UButton
+          variant="ghost"
+          :color="liked ? 'secondary' : 'primary'"
+          icon="lucide:heart"
+          :label="String(likes || '点赞')"
+          @click.stop="
+            useLike(toast, postMap[targetId].posts[index], _id, 'post')
+          "
+        />
+        <UButton
+          variant="ghost"
+          icon="lucide:message-circle"
+          :label="String(commentCount || '评论')"
+          @click.stop="
+            useOpenPostDetailOverlay(
+              postMap,
+              targetId,
+              _id,
+              index,
+              postDetailOverlay
+            )
+          "
+        />
+        <UButton variant="ghost" icon="lucide:share-2" label="分享" />
       </div>
       <!-- <UBadge
        v-if="visibility === 'hidden'"
