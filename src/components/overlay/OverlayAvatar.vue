@@ -4,10 +4,11 @@
     :close="{ onClick: () => emit('close', false) }"
     title="创建角色"
     description=" "
-    :ui="{ description: 'hidden' }"
+    :ui="{ body: 'space-y-4 sm:space-y-6', description: 'hidden' }"
   >
     <template #body>
       <UInput
+        ref="inputRef"
         v-model="keyword"
         class="w-full"
         icon="lucide:search"
@@ -15,9 +16,12 @@
       />
       <UTabs
         v-model="activeTab"
-        variant="pill"
+        orientation="vertical"
         :items="items"
-        class="mt-4 w-full gap-4 sm:mt-6 sm:gap-6"
+        class="items-start gap-4 sm:gap-6"
+        :ui="{
+          list: 'sticky top-0'
+        }"
       >
         <template #content>
           <div class="grid grid-cols-2 gap-4">
@@ -284,7 +288,7 @@
 <script lang="ts" setup>
 import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { ref, watch } from 'vue'
+import { ref, useTemplateRef, watch } from 'vue'
 import { updateProfile } from '@/apis/profile'
 import { mbtiItems } from '@/const'
 
@@ -294,6 +298,7 @@ const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
 const toast = useToast()
 const isSlideoverOpen = ref(false)
 const isConfirmSlideoverOpen = ref(false)
+const inputRef = useTemplateRef('inputRef')
 const activeTab = ref('game')
 const activeItem = ref('')
 const activeAvatar = ref('')
@@ -1691,4 +1696,11 @@ const onSelectAvatar = name => {
 }
 
 watch(keyword, () => {})
+
+watch(activeTab, () => {
+  ;(inputRef.value.inputRef.parentNode.parentNode as HTMLElement).scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  })
+})
 </script>

@@ -57,13 +57,18 @@
           label="背景"
           size="xs"
         />
+        <UButton
+          @click="isOC = !isOC"
+          icon="lucide:arrow-left-right"
+          size="xs"
+        />
       </div>
     </div>
     <div class="text-highlighted mt-2 text-sm">
       {{ targetProfile.bio }}
     </div>
     <div class="mt-2 flex flex-wrap gap-2">
-      <ProfileSpaceTags :target-profile="targetProfile" />
+      <ProfileSpaceTags :is-o-c="isOC" :target-profile="targetProfile" />
       <UBadge
         v-if="isSelf"
         icon="lucide:circle-plus"
@@ -99,6 +104,7 @@
   <ProfileSpaceTagsSlideover
     v-if="isSelf"
     v-model="isTagSlideoverOpen"
+    :is-o-c="isOC"
     :target-id="targetId"
     :target-profile="targetProfile"
   />
@@ -131,6 +137,7 @@ const toast = useToast()
 const { isMobile, userInfo, avatarURL } = storeToRefs(useUserStore())
 const { activeTargetIds } = storeToRefs(useRecentContactsStore())
 const isSelf = props.targetId === userInfo.value.id
+const isOC = ref(true)
 const route = useRoute()
 const bgBlob = isSelf
   ? (
