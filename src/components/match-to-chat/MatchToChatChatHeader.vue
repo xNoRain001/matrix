@@ -85,7 +85,7 @@
   >
     <template #content>
       <div class="space-y-2 space-x-2">
-        <ProfileSpaceTags :target-profile="targetProfile" />
+        <ProfileSpaceTags :is-o-c="true" :target-profile="targetProfile" />
       </div>
     </template>
   </UCollapsible>

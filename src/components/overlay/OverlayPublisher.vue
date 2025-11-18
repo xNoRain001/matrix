@@ -386,7 +386,7 @@ const onTextToImage = async () => {
 
   try {
     const response = await fetch(
-      `https://text-to-image.mtrix.cyou?prompt=${prompt.value}`
+      `https://text-to-image.xtrix.asia?prompt=${prompt.value}`
     )
 
     if (!response.ok) {

@@ -213,7 +213,7 @@ const onChat = async () => {
     _messages.push(question)
     prompt.value = ''
     generating.value = true
-    const res = await fetch('https://llm.mtrix.cyou/api/chat', {
+    const res = await fetch('https://llm.xtrix.asia/api/chat', {
       method: 'post',
       headers: {
         'Content-Type': 'application/json'
