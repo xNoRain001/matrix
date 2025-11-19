@@ -93,8 +93,7 @@ const useUploadFilesToOSS = async (
     const { ossURL, width, height } = file
 
     if (ossURL) {
-      // 存在 ossURL，说明从本地数据库中读取的图片，file 此时是 Blob 类型，如果能进入
-      // 到这里，一定是更新操作
+      // 存在 ossURL，说明是已经保存在服务器中的图片
       imageMetadata.push({ url: ossURL, width, height })
     } else {
       // 新图片，记录索引，之后根据索引更新对应的数据

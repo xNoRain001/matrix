@@ -157,7 +157,7 @@ import { onMounted, reactive, ref, useTemplateRef } from 'vue'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import { publishPostAPI, updatePostAPI } from '@/apis/post'
 import { postFeedback } from '@/apis/feedback'
-import { useGetDB, useURLToBlob } from '@/hooks'
+import { useURLToBlob } from '@/hooks'
 import useUploadFilesToOSS from '@/hooks/use-upload-files-to-oss'
 import type { content } from '@/types'
 import { reportAPI } from '@/apis/report'
@@ -213,14 +213,8 @@ const initFiles = async () => {
   }
 
   return isUpdatePost
-    ? postMap.value[props.targetId].activePost.content.images.map(
-        ({ blob, width, height, ossURL }) => {
-          ;(blob as any).ossURL = ossURL
-          ;(blob as any).width = width
-          ;(blob as any).height = height
-
-          return blob
-        }
+    ? await initCommentFiles(
+        postMap.value[props.targetId].activePost.content.images
       )
     : isUpdateComment
       ? await initCommentFiles(
@@ -536,27 +530,8 @@ const onPublishPost = async () => {
     formData.append('type', 'publishPost')
     formData.append('content', JSON.stringify(payload))
     const { data: post } = await publishPostAPI(formData)
-    const _post = JSON.parse(JSON.stringify(post))
-    const images = post.content.images
-    const _images = _post.content.images
     toast.add({ title: '发布成功', icon: 'lucide:smile' })
     localStorage.removeItem('postDraft')
-    for (let i = 0, l = imageMetadata.length; i < l; i++) {
-      const file = files.value[i]
-      const image = images[i]
-      const _image = _images[i]
-      // 先保存 ossURL
-      _image.ossURL = image.url
-      // 内存中也需要保存，这样立马进行更新时能判断出不是新图片
-      image.ossURL = image.url
-      image.url = URL.createObjectURL(file)
-      image.blob = file
-      _image.blob = file
-      delete _image.url
-    }
-    const db = await useGetDB(userInfo.value.id)
-    // 需要保存 id，否则没有重新从本地数据库读取的情况下进行修改时无法更新本地数据库
-    post.id = await db.add('posts', _post)
 
     // 在广场直接发布 post，如果之前没有打开过个人空间，postMap 中是没有值的
     if (postMap.value[props.targetId]) {
@@ -592,6 +567,7 @@ const isChanged = () => {
 
   // 没发生任何改变
   if (payload.text === oldText && res) {
+    emit('close', true)
     toast.add({ title: '更新成功', icon: 'lucide:smile' })
     return false
   }
@@ -624,41 +600,19 @@ const onUpdatePost = async () => {
     const stringifyPayload = JSON.stringify(payload)
     formData.append('content', stringifyPayload)
     await updatePostAPI(formData)
-    const _latestContent = JSON.parse(stringifyPayload)
     const { images } = payload
-    const { images: _images } = _latestContent
     toast.add({ title: '更新成功', icon: 'lucide:smile' })
     const _activePost = postMap.value[props.targetId].activePost
     for (let i = 0, l = imageMetadata.length; i < l; i++) {
-      const file = files.value[i]
       const image = images[i]
-      const _image = _images[i]
-      // 如果不是新增的图片，url 已经在数据库中保存了
-      const ossURL = image.url.startsWith('tmp/')
-        ? `posts/${activePostId}/${image.url.split('/')[2]}`
-        : image.url
-      _image.ossURL = ossURL
-      image.ossURL = ossURL
-      image.url = URL.createObjectURL(file)
-      image.blob = file
-      _image.blob = file
-      delete _image.url
+
+      // 修改新增的图片的 url
+      if (image.url.startsWith('tmp/')) {
+        image.url = `posts/${activePostId}/${image.url.split('/')[2]}`
+      }
     }
     _activePost.updateAt = Date.now()
-    const post = JSON.parse(JSON.stringify(_activePost))
     _activePost.content = payload
-    post.content = _latestContent
-    const db = await useGetDB(userInfo.value.id)
-    const tx = db.transaction('posts', 'readwrite')
-    const store = tx.objectStore('posts')
-    const index = store.index('_id')
-    const cursor = await index.openCursor(
-      postMap.value[props.targetId].activePostId
-    )
-    if (cursor) {
-      // 由于是从本地数据库中读取的，post 中有 id 字段，所以不需要传 id
-      await store.put(post)
-    }
     emit('close', true)
   } catch (error) {
     toast.add({

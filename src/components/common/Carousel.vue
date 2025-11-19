@@ -19,6 +19,7 @@
       >
         <img
           loading="lazy"
+          crossorigin="anonymous"
           @click="
             !viewer && viewerOverlay.open({ urls: items, activeIndex: index })
           "
@@ -52,6 +53,7 @@
         >
           <img
             loading="lazy"
+            crossorigin="anonymous"
             :src="
               item.url.startsWith('blob:') || item.url.startsWith('https://')
                 ? item.url
@@ -65,6 +67,7 @@
     <img
       v-else
       loading="lazy"
+      crossorigin="anonymous"
       @click="!viewer && viewerOverlay.open({ urls: items, activeIndex: 0 })"
       :src="
         items[0].url.startsWith('blob:') || items[0].url.startsWith('https://')

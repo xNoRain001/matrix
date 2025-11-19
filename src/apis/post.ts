@@ -14,8 +14,6 @@ export const publishPostAPI = async data =>
 export const getPostsAPI = async (targetId = '', lastId = '') =>
   HTTP.request(`${prefix}?targetId=${targetId}&lastId=${lastId}`)
 
-export const getSelfPostsAPI = async () => HTTP.request(`${prefix}/self-posts`)
-
 export const deletePostAPI = async postId =>
   HTTP.request(`${prefix}?postId=${postId}`, {
     method: 'DELETE'

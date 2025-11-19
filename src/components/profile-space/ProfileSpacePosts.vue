@@ -171,16 +171,14 @@
 <script lang="ts" setup>
 import {
   useFormatTimeAgo,
-  useGetDB,
   useInitAutoScrollBtn,
   useLike,
   useNoop,
-  useOpenPostDetailOverlay,
-  useURLToBlob
+  useOpenPostDetailOverlay
 } from '@/hooks'
 import OverlayPostDetail from '@/components/overlay/OverlayPostDetail.vue'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { deletePostAPI, getPostsAPI, getSelfPostsAPI } from '@/apis/post'
+import { deletePostAPI, getPostsAPI } from '@/apis/post'
 import { storeToRefs } from 'pinia'
 import {
   useFooterStore,
@@ -203,7 +201,7 @@ const overlay = useOverlay()
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const postDetailOverlay = overlay.create(OverlayPostDetail)
 const publisherOverlay = overlay.create(OverlayPublisher)
-const { postMap, lastFetchedPostId } = storeToRefs(usePostStore())
+const { postMap } = storeToRefs(usePostStore())
 const { footerNavs } = storeToRefs(useFooterStore())
 const { activeSpaceTargetIds } = storeToRefs(useRecentContactsStore())
 const route = useRoute()
@@ -239,7 +237,6 @@ const dropdownMenuItems = isSelf
         }
       ]
     ]
-const { VITE_OSS_BASE_URL } = import.meta.env
 const loading = ref(!postMap.value[props.targetId])
 const isAutoScrollBtnShow = ref(false)
 
@@ -285,33 +282,19 @@ const onScroll = useThrottleFn(
     }
 
     if (scrollHeight - (scrollTop + clientHeight) < 64) {
-      if (isSelf) {
-        // 如果是 API 获取的 post，会返回全部，不会进入到这里，因此一定是从本地数据库
-        // 中加载的 post
-        const posts = await getPostsFromIndexedDB()
-        const { length } = posts
+      const lastId =
+        postMap.value[props.targetId].posts[
+          postMap.value[props.targetId].posts.length - 1
+        ]._id
+      const { data } = await getPostsAPI(props.targetId, lastId)
+      const { length } = data
 
-        if (length) {
-          postMap.value[props.targetId].posts.push(...posts)
-        }
-
-        lastFetchedPostId.value = posts[posts.length - 1]?.id || 0
-        allPostLoaded.value = length < 10
-      } else {
-        const lastId =
-          postMap.value[props.targetId].posts[
-            postMap.value[props.targetId].posts.length - 1
-          ]._id
-        const { data } = await getPostsAPI(props.targetId, lastId)
-        const { length } = data
-
-        if (length) {
-          postMap.value[props.targetId].posts.push(...data)
-        }
-
-        // 等于 10 时会多发送一次请求，不做处理
-        allPostLoaded.value = data.length < 10
+      if (length) {
+        postMap.value[props.targetId].posts.push(...data)
       }
+
+      // 等于 10 时会多发送一次请求，不做处理
+      allPostLoaded.value = data.length < 10
     }
   },
   200,
@@ -334,17 +317,6 @@ const onEditPost = () => {
 const onDeletePost = async () => {
   try {
     await deletePostAPI(postMap.value[props.targetId].activePostId)
-    const db = await useGetDB(userInfo.value.id)
-    const tx = db.transaction('posts', 'readwrite')
-    const store = tx.objectStore('posts')
-    const index = store.index('_id')
-    const cursor = await index.openCursor(
-      postMap.value[props.targetId].activePostId
-    )
-    if (cursor) {
-      await store.delete(cursor.primaryKey)
-    }
-    await tx.done
     postMap.value[props.targetId].posts.splice(
       postMap.value[props.targetId].activePostIndex,
       1
@@ -373,81 +345,6 @@ const onOpenDropdownMenu = (postId, postIndex) => {
   }
 }
 
-const getPostsFromIndexedDB = async () => {
-  const posts = []
-  const db = await useGetDB(userInfo.value.id)
-  const transaction = db.transaction('posts', 'readonly')
-  const store = transaction.objectStore('posts')
-  let cursor = await store.openCursor(
-    IDBKeyRange.bound(0, lastFetchedPostId.value, false, true),
-    'prev'
-  )
-
-  // 已经获取了所有
-  if (!cursor) {
-    return posts
-  }
-
-  let counter = 0
-  while (cursor && counter < 10) {
-    const { images } = cursor.value.content
-
-    for (let i = 0, l = images.length; i < l; i++) {
-      const image = images[i]
-
-      if (image.blob) {
-        image.url = URL.createObjectURL(image.blob)
-      }
-    }
-
-    posts.push(cursor.value)
-    counter++
-    cursor = await cursor.continue()
-  }
-
-  return posts
-}
-
-const getPostsFromAPI = async () => {
-  try {
-    const { data } = await getSelfPostsAPI()
-    const _data = JSON.parse(JSON.stringify(data))
-
-    for (let i = 0, l = data.length; i < l; i++) {
-      const { images } = data[i].content
-      const { images: _images } = _data[i].content
-
-      for (let i = 0, l = images.length; i < l; i++) {
-        const image = images[i]
-        const _image = _images[i]
-        const blob = await useURLToBlob(VITE_OSS_BASE_URL + image.url)
-        _image.ossURL = image.url
-        image.url = URL.createObjectURL(blob)
-        image.blob = blob
-        delete _image.url
-        _image.blob = blob
-      }
-    }
-
-    const db = await useGetDB(userInfo.value.id)
-    const tx = db.transaction('posts', 'readwrite')
-    const store = tx.objectStore('posts')
-
-    for (let i = _data.length - 1; i >= 0; i--) {
-      await store.add(_data[i])
-    }
-
-    await tx.done
-
-    localStorage.setItem(`persistentPosts-${userInfo.value.id}`, 'true')
-    allPostLoaded.value = true
-
-    return data
-  } catch (error) {
-    toast.add({ title: error.message, color: 'error', icon: 'lucide:annoyed' })
-  }
-}
-
 const getPosts = async () => {
   postMap.value[props.targetId] = {} as any
   const { data: posts } = await getPostsAPI(props.targetId)
@@ -472,41 +369,18 @@ watch(
 )
 
 onMounted(async () => {
-  if (isSelf) {
-    if (!postMap.value[props.targetId]) {
-      postMap.value[props.targetId] = {} as any
-      const persistentPosts = Boolean(
-        localStorage.getItem(`persistentPosts-${userInfo.value.id}`)
-      )
-      postMap.value[props.targetId].posts = persistentPosts
-        ? await getPostsFromIndexedDB()
-        : await getPostsFromAPI()
-
-      if (persistentPosts) {
-        const { length } = postMap.value[props.targetId].posts
-        lastFetchedPostId.value =
-          postMap.value[props.targetId].posts[length - 1]?.id || 0
-        allPostLoaded.value = length < 10
-      } else {
-        // 从 API 获取，会一次性返回所有 post
-        allPostLoaded.value = true
-      }
-
+  // 缓存自己发布的帖子
+  if (!(isSelf && postMap.value[props.targetId])) {
+    try {
+      await getPosts()
       loading.value = false
-    } else {
-      // 存在缓存，判断是不是获取了全部
-      const db = await useGetDB(userInfo.value.id)
-      const transaction = db.transaction('posts', 'readonly')
-      const store = transaction.objectStore('posts')
-      const count = await store.count()
-
-      if (postMap.value[props.targetId].posts.length === count) {
-        allPostLoaded.value = true
-      }
+    } catch (error) {
+      toast.add({
+        title: error.message,
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
     }
-  } else {
-    await getPosts()
-    loading.value = false
   }
 
   setTimeout(() => {

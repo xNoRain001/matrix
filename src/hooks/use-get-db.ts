@@ -48,14 +48,6 @@ const useGetDB = async id => {
           })
         }
 
-        if (!db.objectStoreNames.contains('posts')) {
-          const store = db.createObjectStore('posts', {
-            keyPath: 'id',
-            autoIncrement: true
-          })
-          store.createIndex('_id', '_id', { unique: true })
-        }
-
         if (!db.objectStoreNames.contains('favoriteEmojis')) {
           const store = db.createObjectStore('favoriteEmojis', {
             keyPath: 'id',

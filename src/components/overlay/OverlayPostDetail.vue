@@ -928,9 +928,8 @@ const getComments = async (lastId = '', lastHot = 0) => {
       postMeta.comments.push(...data)
     }
   } else {
-    if (length) {
-      postMeta.comments = data
-    }
+    // 如果没有评论，就赋值这个空数组，因为可能会发表评论
+    postMeta.comments = data
   }
 
   allCommentsLoaded.value = length < pageSize
