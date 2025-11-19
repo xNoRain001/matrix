@@ -49,6 +49,7 @@ export type userInfo = {
     province: string
     city: string
     role: 'standard'
+    registerIndex: number
     createdAt: number
     onlineStatus?: {
       isOnline: boolean

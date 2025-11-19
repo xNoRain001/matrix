@@ -64,10 +64,16 @@
         />
       </div>
     </div>
-    <div class="text-highlighted mt-2 text-sm">
+    <div class="text-toned text-xs">
+      ID：{{ String(userInfo.profile.registerIndex).padStart(5, '0') }} / IP：{{
+        userInfo.ipInfo.province || '未知'
+      }}
+    </div>
+    <div v-if="targetProfile.bio" class="text-highlighted mt-2 text-sm">
       {{ targetProfile.bio }}
     </div>
-    <div class="mt-2 flex flex-wrap gap-2">
+    <USeparator class="py-2" :ui="{ border: 'border-accented' }" />
+    <div class="flex flex-wrap gap-2">
       <ProfileSpaceTags :is-o-c="isOC" :target-profile="targetProfile" />
       <UBadge
         v-if="isSelf"
@@ -86,7 +92,7 @@
           ]
         })
       "
-      class="ring-default absolute top-0 -translate-y-1/2 cursor-pointer ring-2"
+      class="ring-accented absolute top-0 -translate-y-1/2 cursor-pointer ring-2"
       :src="isSelf ? avatarURL : `${VITE_OSS_BASE_URL}avatar/${targetId}`"
       :alt="targetProfile.nickname[0]"
       size="3xl"

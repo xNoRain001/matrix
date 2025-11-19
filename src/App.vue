@@ -1460,6 +1460,11 @@ onBeforeMount(async () => {
         province,
         city
       }
+    } else {
+      userInfo.value.ipInfo = {
+        province: '福建省',
+        city: '厦门市'
+      }
     }
 
     // 拉取离线数据后，更新本地数据库中的数据和内存中的数据
