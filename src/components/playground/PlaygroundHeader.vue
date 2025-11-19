@@ -178,7 +178,12 @@ const toast = useToast()
 
 const getLatestData = async () => {
   const posts = (
-    await getPlaygroundPostsAPI('latest', '', postMap.value.latest.posts[0]._id)
+    await getPlaygroundPostsAPI(
+      'latest',
+      '',
+      //  可能在没有任何内容的时候刷新
+      postMap.value.latest.posts?.[0]?._id || ''
+    )
   ).data
   const { length } = posts
 

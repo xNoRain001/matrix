@@ -98,7 +98,7 @@ import { ref } from 'vue'
 import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 import type { userInfo } from '@/types'
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     isMatch?: boolean
     targetId: string
@@ -109,7 +109,8 @@ const props = withDefaults(
   }
 )
 const emits = defineEmits(['close'])
-const open = ref(props.isMatch ? true : false)
+// const open = ref(props.isMatch ? true : false)
+const open = ref(false)
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const { unreadMsgCounter, activeSpaceTargetIds } = storeToRefs(
   useRecentContactsStore()

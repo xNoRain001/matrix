@@ -16,6 +16,7 @@
           </div>
         </div>
       </template>
+      <!-- 存在 length 属性，说明已经成功从服务器获取了数据 -->
       <div v-if="postMap[activeTab]?.posts?.length >= 0">
         <div
           v-for="(
@@ -32,7 +33,7 @@
             index
           ) in postMap[activeTab].posts"
           :key="_id"
-          class="hover:bg-accented/50 border-b-accented/50 cursor-pointer space-y-2 rounded-none border-b p-4 sm:p-6"
+          class="border-b-accented/50 space-y-2 rounded-none border-b p-4 sm:p-6"
         >
           <!-- :description="`${useFormatTimeAgo(createdAt)} · 广东`" -->
           <UUser
@@ -109,8 +110,13 @@
           </div>
         </div>
         <Separator
-          :label="
-            postMap[activeTab].posts.length === 0 ? '空空如也' : '已经到底了'
+          v-if="postMap[activeTab].posts.length === 0"
+          :label="'空空如也'"
+        />
+        <Separator
+          v-else-if="allPostLoaded"
+          label="
+            '已经到底了'
           "
         />
         <Transition

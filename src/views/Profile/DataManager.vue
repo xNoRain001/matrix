@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { useFixIndexedDB } from '@/hooks'
+import { useFixIndexedDB, useGetDB } from '@/hooks'
 import { useUserStore } from '@/store'
 import { createReusableTemplate } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
@@ -81,15 +81,25 @@ const [DefineSlideoverBodyTemplate, ReuseSlideoverBodyTemplate] =
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const sections = [
   {
-    title: '聊天记录',
+    title: '本地数据',
     fields: [
       {
         label: '清空聊天记录',
         onSelect: () => (isDataManagerModalOpen.value = true)
+      },
+      {
+        label: '清空动态缓存',
+        onSelect: async () => {
+          const { id } = userInfo.value
+          const db = await useGetDB(id)
+          db.close()
+          const req = indexedDB.deleteDatabase(`posts-${id}`)
+          req.onsuccess = () => {
+            localStorage.removeItem(`persistentPosts-${id}`)
+            location.reload()
+          }
+        }
       }
-      // {
-      //   label: '清空缓存图片'
-      // }
     ]
   }
 ]
