@@ -182,15 +182,8 @@ const overlay = useOverlay()
 const logoutOverlay = overlay.create(OverlayLogout)
 const publisherOverlay = overlay.create(OverlayPublisher)
 const offlineOverlay = overlay.create(OverlayOffline)
-const {
-  avatarURL,
-  isMobile,
-  globalSocket,
-  globalPC,
-  userInfo,
-  config,
-  onlineCount
-} = storeToRefs(useUserStore())
+const { isMobile, globalSocket, globalPC, userInfo, config, onlineCount } =
+  storeToRefs(useUserStore())
 const {
   leaveRoomTimer,
   rtcConnected,
@@ -1112,19 +1105,23 @@ const onConnectError = () => {
         ? maxReconnectionAttempts
         : maxReconnectionAttempts + 1)
     ) {
-      toast.add({
-        title: '重连失败，请检查网络后重试或刷新页面',
-        color: 'error',
-        icon: 'lucide:annoyed'
-      })
-      // 在断网模态框中的重连失败，取消 loading 状态，让用户再次点击
-
-      offlineOverlay.patch({
-        reconnecting: false
-      })
-      firstConnectionSuccess = false
-      // 同时需要重置尝试次数
-      reconnectionAttempts = 0
+      if (isMobile.value) {
+        // 移动端浏览器关闭后再打开，直接刷新页面
+        location.reload()
+      } else {
+        toast.add({
+          title: '重连失败，请检查网络后重试或刷新页面',
+          color: 'error',
+          icon: 'lucide:annoyed'
+        })
+        // 在断网模态框中的重连失败，取消 loading 状态，让用户再次点击
+        offlineOverlay.patch({
+          reconnecting: false
+        })
+        firstConnectionSuccess = false
+        // 同时需要重置尝试次数
+        reconnectionAttempts = 0
+      }
     }
   } else if (
     reconnectionAttempts ===
@@ -1414,15 +1411,6 @@ const initLastMsgs = async () => {
   unreadMsgCounter.value = _unreadMsgCounter
 }
 
-const initAvatarURL = async () => {
-  const avatarBlob = (
-    await (await useGetDB(userInfo.value.id)).get('avatar', userInfo.value.id)
-  )?.blob
-  avatarURL.value = avatarBlob
-    ? URL.createObjectURL(avatarBlob)
-    : `${VITE_OSS_BASE_URL}avatar/${userInfo.value.id}`
-}
-
 const initChatBgURL = async () => {
   const chatBgBlob = (
     await (await useGetDB(userInfo.value.id)).get('chatBg', userInfo.value.id)
@@ -1449,7 +1437,6 @@ onBeforeMount(async () => {
     const socket = createSocket()
     // 先获取本地数据库中的数据
     await initLastMsgs()
-    await initAvatarURL()
     await initChatBgURL()
 
     if (VITE_ENV === 'production') {

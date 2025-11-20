@@ -182,7 +182,7 @@
                 <div
                   v-if="content.images.length"
                   @click="viewerOverlay.open({ urls: content.images })"
-                  class="flex"
+                  class="flex flex-wrap gap-2"
                 >
                   <!-- 
                     设置 crossorigin="anonymous" 时，浏览器通过 JS 获取图片时请求头
@@ -363,7 +363,7 @@
                             v-if="
                               replyComments[replyIndex].content.images.length
                             "
-                            class="flex"
+                            class="flex flex-wrap gap-2"
                           >
                             <img
                               loading="lazy"

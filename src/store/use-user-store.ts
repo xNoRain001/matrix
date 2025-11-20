@@ -58,7 +58,7 @@ const useUserStore = defineStore('userStore', () => {
     globalPC: ref<RTCPeerConnection | null>(null),
     userInfo: ref<userInfo | null>(userInfo),
     config: ref<typeof defaultConfig>(_config),
-    avatarURL: ref('')
+    avatarURL: ref(`${import.meta.env.VITE_OSS_BASE_URL}avatar/${userInfo?.id}`)
   }
 })
 

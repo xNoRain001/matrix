@@ -57,7 +57,9 @@
           label="背景"
           size="xs"
         />
+        <!-- 个人主页必须显示切换按钮，因为可能会修改标签 -->
         <UButton
+          v-if="isSelf || isToggleBtnShow"
           @click="isOC = !isOC"
           icon="lucide:arrow-left-right"
           size="xs"
@@ -72,8 +74,7 @@
     <div v-if="targetProfile.bio" class="text-highlighted mt-2 text-sm">
       {{ targetProfile.bio }}
     </div>
-    <USeparator class="py-2" :ui="{ border: 'border-accented' }" />
-    <div class="flex flex-wrap gap-2">
+    <div v-if="isSelf || isTagsShow" class="mt-2 flex flex-wrap gap-2">
       <ProfileSpaceTags :is-o-c="isOC" :target-profile="targetProfile" />
       <UBadge
         v-if="isSelf"
@@ -120,7 +121,7 @@
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref, useTemplateRef, watch } from 'vue'
-import { useGetDB, useUpdateStaticNameFile } from '@/hooks'
+import { useUpdateStaticNameFile } from '@/hooks'
 import { useRoute } from 'vue-router'
 import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
 import OverlayChat from '@/components/overlay/OverlayChat.vue'
@@ -143,24 +144,16 @@ const toast = useToast()
 const { isMobile, userInfo, avatarURL } = storeToRefs(useUserStore())
 const { activeTargetIds } = storeToRefs(useRecentContactsStore())
 const isSelf = props.targetId === userInfo.value.id
-const isOC = ref(true)
-const route = useRoute()
-const bgBlob = isSelf
-  ? (
-      await (
-        await useGetDB(userInfo.value.id)
-      ).get('spaceBg', userInfo.value.id)
-    )?.blob
-  : null
-const { VITE_OSS_BASE_URL } = import.meta.env
-const bgURL = ref(
-  isSelf
-    ? bgBlob
-      ? URL.createObjectURL(bgBlob)
-      : // 本地数据库中删除了但 OSS 中还存在，TODO: 重新保存到本地数据库
-        `${VITE_OSS_BASE_URL}spaceBg/${userInfo.value.id}`
-    : `${VITE_OSS_BASE_URL}spaceBg/${props.targetId}`
+const isToggleBtnShow = Boolean(
+  props.targetProfile.ocTags.length && props.targetProfile.tags.length
 )
+const isTagsShow = Boolean(
+  props.targetProfile.ocTags.length || props.targetProfile.tags.length
+)
+const isOC = ref(isSelf || Boolean(props.targetProfile.ocTags.length))
+const route = useRoute()
+const { VITE_OSS_BASE_URL } = import.meta.env
+const bgURL = ref(`${VITE_OSS_BASE_URL}spaceBg/${props.targetId}`)
 const viewerOverlay = overlay.create(OverlayViewer)
 const chatOverlay = overlay.create(OverlayChat)
 const isTagSlideoverOpen = ref(false)

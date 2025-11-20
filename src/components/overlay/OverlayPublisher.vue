@@ -416,12 +416,7 @@ const onReport = async () => {
   }
 
   try {
-    const imageMetadata = await useUploadFilesToOSS(
-      userInfo,
-      'image',
-      files.value
-    )
-    payload.images = imageMetadata
+    payload.images = await useUploadFilesToOSS(userInfo, 'image', files.value)
     const formData = new FormData()
 
     if (props.reportTarget === 'post') {
@@ -520,12 +515,7 @@ const onDraft = () => {
 
 const onPublishPost = async () => {
   try {
-    const imageMetadata = await useUploadFilesToOSS(
-      userInfo,
-      'image',
-      files.value
-    )
-    payload.images = imageMetadata
+    payload.images = await useUploadFilesToOSS(userInfo, 'image', files.value)
     const formData = new FormData()
     formData.append('type', 'publishPost')
     formData.append('content', JSON.stringify(payload))
@@ -587,12 +577,7 @@ const onUpdatePost = async () => {
   }
 
   try {
-    const imageMetadata = await useUploadFilesToOSS(
-      userInfo,
-      'image',
-      files.value
-    )
-    payload.images = imageMetadata
+    payload.images = await useUploadFilesToOSS(userInfo, 'image', files.value)
     const formData = new FormData()
     const activePostId = postMap.value[props.targetId].activePostId
     formData.append('type', 'updatePost')
@@ -603,12 +588,13 @@ const onUpdatePost = async () => {
     const { images } = payload
     toast.add({ title: '更新成功', icon: 'lucide:smile' })
     const _activePost = postMap.value[props.targetId].activePost
-    for (let i = 0, l = imageMetadata.length; i < l; i++) {
+    for (let i = 0, l = images.length; i < l; i++) {
       const image = images[i]
+      const { url } = image
 
       // 修改新增的图片的 url
-      if (image.url.startsWith('tmp/')) {
-        image.url = `posts/${activePostId}/${image.url.split('/')[2]}`
+      if (url.startsWith('tmp/')) {
+        image.url = `posts/${activePostId}/${url.split('/')[2]}`
       }
     }
     _activePost.updateAt = Date.now()
@@ -629,12 +615,7 @@ const onUpdateReply = async () => {
   }
 
   try {
-    const imageMetadata = await useUploadFilesToOSS(
-      userInfo,
-      'image',
-      files.value
-    )
-    payload.images = imageMetadata
+    payload.images = await useUploadFilesToOSS(userInfo, 'image', files.value)
     const formData = new FormData()
     const activePostId = postMap.value[props.targetId].activePostId
     formData.append('type', 'updateReply')
@@ -648,9 +629,10 @@ const onUpdateReply = async () => {
     for (let i = 0, l = images.length; i < l; i++) {
       const image = images[i]
       const { url } = image
-      image.url = url.startsWith('tmp/')
-        ? `posts/${activePostId}/${postMap.value[props.targetId].activeCommentId}/${postMap.value[props.targetId].activeReplyId}/${url.split('/')[4]}`
-        : url
+
+      if (url.startsWith('tmp/')) {
+        image.url = `posts/${activePostId}/${postMap.value[props.targetId].activeCommentId}/${postMap.value[props.targetId].activeReplyId}/${url.split('/')[2]}`
+      }
     }
     const reply =
       postMap.value[props.targetId].comments[
@@ -670,12 +652,7 @@ const onUpdateReply = async () => {
 
 const onReply = async () => {
   try {
-    const imageMetadata = await useUploadFilesToOSS(
-      userInfo,
-      'image',
-      files.value
-    )
-    payload.images = imageMetadata
+    payload.images = await useUploadFilesToOSS(userInfo, 'image', files.value)
     const formData = new FormData()
     formData.append('type', 'reply')
     formData.append('content', JSON.stringify(payload))
@@ -726,12 +703,7 @@ const onUpdateComment = async () => {
   }
 
   try {
-    const imageMetadata = await useUploadFilesToOSS(
-      userInfo,
-      'image',
-      files.value
-    )
-    payload.images = imageMetadata
+    payload.images = await useUploadFilesToOSS(userInfo, 'image', files.value)
     const formData = new FormData()
     const activePostId = postMap.value[props.targetId].activePostId
     formData.append('type', 'updateComment')
@@ -744,9 +716,10 @@ const onUpdateComment = async () => {
     for (let i = 0, l = images.length; i < l; i++) {
       const image = images[i]
       const { url } = image
-      image.url = url.startsWith('tmp/')
-        ? `posts/${activePostId}/${postMap.value[props.targetId].activeCommentId}/${url.split('/')[3]}`
-        : url
+
+      if (image.url.startsWith('tmp/')) {
+        image.url = `posts/${activePostId}/${postMap.value[props.targetId].activeCommentId}/${url.split('/')[2]}`
+      }
     }
     const comment =
       postMap.value[props.targetId].comments[
@@ -766,12 +739,7 @@ const onUpdateComment = async () => {
 
 const onPublishComment = async () => {
   try {
-    const imageMetadata = await useUploadFilesToOSS(
-      userInfo,
-      'image',
-      files.value
-    )
-    payload.images = imageMetadata
+    payload.images = await useUploadFilesToOSS(userInfo, 'image', files.value)
     const formData = new FormData()
     formData.append('type', 'publishComment')
     formData.append('content', JSON.stringify(payload))
@@ -798,12 +766,7 @@ const onPublishComment = async () => {
 
 const onFeedback = async () => {
   try {
-    const imageMetadata = await useUploadFilesToOSS(
-      userInfo,
-      'image',
-      files.value
-    )
-    payload.images = imageMetadata
+    payload.images = await useUploadFilesToOSS(userInfo, 'image', files.value)
     const formData = new FormData()
     formData.append('type', 'feedback')
     formData.append('content', JSON.stringify(payload))

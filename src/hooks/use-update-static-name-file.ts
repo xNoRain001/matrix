@@ -1,6 +1,5 @@
 import { getSignedURLAPI, updateStaticNameAPI } from '@/apis/oss'
 import useGenHash from './use-gen-hash'
-import useGetDB from './use-get-db'
 import useNSFW from './use-nsfw'
 
 const useUpdateStaticNameFile = async (
@@ -54,8 +53,6 @@ const useUpdateStaticNameFile = async (
 
     try {
       await updateStaticNameAPI(type, hash)
-      const db = await useGetDB(userInfo.value.id)
-      await db.put(type, { id: userInfo.value.id, blob: file })
       urlRef.value = URL.createObjectURL(file)
       toast.add({ title: '更新成功', icon: 'lucide:smile' })
     } catch (error) {

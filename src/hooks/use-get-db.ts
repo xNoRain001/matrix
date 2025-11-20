@@ -30,18 +30,6 @@ const useGetDB = async id => {
           store.createIndex('hash', 'hash', { unique: true })
         }
 
-        if (!db.objectStoreNames.contains('spaceBg')) {
-          db.createObjectStore('spaceBg', {
-            keyPath: 'id'
-          })
-        }
-
-        if (!db.objectStoreNames.contains('avatar')) {
-          db.createObjectStore('avatar', {
-            keyPath: 'id'
-          })
-        }
-
         if (!db.objectStoreNames.contains('chatBg')) {
           db.createObjectStore('chatBg', {
             keyPath: 'id'
@@ -54,13 +42,6 @@ const useGetDB = async id => {
             autoIncrement: true
           })
           store.createIndex('hash', 'hash', { unique: true })
-        }
-
-        if (!db.objectStoreNames.contains('colleges')) {
-          db.createObjectStore('colleges', {
-            keyPath: 'id',
-            autoIncrement: true
-          })
         }
 
         if (!db.objectStoreNames.contains('llm')) {
