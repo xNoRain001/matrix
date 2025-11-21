@@ -12,7 +12,7 @@
           ) in reports"
           :key="_id"
           variant="subtle"
-          class="hover:bg-accented/50 cursor-pointer"
+          class="cursor-pointer"
           :ui="{ header: 'mb-2', body: 'w-full' }"
         >
           <template #description>
@@ -25,6 +25,7 @@
               </div>
               <Carousel
                 v-if="post.content.images.length"
+                :set-loading="true"
                 :class="post.content.text ? 'mt-2' : ''"
                 :items="post.content.images"
                 :active-index="0"
@@ -39,6 +40,7 @@
               </div>
               <Carousel
                 v-if="comment.content.images.length"
+                :set-loading="true"
                 :class="comment.content.text ? 'mt-2' : ''"
                 :items="comment.content.images"
                 :active-index="0"
@@ -46,12 +48,14 @@
             </template>
             <template v-else-if="reportTarget === 'avatar'">
               <img
+                loading="lazy"
                 class="max-h-80 max-w-80 rounded-lg"
                 :src="`${VITE_OSS_BASE_URL}avatar/${user}`"
               />
             </template>
             <template v-else-if="reportTarget === 'spaceBg'">
               <img
+                loading="lazy"
                 class="max-h-80 max-w-80 rounded-lg"
                 :src="`${VITE_OSS_BASE_URL}space-bg/${user}`"
               />
@@ -80,6 +84,7 @@
             </div>
             <Carousel
               v-if="content.images.length"
+        :set-loading="true"
               :class="content.text ? 'mt-2' : ''"
               :items="content.images"
               :active-index="0"

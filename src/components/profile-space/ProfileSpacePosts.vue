@@ -24,7 +24,7 @@
         index
       ) in postMap[targetId].posts"
       :key="_id"
-      class="hover:bg-accented/50 border-b-accented/50 cursor-pointer space-y-2 rounded-none border-b p-4 sm:p-6"
+      class="border-b-accented/50 cursor-pointer space-y-2 rounded-none border-b p-4 sm:p-6"
     >
       <div class="flex items-center justify-between gap-2">
         <span class="text-toned truncate text-sm">
@@ -50,6 +50,8 @@
       <Carousel
         v-if="images.length"
         @click.stop="useNoop"
+        :set-loading="true"
+        :set-crossorigin="true"
         :items="images"
         :active-index="0"
       />

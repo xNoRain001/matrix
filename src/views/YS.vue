@@ -1,7 +1,7 @@
 <template>
   <UDashboardPanel id="ys">
     <template #header>
-      <UDashboardNavbar title="支援" :ui="{ right: 'gap-3' }">
+      <UDashboardNavbar title="支援" :toggle="false">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>

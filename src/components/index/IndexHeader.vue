@@ -1,5 +1,5 @@
 <template>
-  <UDashboardNavbar title="大厅" :ui="{ right: 'gap-3' }">
+  <UDashboardNavbar title="大厅" :toggle="false">
     <template #leading>
       <UDashboardSidebarCollapse />
     </template>

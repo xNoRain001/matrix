@@ -11,7 +11,7 @@
     @click="viewerOverlay.open({ urls: [{ url: bgURL }] })"
     :src="bgURL"
     :class="isMatch ? '' : '-mt-16'"
-    class="sticky -top-[calc(50vh-4rem)] z-10 h-[50vh] cursor-pointer object-cover"
+    class="sticky -top-[calc(50vh-4rem)] z-10 mx-auto h-[50vh] cursor-pointer object-cover"
     @error="isPlaceholderShow = true"
   />
   <!-- 个人资料卡片 -->
@@ -67,7 +67,7 @@
       </div>
     </div>
     <div class="text-toned text-xs">
-      ID：{{ String(userInfo.profile.registerIndex).padStart(5, '0') }} / IP：{{
+      ID：{{ String(targetProfile.registerIndex).padStart(5, '0') }} / IP：{{
         userInfo.ipInfo.province || '未知'
       }}
     </div>

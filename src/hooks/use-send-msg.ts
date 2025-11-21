@@ -109,7 +109,7 @@ export const sendMsg = async (
         payload.ossURL = ossURL
 
         if (resend) {
-          // 修改为当前时间
+          // 这是给接收方的数据，需要修改为时间为当前时间
           payload.timestamp = Date.now()
           delete messageRecord.resendArgs
           delete messageRecord.error

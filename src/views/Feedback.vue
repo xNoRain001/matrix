@@ -12,7 +12,7 @@
           ) in feedbacks"
           :key="_id"
           variant="subtle"
-          class="hover:bg-accented/50 cursor-pointer"
+          class="cursor-pointer"
           :ui="{ header: 'mb-2', body: 'w-full' }"
         >
           <template #header>
@@ -38,6 +38,7 @@
             </div>
             <Carousel
               v-if="content.images.length"
+              :set-loading="true"
               :class="content.text ? 'mt-2' : ''"
               :items="content.images"
               :active-index="0"

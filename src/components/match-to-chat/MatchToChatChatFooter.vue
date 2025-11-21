@@ -162,7 +162,7 @@
     />
     <UCollapsible v-model:open="expanded">
       <template #content>
-        <div class="grid grid-cols-4 gap-4 pt-4">
+        <div class="grid grid-cols-4 gap-4 py-4">
           <div
             class="flex flex-col items-center"
             v-for="({ icon, label, onSelect }, index) in collapsibleItems"
@@ -494,12 +494,12 @@ const onRandom = async () => {
 
 const collapsibleItems = [
   {
-    icon: 'lucide:file-image',
+    icon: 'lucide:image',
     label: '图片',
     onSelect: () => inputRef.value.click()
   },
   {
-    icon: 'lucide:phone',
+    icon: 'lucide:phone-call',
     label: '语音',
     onSelect: onCall
   },

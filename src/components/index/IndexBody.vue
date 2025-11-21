@@ -118,7 +118,7 @@ const list = [
     to: '/match-to-chat'
   },
   {
-    icon: 'lucide:phone',
+    icon: 'lucide:phone-call',
     title: '语音聊天',
     desc: '高清音质，实时畅聊无延迟',
     matchType: 'talk',

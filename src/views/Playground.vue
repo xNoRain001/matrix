@@ -77,8 +77,11 @@
           <div v-if="content.text" class="break-all whitespace-pre-wrap">
             {{ content.text }}
           </div>
+          <!-- 需要开启 crossorigin，否则切换到个人空间时会报跨域错误 -->
           <Carousel
             v-if="content.images.length"
+            :set-loading="true"
+            :set-crossorigin="true"
             :items="content.images"
             :active-index="0"
           />

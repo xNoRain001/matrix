@@ -15,6 +15,7 @@
         </p>
         <Carousel
           v-if="postMap[targetId].activePost.content.images.length"
+          :set-crossorigin="true"
           :items="postMap[targetId].activePost.content.images"
           :active-index="0"
         />

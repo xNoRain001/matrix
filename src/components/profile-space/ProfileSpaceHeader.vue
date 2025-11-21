@@ -12,7 +12,6 @@
         icon="lucide:chevron-left"
         color="neutral"
         variant="ghost"
-        class="-ms-1.5"
         @click="emits('close')"
       />
     </template>

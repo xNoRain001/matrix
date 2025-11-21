@@ -1,5 +1,5 @@
 <template>
-  <UDashboardNavbar title="消息">
+  <UDashboardNavbar title="消息" :toggle="false">
     <template #leading>
       <UDashboardSidebarCollapse />
     </template>
@@ -31,7 +31,7 @@ import { ref } from 'vue'
 
 const isLLMSlideoverOpen = ref(false)
 const { unreadMsgCounter, lastMsgMap } = storeToRefs(useRecentContactsStore())
-const { userInfo } = storeToRefs(useUserStore())
+const { isMobile, userInfo } = storeToRefs(useUserStore())
 
 const onResetMsgCounter = async () => {
   const _lastMsgMap = lastMsgMap.value

@@ -7,7 +7,7 @@
   />
   <UDashboardPanel v-else id="settings" :ui="{ body: 'lg:py-12' }">
     <template #header>
-      <UDashboardNavbar title="我的">
+      <UDashboardNavbar title="我的" :toggle="false">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>

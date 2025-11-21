@@ -18,8 +18,8 @@
         @select="onSelect"
       >
         <img
-          loading="lazy"
-          crossorigin="anonymous"
+          :loading="setLoading ? 'lazy' : undefined"
+          :crossorigin="setCrossorigin ? 'anonymous' : undefined"
           @click="
             !viewer && viewerOverlay.open({ urls: items, activeIndex: index })
           "
@@ -52,8 +52,8 @@
           @click="select(index)"
         >
           <img
-            loading="lazy"
-            crossorigin="anonymous"
+            :loading="setLoading ? 'lazy' : undefined"
+            :crossorigin="setCrossorigin ? 'anonymous' : undefined"
             :src="
               item.url.startsWith('blob:') || item.url.startsWith('https://')
                 ? item.url
@@ -66,8 +66,8 @@
     </template>
     <img
       v-else
-      loading="lazy"
-      crossorigin="anonymous"
+      :loading="setLoading ? 'lazy' : undefined"
+      :crossorigin="setCrossorigin ? 'anonymous' : undefined"
       @click="!viewer && viewerOverlay.open({ urls: items, activeIndex: 0 })"
       :src="
         items[0].url.startsWith('blob:') || items[0].url.startsWith('https://')
@@ -99,9 +99,13 @@ const props = withDefaults(
     items: { url: string; width?: number; height?: number }[]
     activeIndex: number
     viewer?: boolean
+    setCrossorigin?: boolean
+    setLoading?: boolean
   }>(),
   {
-    viewer: false
+    viewer: false,
+    setCrossorigin: false,
+    setLoading: false
   }
 )
 const overlay = useOverlay()

@@ -90,7 +90,7 @@
         @touchmove.prevent="onTouchmove"
         @touchend="onSaveFloatingBtnPosition"
         @click="!moving && talkOverlay.open()"
-        icon="lucide:phone"
+        icon="lucide:phone-call"
         size="xl"
         class="absolute cursor-pointer"
         :style="{
@@ -1032,13 +1032,13 @@ const onInviteWebRTC = (roomId, targetId, targetProfile) => {
     duration: voiceChatInviteToastExpireTime,
     actions: [
       {
-        icon: 'lucide:phone-off',
+        icon: 'lucide:phone-missed',
         label: '拒绝',
         color: 'error',
         onClick: () => acceptWebRTC(targetProfile, roomId, now, false)
       },
       {
-        icon: 'lucide:phone',
+        icon: 'lucide:phone-incoming',
         label: '同意',
         color: 'primary',
         onClick: () => acceptWebRTC(targetProfile, roomId, now, true)

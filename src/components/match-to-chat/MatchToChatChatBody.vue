@@ -26,7 +26,7 @@
           {{ useFormatTimestamp(item.timestamp) }}
         </div>
         <template v-else-if="item.type === 'text'">
-          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
+          <div v-if="item.sent" class="flex items-start justify-end gap-2 pb-1">
             <UButton
               v-if="item.error"
               @click="onResendMsg(item)"
@@ -48,7 +48,7 @@
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-start gap-3 pb-1">
+          <div v-else class="flex items-start gap-2 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
@@ -65,7 +65,7 @@
           </div>
         </template>
         <template v-else-if="item.type === 'image'">
-          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
+          <div v-if="item.sent" class="flex items-start justify-end gap-2 pb-1">
             <UButton
               v-if="item.error"
               @click="onResendMsg(item)"
@@ -97,7 +97,7 @@
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-start gap-3 pb-1">
+          <div v-else class="flex items-start gap-2 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
@@ -124,7 +124,7 @@
           </div>
         </template>
         <template v-else-if="item.type === 'audio'">
-          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
+          <div v-if="item.sent" class="flex items-start justify-end gap-2 pb-1">
             <UButton
               v-if="item.error"
               @click="onResendMsg(item)"
@@ -279,7 +279,7 @@
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-start gap-3 pb-1">
+          <div v-else class="flex items-start gap-2 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
@@ -314,9 +314,9 @@
           </div>
         </template>
         <template v-else-if="item.type === 'voiceChatCallTip'">
-          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
+          <div v-if="item.sent" class="flex items-start justify-end gap-2 pb-1">
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon name="lucide:phone" class="size-5" />
+              <UIcon name="lucide:phone-outgoing" class="size-5" />
               发起了语音通话
             </div>
             <UAvatar
@@ -328,7 +328,7 @@
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-start gap-3 pb-1">
+          <div v-else class="flex items-start gap-2 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
@@ -338,13 +338,13 @@
             />
             <div v-else class="w-10"></div>
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon name="lucide:phone" class="size-5" />
+              <UIcon name="lucide:phone-outgoing" class="size-5" />
               发起了语音通话
             </div>
           </div>
         </template>
         <template v-else-if="item.type === 'voiceChatCallOffTip'">
-          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
+          <div v-if="item.sent" class="flex items-start justify-end gap-2 pb-1">
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
               <UIcon name="lucide:phone-missed" class="size-5" />
               结束了语音通话
@@ -358,7 +358,7 @@
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-start gap-3 pb-1">
+          <div v-else class="flex items-start gap-2 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
@@ -374,7 +374,7 @@
           </div>
         </template>
         <template v-else-if="item.type === 'voiceChatRefuseTip'">
-          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
+          <div v-if="item.sent" class="flex items-start justify-end gap-2 pb-1">
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
               <UIcon name="lucide:phone-missed" class="size-5" />
               拒绝了语音通话
@@ -388,7 +388,7 @@
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-start gap-3 pb-1">
+          <div v-else class="flex items-start gap-2 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
@@ -404,9 +404,9 @@
           </div>
         </template>
         <template v-else-if="item.type === 'voiceChatAgreeTip'">
-          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
+          <div v-if="item.sent" class="flex items-start justify-end gap-2 pb-1">
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon name="lucide:phone" class="size-5" />
+              <UIcon name="lucide:phone-incoming" class="size-5" />
               同意了语音通话
             </div>
             <UAvatar
@@ -418,7 +418,7 @@
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-start gap-3 pb-1">
+          <div v-else class="flex items-start gap-2 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
@@ -428,13 +428,13 @@
             />
             <div v-else class="w-10"></div>
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
-              <UIcon name="lucide:phone" class="size-5" />
+              <UIcon name="lucide:phone-incoming" class="size-5" />
               同意了语音通话
             </div>
           </div>
         </template>
         <template v-else-if="item.type === 'voiceChatAgreeButNoPermissionTip'">
-          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
+          <div v-if="item.sent" class="flex items-start justify-end gap-2 pb-1">
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
               <UIcon name="lucide:phone-missed" class="size-5" />
               权限不足
@@ -448,7 +448,7 @@
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-start gap-3 pb-1">
+          <div v-else class="flex items-start gap-2 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
@@ -464,7 +464,7 @@
           </div>
         </template>
         <template v-else-if="item.type === 'contactAgreeTip'">
-          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
+          <div v-if="item.sent" class="flex items-start justify-end gap-2 pb-1">
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
               <UIcon name="lucide:smile" class="size-5" />
               {{ item.content }}
@@ -478,7 +478,7 @@
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-start gap-3 pb-1">
+          <div v-else class="flex items-start gap-2 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
@@ -502,7 +502,7 @@
           <UIcon name="lucide:dice-5" hidden />
           <UIcon name="lucide:dice-6" hidden />
 
-          <div v-if="item.sent" class="flex items-start justify-end gap-3 pb-1">
+          <div v-if="item.sent" class="flex items-start justify-end gap-2 pb-1">
             <div class="bg-muted flex items-center gap-2 rounded-xl px-4 py-2">
               <UIcon :name="`lucide:dice-${item.content}`" class="size-16" />
             </div>
@@ -515,7 +515,7 @@
             />
             <div v-else class="w-10"></div>
           </div>
-          <div v-else class="flex items-start gap-3 pb-1">
+          <div v-else class="flex items-start gap-2 pb-1">
             <UAvatar
               data-type="avatar"
               v-if="item.separator"
