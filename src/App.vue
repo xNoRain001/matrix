@@ -302,12 +302,12 @@ const navs = [
       label: '关于我们',
       icon: 'lucide:info',
       onSelect: () => abouttOverlay.open()
-    },
-    {
-      label: '只有神知道的世界',
-      icon: 'lucide:leaf',
-      onSelect: () => router.replace('/ys')
     }
+    // {
+    //   label: '只有神知道的世界',
+    //   icon: 'lucide:leaf',
+    //   onSelect: () => router.replace('/ys')
+    // }
   ]
 ] satisfies NavigationMenuItem[][]
 const groups = computed(() => [

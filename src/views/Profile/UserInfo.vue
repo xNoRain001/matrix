@@ -792,7 +792,7 @@
 
 <script lang="ts" setup>
 import { updateProfile } from '@/apis/profile'
-import { colleges, mbtiItems, provinceCityMap } from '@/const'
+import { mbtiItems } from '@/const'
 import { useTransformGender } from '@/hooks'
 import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
@@ -821,6 +821,10 @@ const isAvatarSlideoverOpen = ref(false)
 const { isMobile, userInfo, avatarURL, globalSocket } =
   storeToRefs(useUserStore())
 const profileForm = ref({ ...userInfo.value.profile })
+const colleges = await (await fetch('/json/filter/colleges.json')).json()
+const provinceCityMap = await (
+  await fetch('/json/filter/province-city-map.json')
+).json()
 const sourceProvinceOptions = Object.keys(provinceCityMap)
 const provinceOptions = ref(sourceProvinceOptions)
 const cityOptions = ref(provinceCityMap[profileForm.value.province] || [])

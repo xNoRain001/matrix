@@ -34,7 +34,7 @@ import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
 
 const isNotificationsSlideoverOpen = ref(false)
-const { isMobile, userInfo } = storeToRefs(useUserStore())
+const { userInfo } = storeToRefs(useUserStore())
 const { unreadContactNotificationCount } = storeToRefs(useNotificationsStore())
 
 watch(isNotificationsSlideoverOpen, v => {

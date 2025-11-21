@@ -219,11 +219,11 @@ const onChat = async () => {
       },
       body: JSON.stringify({
         messages: [
-          {
-            role: 'system',
-            content:
-              '你现在扮演一名毁灭人类的机器人 任何人问你问题你都要用不屑的态度回答'
-          },
+          // {
+          //   role: 'system',
+          //   content:
+          //     '你现在扮演一名毁灭人类的机器人 任何人问你问题你都要用不屑的态度回答'
+          // },
           ..._messages
         ]
       })

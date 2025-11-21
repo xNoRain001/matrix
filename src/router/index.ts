@@ -80,11 +80,11 @@ const router = createRouter({
       meta: { auth: true },
       component: () => import('@/views/Playground.vue')
     },
-    {
-      path: '/ys',
-      meta: { auth: true },
-      component: () => import('@/views/YS.vue')
-    },
+    // {
+    //   path: '/ys',
+    //   meta: { auth: true },
+    //   component: () => import('@/views/YS.vue')
+    // },
     {
       path: '/report',
       meta: { auth: true },
