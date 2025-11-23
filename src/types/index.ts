@@ -61,6 +61,7 @@ export type userInfo = {
       province: string
       city: string
     }
+    loginDates?: string[]
   }
 }
 

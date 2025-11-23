@@ -103,9 +103,6 @@
       />
     </div>
     <div class="text-highlighted mt-2 flex gap-4 text-xs">
-      <div v-if="isSelf" @click="onOpenFollowerSlideover('mutual')">
-        互关：1
-      </div>
       <div @click="onOpenFollowerSlideover('following')">关注：1</div>
       <div @click="onOpenFollowerSlideover('follower')">粉丝：1</div>
     </div>
@@ -178,7 +175,8 @@ const props = withDefaults(
 )
 const spaceBgRef = useTemplateRef('spaceBgRef')
 const toast = useToast()
-const { isMobile, userInfo, avatarURL } = storeToRefs(useUserStore())
+const { isMobile, userInfo, avatarURL, globalSocket } =
+  storeToRefs(useUserStore())
 const { activeTargetIds } = storeToRefs(useRecentContactsStore())
 const isSelf = props.targetId === userInfo.value.id
 const isToggleBtnShow = Boolean(
@@ -199,7 +197,7 @@ const isFollowSlideoverOpen = ref(false)
 const { path } = route
 const isChatBtnShow = path === '/messages' && activeTargetIds.value.size === 1
 const isContacts = path === '/contacts'
-const activeTab = ref<'' | 'mutual' | 'following' | 'follower'>('')
+const activeTab = ref<'' | 'following' | 'follower'>('')
 
 const onOpenFollowerSlideover = async v => {
   if (!isSelf) {
@@ -224,8 +222,10 @@ const onOpenFollowerSlideover = async v => {
 
 const onFollow = async () => {
   try {
-    await followAPI(props.targetId)
+    const { targetId } = props
+    await followAPI(targetId)
     props.targetProfile.isFollower = true
+    globalSocket.value.emit('follow', targetId)
     toast.add({
       title: '关注成功',
       icon: 'lucide:smile'
@@ -241,7 +241,8 @@ const onFollow = async () => {
 
 const onUnfollow = async () => {
   try {
-    await unfollowAPI(props.targetId)
+    const { targetId } = props
+    await unfollowAPI(targetId)
     props.targetProfile.isFollower = false
     toast.add({
       title: '取消关注成功',

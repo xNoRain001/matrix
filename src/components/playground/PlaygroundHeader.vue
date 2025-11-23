@@ -46,15 +46,20 @@
       <template v-if="activeTab === 'like'">
         <div
           v-if="likeNotifications.length"
-          v-for="{ id, profile, createdAt } in likeNotifications"
-          :key="id"
+          v-for="{
+            _id,
+            targetId,
+            targetProfile: { nickname },
+            createdAt
+          } in likeNotifications"
+          :key="_id"
           class="bg-elevated/50 border-b-accented/50 cursor-pointer rounded-none border-b p-4 sm:p-6"
         >
           <UUser
-            :name="profile.nickname"
+            :name="nickname"
             :avatar="{
-              src: `${VITE_OSS_BASE_URL}avatar/${id}`,
-              alt: profile.nickname[0]
+              src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
+              alt: nickname[0]
             }"
             size="xl"
             :ui="{
@@ -77,15 +82,20 @@
       <template v-if="activeTab === 'star'">
         <div
           v-if="likeNotifications.length"
-          v-for="{ id, profile, createdAt } in likeNotifications"
-          :key="id"
+          v-for="{
+            _id,
+            targetId,
+            targetProfile: { nickname },
+            createdAt
+          } in likeNotifications"
+          :key="_id"
           class="bg-elevated/50 border-b-accented/50 cursor-pointer rounded-none border-b p-4 sm:p-6"
         >
           <UUser
-            :name="profile.nickname"
+            :name="nickname"
             :avatar="{
-              src: `${VITE_OSS_BASE_URL}avatar/${id}`,
-              alt: profile.nickname[0]
+              src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
+              alt: nickname[0]
             }"
             size="xl"
             :ui="{
@@ -108,15 +118,20 @@
       <template v-if="activeTab === 'comment'">
         <div
           v-if="likeNotifications.length"
-          v-for="{ id, profile, createdAt } in likeNotifications"
-          :key="id"
+          v-for="{
+            _id,
+            targetId,
+            targetProfile: { nickname },
+            createdAt
+          } in likeNotifications"
+          :key="_id"
           class="bg-elevated/50 border-b-accented/50 cursor-pointer rounded-none border-b p-4 sm:p-6"
         >
           <UUser
-            :name="profile.nickname"
+            :name="nickname"
             :avatar="{
-              src: `${VITE_OSS_BASE_URL}avatar/${id}`,
-              alt: profile.nickname[0]
+              src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
+              alt: nickname[0]
             }"
             size="xl"
             :ui="{

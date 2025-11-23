@@ -19,7 +19,7 @@
         :target-profile="targetProfile"
       />
       <!-- 日历热力图 -->
-      <!-- <ProfileSpaceCalHeatMap /> -->
+      <!-- <ProfileSpaceCalHeatMap :target-profile="targetProfile" /> -->
       <!-- 动态 -->
       <ProfileSpacePosts
         :is-match="isMatch"

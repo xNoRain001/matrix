@@ -26,13 +26,10 @@ import useFormatTimeAgo from './use-format-time-ago'
 import useAddMessageRecordToDB from './use-add-message-record-to-db'
 import useAddMessageRecordToView from './use-add-message-record-to-view'
 import useUpdateLastMsgToView from './use-update-last-msg-to-view'
-import useRefreshContacts from './use-refresh-contacts'
 import useGenHash from './use-gen-hash'
 import useFixIndexedDB from './use-fix-indexed-db'
 import useHideMessageList from './use-hide-message-list'
 import useClearMessageRecord from './use-clear-message-record'
-import useDeleteContact from './use-delete-contact'
-import useAddContact from './use-add-contact'
 import useInitLabelAndSeparator from './use-init-label-and-separator'
 import useRefreshOnlineStatus from './use-refresh-online-status'
 import useSendMsg from './use-send-msg'
@@ -79,13 +76,10 @@ export {
   useSendMsg,
   useRefreshOnlineStatus,
   useInitLabelAndSeparator,
-  useAddContact,
-  useDeleteContact,
   useClearMessageRecord,
   useHideMessageList,
   useFixIndexedDB,
   useGenHash,
-  useRefreshContacts,
   useAddMessageRecordToDB,
   useAddMessageRecordToView,
   useUpdateLastMsgToView,

@@ -1,17 +1,15 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { userInfo } from '@/types'
 import useUserStore from './use-user-store'
 import { useInitLocalStorage } from '@/hooks'
 
 type notifications = {
   _id: string
+  targetId: string
+  targetProfile: { nickname: string }
+  type: 'follow' | 'feedback' | 'reporter' | 'reported'
   content: string
   createdAt: number
-  id: string
-  type: 'contact' | 'feedback' | 'reporter' | 'reported'
-  actionType: 'addContact' | 'agreeContact' | 'refuseContact' | 'deleteContact'
-  profile: userInfo['profile']
 }[]
 
 const useNotificationsStore = defineStore('notificationsStore', () => {

@@ -24,12 +24,10 @@
       </div>
       <div
         v-if="userMap[activeTab].length"
-        v-for="{
-          _id,
-          following,
-          followingProfile: { nickname, bio }
-        } in userMap[activeTab]"
-        :key="_id"
+        v-for="{ following, followingProfile: { nickname, bio } } in userMap[
+          activeTab
+        ]"
+        :key="following"
         @click="
           !activeSpaceTargetIds.has(following) &&
           profileSpaceOverlay.open({
@@ -76,21 +74,14 @@
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
-import {
-  getFollowersAPI,
-  getFollowingAPI,
-  getMutualsAPI,
-  unfollowAPI
-} from '@/apis/follow'
+import { getFollowersAPI, getFollowingAPI, unfollowAPI } from '@/apis/follow'
 import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
 
 const props = defineProps<{
   targetId: string
 }>()
 const isFollowSlideoverOpen = defineModel<boolean>()
-const activeTab = defineModel<'' | 'mutual' | 'following' | 'follower'>(
-  'active-tab'
-)
+const activeTab = defineModel<'' | 'following' | 'follower'>('active-tab')
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const { activeSpaceTargetIds } = storeToRefs(useRecentContactsStore())
 const isSelf = props.targetId === userInfo.value.id
@@ -99,7 +90,6 @@ const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 const loading = ref(true)
 const loadingFollowings = ref(true)
 const loadingFollowers = ref(true)
-const loadingMutuals = ref(true)
 const toast = useToast()
 const { VITE_OSS_BASE_URL } = import.meta.env
 const tabItems = [
@@ -112,16 +102,7 @@ const tabItems = [
     value: 'follower'
   }
 ]
-
-if (isSelf) {
-  tabItems.unshift({
-    label: '互关',
-    value: 'mutual'
-  })
-}
-
 const userMap = ref({
-  mutual: [],
   following: [],
   follower: []
 })
@@ -162,16 +143,6 @@ const getUsers = async () => {
     }
 
     loadingFollowers.value = false
-    loading.value = false
-  } else if (v === 'mutual' && loadingMutuals.value) {
-    loading.value = true
-    const { data } = await getMutualsAPI()
-
-    if (data.length) {
-      _userMap[v] = data
-    }
-
-    loadingMutuals.value = false
     loading.value = false
   }
 }

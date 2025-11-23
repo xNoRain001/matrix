@@ -140,7 +140,6 @@ import {
   useAddMessageRecordToView,
   useAddMessageRecordToDB,
   useUpdateLastMsgToDB,
-  useRefreshContacts,
   useInitLabelAndSeparator,
   useSendMsg,
   useUpdateLastMsgToView,
@@ -201,7 +200,6 @@ const {
   unreadMsgCounter,
   lastMsgMap,
   lastMsgList,
-  contactList,
   contactProfileMap,
   hashToBlobURLMap,
   indexMap,
@@ -481,15 +479,7 @@ const startRTC = async roomId => {
   globalSocket.value.emit('web-rtc', roomId, { description: offer })
 }
 
-const onAddContact = async notification => {
-  toast.add({
-    title: notification.profile.nickname,
-    description: '请求添加你为好友',
-    avatar: {
-      src: `${VITE_OSS_BASE_URL}avatar/${notification.id}`,
-      alt: notification.profile.nickname[0]
-    }
-  })
+const onFollow = async notification => {
   const _contactNotifications = contactNotifications.value
   const { id } = userInfo.value
   _contactNotifications.unshift(notification)
@@ -502,79 +492,6 @@ const onAddContact = async notification => {
     `unreadContactNotificationCount-${id}`,
     String(unreadContactNotificationCount.value)
   )
-}
-
-const onAgreeContact = (notification, contact) => {
-  const _contactNotifications = contactNotifications.value
-  _contactNotifications.unshift(notification)
-  unreadContactNotificationCount.value++
-  const { id } = userInfo.value
-  localStorage.setItem(
-    `contactNotifications-${id}`,
-    JSON.stringify(_contactNotifications)
-  )
-  localStorage.setItem(
-    `unreadContactNotificationCount-${id}`,
-    String(unreadContactNotificationCount.value)
-  )
-  const _contactList = contactList.value
-  const _contactProfileMap = contactProfileMap.value
-  const { id: contactId } = contact
-  _contactList.unshift(contactId)
-  _contactProfileMap[contactId] = contact
-  localStorage.setItem(`contactList-${id}`, JSON.stringify(_contactList))
-  localStorage.setItem(
-    `contactProfileMap-${id}`,
-    JSON.stringify(_contactProfileMap)
-  )
-}
-
-const onRefuseContact = notification => {
-  const _contactNotifications = contactNotifications.value
-  const { id } = userInfo.value
-  _contactNotifications.unshift(notification)
-  unreadContactNotificationCount.value++
-  localStorage.setItem(
-    `contactNotifications-${id}`,
-    JSON.stringify(_contactNotifications)
-  )
-  localStorage.setItem(
-    `unreadContactNotificationCount-${id}`,
-    String(unreadContactNotificationCount.value)
-  )
-}
-
-const onDeleteContact = (notification, targetId) => {
-  const _contactNotifications = contactNotifications.value
-  _contactNotifications.unshift(notification)
-  unreadContactNotificationCount.value++
-  const { id } = userInfo.value
-  localStorage.setItem(
-    `contactNotifications-${id}`,
-    JSON.stringify(_contactNotifications)
-  )
-  localStorage.setItem(
-    `unreadContactNotificationCount-${id}`,
-    String(unreadContactNotificationCount.value)
-  )
-
-  const _contactList = contactList.value
-  const _contactProfileMap = contactProfileMap.value
-  const index = _contactList.findIndex(id => id === targetId)
-
-  if (index >= 0) {
-    _contactList.splice(index, 1)
-    delete _contactProfileMap[targetId]
-    localStorage.setItem(`contactList-${id}`, JSON.stringify(_contactList))
-    localStorage.setItem(
-      `contactProfileMap-${id}`,
-      JSON.stringify(_contactProfileMap)
-    )
-  }
-}
-
-const onRefreshContacts = data => {
-  useRefreshContacts(userInfo.value.id, data, contactList, contactProfileMap)
 }
 
 const onTrack = ({ track, streams }) => {
@@ -1335,16 +1252,8 @@ const initSocket = socket => {
   socket.on('otherjoin', onOtherJoin)
   // web rtc
   socket.on('web-rtc', onWebRTC)
-  // 好友请求
-  socket.on('add-contact', onAddContact)
-  // 对方同意了我的好友请求
-  socket.on('agree-contact', onAgreeContact)
-  // 对方拒绝了我的好友请求
-  socket.on('refuse-contact', onRefuseContact)
-  // 对方将我从好友列表中移除了
-  socket.on('delete-contact', onDeleteContact)
-  // 在我离线时，有人同意了我的好友请求，在线时需要刷新好友列表
-  socket.on('refresh-contacts', onRefreshContacts)
+  // 被关注
+  socket.on('follow', onFollow)
   // 接收消息
   socket.on('receive-msg', onReceiveMsg)
   // 接收的离线消息

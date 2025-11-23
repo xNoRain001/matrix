@@ -28,112 +28,30 @@
   <UDropdownMenu v-else :items="dropdownItems">
     <UButton icon="lucide:ellipsis" color="neutral" variant="ghost" />
   </UDropdownMenu>
-  <defineOverlayTemplate>
-    <UButton
-      label="取消"
-      color="neutral"
-      class="justify-center"
-      @click="isOverlayOpen = false"
-    />
-    <UButton label="确认" class="justify-center" @click="onDeleteContact()" />
-  </defineOverlayTemplate>
-  <UDrawer
-    v-if="isMobile"
-    v-model:open="isOverlayOpen"
-    :title="title"
-    description=" "
-    :ui="{ description: 'hidden' }"
-  >
-    <template #footer>
-      <reuseOverlayTemplate />
-    </template>
-  </UDrawer>
-  <UModal
-    v-else
-    v-model:open="isOverlayOpen"
-    :title="title"
-    description=" "
-    :ui="{ description: 'hidden' }"
-  >
-    <template #footer>
-      <reuseOverlayTemplate />
-    </template>
-  </UModal>
 </template>
 
 <script lang="ts" setup>
-import { useAddContact, useDeleteContact } from '@/hooks'
-import { useRecentContactsStore, useUserStore } from '@/store'
-import { createReusableTemplate } from '@vueuse/core'
+import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
 import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
-import type { userInfo } from '@/types'
 
 const props = defineProps<{
   targetId: string
 }>()
-const toast = useToast()
-const [defineOverlayTemplate, reuseOverlayTemplate] = createReusableTemplate()
-const isOverlayOpen = ref(false)
-const title = ref('')
-const { isSpaceOpen, activeSpaceTargetIds, contactProfileMap, contactList } =
-  storeToRefs(useRecentContactsStore())
-const { globalSocket, userInfo, isMobile } = storeToRefs(useUserStore())
-const route = useRoute()
-const isDeleteContactActionInList =
-  activeSpaceTargetIds.value.size === 1 && route.path === '/contacts'
-const addContact = {
-  label: '添加好友',
-  icon: 'lucide:circle-plus',
-  onSelect: () => useAddContact(props.targetId, globalSocket, toast)
-}
-const deleteContact = {
-  label: '删除好友',
-  icon: 'i-lucide-triangle-alert',
-  onSelect: () => {
-    title.value = '删除好友'
-    isOverlayOpen.value = true
-  }
-}
+const { isMobile } = storeToRefs(useUserStore())
 const overlay = useOverlay()
 const publisherOverlay = overlay.create(OverlayPublisher)
-const report = {
-  label: '举报个人资料',
-  icon: 'lucide:circle-alert',
-  onSelect: () => {
-    publisherOverlay.open({
-      action: 'report',
-      reportTarget: 'profile',
-      reportedUserId: props.targetId
-    })
+const dropdownItems = [
+  {
+    label: '举报个人资料',
+    icon: 'lucide:circle-alert',
+    onSelect: () => {
+      publisherOverlay.open({
+        action: 'report',
+        reportTarget: 'profile',
+        reportedUserId: props.targetId
+      })
+    }
   }
-}
-const dropdownItems = computed(() =>
-  contactProfileMap.value[props.targetId]
-    ? // 只有 contacts 页面下的一级界面才提供删除好友的选项
-      isDeleteContactActionInList
-      ? [deleteContact, report]
-      : [report]
-    : [addContact, report]
-)
-
-const onDeleteContact = async () => {
-  try {
-    await useDeleteContact(
-      userInfo,
-      props.targetId,
-      contactList,
-      contactProfileMap,
-      globalSocket,
-      toast,
-      activeSpaceTargetIds,
-      isSpaceOpen
-    )
-  } catch {
-  } finally {
-    isOverlayOpen.value = false
-  }
-}
+]
 </script>

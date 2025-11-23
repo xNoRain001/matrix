@@ -13,21 +13,22 @@
       <div
         v-if="contactNotifications.length"
         v-for="(
-          { id, profile, createdAt, content, actionType }, index
+          { _id, targetId, targetProfile: { nickname }, createdAt, content },
+          index
         ) in contactNotifications"
-        :key="id"
+        :key="_id"
         class="bg-elevated/50 border-b-accented/50 cursor-pointer rounded-none border-b p-4 sm:p-6"
         @click="
-          !activeSpaceTargetIds.has(id) &&
+          !activeSpaceTargetIds.has(targetId) &&
           profileSpaceOverlay.open({
-            targetId: id
+            targetId
           })
         "
       >
         <UUser
           :avatar="{
-            src: `${VITE_OSS_BASE_URL}avatar/${id}`,
-            alt: profile.nickname[0]
+            src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
+            alt: nickname[0]
           }"
           size="xl"
           :ui="{
@@ -37,24 +38,8 @@
           }"
         >
           <template #name>
-            <span class="truncate">{{ profile.nickname }}</span>
-            <div v-if="actionType === 'addContact'" class="flex gap-2">
-              <UButton
-                @click.stop="onRefuse(id)"
-                color="error"
-                label="拒绝"
-                icon="lucide:x"
-                size="xs"
-              />
-              <UButton
-                @click.stop="onAgree(id, profile)"
-                label="同意"
-                icon="lucide:check"
-                size="xs"
-              />
-            </div>
+            <span class="truncate">{{ nickname }}</span>
             <UButton
-              v-else
               @click.stop="onDelete(index)"
               color="error"
               label="删除"
@@ -77,34 +62,20 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import {
-  useMatchStore,
-  useMessagesStore,
   useNotificationsStore,
   useRecentContactsStore,
   useUserStore
 } from '@/store'
-import { useFormatTimeAgo, useSendMsg } from '@/hooks'
-import { agreeCandidate, refuseCandidate } from '@/apis/contact'
+import { useFormatTimeAgo } from '@/hooks'
 import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 
 const { VITE_OSS_BASE_URL } = import.meta.env
 const isNotificationsSlideoverOpen = defineModel<boolean>()
-const { userInfo, globalSocket, isMobile } = storeToRefs(useUserStore())
-const { matchRes } = storeToRefs(useMatchStore())
-const {
-  contactList,
-  contactProfileMap,
-  lastMsgList,
-  lastMsgMap,
-  indexMap,
-  unreadMsgCounter,
-  activeSpaceTargetIds
-} = storeToRefs(useRecentContactsStore())
+const { userInfo, isMobile } = storeToRefs(useUserStore())
+const { activeSpaceTargetIds } = storeToRefs(useRecentContactsStore())
 const { contactNotifications } = storeToRefs(useNotificationsStore())
-const { messageRecordMap } = storeToRefs(useMessagesStore())
 const overlay = useOverlay()
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
-const toast = useToast()
 
 const onDelete = index => {
   const _contactNotifications = contactNotifications.value
@@ -113,91 +84,5 @@ const onDelete = index => {
     `contactNotifications-${userInfo.value.id}`,
     JSON.stringify(_contactNotifications)
   )
-}
-
-const onRefuse = async targetId => {
-  try {
-    await refuseCandidate(targetId)
-    contactNotifications.value = contactNotifications.value.filter(
-      item => item.id !== targetId
-    )
-    const { id } = userInfo.value
-    localStorage.setItem(
-      `contactNotifications-${id}`,
-      JSON.stringify(contactNotifications.value)
-    )
-    globalSocket.value.emit('refuse-contact', targetId)
-  } catch (error) {
-    toast.add({
-      title: error.message,
-      color: 'error',
-      icon: 'lucide:annoyed'
-    })
-  }
-}
-
-const onAgree = async (targetId, targetProfile) => {
-  try {
-    await agreeCandidate(targetId)
-
-    contactNotifications.value = contactNotifications.value.filter(
-      item => item.id !== targetId
-    )
-    const { id } = userInfo.value
-
-    localStorage.setItem(
-      `contactNotifications-${id}`,
-      JSON.stringify(contactNotifications.value)
-    )
-
-    // 互相添加好友，其中一方已经同意，不用进行后续处理
-    if (contactProfileMap.value[targetId]) {
-      return
-    }
-
-    const _contactList = contactList.value
-    const _contactProfileMap = contactProfileMap.value
-    const local = {
-      id: targetId,
-      createdAt: Date.now(),
-      remark: '',
-      status: 'normal' as const,
-      profile: targetProfile
-    }
-    _contactList.unshift(targetId)
-    _contactProfileMap[targetId] = local
-    localStorage.setItem(`contactList-${id}`, JSON.stringify(_contactList))
-    localStorage.setItem(
-      `contactProfileMap-${id}`,
-      JSON.stringify(_contactProfileMap)
-    )
-    globalSocket.value.emit('agree-contact', targetId)
-    useSendMsg(
-      'contactAgreeTip',
-      '同意了你的好友请求',
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      targetId,
-      userInfo,
-      globalSocket,
-      messageRecordMap,
-      lastMsgList,
-      lastMsgMap,
-      matchRes,
-      indexMap,
-      unreadMsgCounter,
-      false
-    )
-  } catch (error) {
-    toast.add({
-      title: error.message,
-      color: 'error',
-      icon: 'lucide:annoyed'
-    })
-  }
 }
 </script>

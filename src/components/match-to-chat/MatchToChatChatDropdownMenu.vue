@@ -74,11 +74,7 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  useAddContact,
-  useClearMessageRecord,
-  useHideMessageList
-} from '@/hooks'
+import { useClearMessageRecord, useHideMessageList } from '@/hooks'
 import useDeleteMessageList from '@/hooks/use-delete-message-list'
 import { useMessagesStore, useRecentContactsStore, useUserStore } from '@/store'
 import type { userInfo } from '@/types'
@@ -111,7 +107,7 @@ const {
   indexMap,
   unreadMsgCounter
 } = storeToRefs(useRecentContactsStore())
-const { globalSocket, userInfo, isMobile } = storeToRefs(useUserStore())
+const { userInfo, isMobile } = storeToRefs(useUserStore())
 const { messageRecordMap } = storeToRefs(useMessagesStore())
 const route = useRoute()
 const isConfirmOverlayOpen = ref(false)
@@ -136,11 +132,6 @@ const deleteMessageRecord = {
     description.value = '该操作会删除聊天记录'
     isConfirmOverlayOpen.value = true
   }
-}
-const addContact = {
-  label: '添加好友',
-  icon: 'lucide:circle-plus',
-  onSelect: () => useAddContact(props.targetId, globalSocket, toast)
 }
 const overlay = useOverlay()
 const publisherOverlay = overlay.create(OverlayPublisher)
@@ -190,11 +181,11 @@ const dropdownItems = computed(() =>
         : [deleteMessageRecord, report]
     : props.isMatch
       ? isMobile.value
-        ? [addContact, deleteMessageRecord, report]
-        : [addContact, deleteMessageRecord, report, reportAvatarOrSpaceBg]
+        ? [deleteMessageRecord, report]
+        : [deleteMessageRecord, report, reportAvatarOrSpaceBg]
       : isListActionShow
-        ? [addContact, deleteList, deleteMessageRecord, report]
-        : [addContact, deleteMessageRecord, report]
+        ? [deleteList, deleteMessageRecord, report]
+        : [deleteMessageRecord, report]
 )
 
 const onDeleteList = async () => {

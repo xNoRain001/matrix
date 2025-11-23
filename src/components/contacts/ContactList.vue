@@ -1,102 +1,68 @@
 <template>
-  <UContextMenu
-    :items="contextMenuItems"
-    :ui="{
-      content: 'w-48'
-    }"
-  >
-    <div class="divide-default divide-y overflow-y-auto">
-      <template v-if="isFirstGetContactsOnlineStatus">
-        <div
-          v-for="i in 5"
-          :key="i"
-          class="flex items-center gap-2.5 p-4 sm:px-6"
-        >
-          <USkeleton class="size-10 rounded-full" />
-
-          <div class="grid flex-1 gap-2">
-            <USkeleton class="h-4 w-full" />
-            <USkeleton class="h-4 w-4/5" />
-          </div>
-        </div>
-      </template>
+  <div class="divide-default divide-y overflow-y-auto">
+    <template v-if="isFirstGetContactsOnlineStatus">
       <div
-        v-else
-        v-for="id in contactList"
-        :key="id"
-        @contextmenu="contextmenuId = id"
+        v-for="i in 5"
+        :key="i"
+        class="flex items-center gap-2.5 p-4 sm:px-6"
       >
-        <SlideItem>
-          <template #right>
-            <div class="flex flex-1 text-sm font-semibold">
-              <!-- <div class="bg-secondary flex flex-1 items-center justify-center">
-                批量
-              </div> -->
-              <div
-                class="bg-error flex flex-1 items-center justify-center"
-                @click="onDeleteContact(id)"
-              >
-                删除
-              </div>
-            </div>
-          </template>
-          <div
-            class="w-full cursor-pointer p-4 transition-colors sm:px-6"
-            :class="
-              isMobile
-                ? []
-                : [
-                    'border-l-2',
-                    activeTargetId === id
-                      ? 'border-primary bg-primary/10'
-                      : 'hover:border-primary hover:bg-primary/5 border-bg'
-                  ]
-            "
-            @click="onClick(id)"
-          >
-            <UUser
-              :avatar="{
-                src: `${VITE_OSS_BASE_URL}avatar/${id}`,
-                alt: contactProfileMap[id].profile.nickname[0]
-              }"
-              size="xl"
-              :chip="{
-                color: contactProfileMap[id].profile?.onlineStatus?.isOnline
-                  ? 'primary'
-                  : 'error'
-              }"
-              :name="contactProfileMap[id].profile.nickname"
-              :description="`${contactProfileMap[id].profile?.onlineStatus?.isOnline ? '在线' : formatLastOnline(contactProfileMap[id].profile?.onlineStatus?.lastOnline)}`"
-              :ui="{
-                wrapper: 'flex-1 min-w-0',
-                name: 'truncate'
-              }"
-            />
-          </div>
-        </SlideItem>
+        <USkeleton class="size-10 rounded-full" />
+
+        <div class="grid flex-1 gap-2">
+          <USkeleton class="h-4 w-full" />
+          <USkeleton class="h-4 w-4/5" />
+        </div>
+      </div>
+    </template>
+    <div v-else v-for="id in contactList" :key="id">
+      <div
+        class="w-full cursor-pointer p-4 transition-colors sm:px-6"
+        :class="
+          isMobile
+            ? []
+            : [
+                'border-l-2',
+                activeTargetId === id
+                  ? 'border-primary bg-primary/10'
+                  : 'hover:border-primary hover:bg-primary/5 border-bg'
+              ]
+        "
+        @click="onClick(id)"
+      >
+        <UUser
+          :avatar="{
+            src: `${VITE_OSS_BASE_URL}avatar/${id}`,
+            alt: contactProfileMap[id].profile.nickname[0]
+          }"
+          size="xl"
+          :chip="{
+            color: contactProfileMap[id].profile.onlineStatus?.isOnline
+              ? 'primary'
+              : 'error'
+          }"
+          :name="contactProfileMap[id].profile.nickname"
+          :description="`${contactProfileMap[id].profile.onlineStatus?.isOnline ? '在线' : formatLastOnline(contactProfileMap[id].profile.onlineStatus?.lastOnline)}`"
+          :ui="{
+            wrapper: 'flex-1 min-w-0',
+            name: 'truncate'
+          }"
+        />
       </div>
     </div>
-  </UContextMenu>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import type { ContextMenuItem } from '@nuxt/ui'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
-import {
-  useDeleteContact,
-  useFormatTimestamp,
-  useRefreshOnlineStatus
-} from '@/hooks'
-import type { userInfo } from '@/types'
+import { onBeforeUnmount, onMounted } from 'vue'
+import { useFormatTimestamp, useRefreshOnlineStatus } from '@/hooks'
 import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 import { day, fiveMinutes, haldAnHour, hour, tenMinutes } from '@/const'
 
 let timer = null
-let contextmenuId = ''
 const { VITE_OSS_BASE_URL } = import.meta.env
-const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
+const { isMobile, globalSocket } = storeToRefs(useUserStore())
 const {
   isSpaceOpen,
   activeTargetId,
@@ -106,26 +72,6 @@ const {
   contactProfileMap,
   isFirstGetContactsOnlineStatus
 } = storeToRefs(useRecentContactsStore())
-const toast = useToast()
-const contextMenuItems = ref<ContextMenuItem[][]>([
-  [
-    {
-      label: '删除好友',
-      icon: 'i-lucide-triangle-alert',
-      onSelect: () =>
-        useDeleteContact(
-          userInfo,
-          contextmenuId,
-          contactList,
-          contactProfileMap,
-          globalSocket,
-          toast,
-          activeSpaceTargetIds,
-          isSpaceOpen
-        )
-    }
-  ]
-])
 const overlay = useOverlay()
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 
@@ -157,18 +103,6 @@ const onClick = targetId => {
     isSpaceOpen.value = true
   }
 }
-
-const onDeleteContact = id =>
-  useDeleteContact(
-    userInfo,
-    id,
-    contactList,
-    contactProfileMap,
-    globalSocket,
-    toast,
-    activeSpaceTargetIds,
-    isSpaceOpen
-  )
 
 const formatLastOnline = timestamp => {
   if (timestamp === 0) {

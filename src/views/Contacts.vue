@@ -8,9 +8,9 @@
     :class="isMobile ? 'pb-16' : ''"
   >
     <ContactHeader />
-    <ContactList v-if="contactList.length" />
+    <ContactList v-if="contactList?.length" />
     <div
-      v-if="isMobile && !contactList.length"
+      v-if="isMobile && !contactList?.length"
       class="flex flex-1 items-center justify-center"
     >
       <UIcon name="lucide:user-round" class="text-dimmed size-32" />
@@ -29,15 +29,13 @@
 </template>
 
 <script setup lang="ts">
-import { getContacts } from '@/apis/contact'
-import { useRefreshContacts } from '@/hooks'
+import { getMutualsAPI } from '@/apis/follow'
 import { useRecentContactsStore, useUserStore } from '@/store'
-import type { userInfo } from '@/types'
 import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onMounted } from 'vue'
 
 const toast = useToast()
-const { isMobile, userInfo } = storeToRefs(useUserStore())
+const { isMobile } = storeToRefs(useUserStore())
 const {
   isSpaceOpen,
   activeTargetId,
@@ -47,28 +45,23 @@ const {
 } = storeToRefs(useRecentContactsStore())
 
 const refreshContactsProfile = async () => {
-  const now = Date.now()
-  const expired =
-    now >
-    Number(localStorage.getItem(`contactListExpireAt-${userInfo.value.id}`))
+  try {
+    const { data } = await getMutualsAPI()
 
-  // 过期，获取所有好友的最新资料
-  if (expired) {
-    try {
-      const { data } = await getContacts()
-      useRefreshContacts(
-        userInfo.value.id,
-        data,
-        contactList,
-        contactProfileMap
-      )
-    } catch (error) {
-      toast.add({
-        title: error.message,
-        color: 'error',
-        icon: 'lucide:annoyed'
-      })
+    if (data.length) {
+      contactList.value = data.map(item => item.following)
+
+      for (let i = 0, l = data.length; i < l; i++) {
+        const { following, followingProfile } = data[i]
+        contactProfileMap.value[following] = { profile: followingProfile }
+      }
     }
+  } catch (error) {
+    toast.add({
+      title: error.message,
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
   }
 }
 
@@ -79,7 +72,9 @@ const onClose = () => {
 }
 
 onMounted(async () => {
-  await refreshContactsProfile()
+  if (contactList.value === null) {
+    await refreshContactsProfile()
+  }
 })
 
 onBeforeUnmount(() => {

@@ -1,29 +1,18 @@
 import { reactive, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { userInfo } from '@/types'
-import useUserStore from './use-user-store'
-import { useInitLocalStorage } from '@/hooks'
 
 const useRecentContactsStore = defineStore('recentContactsStore', () => {
-  const id = useUserStore().userInfo?.id || ''
-  const _contactList = useInitLocalStorage(`contactList-${id}`, [])
-  const _contactProfileMap = useInitLocalStorage(`contactProfileMap-${id}`, {})
-
   return {
-    contactList: ref(_contactList),
+    contactList: ref(null),
     contactProfileMap: ref<
       Record<
         string,
         {
-          createdAt: number
-          id: string
-          remark: string
-          status: 'normal'
-          online?: boolean
           profile: userInfo['profile']
         }
       >
-    >(_contactProfileMap),
+    >({}),
     pinId: ref(''), // 置顶对象的 id
     isSpaceOpen: ref(false),
     isChatOpen: ref(false),
@@ -46,7 +35,6 @@ const useRecentContactsStore = defineStore('recentContactsStore', () => {
           sent: boolean
           unreadMsgs: number
           timeAgo: string
-          online?: boolean
         }
       >
     >({}),

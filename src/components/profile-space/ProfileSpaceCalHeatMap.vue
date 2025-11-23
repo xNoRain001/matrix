@@ -10,7 +10,9 @@ import { onMounted } from 'vue'
 import CalHeatmap from 'cal-heatmap'
 import CalendarLabel from 'cal-heatmap/plugins/CalendarLabel'
 import 'cal-heatmap/cal-heatmap.css'
+import type { userInfo } from '@/types'
 
+const props = defineProps<{ targetProfile: userInfo['profile'] }>()
 const cal = new CalHeatmap()
 const date = new Date()
 const year = date.getFullYear()
@@ -22,11 +24,15 @@ const _year = t ? year - 1 : year
 const start = new Date(`${_year}-${String(__month).padStart(2, '0')}-01`)
 
 const paintCalendar = () => {
+  console.log(props.targetProfile)
   cal.paint(
     {
       theme: 'dark',
       data: {
-        source: [],
+        source: props.targetProfile.loginDates.map(date => ({
+          date,
+          value: 1
+        })),
         type: 'json',
         x: 'date',
         y: 'value'
