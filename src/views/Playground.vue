@@ -23,7 +23,7 @@
             {
               _id,
               user,
-              profile,
+              profile: { nickname },
               content,
               createdAt,
               likes,
@@ -39,16 +39,15 @@
           <UUser
             :avatar="{
               src: `${VITE_OSS_BASE_URL}avatar/${user}`,
-              alt: profile.nickname[0]
+              alt: nickname[0]
             }"
-            :name="profile.nickname"
+            :name="nickname"
             :description="useFormatTimeAgo(createdAt)"
             size="xl"
             @click="
               !activeSpaceTargetIds.has(user) &&
               profileSpaceOverlay.open({
-                targetId: user,
-                targetProfile: profile
+                targetId: user
               })
             "
             :ui="{
@@ -58,7 +57,7 @@
             }"
           >
             <template #name>
-              <span class="truncate">{{ profile.nickname }}</span>
+              <span class="truncate">{{ nickname }}</span>
               <UButton
                 v-if="isMobile"
                 variant="ghost"

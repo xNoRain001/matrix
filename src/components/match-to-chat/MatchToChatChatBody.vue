@@ -53,7 +53,7 @@
               data-type="avatar"
               v-if="item.separator"
               :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
-              :alt="targetProfile.nickname"
+              :alt="targetNickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -102,7 +102,7 @@
               data-type="avatar"
               v-if="item.separator"
               :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
-              :alt="targetProfile.nickname"
+              :alt="targetNickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -284,7 +284,7 @@
               data-type="avatar"
               v-if="item.separator"
               :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
-              :alt="targetProfile.nickname"
+              :alt="targetNickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -333,7 +333,7 @@
               data-type="avatar"
               v-if="item.separator"
               :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
-              :alt="targetProfile.nickname"
+              :alt="targetNickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -363,7 +363,7 @@
               data-type="avatar"
               v-if="item.separator"
               :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
-              :alt="targetProfile.nickname"
+              :alt="targetNickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -393,7 +393,7 @@
               data-type="avatar"
               v-if="item.separator"
               :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
-              :alt="targetProfile.nickname"
+              :alt="targetNickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -423,7 +423,7 @@
               data-type="avatar"
               v-if="item.separator"
               :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
-              :alt="targetProfile.nickname"
+              :alt="targetNickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -453,7 +453,7 @@
               data-type="avatar"
               v-if="item.separator"
               :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
-              :alt="targetProfile.nickname"
+              :alt="targetNickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -483,7 +483,7 @@
               data-type="avatar"
               v-if="item.separator"
               :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
-              :alt="targetProfile.nickname"
+              :alt="targetNickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -520,7 +520,7 @@
               data-type="avatar"
               v-if="item.separator"
               :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
-              :alt="targetProfile.nickname"
+              :alt="targetNickname"
               size="xl"
             />
             <div v-else class="w-10"></div>
@@ -597,7 +597,7 @@ const playingURL = ref('')
 const props = defineProps<{
   isMatch: boolean
   targetId: string
-  targetProfile: userInfo['profile']
+  targetNickname: string
 }>()
 const { config, userInfo, avatarURL } = storeToRefs(useUserStore())
 const {
@@ -714,18 +714,16 @@ const onClick = e => {
     const { src, width, height } = target
     viewerOverlay.open({ urls: [{ url: src, width, height }] })
   } else if (type === 'avatar') {
-    const { targetId, targetProfile } = props
+    const { targetId } = props
     !activeSpaceTargetIds.value.has(targetId) &&
       profileSpaceOverlay.open({
-        targetId,
-        targetProfile
+        targetId
       })
   } else if (type === 'avatar-self') {
-    const { id, profile } = userInfo.value
+    const { id } = userInfo.value
     !activeSpaceTargetIds.value.has(id) &&
       profileSpaceOverlay.open({
-        targetId: id,
-        targetProfile: profile
+        targetId: id
       })
   }
 }

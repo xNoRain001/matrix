@@ -73,7 +73,6 @@ import type { userInfo } from '@/types'
 
 const props = defineProps<{
   targetId: string
-  targetProfile: userInfo['profile']
 }>()
 const toast = useToast()
 const [defineOverlayTemplate, reuseOverlayTemplate] = createReusableTemplate()

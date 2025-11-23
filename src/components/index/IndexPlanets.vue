@@ -349,10 +349,9 @@ const checkIntersection = () => {
   const intersects = raycaster.intersectObjects(smallBalls)
 
   if (intersects.length > 0) {
-    const { id, profile } = labelSprites[intersects[0].object.userData.index]
+    const { id } = labelSprites[intersects[0].object.userData.index]
     profileSpaceOverlay.open({
-      targetId: id,
-      targetProfile: profile
+      targetId: id
     })
   }
 }

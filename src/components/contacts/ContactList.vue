@@ -100,7 +100,7 @@ const { isMobile, userInfo, globalSocket } = storeToRefs(useUserStore())
 const {
   isSpaceOpen,
   activeTargetId,
-  activeTargetProfile,
+  activeTargetNickname,
   activeSpaceTargetIds,
   contactList,
   contactProfileMap,
@@ -131,7 +131,8 @@ const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 
 const updateTarget = targetId => {
   activeTargetId.value = targetId
-  activeTargetProfile.value = contactProfileMap.value[targetId].profile
+  activeTargetNickname.value =
+    contactProfileMap.value[targetId].profile.nickname
 
   const _activeSpaceTargetIds = activeSpaceTargetIds.value
 
@@ -145,16 +146,14 @@ const updateTarget = targetId => {
 }
 
 const onClick = targetId => {
-  const targetProfile = contactProfileMap.value[targetId].profile
-
   if (isMobile.value) {
     profileSpaceOverlay.open({
-      targetId,
-      targetProfile
+      targetId
     })
   } else {
     activeTargetId.value = targetId
-    activeTargetProfile.value = targetProfile
+    activeTargetNickname.value =
+      contactProfileMap.value[targetId].profile.nickname
     isSpaceOpen.value = true
   }
 }

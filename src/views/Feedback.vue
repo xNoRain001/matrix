@@ -8,7 +8,7 @@
       <div>
         <UPageCard
           v-for="(
-            { _id, user, profile, content, createdAt }, index
+            { _id, user, profile: { nickname, bio }, content, createdAt }, index
           ) in feedbacks"
           :key="_id"
           variant="subtle"
@@ -19,10 +19,10 @@
             <UUser
               :avatar="{
                 src: `${VITE_OSS_BASE_URL}avatar/${user}`,
-                alt: profile.nickname[0]
+                alt: nickname[0]
               }"
-              :name="profile.nickname"
-              :description="profile.bio"
+              :name="nickname"
+              :description="bio"
               size="xl"
               :ui="{
                 name: 'break-all'

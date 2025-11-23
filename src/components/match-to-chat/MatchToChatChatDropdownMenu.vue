@@ -92,7 +92,6 @@ const props = withDefaults(
   defineProps<{
     isMatch?: boolean
     targetId: string
-    targetProfile: userInfo['profile']
   }>(),
   {
     isMatch: false
@@ -104,7 +103,7 @@ const [defineOverlayTemplate, reuseOverlayTemplate] = createReusableTemplate()
 const {
   isChatOpen,
   activeTargetId,
-  activeTargetProfile,
+  activeTargetNickname,
   activeTargetIds,
   contactProfileMap,
   lastMsgMap,
@@ -215,7 +214,7 @@ const onDeleteList = async () => {
       activeTargetIds,
       isChatOpen,
       activeTargetId,
-      activeTargetProfile,
+      activeTargetNickname,
       false,
       isMobile.value,
       emits
@@ -242,7 +241,7 @@ const onHideList = async () => {
       activeTargetIds,
       isChatOpen,
       activeTargetId,
-      activeTargetProfile,
+      activeTargetNickname,
       false,
       isMobile.value,
       emits

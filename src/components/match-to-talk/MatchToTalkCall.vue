@@ -64,10 +64,10 @@
     <div class="flex flex-1 flex-col items-center gap-4">
       <UAvatar
         :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
-        :alt="targetProfile.nickname[0]"
+        :alt="targetNickname[0]"
         class="size-24 text-5xl"
       />
-      <div class="text-center">{{ targetProfile.nickname }}</div>
+      <div class="text-center">{{ targetNickname }}</div>
       <div class="text-sm">
         {{ rtcConnected ? '通话中...' : '等待对方接通...' }}
       </div>
@@ -146,7 +146,7 @@ const props = withDefaults(
     isMatch?: boolean
     close?: () => void
     targetId: string
-    targetProfile: userInfo['profile']
+    targetNickname: string
   }>(),
   {
     isMatch: false,
@@ -242,7 +242,7 @@ const onCancel = () => {
 
   // 语音匹配挂断时不进行通知
   // TODO: 处理匹配结果是好友的情况
-  if (matchRes.value?.id !== _targetId) {
+  if (matchRes.value?.targetId !== _targetId) {
     useSendMsg(
       'voiceChatCallOffTip',
       '[语音通话]',

@@ -26,23 +26,22 @@
       }"
     >
       <UTooltip
-        v-for="({ profile, user, _id, color }, index) in planets"
-        :key="_id"
-        :text="profile.nickname"
+        v-for="({ user, nickname, gender, color }, index) in planets"
+        :key="user"
+        :text="nickname"
         :delay-duration="0"
       >
         <!-- lg:hover:ring-inverted  -->
         <div
           @click="
             profileSpaceOverlay.open({
-              targetId: user._id,
-              targetProfile: profile
+              targetId: user
             })
           "
           :class="
-            profile.gender === 'male'
+            gender === 'male'
               ? 'ring-sky-400'
-              : profile.gender === 'female'
+              : gender === 'female'
                 ? 'ring-pink-400'
                 : 'ring-default'
           "
@@ -54,8 +53,8 @@
           }"
         >
           <img
-            :src="`${VITE_OSS_BASE_URL}avatar/${user._id}`"
-            :alt="profile.nickname[0]"
+            :src="`${VITE_OSS_BASE_URL}avatar/${user}`"
+            :alt="nickname[0]"
             class="size-full rounded-full object-cover"
             @error="onError"
           />
@@ -66,7 +65,6 @@
 </template>
 
 <script setup lang="ts">
-import type { userInfo } from '@/types'
 import { useElementSize } from '@vueuse/core'
 import { computed, ref } from 'vue'
 import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
@@ -74,9 +72,9 @@ import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 const props = withDefaults(
   defineProps<{
     planets: {
-      profile: userInfo['profile']
-      user: { _id: string }
-      _id: string
+      user: string
+      nickname: string
+      gender: 'male' | 'female' | 'other'
       color: string
     }[]
     level?: number

@@ -10,7 +10,7 @@
       <MatchToTalkCall
         :close="() => emit('close', false)"
         :target-id="webRTCTargetId"
-        :target-profile="webRTCTargetProfile"
+        :target-nickname="webRTCTargetNickname"
       />
     </template>
   </UModal>
@@ -21,5 +21,5 @@ import { useWebRTCStore } from '@/store'
 import { storeToRefs } from 'pinia'
 
 const emit = defineEmits<{ close: [boolean] }>()
-const { webRTCTargetId, webRTCTargetProfile } = storeToRefs(useWebRTCStore())
+const { webRTCTargetId, webRTCTargetNickname } = storeToRefs(useWebRTCStore())
 </script>

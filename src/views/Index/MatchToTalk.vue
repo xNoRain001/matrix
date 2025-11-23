@@ -13,13 +13,13 @@
         <MatchToChatChatHeader
           @close="isOpen = false"
           :is-match="true"
-          :target-id="targetId"
-          :target-profile="targetProfile"
+          :target-id="matchRes.targetId"
+          :target-nickname="matchRes.targetNickname"
         />
         <MatchToTalkCall
           :is-match="true"
-          :target-id="targetId"
-          :target-profile="targetProfile"
+          :target-id="matchRes.targetId"
+          :target-nickname="matchRes.targetNickname"
           class="m-4 sm:m-6"
         />
       </div>
@@ -27,38 +27,30 @@
         v-if="!isMobile"
         class="max-w-md"
         :is-match="true"
-        :target-id="targetId"
-        :target-profile="targetProfile"
+        :target-id="matchRes.targetId"
       />
     </template>
   </UModal>
 </template>
 
 <script lang="ts" setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMatchStore, useUserStore, useWebRTCStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { useGenRoomId, useRefreshOnlineStatus } from '@/hooks'
+import { useGenRoomId } from '@/hooks'
 
-let timer = null
 const router = useRouter()
 const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
 const { matchRes } = storeToRefs(useMatchStore())
-const targetId = ref('')
-const targetProfile = ref(null)
-const { roomId, isVoiceChatMatch, webRTCTargetId, webRTCTargetProfile } =
+const { roomId, isVoiceChatMatch, webRTCTargetId, webRTCTargetNickname } =
   storeToRefs(useWebRTCStore())
-const isOpen = ref(
-  Boolean(matchRes.value?.type === 'talk' && matchRes.value?.profile)
-)
+const isOpen = ref(Boolean(matchRes.value))
 
 if (isOpen.value) {
-  const { id, profile } = matchRes.value
-  targetId.value = id
-  targetProfile.value = profile
-  webRTCTargetId.value = id
-  webRTCTargetProfile.value = profile
+  const { targetId, targetNickname } = matchRes.value
+  webRTCTargetId.value = targetId
+  webRTCTargetNickname.value = targetNickname
 } else {
   await router.replace('/')
 }
@@ -67,13 +59,8 @@ onMounted(async () => {
   isVoiceChatMatch.value = true
   const _roomId = (roomId.value = useGenRoomId(
     userInfo.value.id,
-    matchRes.value.id
+    matchRes.value.targetId
   ))
   globalSocket.value.emit('bidirectional-web-rtc', _roomId)
-  timer = useRefreshOnlineStatus(globalSocket, 'matchTarget', [targetId.value])
-})
-
-onBeforeUnmount(() => {
-  clearInterval(timer)
 })
 </script>

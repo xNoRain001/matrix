@@ -68,7 +68,7 @@
               }"
               size="xl"
               :chip="{
-                color: lastMsgMap[id].profile?.onlineStatus?.isOnline
+                color: lastMsgMap[id].profile.onlineStatus?.isOnline
                   ? 'primary'
                   : 'error'
               }"
@@ -128,7 +128,7 @@ const {
   lastMsgList,
   activeTargetId,
   activeTargetIds,
-  activeTargetProfile,
+  activeTargetNickname,
   contactProfileMap,
   indexMap,
   unreadMsgCounter,
@@ -151,7 +151,7 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
           activeTargetIds,
           isChatOpen,
           activeTargetId,
-          activeTargetProfile,
+          activeTargetNickname,
           false,
           false
         )
@@ -171,7 +171,7 @@ const contextMenuItems = ref<ContextMenuItem[][]>([
           activeTargetIds,
           isChatOpen,
           activeTargetId,
-          activeTargetProfile,
+          activeTargetNickname,
           false,
           false
         )
@@ -183,7 +183,7 @@ const chatOverlay = overlay.create(OverlayChat)
 
 const updateTarget = targetId => {
   activeTargetId.value = targetId
-  activeTargetProfile.value = lastMsgMap.value[targetId].profile
+  activeTargetNickname.value = lastMsgMap.value[targetId].profile.nickname
 
   const _activeTargetIds = activeTargetIds.value
 
@@ -197,16 +197,16 @@ const updateTarget = targetId => {
 }
 
 const onClick = targetId => {
-  const targetProfile = lastMsgMap.value[targetId].profile
+  const targetNickname = lastMsgMap.value[targetId].profile.nickname
 
   if (isMobile.value) {
     chatOverlay.open({
       targetId,
-      targetProfile
+      targetNickname
     })
   } else {
     activeTargetId.value = targetId
-    activeTargetProfile.value = targetProfile
+    activeTargetNickname.value = targetNickname
     isChatOpen.value = true
   }
 }
@@ -223,7 +223,7 @@ const onDeleteMessageList = id =>
     activeTargetIds,
     isChatOpen,
     activeTargetId,
-    activeTargetProfile,
+    activeTargetNickname,
     true,
     true
   )
@@ -239,7 +239,7 @@ const onHideMessageList = id =>
     activeTargetIds,
     isChatOpen,
     activeTargetId,
-    activeTargetProfile,
+    activeTargetNickname,
     true,
     true
   )

@@ -100,8 +100,7 @@
                   @click="
                     !activeSpaceTargetIds.has(owner) &&
                     profileSpaceOverlay.open({
-                      targetId: owner,
-                      targetProfile: profile
+                      targetId: owner
                     })
                   "
                   class="text-muted bg-elevated relative flex size-10 items-center justify-center rounded-full text-xl font-medium"
@@ -121,8 +120,7 @@
                   @click="
                     !activeSpaceTargetIds.has(owner) &&
                     profileSpaceOverlay.open({
-                      targetId: owner,
-                      targetProfile: profile
+                      targetId: owner
                     })
                   "
                 >
@@ -237,7 +235,7 @@
                         {
                           owner: replyOwner,
                           _id: replyId,
-                          profile,
+                          profile: { nickname },
                           content,
                           createdAt,
                           user,
@@ -263,8 +261,7 @@
                             @click="
                               !activeSpaceTargetIds.has(owner) &&
                               profileSpaceOverlay.open({
-                                targetId: user,
-                                targetProfile: profile
+                                targetId: user
                               })
                             "
                             class="text-muted bg-elevated size-5 rounded-full text-center text-xs font-medium"
@@ -273,7 +270,7 @@
                               loading="lazy"
                               class="size-full rounded-full object-cover"
                               :src="`${VITE_OSS_BASE_URL}avatar/${user}`"
-                              :alt="profile.nickname[0]"
+                              :alt="nickname[0]"
                               @error="onError"
                             />
                           </div>
@@ -284,13 +281,12 @@
                             @click="
                               !activeSpaceTargetIds.has(owner) &&
                               profileSpaceOverlay.open({
-                                targetId: user,
-                                targetProfile: profile
+                                targetId: user
                               })
                             "
                           >
                             {{
-                              `${profile.nickname}${
+                              `${nickname}${
                                 replyTargetProfile?.nickname
                                   ? ` ▸ ${replyTargetProfile?.nickname}`
                                   : ''
@@ -472,21 +468,20 @@
         </div>
         <div v-if="likes.length">
           <div
-            v-for="{ user, profile, createdAt } in likes"
+            v-for="{ user, profile: { nickname }, createdAt } in likes"
             :key="user"
             class="bg-elevated/50 rounded-none p-4 sm:p-6"
             @click="
               profileSpaceOverlay.open({
-                targetId: user,
-                targetProfile: profile
+                targetId: user
               })
             "
           >
             <UUser
-              :name="profile.nickname"
+              :name="nickname"
               :avatar="{
                 src: `${VITE_OSS_BASE_URL}avatar/${user}`,
-                alt: profile.nickname[0]
+                alt: nickname[0]
               }"
               size="xl"
               :ui="{

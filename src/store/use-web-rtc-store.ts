@@ -1,6 +1,5 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { userInfo } from '@/types'
 
 const useWebRTCStore = defineStore('webRTCStore', () => ({
   roomId: ref(''),
@@ -15,7 +14,7 @@ const useWebRTCStore = defineStore('webRTCStore', () => ({
     localStorage.getItem('isSpeakerOpen') === 'false' ? false : true
   ),
   webRTCTargetId: ref(''),
-  webRTCTargetProfile: ref<userInfo['profile']>(null)
+  webRTCTargetNickname: ref('')
 }))
 
 export default useWebRTCStore

@@ -252,7 +252,7 @@ const props = withDefaults(
   defineProps<{
     isMatch?: boolean
     targetId: string
-    targetProfile: userInfo['profile']
+    targetNickname: string
   }>(),
   {
     isMatch: false
@@ -271,7 +271,7 @@ const {
   leaveRoomTimer,
   isVoiceChatMatch,
   webRTCTargetId,
-  webRTCTargetProfile
+  webRTCTargetNickname
 } = storeToRefs(useWebRTCStore())
 const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
 const { messageRecordMap } = storeToRefs(useMessagesStore())
@@ -424,7 +424,7 @@ const onCall = async () => {
   isVoiceChatMatch.value = false
   const _targetId = props.targetId
   webRTCTargetId.value = _targetId
-  webRTCTargetProfile.value = props.targetProfile
+  webRTCTargetNickname.value = props.targetNickname
 
   // 不在这里更新 roomId.value，因为要先确保对方能通话时才会显示语音浮动按钮，
   // 因此在 onJoin 中更新 roomId.value

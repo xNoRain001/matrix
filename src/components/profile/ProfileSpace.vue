@@ -1,6 +1,7 @@
 <template>
   <div class="h-screen w-full">
     <div
+      v-if="targetProfile"
       id="post-scroller"
       ref="containerRef"
       class="relative h-full overflow-y-auto"
@@ -10,7 +11,6 @@
         @close="emits('close')"
         :is-match="isMatch"
         :target-id="targetId"
-        :target-profile="targetProfile"
       />
       <!-- 用户资料 -->
       <ProfileSpaceUserCard
@@ -34,14 +34,20 @@
 <script lang="ts" setup>
 import { usePostStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { onBeforeMount, onBeforeUnmount, useTemplateRef } from 'vue'
+import {
+  onBeforeMount,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  useTemplateRef
+} from 'vue'
 import type { userInfo } from '@/types'
+import { getProfile } from '@/apis/profile'
 
 const props = withDefaults(
   defineProps<{
     isMatch?: boolean
     targetId: string
-    targetProfile: userInfo['profile']
   }>(),
   {
     isMatch: false
@@ -53,6 +59,8 @@ const { userInfo } = storeToRefs(useUserStore())
 const { postMap } = storeToRefs(usePostStore())
 const { activeSpaceTargetIds } = storeToRefs(useRecentContactsStore())
 const isSelf = props.targetId === userInfo.value.id
+const targetProfile = ref(isSelf ? userInfo.value.profile : null)
+const toast = useToast()
 
 onBeforeMount(() => {
   activeSpaceTargetIds.value.add(props.targetId)
@@ -63,6 +71,21 @@ onBeforeUnmount(() => {
 
   if (!isSelf) {
     delete postMap.value[props.targetId]
+  }
+})
+
+onMounted(async () => {
+  if (!isSelf) {
+    try {
+      targetProfile.value = (await getProfile(props.targetId)).data
+    } catch (error) {
+      toast.add({
+        title: error.message,
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
+      emits('close', true)
+    }
   }
 })
 </script>

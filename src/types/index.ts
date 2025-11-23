@@ -51,14 +51,16 @@ export type userInfo = {
     role: 'standard'
     registerIndex: number
     createdAt: number
+    // 扩展属性，这些数据不保存在数据库中
     onlineStatus?: {
       isOnline: boolean
       lastOnline: number
     }
-  }
-  ipInfo: {
-    province: string
-    city: string
+    isFollower?: boolean
+    ipInfo: {
+      province: string
+      city: string
+    }
   }
 }
 

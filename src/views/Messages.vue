@@ -22,7 +22,7 @@
       v-if="isChatOpen"
       @close="onClose"
       :target-id="activeTargetId"
-      :target-profile="activeTargetProfile"
+      :target-nickname="activeTargetNickname"
     />
     <div v-else class="flex flex-1 items-center justify-center">
       <UIcon name="lucide:message-circle-more" class="text-dimmed size-32" />
@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { getProfiles } from '@/apis/profile'
+import { refreshNickname } from '@/apis/profile'
 import { useGetDB } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
@@ -43,12 +43,12 @@ const { isMobile, userInfo } = storeToRefs(useUserStore())
 const {
   isChatOpen,
   activeTargetId,
-  activeTargetProfile,
+  activeTargetNickname,
   lastMsgMap,
   lastMsgList
 } = storeToRefs(useRecentContactsStore())
 
-const refreshChatsProfile = async () => {
+const refreshChatsNickname = async () => {
   const now = Date.now()
   const { id } = userInfo.value
   const expired =
@@ -63,17 +63,14 @@ const refreshChatsProfile = async () => {
     }
 
     try {
-      const { data: profileMap } = await getProfiles(ids.join('_'))
+      const { data: nicknameMap } = await refreshNickname(ids.join('_'))
       const _lastMsgMap = lastMsgMap.value
       const db = await useGetDB(userInfo.value.id)
       const tx = db.transaction('lastMessages', 'readwrite')
 
       for (let i = 0, l = ids.length; i < l; i++) {
         const id = ids[i]
-        _lastMsgMap[id].profile = {
-          ..._lastMsgMap[id].profile,
-          ...profileMap[id]
-        }
+        _lastMsgMap[id].profile.nickname = nicknameMap[id]
         await tx
           .objectStore('lastMessages')
           .put(JSON.parse(JSON.stringify(_lastMsgMap[id])))
@@ -98,11 +95,11 @@ const refreshChatsProfile = async () => {
 const onClose = () => {
   isChatOpen.value = false
   activeTargetId.value = ''
-  activeTargetProfile.value = null
+  activeTargetNickname.value = ''
 }
 
 onMounted(async () => {
-  await refreshChatsProfile()
+  await refreshChatsNickname()
 })
 
 onBeforeUnmount(() => {

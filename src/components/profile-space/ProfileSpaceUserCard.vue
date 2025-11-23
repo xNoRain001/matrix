@@ -30,14 +30,14 @@
       ></UButton> -->
       <div class="flex gap-2">
         <UButton
-          v-if="!isSelf"
+          v-if="!isSelf && !targetProfile.isFollower"
           @click="onFollow"
           icon="lucide:plus"
           label="关注"
           size="xs"
         />
         <UButton
-          v-if="!isSelf"
+          v-if="!isSelf && targetProfile.isFollower"
           @click="onUnfollow"
           icon="lucide:check"
           label="已关注"
@@ -56,7 +56,12 @@
               )
             )
           "
-          @click="chatOverlay.open({ targetId, targetProfile })"
+          @click="
+            chatOverlay.open({
+              targetId,
+              targetNickname: targetProfile.nickname
+            })
+          "
           icon="lucide:message-circle"
           size="xs"
         />
@@ -82,7 +87,7 @@
     </div>
     <div class="text-toned text-xs">
       ID：{{ String(targetProfile.registerIndex).padStart(5, '0') }} / IP：{{
-        userInfo.ipInfo.province || '未知'
+        targetProfile.ipInfo.province || '未知'
       }}
     </div>
     <div v-if="targetProfile.bio" class="text-highlighted mt-2 text-sm">
@@ -97,13 +102,12 @@
         @click="isTagSlideoverOpen = true"
       />
     </div>
-    <div
-      @click="isFollowSlideoverOpen = true"
-      class="text-highlighted mt-2 flex gap-4 text-xs"
-    >
-      <div v-if="isSelf">互关：1</div>
-      <div>关注：1</div>
-      <div>粉丝：1</div>
+    <div class="text-highlighted mt-2 flex gap-4 text-xs">
+      <div v-if="isSelf" @click="onOpenFollowerSlideover('mutual')">
+        互关：1
+      </div>
+      <div @click="onOpenFollowerSlideover('following')">关注：1</div>
+      <div @click="onOpenFollowerSlideover('follower')">粉丝：1</div>
     </div>
     <UAvatar
       @click="
@@ -137,7 +141,11 @@
     :target-id="targetId"
     :target-profile="targetProfile"
   />
-  <ProfileSpaceFollowerSlideover v-model="isFollowSlideoverOpen" />
+  <ProfileSpaceFollowerSlideover
+    v-model="isFollowSlideoverOpen"
+    v-model:active-tab="activeTab"
+    :target-id="targetId"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -149,7 +157,12 @@ import { useRoute } from 'vue-router'
 import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
 import OverlayChat from '@/components/overlay/OverlayChat.vue'
 import type { userInfo } from '@/types'
-import { followAPI, unfollowAPI } from '@/apis/follow'
+import {
+  followAPI,
+  isPublicFollowersAPI,
+  isPublicFollowingAPI,
+  unfollowAPI
+} from '@/apis/follow'
 import ProfileSpaceFollowerSlideover from './ProfileSpaceFollowerSlideover.vue'
 
 const overlay = useOverlay()
@@ -186,10 +199,33 @@ const isFollowSlideoverOpen = ref(false)
 const { path } = route
 const isChatBtnShow = path === '/messages' && activeTargetIds.value.size === 1
 const isContacts = path === '/contacts'
+const activeTab = ref<'' | 'mutual' | 'following' | 'follower'>('')
+
+const onOpenFollowerSlideover = async v => {
+  if (!isSelf) {
+    const { targetId } = props
+    const isFollowing = v === 'following'
+    const { data } = isFollowing
+      ? await isPublicFollowingAPI(targetId)
+      : await isPublicFollowersAPI(targetId)
+
+    if (!data) {
+      return toast.add({
+        title: `由于该用户隐私设置，${isFollowing ? '关注' : '粉丝'}列表不可见`,
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
+    }
+  }
+
+  activeTab.value = v
+  isFollowSlideoverOpen.value = true
+}
 
 const onFollow = async () => {
   try {
     await followAPI(props.targetId)
+    props.targetProfile.isFollower = true
     toast.add({
       title: '关注成功',
       icon: 'lucide:smile'
@@ -206,6 +242,7 @@ const onFollow = async () => {
 const onUnfollow = async () => {
   try {
     await unfollowAPI(props.targetId)
+    props.targetProfile.isFollower = false
     toast.add({
       title: '取消关注成功',
       icon: 'lucide:smile'

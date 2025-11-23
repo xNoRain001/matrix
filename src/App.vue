@@ -195,7 +195,7 @@ const {
   isMicOpen,
   isSpeakerOpen,
   webRTCTargetId,
-  webRTCTargetProfile
+  webRTCTargetNickname
 } = storeToRefs(useWebRTCStore())
 const {
   unreadMsgCounter,
@@ -948,7 +948,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
   }
 }
 
-const acceptWebRTC = async (targetProfile, roomId, now, isAccept: boolean) => {
+const acceptWebRTC = async (targetNickname, roomId, now, isAccept: boolean) => {
   // 由于鼠标悬浮在 toast 上时会暂停进度，因此需要判断是否超出时间
   if (Date.now() - now <= voiceChatInviteToastExpireTime) {
     const socket = globalSocket.value
@@ -957,7 +957,7 @@ const acceptWebRTC = async (targetProfile, roomId, now, isAccept: boolean) => {
     if (isAccept) {
       const isMicOpen = await useIsDeviceOpen(toast, 'microphone', '麦克风')
       webRTCTargetId.value = _targetId
-      webRTCTargetProfile.value = targetProfile
+      webRTCTargetNickname.value = targetNickname
 
       if (isMicOpen) {
         socket.emit('agree-unidirectional-web-rtc', roomId, _targetId)
@@ -1018,16 +1018,16 @@ const acceptWebRTC = async (targetProfile, roomId, now, isAccept: boolean) => {
   }
 }
 
-const onInviteWebRTC = (roomId, targetId, targetProfile) => {
+const onInviteWebRTC = (roomId, targetId, targetNickname) => {
   const now = Date.now()
 
   voiceChatInviteToastId = toast.add({
     close: false,
-    title: targetProfile.nickname,
+    title: targetNickname,
     description: '邀请你语音通话',
     avatar: {
       src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
-      alt: targetProfile.nickname[0]
+      alt: targetNickname[0]
     },
     duration: voiceChatInviteToastExpireTime,
     actions: [
@@ -1035,13 +1035,13 @@ const onInviteWebRTC = (roomId, targetId, targetProfile) => {
         icon: 'lucide:phone-missed',
         label: '拒绝',
         color: 'error',
-        onClick: () => acceptWebRTC(targetProfile, roomId, now, false)
+        onClick: () => acceptWebRTC(targetNickname, roomId, now, false)
       },
       {
         icon: 'lucide:phone-incoming',
         label: '同意',
         color: 'primary',
-        onClick: () => acceptWebRTC(targetProfile, roomId, now, true)
+        onClick: () => acceptWebRTC(targetNickname, roomId, now, true)
       }
     ]
   }).id
@@ -1169,7 +1169,7 @@ const onMatched = async data => {
     // TODO: 处理匹配结果是好友的情况
     if (_matchRes.type === 'talk') {
       const _lastMsgMap = lastMsgMap.value
-      const targetId = _matchRes.id
+      const { targetId } = _matchRes
       await useInitLastMsg(_lastMsgMap, lastMsgList, matchRes, targetId)
       const db = await useGetDB(id)
       await db.put(
@@ -1282,13 +1282,6 @@ const onGetOnlineStatus = (type, res) => {
     isMessageList
       ? (isFirstGetChatsOnlineStatus.value = false)
       : (isFirstGetContactsOnlineStatus.value = false)
-  } else if (type === 'matchTarget') {
-    const { profile } = matchRes.value
-    const onlineStatus = res[ids[0]]
-
-    if (profile?.onlineStatus?.isOnline !== onlineStatus.isOnline) {
-      profile.onlineStatus = onlineStatus
-    }
   }
 }
 
@@ -1440,15 +1433,9 @@ onBeforeMount(async () => {
     await initChatBgURL()
 
     if (VITE_ENV === 'production') {
-      const {
-        data: { province, city }
-      } = await getGeoInfoAPI()
-      userInfo.value.ipInfo = {
-        province,
-        city
-      }
+      userInfo.value.profile.ipInfo = (await getGeoInfoAPI()).data
     } else {
-      userInfo.value.ipInfo = {
+      userInfo.value.profile.ipInfo = {
         province: '福建省',
         city: '厦门市'
       }

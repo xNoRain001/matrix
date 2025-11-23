@@ -1,6 +1,5 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { userInfo } from '@/types'
 import useUserStore from './use-user-store'
 import { useInitLocalStorage } from '@/hooks'
 
@@ -42,12 +41,11 @@ const useMatchStore = defineStore('matchStore', () => {
     hasMatchRes: ref(false), // 最终有匹配结果时值为 true
     noMatch: ref(false), // 暂时没有匹配结果时值为 true
     filter: ref<typeof defaultFilter>(_filter),
-    matchRes: ref<
-      | (Omit<userInfo, 'tokenVersion' | 'email'> & {
-          type: 'chat' | 'talk'
-        })
-      | null
-    >(JSON.parse(localStorage.getItem(`matchRes-${id}`)) || null) // 匹配结果
+    matchRes: ref<{
+      type: 'chat' | 'talk'
+      targetId: string
+      targetNickname: string
+    }>(JSON.parse(localStorage.getItem(`matchRes-${id}`)) || null) // 匹配结果
   }
 })
 

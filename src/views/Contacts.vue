@@ -21,7 +21,6 @@
       v-if="isSpaceOpen"
       @close="onClose"
       :target-id="activeTargetId"
-      :target-profile="activeTargetProfile"
     />
     <div v-else class="flex flex-1 items-center justify-center">
       <UIcon name="lucide:user-round" class="text-dimmed size-32" />
@@ -42,7 +41,7 @@ const { isMobile, userInfo } = storeToRefs(useUserStore())
 const {
   isSpaceOpen,
   activeTargetId,
-  activeTargetProfile,
+  activeTargetNickname,
   contactList,
   contactProfileMap
 } = storeToRefs(useRecentContactsStore())
@@ -76,7 +75,7 @@ const refreshContactsProfile = async () => {
 const onClose = () => {
   isSpaceOpen.value = false
   activeTargetId.value = ''
-  activeTargetProfile.value = null
+  activeTargetNickname.value = ''
 }
 
 onMounted(async () => {

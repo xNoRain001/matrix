@@ -11,13 +11,12 @@
         @click="
           !activeSpaceTargetIds.has(targetId) &&
           profileSpaceOverlay.open({
-            targetId,
-            targetProfile
+            targetId
           })
         "
         class="cursor-pointer truncate"
       >
-        {{ targetProfile.nickname }}
+        {{ targetNickname }}
       </span>
     </template>
     <template #leading>
@@ -34,83 +33,32 @@
       />
     </template>
     <template #right>
-      <UButton
-        v-if="
-          isMatch &&
-          isMobile &&
-          (targetProfile.birthday ||
-            targetProfile.province ||
-            targetProfile.gender !== 'other' ||
-            targetProfile.mbti ||
-            targetProfile.tags.length)
-        "
-        :icon="open ? 'lucide:chevrons-up' : 'lucide:chevrons-down'"
-        color="neutral"
-        variant="ghost"
-        @click="open = !open"
-      />
       <MatchToChatChatDropdownMenu
         @close="emits('close')"
         :is-match="isMatch"
         :target-id="targetId"
-        :target-profile="targetProfile"
       />
     </template>
   </UDashboardNavbar>
-
-  <!-- 移动端匹配时，对方的信息 -->
-  <UCollapsible
-    v-if="
-      isMatch &&
-      isMobile &&
-      (targetProfile.birthday ||
-        targetProfile.province ||
-        targetProfile.gender !== 'other' ||
-        targetProfile.mbti ||
-        targetProfile.tags.length)
-    "
-    v-model:open="open"
-    class="border-default cursor-pointer border-b"
-    @click="
-      !activeSpaceTargetIds.has(targetId) &&
-      profileSpaceOverlay.open({
-        targetId,
-        targetProfile
-      })
-    "
-    :ui="{
-      content: 'space-y-4 sm:space-y-6 p-4 sm:p-6 bg-elevated/50'
-    }"
-  >
-    <template #content>
-      <div class="space-y-2 space-x-2">
-        <ProfileSpaceTags :is-o-c="true" :target-profile="targetProfile" />
-      </div>
-    </template>
-  </UCollapsible>
 </template>
 
 <script setup lang="ts">
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
 import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
-import type { userInfo } from '@/types'
 
 withDefaults(
   defineProps<{
     isMatch?: boolean
     targetId: string
-    targetProfile: userInfo['profile']
+    targetNickname: string
   }>(),
   {
     isMatch: false
   }
 )
 const emits = defineEmits(['close'])
-// const open = ref(props.isMatch ? true : false)
-const open = ref(false)
-const { isMobile, userInfo } = storeToRefs(useUserStore())
+const { isMobile } = storeToRefs(useUserStore())
 const { unreadMsgCounter, activeSpaceTargetIds } = storeToRefs(
   useRecentContactsStore()
 )

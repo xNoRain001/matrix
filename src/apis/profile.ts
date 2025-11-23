@@ -2,8 +2,11 @@ import HTTP from './http'
 
 const prefix = '/profile'
 
-export const getProfiles = async ids =>
-  HTTP.request(`${prefix}/get-profiles?ids=${ids}`)
+export const refreshNickname = async ids =>
+  HTTP.request(`${prefix}/refresh-nickname?ids=${ids}`)
+
+export const getProfile = async id =>
+  HTTP.request(`${prefix}/get-profile?targetId=${id}`)
 
 export const updateProfile = async userInfo =>
   HTTP.request(`${prefix}/update-profile`, {

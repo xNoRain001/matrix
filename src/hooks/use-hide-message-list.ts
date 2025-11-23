@@ -10,7 +10,7 @@ const useHideMessageList = async (
   activeTargetIds,
   isChatOpen,
   activeTargetId,
-  activeTargetProfile,
+  activeTargetNickname,
   isSlide,
   isMobile,
   emits = null
@@ -47,7 +47,7 @@ const useHideMessageList = async (
       // 才能操作聊天列表）
       isChatOpen.value = false
       activeTargetId.value = ''
-      activeTargetProfile.value = null
+      activeTargetNickname.value = ''
     }
   }
 }

@@ -11,7 +11,7 @@
       <MatchToChatChat
         @close="emit('close', false)"
         :target-id="targetId"
-        :target-profile="targetProfile"
+        :target-nickname="targetNickname"
       />
     </template>
   </USlideover>
@@ -19,10 +19,9 @@
 
 <script lang="ts" setup>
 import { useUserStore } from '@/store'
-import type { userInfo } from '@/types'
 import { storeToRefs } from 'pinia'
 
-defineProps<{ targetId: string; targetProfile: userInfo['profile'] }>()
+defineProps<{ targetId: string; targetNickname: string }>()
 const emit = defineEmits<{ close: [boolean] }>()
 const { isMobile } = storeToRefs(useUserStore())
 </script>

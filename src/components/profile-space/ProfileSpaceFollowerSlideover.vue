@@ -30,6 +30,12 @@
           followingProfile: { nickname, bio }
         } in userMap[activeTab]"
         :key="_id"
+        @click="
+          !activeSpaceTargetIds.has(following) &&
+          profileSpaceOverlay.open({
+            targetId: following
+          })
+        "
       >
         <UUser
           :avatar="{
@@ -46,17 +52,19 @@
         >
           <template #name>
             <span class="truncate">{{ nickname }}</span>
-            <UButton
-              v-if="activeTab === 'follower'"
-              label="移除粉丝"
-              size="xs"
-            />
-            <UButton
-              v-else
-              @click="onUnfollow(following)"
-              label="取消关注"
-              size="xs"
-            />
+            <template v-if="isSelf">
+              <UButton
+                v-if="activeTab === 'follower'"
+                label="移除粉丝"
+                size="xs"
+              />
+              <UButton
+                v-else
+                @click.stop="onUnfollow(following)"
+                label="取消关注"
+                size="xs"
+              />
+            </template>
           </template>
         </UUser>
       </div>
@@ -65,7 +73,7 @@
 </template>
 
 <script lang="ts" setup>
-import { useUserStore } from '@/store'
+import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
 import {
@@ -74,20 +82,27 @@ import {
   getMutualsAPI,
   unfollowAPI
 } from '@/apis/follow'
+import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
 
+const props = defineProps<{
+  targetId: string
+}>()
 const isFollowSlideoverOpen = defineModel<boolean>()
-const { isMobile } = storeToRefs(useUserStore())
+const activeTab = defineModel<'' | 'mutual' | 'following' | 'follower'>(
+  'active-tab'
+)
+const { isMobile, userInfo } = storeToRefs(useUserStore())
+const { activeSpaceTargetIds } = storeToRefs(useRecentContactsStore())
+const isSelf = props.targetId === userInfo.value.id
+const overlay = useOverlay()
+const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 const loading = ref(true)
 const loadingFollowings = ref(true)
 const loadingFollowers = ref(true)
+const loadingMutuals = ref(true)
 const toast = useToast()
 const { VITE_OSS_BASE_URL } = import.meta.env
-const activeTab = ref<'mutual' | 'following' | 'follower'>('mutual')
 const tabItems = [
-  {
-    label: '互关',
-    value: 'mutual'
-  },
   {
     label: '关注',
     value: 'following'
@@ -97,6 +112,14 @@ const tabItems = [
     value: 'follower'
   }
 ]
+
+if (isSelf) {
+  tabItems.unshift({
+    label: '互关',
+    value: 'mutual'
+  })
+}
+
 const userMap = ref({
   mutual: [],
   following: [],
@@ -112,16 +135,13 @@ const onUnfollow = async id => {
   }
 }
 
-watch(activeTab, async v => {
-  if (v === 'mutual') {
-    return
-  }
-
+const getUsers = async () => {
   const _userMap = userMap.value
+  const v = activeTab.value
 
   if (v === 'following' && loadingFollowings.value) {
     loading.value = true
-    const { data } = await getFollowingAPI()
+    const { data } = await getFollowingAPI(isSelf ? '' : props.targetId)
 
     if (data.length) {
       _userMap[v] = data
@@ -131,7 +151,7 @@ watch(activeTab, async v => {
     loading.value = false
   } else if (v === 'follower' && loadingFollowers.value) {
     loading.value = true
-    const { data } = await getFollowersAPI()
+    const { data } = await getFollowersAPI(isSelf ? '' : props.targetId)
 
     if (data.length) {
       data.map(item => {
@@ -143,21 +163,20 @@ watch(activeTab, async v => {
 
     loadingFollowers.value = false
     loading.value = false
-  }
-})
-
-// 初始化互关列表
-watch(isFollowSlideoverOpen, async v => {
-  const _activeTab = activeTab.value
-
-  if (v && _activeTab === 'mutual' && loading.value) {
+  } else if (v === 'mutual' && loadingMutuals.value) {
+    loading.value = true
     const { data } = await getMutualsAPI()
 
     if (data.length) {
-      userMap.value[_activeTab] = data
+      _userMap[v] = data
     }
 
+    loadingMutuals.value = false
     loading.value = false
   }
+}
+
+watch(activeTab, () => {
+  getUsers()
 })
 </script>

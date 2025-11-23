@@ -28,11 +28,7 @@
         variant="ghost"
         @click="isSettingSlideoverOpen = true"
       />
-      <ProfileSpaceDropdownMenu
-        v-if="!isSelf"
-        :target-id="targetId"
-        :target-profile="targetProfile"
-      />
+      <ProfileSpaceDropdownMenu v-if="!isSelf" :target-id="targetId" />
     </template>
   </UDashboardNavbar>
   <!-- 移动端设置界面 -->
@@ -104,7 +100,6 @@ const props = withDefaults(
   defineProps<{
     isMatch?: boolean
     targetId: string
-    targetProfile: userInfo['profile']
   }>(),
   {
     isMatch: false

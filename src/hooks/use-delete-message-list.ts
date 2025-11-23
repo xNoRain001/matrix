@@ -12,7 +12,7 @@ const useDeleteMessageList = async (
   activeTargetIds,
   isChatOpen,
   activeTargetId,
-  activeTargetProfile,
+  activeTargetNickname,
   isSlide,
   isMobile,
   emits = null
@@ -27,7 +27,7 @@ const useDeleteMessageList = async (
     activeTargetIds,
     isChatOpen,
     activeTargetId,
-    activeTargetProfile,
+    activeTargetNickname,
     isSlide,
     isMobile,
     emits

@@ -4,33 +4,32 @@
       @close="emits('close')"
       :is-match="isMatch"
       :target-id="targetId"
-      :target-profile="targetProfile"
+      :target-nickname="targetNickname"
     />
     <!-- 聊天内容 -->
     <MatchToChatChatBody
       :is-match="isMatch"
       :target-id="targetId"
-      :target-profile="targetProfile"
+      :target-nickname="targetNickname"
     />
     <MatchToChatChatFooter
       :is-match="isMatch"
       :target-id="targetId"
-      :target-profile="targetProfile"
+      :target-nickname="targetNickname"
     />
   </UDashboardPanel>
 </template>
 
 <script lang="ts" setup>
-import { useRecentContactsStore, useUserStore } from '@/store'
+import { useRecentContactsStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onBeforeMount } from 'vue'
-import type { userInfo } from '@/types'
 
 const props = withDefaults(
   defineProps<{
     isMatch?: boolean
     targetId: string
-    targetProfile: userInfo['profile']
+    targetNickname: string
   }>(),
   {
     isMatch: false
@@ -38,7 +37,6 @@ const props = withDefaults(
 )
 const emits = defineEmits(['close'])
 const { activeTargetIds } = storeToRefs(useRecentContactsStore())
-const { userInfo } = storeToRefs(useUserStore())
 
 onBeforeMount(() => {
   activeTargetIds.value.add(props.targetId)

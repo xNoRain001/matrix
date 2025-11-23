@@ -28,7 +28,7 @@ const useRecentContactsStore = defineStore('recentContactsStore', () => {
     isSpaceOpen: ref(false),
     isChatOpen: ref(false),
     activeTargetId: ref(''),
-    activeTargetProfile: ref<userInfo['profile']>(null),
+    activeTargetNickname: ref(''),
     activeTargetIds: reactive(new Set()),
     activeSpaceTargetIds: reactive(new Set()),
     indexMap: ref({}),

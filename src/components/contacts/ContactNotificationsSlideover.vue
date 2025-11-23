@@ -20,8 +20,7 @@
         @click="
           !activeSpaceTargetIds.has(id) &&
           profileSpaceOverlay.open({
-            targetId: id,
-            targetProfile: profile
+            targetId: id
           })
         "
       >
