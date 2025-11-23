@@ -13,11 +13,12 @@
         orientation="horizontal"
         class="mb-4"
         :ui="{
-          container: 'lg:grid-cols-none'
+          container: 'lg:grid-cols-none',
+          title: 'items-center flex gap-2'
         }"
       >
         <template #title>
-          角色
+          <span>角色</span>
           <UButton
             icon="lucide:dices"
             variant="ghost"

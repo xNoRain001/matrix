@@ -30,6 +30,20 @@
       ></UButton> -->
       <div class="flex gap-2">
         <UButton
+          v-if="!isSelf"
+          @click="onFollow"
+          icon="lucide:plus"
+          label="关注"
+          size="xs"
+        />
+        <UButton
+          v-if="!isSelf"
+          @click="onUnfollow"
+          icon="lucide:check"
+          label="已关注"
+          size="xs"
+        />
+        <UButton
           v-if="
             !(
               // 自己的空间不显示
@@ -83,6 +97,14 @@
         @click="isTagSlideoverOpen = true"
       />
     </div>
+    <div
+      @click="isFollowSlideoverOpen = true"
+      class="text-highlighted mt-2 flex gap-4 text-xs"
+    >
+      <div v-if="isSelf">互关：1</div>
+      <div>关注：1</div>
+      <div>粉丝：1</div>
+    </div>
     <UAvatar
       @click="
         viewerOverlay.open({
@@ -115,6 +137,7 @@
     :target-id="targetId"
     :target-profile="targetProfile"
   />
+  <ProfileSpaceFollowerSlideover v-model="isFollowSlideoverOpen" />
 </template>
 
 <script lang="ts" setup>
@@ -126,6 +149,8 @@ import { useRoute } from 'vue-router'
 import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
 import OverlayChat from '@/components/overlay/OverlayChat.vue'
 import type { userInfo } from '@/types'
+import { followAPI, unfollowAPI } from '@/apis/follow'
+import ProfileSpaceFollowerSlideover from './ProfileSpaceFollowerSlideover.vue'
 
 const overlay = useOverlay()
 const props = withDefaults(
@@ -138,7 +163,6 @@ const props = withDefaults(
     isMatch: false
   }
 )
-const emits = defineEmits(['close'])
 const spaceBgRef = useTemplateRef('spaceBgRef')
 const toast = useToast()
 const { isMobile, userInfo, avatarURL } = storeToRefs(useUserStore())
@@ -158,9 +182,42 @@ const viewerOverlay = overlay.create(OverlayViewer)
 const chatOverlay = overlay.create(OverlayChat)
 const isTagSlideoverOpen = ref(false)
 const isPlaceholderShow = ref(false)
+const isFollowSlideoverOpen = ref(false)
 const { path } = route
 const isChatBtnShow = path === '/messages' && activeTargetIds.value.size === 1
 const isContacts = path === '/contacts'
+
+const onFollow = async () => {
+  try {
+    await followAPI(props.targetId)
+    toast.add({
+      title: '关注成功',
+      icon: 'lucide:smile'
+    })
+  } catch (error) {
+    toast.add({
+      title: '关注失败',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+  }
+}
+
+const onUnfollow = async () => {
+  try {
+    await unfollowAPI(props.targetId)
+    toast.add({
+      title: '取消关注成功',
+      icon: 'lucide:smile'
+    })
+  } catch (error) {
+    toast.add({
+      title: '取消关注失败',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+  }
+}
 
 const computeDays = timestamp =>
   Math.ceil((Date.now() - timestamp) / (1000 * 60 * 60 * 24))
