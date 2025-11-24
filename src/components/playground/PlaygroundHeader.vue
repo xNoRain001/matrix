@@ -32,17 +32,12 @@
     title="通知"
     description=" "
     :ui="{
-      body: 'p-0 sm:p-0 flex flex-col',
+      body: 'flex flex-col',
       description: 'hidden'
     }"
   >
     <template #body>
-      <UTabs
-        :items="tabItems"
-        v-model="activeTab"
-        class="p-4 sm:p-6"
-        :content="false"
-      />
+      <UTabs :items="tabItems" v-model="activeTab" :content="false" />
       <template v-if="activeTab === 'like'">
         <div
           v-if="likeNotifications.length"

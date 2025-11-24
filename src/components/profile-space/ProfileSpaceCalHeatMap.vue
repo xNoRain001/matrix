@@ -1,12 +1,12 @@
 <template>
   <div
-    id="cal-heatmap"
+    ref="calHeatmapRef"
     class="border-b-accented/50 overflow-x-auto border-b p-4 sm:p-6"
   ></div>
 </template>
 
 <script lang="ts" setup>
-import { onMounted } from 'vue'
+import { onMounted, useTemplateRef } from 'vue'
 import CalHeatmap from 'cal-heatmap'
 import CalendarLabel from 'cal-heatmap/plugins/CalendarLabel'
 import 'cal-heatmap/cal-heatmap.css'
@@ -22,9 +22,9 @@ const t = _month < 1
 const __month = t ? 12 + _month : _month
 const _year = t ? year - 1 : year
 const start = new Date(`${_year}-${String(__month).padStart(2, '0')}-01`)
+const calHeatmapRef = useTemplateRef('calHeatmapRef')
 
 const paintCalendar = () => {
-  console.log(props.targetProfile)
   cal.paint(
     {
       theme: 'dark',
@@ -64,7 +64,7 @@ const paintCalendar = () => {
         height: 12,
         gutter: 4
       },
-      itemSelector: '#cal-heatmap'
+      itemSelector: calHeatmapRef.value
     },
     [
       [

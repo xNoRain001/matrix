@@ -5,7 +5,7 @@
     title="关注"
     description=" "
     :ui="{
-      body: 'space-y-4 sm:space-y-6',
+      body: 'flex flex-col',
       description: 'hidden'
     }"
   >
@@ -24,20 +24,22 @@
       </div>
       <div
         v-if="userMap[activeTab].length"
-        v-for="{ following, followingProfile: { nickname, bio } } in userMap[
-          activeTab
-        ]"
-        :key="following"
+        v-for="(
+          { targetId, targetProfile: { nickname, bio }, mutual, unfollow },
+          index
+        ) in userMap[activeTab]"
+        :key="targetId"
         @click="
-          !activeSpaceTargetIds.has(following) &&
+          !activeSpaceTargetIds.has(targetId) &&
           profileSpaceOverlay.open({
-            targetId: following
+            targetId
           })
         "
+        class="bg-elevated/50 border-b-accented/50 cursor-pointer rounded-lg border-b p-4 sm:p-6"
       >
         <UUser
           :avatar="{
-            src: `${VITE_OSS_BASE_URL}avatar/${following}`,
+            src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
             alt: nickname[0]
           }"
           :description="bio"
@@ -51,20 +53,53 @@
           <template #name>
             <span class="truncate">{{ nickname }}</span>
             <template v-if="isSelf">
-              <UButton
-                v-if="activeTab === 'follower'"
-                label="移除粉丝"
-                size="xs"
-              />
-              <UButton
-                v-else
-                @click.stop="onUnfollow(following)"
-                label="取消关注"
-                size="xs"
-              />
+              <template v-if="activeTab === 'follower'">
+                <UButton
+                  v-if="mutual"
+                  @click.stop="onUnfollow(index, targetId, true)"
+                  label="互相关注"
+                  size="xs"
+                />
+                <UButton
+                  v-else
+                  @click.stop="onFollow(index, targetId, true)"
+                  label="回关"
+                  size="xs"
+                />
+                <UButton
+                  @click.stop="onRemoveFollower(index, targetId)"
+                  label="移除"
+                  size="xs"
+                />
+              </template>
+              <template v-else>
+                <UButton
+                  v-if="unfollow"
+                  @click.stop="onFollow(index, targetId)"
+                  label="关注"
+                  size="xs"
+                />
+                <UButton
+                  v-else
+                  @click.stop="onUnfollow(index, targetId)"
+                  :label="mutual ? '互相关注' : '已关注'"
+                  size="xs"
+                />
+              </template>
             </template>
           </template>
         </UUser>
+      </div>
+      <div v-if="activeTab === 'follower' && !publicFollowers">
+        <UIcon name="lucide:eye-off" class="text-dimmed size-32"></UIcon>
+        <div class="text-toned text-sm">由于该用户隐私设置，粉丝列表不可见</div>
+      </div>
+      <div
+        v-if="activeTab === 'following' && !publicFollowings"
+        class="flex flex-1 flex-col items-center justify-center gap-4"
+      >
+        <UIcon name="lucide:eye-off" class="text-dimmed size-32"></UIcon>
+        <div class="text-toned text-sm">由于该用户隐私设置，关注列表不可见</div>
       </div>
     </template>
   </USlideover>
@@ -74,7 +109,15 @@
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
-import { getFollowersAPI, getFollowingAPI, unfollowAPI } from '@/apis/follow'
+import {
+  followAPI,
+  getFollowersAPI,
+  getFollowingAPI,
+  isPublicFollowersAPI,
+  isPublicFollowingAPI,
+  removeFollowerAPI,
+  unfollowAPI
+} from '@/apis/follower'
 import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
 
 const props = defineProps<{
@@ -90,6 +133,8 @@ const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 const loading = ref(true)
 const loadingFollowings = ref(true)
 const loadingFollowers = ref(true)
+const publicFollowings = ref(true)
+const publicFollowers = ref(true)
 const toast = useToast()
 const { VITE_OSS_BASE_URL } = import.meta.env
 const tabItems = [
@@ -107,12 +152,44 @@ const userMap = ref({
   follower: []
 })
 
-const onUnfollow = async id => {
+const onRemoveFollower = async (index, targetId) => {
   try {
-    await unfollowAPI(id)
-    toast.add({ title: '取消关注成功', icon: 'lucide:smile' })
+    await removeFollowerAPI(targetId)
+    toast.add({ title: '移除成功', icon: 'lucide:smile' })
+    userInfo.value.profile.followerCount--
+    userMap.value[activeTab.value].splice(index, 1)
   } catch (error) {
-    toast.add({ title: '取消关注失败', color: 'error', icon: 'lucide:annoyed' })
+    toast.add({ title: error.message, color: 'error', icon: 'lucide:annoyed' })
+  }
+}
+
+const onFollow = async (index, targetId, mutual = false) => {
+  try {
+    await followAPI(targetId)
+    toast.add({ title: '关注成功', icon: 'lucide:smile' })
+    userInfo.value.profile.followingCount++
+    userMap.value[activeTab.value][index].unfollow = false
+
+    if (mutual) {
+      userMap.value[activeTab.value][index].mutual = true
+    }
+  } catch (error) {
+    toast.add({ title: error.message, color: 'error', icon: 'lucide:annoyed' })
+  }
+}
+
+const onUnfollow = async (index, targetId, mutual = false) => {
+  try {
+    await unfollowAPI(targetId)
+    toast.add({ title: '取消关注成功', icon: 'lucide:smile' })
+    userInfo.value.profile.followingCount--
+    userMap.value[activeTab.value][index].unfollow = true
+
+    if (mutual) {
+      userMap.value[activeTab.value][index].mutual = false
+    }
+  } catch (error) {
+    toast.add({ title: error.message, color: 'error', icon: 'lucide:annoyed' })
   }
 }
 
@@ -122,26 +199,54 @@ const getUsers = async () => {
 
   if (v === 'following' && loadingFollowings.value) {
     loading.value = true
-    const { data } = await getFollowingAPI(isSelf ? '' : props.targetId)
+    const { targetId } = props
+
+    if (!isSelf) {
+      const { data } = await isPublicFollowingAPI(targetId)
+
+      if (!data) {
+        publicFollowings.value = false
+        loadingFollowings.value = false
+        loading.value = false
+        return
+      }
+    }
+
+    const { data } = await getFollowingAPI(isSelf ? '' : targetId)
 
     if (data.length) {
       _userMap[v] = data
     }
 
+    userInfo.value.profile.followingCount = data.length
     loadingFollowings.value = false
     loading.value = false
   } else if (v === 'follower' && loadingFollowers.value) {
     loading.value = true
-    const { data } = await getFollowersAPI(isSelf ? '' : props.targetId)
+    const { targetId } = props
+
+    if (!isSelf) {
+      const { data } = await isPublicFollowersAPI(targetId)
+
+      if (!data) {
+        publicFollowers.value = false
+        loadingFollowers.value = false
+        loading.value = false
+        return
+      }
+    }
+
+    const { data } = await getFollowersAPI(isSelf ? '' : targetId)
 
     if (data.length) {
       data.map(item => {
-        item.following = item.follower
-        item.followingProfile = item.followerProfile
+        item.targetId = item.user
+        item.targetProfile = item.profile
       })
       _userMap[v] = data
     }
 
+    userInfo.value.profile.followerCount = data.length
     loadingFollowers.value = false
     loading.value = false
   }

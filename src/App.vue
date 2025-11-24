@@ -158,7 +158,7 @@ import OverlayTalk from './components/overlay/OverlayTalk.vue'
 import OverlayHelpAndSupport from './components/overlay/OverlayHelpAndSupport.vue'
 import OverlayAbout from './components/overlay/OverlayAbout.vue'
 import { zh_cn } from '@nuxt/ui/locale'
-import { getGeoInfoAPI } from './apis/profile'
+import { getProfile } from './apis/profile'
 
 let voiceChatInviteToastId = null
 let matchTimer = null
@@ -354,7 +354,7 @@ const floatingBtnY = ref(Number(localStorage.getItem('floatingBtnY') || 40))
 const talkOverlay = overlay.create(OverlayTalk)
 const helpAndSupportOverlay = overlay.create(OverlayHelpAndSupport)
 const abouttOverlay = overlay.create(OverlayAbout)
-const { VITE_ENV, VITE_VERSION, VITE_OSS_BASE_URL } = import.meta.env
+const { VITE_VERSION, VITE_OSS_BASE_URL } = import.meta.env
 
 const initFloatingBtnPosition = (currentTarget, clientX, clientY) => {
   const { left, top, width, height } = currentTarget.getBoundingClientRect()
@@ -1335,19 +1335,18 @@ const initBeep = () => {
 
 onBeforeMount(async () => {
   if (userInfo.value?.id) {
+    userInfo.value.profile.ipInfo = { province: '', city: '' }
+
     // 优先创建 socket
     const socket = createSocket()
     // 先获取本地数据库中的数据
     await initLastMsgs()
     await initChatBgURL()
 
-    if (VITE_ENV === 'production') {
-      userInfo.value.profile.ipInfo = (await getGeoInfoAPI()).data
-    } else {
-      userInfo.value.profile.ipInfo = {
-        province: '福建省',
-        city: '厦门市'
-      }
+    const { data } = await getProfile()
+    userInfo.value.profile = {
+      ...userInfo.value.profile,
+      ...data
     }
 
     // 拉取离线数据后，更新本地数据库中的数据和内存中的数据

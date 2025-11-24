@@ -48,6 +48,8 @@ export type userInfo = {
     college: string
     province: string
     city: string
+    followerCount: number
+    followingCount: number
     role: 'standard'
     registerIndex: number
     createdAt: number

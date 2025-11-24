@@ -1,12 +1,12 @@
 import HTTP from './http'
 
-const prefix = '/follow'
+const prefix = '/follower'
 
-export const followAPI = async following =>
-  HTTP.request(`${prefix}?following=${following}`)
+export const followAPI = async targetId =>
+  HTTP.request(`${prefix}?targetId=${targetId}`)
 
-export const unfollowAPI = async following =>
-  HTTP.request(`${prefix}/unfollow?following=${following}`)
+export const unfollowAPI = async targetId =>
+  HTTP.request(`${prefix}/unfollow?targetId=${targetId}`)
 
 export const getFollowingAPI = async targetId =>
   HTTP.request(`${prefix}/get-following?targetId=${targetId}`)
@@ -15,6 +15,9 @@ export const getFollowersAPI = async targetId =>
   HTTP.request(`${prefix}/get-followers?targetId=${targetId}`)
 
 export const getMutualsAPI = async () => HTTP.request(`${prefix}/get-mutuals`)
+
+export const removeFollowerAPI = async targetId =>
+  HTTP.request(`${prefix}/remove-follower?targetId=${targetId}`)
 
 export const isPublicFollowingAPI = async targetId =>
   HTTP.request(`${prefix}/is-public-following?targetId=${targetId}`)

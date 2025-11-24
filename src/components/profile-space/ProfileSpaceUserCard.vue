@@ -103,8 +103,12 @@
       />
     </div>
     <div class="text-highlighted mt-2 flex gap-4 text-xs">
-      <div @click="onOpenFollowerSlideover('following')">关注：1</div>
-      <div @click="onOpenFollowerSlideover('follower')">粉丝：1</div>
+      <div @click="onOpenFollowerSlideover('following')">
+        关注：{{ targetProfile.followingCount }}
+      </div>
+      <div @click="onOpenFollowerSlideover('follower')">
+        粉丝：{{ targetProfile.followerCount }}
+      </div>
     </div>
     <UAvatar
       @click="
@@ -159,7 +163,7 @@ import {
   isPublicFollowersAPI,
   isPublicFollowingAPI,
   unfollowAPI
-} from '@/apis/follow'
+} from '@/apis/follower'
 import ProfileSpaceFollowerSlideover from './ProfileSpaceFollowerSlideover.vue'
 
 const overlay = useOverlay()
@@ -203,9 +207,8 @@ const onOpenFollowerSlideover = async v => {
   if (!isSelf) {
     const { targetId } = props
     const isFollowing = v === 'following'
-    const { data } = isFollowing
-      ? await isPublicFollowingAPI(targetId)
-      : await isPublicFollowersAPI(targetId)
+    const api = isFollowing ? isPublicFollowingAPI : isPublicFollowersAPI
+    const { data } = await api(targetId)
 
     if (!data) {
       return toast.add({
@@ -225,6 +228,8 @@ const onFollow = async () => {
     const { targetId } = props
     await followAPI(targetId)
     props.targetProfile.isFollower = true
+    props.targetProfile.followerCount++
+    userInfo.value.profile.followingCount++
     globalSocket.value.emit('follow', targetId)
     toast.add({
       title: '关注成功',
@@ -244,6 +249,8 @@ const onUnfollow = async () => {
     const { targetId } = props
     await unfollowAPI(targetId)
     props.targetProfile.isFollower = false
+    props.targetProfile.followerCount--
+    userInfo.value.profile.followingCount--
     toast.add({
       title: '取消关注成功',
       icon: 'lucide:smile'

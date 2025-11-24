@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { getMutualsAPI } from '@/apis/follow'
+import { getMutualsAPI } from '@/apis/follower'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onMounted } from 'vue'
@@ -49,11 +49,11 @@ const refreshContactsProfile = async () => {
     const { data } = await getMutualsAPI()
 
     if (data.length) {
-      contactList.value = data.map(item => item.following)
+      contactList.value = data.map(item => item.user)
 
       for (let i = 0, l = data.length; i < l; i++) {
-        const { following, followingProfile } = data[i]
-        contactProfileMap.value[following] = { profile: followingProfile }
+        const { user, profile } = data[i]
+        contactProfileMap.value[user] = { profile }
       }
     }
   } catch (error) {

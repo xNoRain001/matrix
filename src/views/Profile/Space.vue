@@ -8,11 +8,7 @@
     }"
   >
     <template #content>
-      <ProfileSpace
-        @close="isSlideoverOpen = false"
-        :target-id="userInfo.id"
-        :target-profile="userInfo.profile"
-      />
+      <ProfileSpace @close="isSlideoverOpen = false" :target-id="userInfo.id" />
     </template>
   </USlideover>
 </template>
