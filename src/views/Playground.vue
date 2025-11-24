@@ -27,7 +27,7 @@
               content,
               createdAt,
               likes,
-              liked,
+              like,
               commentCount
             },
             index
@@ -87,7 +87,7 @@
           <div class="flex justify-around gap-2">
             <UButton
               variant="ghost"
-              :color="liked ? 'secondary' : 'primary'"
+              :color="like ? 'secondary' : 'primary'"
               icon="lucide:heart"
               :label="String(likes || '点赞')"
               @click="

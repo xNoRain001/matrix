@@ -519,9 +519,15 @@ const onPublishPost = async () => {
     const formData = new FormData()
     formData.append('type', 'publishPost')
     formData.append('content', JSON.stringify(payload))
+    // 服务器只返回 _id 和 content
     const { data: post } = await publishPostAPI(formData)
     toast.add({ title: '发布成功', icon: 'lucide:smile' })
     localStorage.removeItem('postDraft')
+    // 补充其他属性
+    post.visibility = 'public'
+    post.likes = post.commentCount = 0
+    post.like = false
+    post.createdAt = Date.now()
 
     // 在广场直接发布 post，如果之前没有打开过个人空间，postMap 中是没有值的
     if (postMap.value[props.targetId]) {
@@ -665,8 +671,15 @@ const onReply = async () => {
       'replyId',
       postMap.value[props.targetId].activeReplyId || ''
     )
+    // 服务器只返回 _id 和 content
     const newComment = (await replyAPI(formData)).data
     toast.add({ title: '评论成功', icon: 'lucide:smile' })
+    // 补充其他属性
+    newComment.owner = props.owner
+    newComment.user = userInfo.value.id
+    newComment.likes = 0
+    newComment.like = false
+    newComment.createdAt = Date.now()
     newComment.profile = userInfo.value.profile
     postMap.value[props.targetId].activePost.commentCount++
     const comment =
@@ -744,13 +757,22 @@ const onPublishComment = async () => {
     formData.append('type', 'publishComment')
     formData.append('content', JSON.stringify(payload))
     formData.append('postId', postMap.value[props.targetId].activePostId)
+    // 服务器只返回 _id 和 content
     const newComment = (await publishCommentAPI(formData)).data
     toast.add({ title: '评论成功', icon: 'lucide:smile' })
     postMap.value[props.targetId].activePost.commentCount++
+    // 补充其他属性
+    newComment.user = userInfo.value.id
+    newComment.like = false
+    newComment.likes =
+      newComment.replyComments =
+      newComment.visibleReplyCount =
+      newComment.replyCount =
+        0
     newComment.page = 0
-    newComment.visibleReplyCount = 0
-    newComment.replyComments = []
+    newComment.createdAt = Date.now()
     newComment.profile = userInfo.value.profile
+    newComment.replyComments = []
     postMap.value[props.targetId].isCommentCollapsibleOpenMap[newComment._id] =
       false
     postMap.value[props.targetId].comments.unshift(newComment)

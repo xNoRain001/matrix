@@ -25,9 +25,7 @@
           </p>
           <UButton
             variant="ghost"
-            :color="
-              postMap[targetId].activePost.liked ? 'secondary' : 'primary'
-            "
+            :color="postMap[targetId].activePost.like ? 'secondary' : 'primary'"
             icon="lucide:heart"
             :label="String(postMap[targetId].activePost.likes || '')"
             @click="
@@ -77,7 +75,7 @@
                 createdAt,
                 likes,
                 replyCount,
-                liked,
+                like,
                 replyComments,
                 visibleReplyCount
               },
@@ -208,7 +206,7 @@
                   <div>
                     <UButton
                       variant="ghost"
-                      :color="liked ? 'secondary' : 'primary'"
+                      :color="like ? 'secondary' : 'primary'"
                       icon="lucide:heart"
                       :label="String(likes || '')"
                       @click="
@@ -239,7 +237,7 @@
                           content,
                           createdAt,
                           user,
-                          liked,
+                          like,
                           likes,
                           replyTargetProfile
                         },
@@ -259,7 +257,7 @@
                         <template #avatar>
                           <div
                             @click="
-                              !activeSpaceTargetIds.has(owner) &&
+                              !activeSpaceTargetIds.has(user) &&
                               profileSpaceOverlay.open({
                                 targetId: user
                               })
@@ -279,7 +277,7 @@
                           <span
                             class="text-toned truncate"
                             @click="
-                              !activeSpaceTargetIds.has(owner) &&
+                              !activeSpaceTargetIds.has(user) &&
                               profileSpaceOverlay.open({
                                 targetId: user
                               })
@@ -403,7 +401,7 @@
                               <UButton
                                 variant="ghost"
                                 icon="lucide:heart"
-                                :color="liked ? 'secondary' : 'primary'"
+                                :color="like ? 'secondary' : 'primary'"
                                 :label="String(likes || '')"
                                 @click="
                                   useLike(
@@ -472,6 +470,7 @@
             :key="user"
             class="bg-elevated/50 rounded-none p-4 sm:p-6"
             @click="
+              !activeSpaceTargetIds.has(user) &&
               profileSpaceOverlay.open({
                 targetId: user
               })

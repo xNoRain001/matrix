@@ -10,10 +10,10 @@ const useLike = async (
     const { data: isLike } = await likeAPI(targetId, targetType)
 
     if (isLike) {
-      container.liked = true
+      container.like = true
       container.likes++
     } else {
-      container.liked = false
+      container.like = false
       container.likes--
     }
   } catch {

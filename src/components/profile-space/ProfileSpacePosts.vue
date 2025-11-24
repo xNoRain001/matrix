@@ -18,7 +18,7 @@
           createdAt,
           likes,
           commentCount,
-          liked
+          like
           // visibility
         },
         index
@@ -58,7 +58,7 @@
       <div class="flex justify-around">
         <UButton
           variant="ghost"
-          :color="liked ? 'secondary' : 'primary'"
+          :color="like ? 'secondary' : 'primary'"
           icon="lucide:heart"
           :label="String(likes || '点赞')"
           @click.stop="

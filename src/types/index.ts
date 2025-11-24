@@ -108,7 +108,7 @@ export type post = {
   createdAt: number
   updateAt?: number
   likes: number
-  liked: boolean
+  like: boolean
   unlikes: number
   profile?: userInfo['profile']
   visibility: 'public' | 'onlyMe' | 'hidden'
@@ -121,7 +121,7 @@ export type comment = {
   createdAt: number
   updateAt?: number
   likes: number
-  liked: boolean
+  like: boolean
   profile: userInfo['profile']
   replyTargetProfile?: { nickname: string }
   replyCount: number
