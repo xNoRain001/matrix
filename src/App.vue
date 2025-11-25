@@ -335,10 +335,10 @@ const rtcConfiguration: RTCConfiguration = {
     { urls: 'stun:stun2.l.google.com:19302' },
     { urls: 'stun:stun3.l.google.com:19302' },
     { urls: 'stun:stun4.l.google.com:19302' },
-    { urls: 'stun:81.68.131.234:3478' },
+    { urls: 'stun:api.xtrix.asia:3478' },
     // TURN 服务器配置
     {
-      urls: 'turn:81.68.131.234:3478',
+      urls: 'turn:api.xtrix.asia:3478',
       username: 'test',
       credential: 'test123'
     }
