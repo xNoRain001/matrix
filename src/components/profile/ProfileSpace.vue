@@ -1,7 +1,9 @@
 <template>
   <div class="h-screen w-full">
     <div
-      v-if="(!isSelf && targetProfile) || (isSelf && targetProfile.loginDates)"
+      v-if="
+        (!isSelf && targetProfile) || (isSelf && userInfo.profile.loginDates)
+      "
       id="post-scroller"
       ref="containerRef"
       class="relative h-full overflow-y-auto"
@@ -16,15 +18,17 @@
       <ProfileSpaceUserCard
         :is-match="isMatch"
         :target-id="targetId"
-        :target-profile="targetProfile"
+        :target-profile="isSelf ? userInfo.profile : targetProfile"
       />
       <!-- 日历热力图 -->
-      <ProfileSpaceCalHeatMap :target-profile="targetProfile" />
+      <ProfileSpaceCalHeatMap
+        :target-profile="isSelf ? userInfo.profile : targetProfile"
+      />
       <!-- 动态 -->
       <ProfileSpacePosts
         :is-match="isMatch"
         :target-id="targetId"
-        :target-profile="targetProfile"
+        :target-profile="isSelf ? userInfo.profile : targetProfile"
         :container="containerRef"
       />
     </div>
@@ -59,7 +63,7 @@ const { userInfo } = storeToRefs(useUserStore())
 const { postMap } = storeToRefs(usePostStore())
 const { activeSpaceTargetIds } = storeToRefs(useRecentContactsStore())
 const isSelf = props.targetId === userInfo.value.id
-const targetProfile = isSelf ? userInfo.value.profile : ref(null)
+const targetProfile = ref(null)
 const toast = useToast()
 
 onBeforeMount(() => {

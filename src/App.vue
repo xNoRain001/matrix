@@ -1342,7 +1342,6 @@ onBeforeMount(async () => {
     // 先获取本地数据库中的数据
     await initLastMsgs()
     await initChatBgURL()
-
     const { data } = await getProfile()
     userInfo.value.profile = {
       ...userInfo.value.profile,
