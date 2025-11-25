@@ -5,90 +5,85 @@
     title="关注"
     description=" "
     :ui="{
-      body: 'flex flex-col',
+      body: 'flex flex-col p-0 sm:p-0',
       description: 'hidden'
     }"
   >
     <template #body>
-      <UTabs :items="tabItems" v-model="activeTab">
+      <UTabs class="gap-0 p-4 sm:p-6" :items="tabItems" v-model="activeTab">
         <template #content></template
       ></UTabs>
-      <div v-if="loading" class="space-y-4">
-        <div v-for="i in 5" :key="i" class="flex items-center gap-4">
-          <USkeleton class="h-12 w-12 rounded-full" />
-          <div class="grid flex-1 gap-2">
-            <USkeleton class="h-4 w-full" />
-            <USkeleton class="h-4 w-4/5" />
-          </div>
-        </div>
-      </div>
-      <div
-        v-if="userMap[activeTab].length"
-        v-for="(
-          { targetId, targetProfile: { nickname, bio }, mutual, unfollow },
-          index
-        ) in userMap[activeTab]"
-        :key="targetId"
-        @click="
-          !activeSpaceTargetIds.has(targetId) &&
-          profileSpaceOverlay.open({
-            targetId
-          })
-        "
-        class="bg-elevated/50 border-b-accented/50 cursor-pointer rounded-lg border-b p-4 sm:p-6"
-      >
-        <UUser
-          :avatar="{
-            src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
-            alt: nickname[0]
-          }"
-          :description="bio"
-          size="xl"
-          :ui="{
-            wrapper: 'flex-1 min-w-0',
-            name: 'flex justify-between items-center gap-2',
-            description: 'truncate'
-          }"
+      <Skeleton v-if="loading" :count="5" />
+      <div class="divide-default divide-y">
+        <div
+          v-if="userMap[activeTab].length"
+          v-for="(
+            { targetId, targetProfile: { nickname, bio }, mutual, unfollow },
+            index
+          ) in userMap[activeTab]"
+          :key="targetId"
+          @click="
+            !activeSpaceTargetIds.has(targetId) &&
+            profileSpaceOverlay.open({
+              targetId
+            })
+          "
+          class="cursor-pointer p-4 sm:p-6"
         >
-          <template #name>
-            <span class="truncate">{{ nickname }}</span>
-            <template v-if="isSelf">
-              <template v-if="activeTab === 'follower'">
-                <UButton
-                  v-if="mutual"
-                  @click.stop="onUnfollow(index, targetId, true)"
-                  label="互相关注"
-                  size="xs"
-                />
-                <UButton
-                  v-else
-                  @click.stop="onFollow(index, targetId, true)"
-                  label="回关"
-                  size="xs"
-                />
-                <UButton
-                  @click.stop="onRemoveFollower(index, targetId)"
-                  label="移除"
-                  size="xs"
-                />
-              </template>
-              <template v-else>
-                <UButton
-                  v-if="unfollow"
-                  @click.stop="onFollow(index, targetId)"
-                  label="关注"
-                  size="xs"
-                />
-                <UButton
-                  v-else
-                  @click.stop="onUnfollow(index, targetId)"
-                  :label="mutual ? '互相关注' : '已关注'"
-                  size="xs"
-                />
+          <UUser
+            :avatar="{
+              src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
+              alt: nickname[0]
+            }"
+            :description="bio"
+            size="xl"
+            :ui="{
+              wrapper: 'flex-1 min-w-0',
+              name: 'flex justify-between items-center gap-2',
+              description: 'truncate'
+            }"
+          >
+            <template #name>
+              <span class="truncate">{{ nickname }}</span>
+              <template v-if="isSelf">
+                <div v-if="activeTab === 'follower'">
+                  <UButton
+                    v-if="mutual"
+                    @click.stop="onUnfollow(index, targetId, true)"
+                    label="互相关注"
+                    size="xs"
+                  />
+                  <UButton
+                    v-else
+                    @click.stop="onFollow(index, targetId, true)"
+                    label="回关"
+                    size="xs"
+                  />
+                  <UButton
+                    @click.stop="onRemoveFollower(index, targetId)"
+                    label="移除"
+                    size="xs"
+                  />
+                </div>
+                <template v-else>
+                  <UButton
+                    v-if="unfollow"
+                    @click.stop="onFollow(index, targetId)"
+                    label="关注"
+                    size="xs"
+                  />
+                  <UButton
+                    v-else
+                    @click.stop="onUnfollow(index, targetId)"
+                    :label="mutual ? '互相关注' : '已关注'"
+                    size="xs"
+                  />
+                </template>
               </template>
             </template>
-          </template>
-        </UUser>
+          </UUser>
+        </div>
+        <Separator v-if="userMap[activeTab].length === 0" :label="'空空如也'" />
       </div>
       <div v-if="activeTab === 'follower' && !publicFollowers">
         <UIcon name="lucide:eye-off" class="text-dimmed size-32"></UIcon>

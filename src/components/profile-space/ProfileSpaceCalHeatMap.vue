@@ -1,7 +1,7 @@
 <template>
   <div
     ref="calHeatmapRef"
-    class="border-b-accented/50 overflow-x-auto border-b p-4 sm:p-6"
+    class="border-b-default overflow-x-auto border-b p-4 sm:p-6"
   ></div>
 </template>
 

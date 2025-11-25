@@ -1,23 +1,17 @@
 <template>
-  <UDashboardPanel id="playground" :ui="{ body: 'p-0 sm:p-0' }">
+  <UDashboardPanel id="playground" :ui="{ body: 'p-0 sm:p-0 ' }">
     <template #header>
       <PlaygroundHeader v-model="allPostLoaded" />
     </template>
     <template #body>
       <!-- <UTabs ref="tabsRef" :items="tabItems" v-model="activeTab">
         <template #content> -->
-      <template v-if="loading">
-        <div v-for="i in 10" :key="i" class="flex items-center gap-4">
-          <USkeleton class="h-12 w-12 rounded-full" />
-
-          <div class="grid flex-1 gap-2">
-            <USkeleton class="h-4 w-full" />
-            <USkeleton class="h-4 w-4/5" />
-          </div>
-        </div>
-      </template>
+      <Skeleton v-if="loading" :count="10" />
       <!-- 存在 length 属性，说明已经成功从服务器获取了数据 -->
-      <div v-if="postMap[activeTab]?.posts?.length >= 0">
+      <div
+        v-if="postMap[activeTab]?.posts?.length >= 0"
+        class="divide-default divide-y"
+      >
         <div
           v-for="(
             {
@@ -33,7 +27,7 @@
             index
           ) in postMap[activeTab].posts"
           :key="_id"
-          class="border-b-accented/50 space-y-2 rounded-none border-b p-4 sm:p-6"
+          class="space-y-2 p-4 sm:p-6"
         >
           <!-- :description="`${useFormatTimeAgo(createdAt)} · 广东`" -->
           <UUser
@@ -115,12 +109,7 @@
           v-if="postMap[activeTab].posts.length === 0"
           :label="'空空如也'"
         />
-        <Separator
-          v-else-if="allPostLoaded"
-          label="
-            '已经到底了'
-          "
-        />
+        <Separator v-else-if="allPostLoaded" label="已经到底了" />
         <Transition
           enter-active-class="animate-[fade-in_200ms_ease-out]"
           leave-active-class="animate-[fade-out_200ms_ease-in]"

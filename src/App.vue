@@ -354,7 +354,7 @@ const floatingBtnY = ref(Number(localStorage.getItem('floatingBtnY') || 40))
 const talkOverlay = overlay.create(OverlayTalk)
 const helpAndSupportOverlay = overlay.create(OverlayHelpAndSupport)
 const abouttOverlay = overlay.create(OverlayAbout)
-const { VITE_VERSION, VITE_OSS_BASE_URL } = import.meta.env
+const { VITE_LAST_UPDATE_AT, VITE_OSS_BASE_URL } = import.meta.env
 
 const initFloatingBtnPosition = (currentTarget, clientX, clientY) => {
   const { left, top, width, height } = currentTarget.getBoundingClientRect()
@@ -1228,7 +1228,7 @@ const createSocket = (emit = null) => {
     {
       reconnectionAttempts: maxReconnectionAttempts,
       auth: {
-        version: VITE_VERSION,
+        latestUpdateAt: VITE_LAST_UPDATE_AT,
         token: localStorage.getItem('token')
       }
     }

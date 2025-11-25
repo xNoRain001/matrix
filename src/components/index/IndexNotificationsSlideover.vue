@@ -10,34 +10,37 @@
     }"
   >
     <template #body>
-      <div
-        v-if="homeNotifications.length"
-        v-for="({ _id, createdAt, content, type }, index) in homeNotifications"
-        :key="_id"
-        class="bg-elevated/50 border-b-accented/50 cursor-pointer rounded-none border-b p-4 sm:p-6"
-      >
-        <UUser
-          size="xl"
-          :ui="{
-            wrapper: 'flex-1 min-w-0',
-            description: 'flex justify-between items-center gap-2'
-          }"
+      <div v-if="homeNotifications.length" class="divide-default divide-y">
+        <div
+          v-for="(
+            { _id, createdAt, content, type }, index
+          ) in homeNotifications"
+          :key="_id"
+          class="cursor-pointer p-4 sm:p-6"
         >
-          <template #description>
-            <span class="flex-1 truncate">{{ content }}</span>
-            <time
-              >{{ useFormatTimeAgo(createdAt)
-              }}{{
-                type === 'feedback'
-                  ? '已阅读反馈'
-                  : type === 'reporter'
-                    ? '已处理举报对象'
-                    : ''
-              }}</time
-            >
-            <UBadge label="删除" color="error" @click="onDelete(index)" />
-          </template>
-        </UUser>
+          <UUser
+            size="xl"
+            :ui="{
+              wrapper: 'flex-1 min-w-0',
+              description: 'flex justify-between items-center gap-2'
+            }"
+          >
+            <template #description>
+              <span class="flex-1 truncate">{{ content }}</span>
+              <time
+                >{{ useFormatTimeAgo(createdAt)
+                }}{{
+                  type === 'feedback'
+                    ? '已阅读反馈'
+                    : type === 'reporter'
+                      ? '已处理举报对象'
+                      : ''
+                }}</time
+              >
+              <UBadge label="删除" color="error" @click="onDelete(index)" />
+            </template>
+          </UUser>
+        </div>
       </div>
       <div v-else class="flex h-full items-center justify-center">
         <UIcon name="lucide:bell" class="text-dimmed size-32" />

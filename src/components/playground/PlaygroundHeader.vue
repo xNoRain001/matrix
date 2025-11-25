@@ -48,7 +48,7 @@
             createdAt
           } in likeNotifications"
           :key="_id"
-          class="bg-elevated/50 border-b-accented/50 cursor-pointer rounded-none border-b p-4 sm:p-6"
+          class="cursor-pointer p-4 sm:p-6"
         >
           <UUser
             :name="nickname"
@@ -84,7 +84,7 @@
             createdAt
           } in likeNotifications"
           :key="_id"
-          class="bg-elevated/50 border-b-accented/50 cursor-pointer rounded-none border-b p-4 sm:p-6"
+          class="cursor-pointer p-4 sm:p-6"
         >
           <UUser
             :name="nickname"
@@ -120,7 +120,7 @@
             createdAt
           } in likeNotifications"
           :key="_id"
-          class="bg-elevated/50 border-b-accented/50 cursor-pointer rounded-none border-b p-4 sm:p-6"
+          class="cursor-pointer p-4 sm:p-6"
         >
           <UUser
             :name="nickname"

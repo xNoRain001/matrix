@@ -6,20 +6,7 @@
     }"
   >
     <div class="divide-default divide-y overflow-y-auto">
-      <template v-if="isFirstGetChatsOnlineStatus">
-        <div
-          v-for="i in 5"
-          :key="i"
-          class="flex items-center gap-2.5 p-4 sm:px-6"
-        >
-          <USkeleton class="size-10 rounded-full" />
-
-          <div class="grid flex-1 gap-2">
-            <USkeleton class="h-4 w-full" />
-            <USkeleton class="h-4 w-4/5" />
-          </div>
-        </div>
-      </template>
+      <Skeleton v-if="isFirstGetChatsOnlineStatus" :count="5" />
       <div
         v-else
         v-for="id in lastMsgList"

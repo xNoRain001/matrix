@@ -10,47 +10,48 @@
     }"
   >
     <template #body>
-      <div
-        v-if="contactNotifications.length"
-        v-for="(
-          { _id, targetId, targetProfile: { nickname }, createdAt, content },
-          index
-        ) in contactNotifications"
-        :key="_id"
-        class="bg-elevated/50 border-b-accented/50 cursor-pointer rounded-none border-b p-4 sm:p-6"
-        @click="
-          !activeSpaceTargetIds.has(targetId) &&
-          profileSpaceOverlay.open({
-            targetId
-          })
-        "
-      >
-        <UUser
-          :avatar="{
-            src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
-            alt: nickname[0]
-          }"
-          size="xl"
-          :ui="{
-            wrapper: 'flex-1 min-w-0',
-            name: 'flex justify-between items-center gap-2',
-            description: 'flex justify-between gap-2'
-          }"
+      <div v-if="contactNotifications.length" class="divide-default divide-y">
+        <div
+          v-for="(
+            { _id, targetId, targetProfile: { nickname }, createdAt, content },
+            index
+          ) in contactNotifications"
+          :key="_id"
+          class="cursor-pointer p-4 sm:p-6"
+          @click="
+            !activeSpaceTargetIds.has(targetId) &&
+            profileSpaceOverlay.open({
+              targetId
+            })
+          "
         >
-          <template #name>
-            <span class="truncate">{{ nickname }}</span>
-            <UButton
-              @click.stop="onDelete(index)"
-              color="error"
-              label="删除"
-              size="xs"
-            />
-          </template>
-          <template #description>
-            <span class="flex-1 truncate">{{ content }}</span>
-            <time>{{ useFormatTimeAgo(createdAt) }}</time>
-          </template>
-        </UUser>
+          <UUser
+            :avatar="{
+              src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
+              alt: nickname[0]
+            }"
+            size="xl"
+            :ui="{
+              wrapper: 'flex-1 min-w-0',
+              name: 'flex justify-between items-center gap-2',
+              description: 'flex justify-between gap-2'
+            }"
+          >
+            <template #name>
+              <span class="truncate">{{ nickname }}</span>
+              <UButton
+                @click.stop="onDelete(index)"
+                color="error"
+                label="删除"
+                size="xs"
+              />
+            </template>
+            <template #description>
+              <span class="flex-1 truncate">{{ content }}</span>
+              <time>{{ useFormatTimeAgo(createdAt) }}</time>
+            </template>
+          </UUser>
+        </div>
       </div>
       <div v-else class="flex h-full items-center justify-center">
         <UIcon name="lucide:bell" class="text-dimmed size-32" />

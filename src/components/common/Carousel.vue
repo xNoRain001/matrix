@@ -5,8 +5,6 @@
         ref="carousel"
         v-slot="{ item, index }"
         :items="items"
-        :prev="{ onClick: onClickPrev }"
-        :next="{ onClick: onClickNext }"
         :class="
           viewer
             ? isMobile
@@ -68,7 +66,7 @@
       v-else
       :loading="setLoading ? 'lazy' : undefined"
       :crossorigin="setCrossorigin ? 'anonymous' : undefined"
-      @click="!viewer && viewerOverlay.open({ urls: items, activeIndex: 0 })"
+      @click="!viewer && viewerOverlay.open({ urls: items })"
       :src="
         items[0].url.startsWith('blob:') || items[0].url.startsWith('https://')
           ? items[0].url
@@ -115,22 +113,25 @@ const viewerOverlay = overlay.create(OverlayViewer)
 const { isMobile } = storeToRefs(useUserStore())
 const { VITE_OSS_BASE_URL } = import.meta.env
 
-const onClickPrev = () => {
-  _activeIndex.value--
-}
-
-const onClickNext = () => {
-  _activeIndex.value++
-}
-
 const onSelect = (index: number) => {
+  // 滑动图片时更新缩略图的高亮
   _activeIndex.value = index
 }
 
 const select = (index: number) => {
+  // 点击缩略图时更新缩略图的高亮
   _activeIndex.value = index
-  carousel.value?.emblaApi?.scrollTo(index)
+  // 滚动到对应的图片
+  carousel.value.emblaApi.scrollTo(index)
 }
 
-onMounted(() => carousel.value?.emblaApi?.scrollTo(_activeIndex.value))
+onMounted(() => {
+  setTimeout(() => {
+    const { activeIndex } = props
+
+    if (activeIndex) {
+      carousel.value.emblaApi.scrollTo(activeIndex)
+    }
+  })
+})
 </script>

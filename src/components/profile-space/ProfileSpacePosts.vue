@@ -1,15 +1,6 @@
 <template>
-  <div v-if="loading" class="space-y-4 p-4 sm:p-6">
-    <div v-for="i in 5" :key="i" class="flex items-center gap-4">
-      <USkeleton class="h-12 w-12 rounded-full" />
-
-      <div class="grid flex-1 gap-2">
-        <USkeleton class="h-4 w-full" />
-        <USkeleton class="h-4 w-4/5" />
-      </div>
-    </div>
-  </div>
-  <div v-if="postMap[targetId]?.posts?.length">
+  <Skeleton v-if="loading" :count="5" />
+  <div v-if="postMap[targetId]?.posts?.length" class="divide-default divide-y">
     <div
       v-for="(
         {
@@ -24,7 +15,7 @@
         index
       ) in postMap[targetId].posts"
       :key="_id"
-      class="border-b-accented/50 cursor-pointer space-y-2 rounded-none border-b p-4 sm:p-6"
+      class="space-y-2 p-4 sm:p-6"
     >
       <div class="flex items-center justify-between gap-2">
         <span class="text-toned truncate text-sm">

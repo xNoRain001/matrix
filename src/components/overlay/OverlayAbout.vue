@@ -23,7 +23,6 @@
         />
       </svg>
       <p class="text-sm">矩阵</p>
-      <p class="text-sm">Version: {{ VITE_VERSION }}</p>
       <p class="text-sm">Last Update At: {{ VITE_LATEST_UPDATE_DATE }}</p>
       <p class="mt-8 text-xs">X公司 版权所有</p>
       <p class="text-xs">
@@ -51,8 +50,7 @@
         />
       </svg>
       <p class="text-sm">矩阵</p>
-      <p class="text-sm">Version: {{ VITE_VERSION }}</p>
-      <p class="text-sm">Last Update At: {{ VITE_LATEST_UPDATE_DATE }}</p>
+      <p class="text-sm">最后更新于：{{ VITE_LATEST_UPDATE_DATE }}</p>
       <p class="mt-8 text-xs">X公司 版权所有</p>
       <p class="text-xs">
         Copyright © 2025-{{ new Date().getFullYear() }} X. All Rights Reserved.
@@ -69,5 +67,5 @@ const emit = defineEmits<{ close: [boolean] }>()
 const { isMobile } = storeToRefs(useUserStore())
 const title = '关于'
 const description = ' '
-const { VITE_VERSION, VITE_LATEST_UPDATE_DATE } = import.meta.env
+const { VITE_LATEST_UPDATE_DATE } = import.meta.env
 </script>

@@ -9,7 +9,10 @@
     }"
   >
     <template #body>
-      <div ref="contentRef" class="bg-elevated/50 space-y-2 p-4 sm:p-6">
+      <div
+        ref="contentRef"
+        class="border-b-default space-y-2 border-b p-4 sm:p-6"
+      >
         <p class="text-highlighted break-all whitespace-pre-wrap">
           {{ postMap[targetId].activePost.content.text }}
         </p>
@@ -54,17 +57,8 @@
         {{ `评论 ${postMap[targetId].activePost.commentCount}` }}
       </div>
       <div v-if="activeTab === 'comment'">
-        <div v-if="loadingComments" class="space-y-4 p-4 sm:p-6">
-          <div v-for="i in 5" :key="i" class="flex items-center gap-4">
-            <USkeleton class="h-12 w-12 rounded-full" />
-
-            <div class="grid flex-1 gap-2">
-              <USkeleton class="h-4 w-full" />
-              <USkeleton class="h-4 w-4/5" />
-            </div>
-          </div>
-        </div>
-        <div v-if="postMap[targetId].comments">
+        <Skeleton v-if="loadingComments" :count="5" />
+        <div v-if="postMap[targetId].comments" class="divide-default divide-y">
           <div
             v-for="(
               {
@@ -82,7 +76,7 @@
               index
             ) in postMap[targetId].comments"
             :key="_id"
-            class="bg-elevated/50 cursor-pointer space-y-2 rounded-none p-4 sm:p-6"
+            class="space-y-2 p-4 sm:p-6"
           >
             <UUser
               size="xl"
@@ -139,6 +133,7 @@
                     <UButton
                       v-if="isMobile"
                       variant="ghost"
+                      size="xs"
                       icon="lucide:ellipsis"
                       @click="
                         onOpenDropdownMenu(
@@ -154,6 +149,7 @@
                     <UDropdownMenu v-else :items="dropdownMenuItems">
                       <UButton
                         variant="ghost"
+                        size="xs"
                         icon="lucide:ellipsis"
                         @click="
                           onOpenDropdownMenu(
@@ -244,6 +240,7 @@
                         replyIndex
                       ) in replyComments"
                       :key="replyId"
+                      class="mt-2 sm:mt-3"
                     >
                       <UUser
                         size="xl"
@@ -310,6 +307,7 @@
                               <UButton
                                 v-if="isMobile"
                                 variant="ghost"
+                                size="xs"
                                 icon="lucide:ellipsis"
                                 @click="
                                   onOpenReplyDropdownMenu(
@@ -330,6 +328,7 @@
                               >
                                 <UButton
                                   variant="ghost"
+                                  size="xs"
                                   icon="lucide:ellipsis"
                                   @click="
                                     onOpenReplyDropdownMenu(
@@ -454,21 +453,12 @@
         />
       </div>
       <div v-else>
-        <div v-if="loadingLikes" class="space-y-4 p-4 sm:p-6">
-          <div v-for="i in 5" :key="i" class="flex items-center gap-4">
-            <USkeleton class="h-12 w-12 rounded-full" />
-
-            <div class="grid flex-1 gap-2">
-              <USkeleton class="h-4 w-full" />
-              <USkeleton class="h-4 w-4/5" />
-            </div>
-          </div>
-        </div>
-        <div v-if="likes.length">
+        <Skeleton v-if="loadingLikes" :count="5" />
+        <div v-if="likes.length" class="divide-default divide-y">
           <div
             v-for="{ user, profile: { nickname }, createdAt } in likes"
             :key="user"
-            class="bg-elevated/50 rounded-none p-4 sm:p-6"
+            class="p-4 sm:p-6"
             @click="
               !activeSpaceTargetIds.has(user) &&
               profileSpaceOverlay.open({

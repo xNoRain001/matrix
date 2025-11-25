@@ -11,7 +11,7 @@
     }"
   >
     <template #body>
-      <Carousel :items="urls" :active-index="_activeIndex" :viewer="true" />
+      <Carousel :items="urls" :active-index="activeIndex" :viewer="true" />
     </template>
     <!-- <template #footer>
       <UButton
@@ -24,9 +24,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
-
-const props = withDefaults(
+withDefaults(
   defineProps<{
     urls: { url: string; width?: number; height?: number }[]
     activeIndex?: number
@@ -36,7 +34,6 @@ const props = withDefaults(
   }
 )
 const emit = defineEmits<{ close: [boolean] }>()
-const _activeIndex = ref(props.activeIndex)
 
 // const onDownload = (url, filename) => {
 //   fetch(url)
