@@ -8,13 +8,16 @@
     :class="isMobile ? 'pb-16' : ''"
   >
     <MessageHeader />
-    <MessageList v-if="lastMsgList.length" />
-    <div
-      v-if="isMobile && !lastMsgList.length"
-      class="flex flex-1 items-center justify-center"
-    >
-      <UIcon name="lucide:message-circle-more" class="text-dimmed size-32" />
-    </div>
+    <Skeleton v-if="loading" :count="5" />
+    <template v-else>
+      <MessageList v-if="lastMsgList.length" />
+      <div
+        v-if="isMobile && !lastMsgList.length"
+        class="flex flex-1 items-center justify-center"
+      >
+        <UIcon name="lucide:message-circle-more" class="text-dimmed size-32" />
+      </div>
+    </template>
   </UDashboardPanel>
   <template v-if="!isMobile">
     <!-- 由于并不依赖模态框，因此需要手动修改 targetId -->
@@ -35,7 +38,7 @@ import { refreshNickname } from '@/apis/profile'
 import { useGetDB } from '@/hooks'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { onMounted, onBeforeUnmount } from 'vue'
+import { onMounted, onBeforeUnmount, ref } from 'vue'
 
 let timer = null
 const toast = useToast()
@@ -47,49 +50,51 @@ const {
   lastMsgMap,
   lastMsgList
 } = storeToRefs(useRecentContactsStore())
-
-const refreshChatsNickname = async () => {
-  const now = Date.now()
-  const { id } = userInfo.value
-  const expired =
-    now > Number(localStorage.getItem(`lastMsgProfileMapExpireAt-${id}`))
-
-  // 过期，获取所有用户的最新资料
-  if (expired) {
-    const ids = lastMsgList.value
-
-    if (!ids.length) {
-      return
-    }
-
-    try {
-      const { data: nicknameMap } = await refreshNickname(ids.join('_'))
-      const _lastMsgMap = lastMsgMap.value
-      const db = await useGetDB(userInfo.value.id)
-      const tx = db.transaction('lastMessages', 'readwrite')
-
-      for (let i = 0, l = ids.length; i < l; i++) {
-        const id = ids[i]
-        _lastMsgMap[id].profile.nickname = nicknameMap[id]
-        await tx
-          .objectStore('lastMessages')
-          .put(JSON.parse(JSON.stringify(_lastMsgMap[id])))
-      }
-
-      await tx.done
-
-      localStorage.setItem(
-        `lastMsgProfileMapExpireAt-${id}`,
-        String(now + 1000 * 60 * 60 * 6)
+const loading = ref(
+  lastMsgList.value.length &&
+    Date.now() >
+      Number(
+        localStorage.getItem(`lastMsgProfileMapExpireAt-${userInfo.value.id}`)
       )
-    } catch (error) {
-      toast.add({
-        title: error.message,
-        color: 'error',
-        icon: 'lucide:annoyed'
-      })
-    }
+)
+
+const refreshChatNickname = async () => {
+  if (!loading.value) {
+    return
   }
+
+  const { id } = userInfo.value
+  const ids = lastMsgList.value
+
+  try {
+    const { data: nicknameMap } = await refreshNickname(ids.join('_'))
+    const _lastMsgMap = lastMsgMap.value
+    const db = await useGetDB(userInfo.value.id)
+    const tx = db.transaction('lastMessages', 'readwrite')
+
+    for (let i = 0, l = ids.length; i < l; i++) {
+      const id = ids[i]
+      _lastMsgMap[id].profile.nickname = nicknameMap[id]
+      await tx
+        .objectStore('lastMessages')
+        .put(JSON.parse(JSON.stringify(_lastMsgMap[id])))
+    }
+
+    await tx.done
+
+    localStorage.setItem(
+      `lastMsgProfileMapExpireAt-${id}`,
+      String(Date.now() + 1000 * 60 * 60 * 6)
+    )
+  } catch (error) {
+    toast.add({
+      title: error.message,
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+  }
+
+  loading.value = false
 }
 
 const onClose = () => {
@@ -99,7 +104,7 @@ const onClose = () => {
 }
 
 onMounted(async () => {
-  await refreshChatsNickname()
+  refreshChatNickname()
 })
 
 onBeforeUnmount(() => {

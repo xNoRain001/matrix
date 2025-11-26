@@ -46,7 +46,7 @@
             <template #name>
               <span class="truncate">{{ nickname }}</span>
               <template v-if="isSelf">
-                <div v-if="activeTab === 'follower'">
+                <div v-if="activeTab === 'follower'" class="flex gap-2">
                   <UButton
                     v-if="mutual"
                     @click.stop="onUnfollow(index, targetId, true)"

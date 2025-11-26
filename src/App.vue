@@ -204,8 +204,6 @@ const {
   hashToBlobURLMap,
   indexMap,
   isReceivingOfflineMsgs,
-  isFirstGetContactsOnlineStatus,
-  isFirstGetChatsOnlineStatus,
   activeTargetIds
 } = storeToRefs(useRecentContactsStore())
 const { messageRecordMap } = storeToRefs(useMessagesStore())
@@ -809,7 +807,7 @@ const onReceiveOfflineMsgs = async offlineMsgs => {
     const id = contacts[i]
     const offlineMsgs = grouped[id]
     const offlineMsgsLength = offlineMsgs.length
-    // 接收离线消息时可能处于匹配聊天界面中，需要更新视图
+    // 接收离线消息时可能处于聊天界面中，需要更新视图
     const inView = activeTargetIds.value.has(id)
     const __lastMsgMap: Record<string, { sent: boolean; timestamp: number }> = {
       [id]: (_lastMsgMap[id] as any) || {}
@@ -1195,10 +1193,6 @@ const onGetOnlineStatus = (type, res) => {
         profile.onlineStatus = onlineStatus
       }
     }
-
-    isMessageList
-      ? (isFirstGetChatsOnlineStatus.value = false)
-      : (isFirstGetContactsOnlineStatus.value = false)
   }
 }
 
@@ -1228,7 +1222,7 @@ const createSocket = (emit = null) => {
     {
       reconnectionAttempts: maxReconnectionAttempts,
       auth: {
-        latestUpdateAt: VITE_LAST_UPDATE_AT,
+        lastUpdateAt: VITE_LAST_UPDATE_AT,
         token: localStorage.getItem('token')
       }
     }

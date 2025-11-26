@@ -20,16 +20,22 @@
         @click="onGenRandomAvatar"
         class="w-full justify-center"
         label="随机头像"
+        :loading="generating"
+        :disabled="generating || uploading || saving"
       />
       <UButton
-        @click="avatarRef.click()"
+        @click="onUploadAvatar"
         class="w-full justify-center"
         label="上传头像"
+        :loading="uploading"
+        :disabled="generating || uploading || saving"
       />
       <UButton
         @click="onSaveAvatar"
         class="w-full justify-center"
         label="保存头像"
+        :loading="saving"
+        :disabled="generating || uploading || saving"
       />
     </template>
   </USlideover>
@@ -50,15 +56,36 @@ import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref, useTemplateRef } from 'vue'
 
+let startUpload = false
 const isAvatarSlideoverOpen = defineModel<boolean>()
 const avatarRef = useTemplateRef('avatarRef')
 const { isMobile, userInfo, avatarURL } = storeToRefs(useUserStore())
 const toast = useToast()
 const src = ref(avatarURL.value)
+const generating = ref(false)
+const uploading = ref(false)
+const saving = ref(false)
+
+const onUploadAvatar = () => {
+  avatarRef.value.click()
+  startUpload = true
+}
 
 const onFileChange = async e => {
+  if (startUpload) {
+    uploading.value = true
+  }
+
   await useUpdateStaticNameFile(e, 'avatar', userInfo, toast, avatarURL)
   src.value = avatarURL.value
+
+  if (startUpload) {
+    uploading.value = false
+    startUpload = false
+  } else {
+    saving.value = false
+  }
+
   isAvatarSlideoverOpen.value = false
 }
 
@@ -71,6 +98,7 @@ const onSaveAvatar = () => {
     input.files = dataTransfer.files
     const event = new Event('change')
     input.dispatchEvent(event)
+    saving.value = true
   } else {
     isAvatarSlideoverOpen.value = false
   }
@@ -94,6 +122,7 @@ const base64ToFile = () => {
 }
 
 const onGenRandomAvatar = async () => {
+  generating.value = true
   const { createAvatar } = await import('@dicebear/core')
   const { toPng } = await import('@dicebear/converter')
   const {
@@ -163,5 +192,6 @@ const onGenRandomAvatar = async () => {
   )
   const png = toPng(avatar)
   src.value = await png.toDataUri()
+  generating.value = false
 }
 </script>

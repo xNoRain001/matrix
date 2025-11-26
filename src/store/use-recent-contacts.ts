@@ -4,7 +4,7 @@ import type { userInfo } from '@/types'
 
 const useRecentContactsStore = defineStore('recentContactsStore', () => {
   return {
-    contactList: ref(null),
+    contactList: ref([]),
     contactProfileMap: ref<
       Record<
         string,
@@ -39,9 +39,7 @@ const useRecentContactsStore = defineStore('recentContactsStore', () => {
       >
     >({}),
     lastMsgList: ref<string[]>([]),
-    unreadMsgCounter: ref(0),
-    isFirstGetContactsOnlineStatus: ref(true),
-    isFirstGetChatsOnlineStatus: ref(true)
+    unreadMsgCounter: ref(0)
   }
 })
 

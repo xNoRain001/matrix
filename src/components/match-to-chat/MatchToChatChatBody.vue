@@ -589,7 +589,6 @@ import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 import type { userInfo } from '@/types'
 
 let timer = null
-let receivingOfflineMsgsTimer = null
 let lastFetchedMsgId = Number.MAX_SAFE_INTEGER
 let skipUnshiftMessageRecord = false
 const { VITE_OSS_BASE_URL } = import.meta.env
@@ -600,13 +599,8 @@ const props = defineProps<{
   targetNickname: string
 }>()
 const { config, userInfo, avatarURL } = storeToRefs(useUserStore())
-const {
-  lastMsgMap,
-  hashToBlobURLMap,
-  unreadMsgCounter,
-  isReceivingOfflineMsgs,
-  activeSpaceTargetIds
-} = storeToRefs(useRecentContactsStore())
+const { lastMsgMap, hashToBlobURLMap, unreadMsgCounter, activeSpaceTargetIds } =
+  storeToRefs(useRecentContactsStore())
 const { messageRecordMap } = storeToRefs(useMessagesStore())
 const keyword = ref('')
 const updateParts = ref({
@@ -833,19 +827,6 @@ const initMessages = async () => {
   await resetUnreadMsgs()
 }
 
-const initMessagesInMatch = async () => {
-  if (!isReceivingOfflineMsgs.value) {
-    initMessages()
-  } else {
-    receivingOfflineMsgsTimer = setInterval(async () => {
-      if (!isReceivingOfflineMsgs.value) {
-        clearInterval(receivingOfflineMsgsTimer)
-        initMessages()
-      }
-    }, 1000)
-  }
-}
-
 const initScroller = id => {
   messageRecordMap.value[id] = {}
   messageRecordMap.value[id].scroller = scrollerRef.value as HTMLElement
@@ -870,9 +851,9 @@ watch(
   }
 )
 
-onMounted(() => {
+onMounted(async () => {
   initScroller(props.targetId)
-  props.isMatch ? initMessagesInMatch() : initMessages()
+  await initMessages()
   updateTimeAgo()
   timer = setInterval(updateTimeAgo, 1000 * 60)
 })

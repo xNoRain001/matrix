@@ -6,9 +6,7 @@
     }"
   >
     <div class="divide-default divide-y overflow-y-auto">
-      <Skeleton v-if="isFirstGetChatsOnlineStatus" :count="5" />
       <div
-        v-else
         v-for="id in lastMsgList"
         :key="id"
         @contextmenu="contextmenuId = id"
@@ -79,10 +77,12 @@
                 />
               </template>
               <template #description>
-                <span class="flex-1 truncate">
+                <span v-if="lastMsgMap[id].content" class="flex-1 truncate">
                   {{ lastMsgMap[id].content }}
                 </span>
-                <time>{{ useFormatTimestamp(lastMsgMap[id].timestamp) }}</time>
+                <time v-if="lastMsgMap[id].content">{{
+                  useFormatTimestamp(lastMsgMap[id].timestamp)
+                }}</time>
               </template>
             </UUser>
           </div>
@@ -118,8 +118,7 @@ const {
   activeTargetNickname,
   contactProfileMap,
   indexMap,
-  unreadMsgCounter,
-  isFirstGetChatsOnlineStatus
+  unreadMsgCounter
 } = storeToRefs(useRecentContactsStore())
 const { messageRecordMap } = storeToRefs(useMessagesStore())
 const contextMenuItems = ref<ContextMenuItem[][]>([

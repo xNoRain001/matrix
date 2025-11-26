@@ -8,13 +8,16 @@
     :class="isMobile ? 'pb-16' : ''"
   >
     <ContactHeader />
-    <ContactList v-if="contactList?.length" />
-    <div
-      v-if="isMobile && !contactList?.length"
-      class="flex flex-1 items-center justify-center"
-    >
-      <UIcon name="lucide:user-round" class="text-dimmed size-32" />
-    </div>
+    <Skeleton v-if="loading" :count="5" />
+    <template v-if="!loading">
+      <ContactList v-if="contactList.length" />
+      <div
+        v-if="isMobile && !contactList.length"
+        class="flex flex-1 items-center justify-center"
+      >
+        <UIcon name="lucide:user-round" class="text-dimmed size-32" />
+      </div>
+    </template>
   </UDashboardPanel>
   <template v-if="!isMobile">
     <ProfileSpace
@@ -32,7 +35,7 @@
 import { getMutualsAPI } from '@/apis/follower'
 import { useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { onBeforeUnmount, onMounted } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 const toast = useToast()
 const { isMobile } = storeToRefs(useUserStore())
@@ -43,8 +46,9 @@ const {
   contactList,
   contactProfileMap
 } = storeToRefs(useRecentContactsStore())
+const loading = ref(true)
 
-const refreshContactsProfile = async () => {
+const getMutuals = async () => {
   try {
     const { data } = await getMutualsAPI()
 
@@ -56,6 +60,8 @@ const refreshContactsProfile = async () => {
         contactProfileMap.value[user] = { profile }
       }
     }
+
+    loading.value = false
   } catch (error) {
     toast.add({
       title: error.message,
@@ -72,9 +78,7 @@ const onClose = () => {
 }
 
 onMounted(async () => {
-  if (contactList.value === null) {
-    await refreshContactsProfile()
-  }
+  await getMutuals()
 })
 
 onBeforeUnmount(() => {

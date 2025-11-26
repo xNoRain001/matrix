@@ -787,7 +787,7 @@
       </UPageCard>
     </UForm>
   </template>
-  <ProfileUserInfoSlideover v-model="isAvatarSlideoverOpen" />
+  <ProfileAvatarSlideover v-model="isAvatarSlideoverOpen" />
 </template>
 
 <script lang="ts" setup>

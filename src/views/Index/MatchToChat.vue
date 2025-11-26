@@ -7,7 +7,7 @@
     v-model:open="isOpen"
     :ui="{ content: 'flex-row', description: 'hidden' }"
   >
-    <template #content>
+    <template #content v-if="!isReceivingOfflineMsgs">
       <MatchToChatChat
         @close="isOpen = false"
         :is-match="true"
@@ -26,13 +26,14 @@
 
 <script lang="ts" setup>
 import { useRouter } from 'vue-router'
-import { useMatchStore, useUserStore } from '@/store'
+import { useMatchStore, useRecentContactsStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 
 const router = useRouter()
 const { isMobile } = storeToRefs(useUserStore())
 const { matchRes } = storeToRefs(useMatchStore())
+const { isReceivingOfflineMsgs } = storeToRefs(useRecentContactsStore())
 const isOpen = ref(Boolean(matchRes.value))
 
 if (!isOpen.value) {

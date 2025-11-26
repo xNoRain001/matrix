@@ -1,7 +1,6 @@
 <template>
   <div class="divide-default divide-y overflow-y-auto">
-    <Skeleton v-if="isFirstGetContactsOnlineStatus" :count="5" />
-    <div v-else v-for="id in contactList" :key="id">
+    <div v-for="id in contactList" :key="id">
       <div
         class="w-full cursor-pointer p-4 transition-colors sm:px-6"
         :class="
@@ -56,8 +55,7 @@ const {
   activeTargetNickname,
   activeSpaceTargetIds,
   contactList,
-  contactProfileMap,
-  isFirstGetContactsOnlineStatus
+  contactProfileMap
 } = storeToRefs(useRecentContactsStore())
 const overlay = useOverlay()
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
@@ -92,6 +90,10 @@ const onClick = targetId => {
 }
 
 const formatLastOnline = timestamp => {
+  if (timestamp === undefined) {
+    return '最后在线于：未知'
+  }
+
   if (timestamp === 0) {
     return '最后在线于：7 天前'
   }
