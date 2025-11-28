@@ -222,7 +222,7 @@
 
     <UDrawer
       v-model:open="isBioDrawerOpen"
-      title="修改角色背景故事"
+      title="修改角色背景故事 / 台词"
       description=" "
       :ui="{
         description: 'hidden'
@@ -332,32 +332,6 @@
     </UDrawer>
 
     <UDrawer
-      v-model:open="isOCWeightDrawerOpen"
-      title="修改角色体重"
-      description=" "
-      :ui="{
-        description: 'hidden'
-      }"
-    >
-      <template #body>
-        <UInput class="w-full" v-model="profileForm.ocWeight" maxlength="5">
-          <template v-if="profileForm.ocWeight" #trailing>
-            <div class="text-muted text-xs tabular-nums">
-              {{ profileForm.ocWeight.length }}/5
-            </div>
-            <UButton
-              color="neutral"
-              variant="link"
-              size="sm"
-              icon="lucide:circle-x"
-              @click="profileForm.ocWeight = ''"
-            />
-          </template>
-        </UInput>
-      </template>
-    </UDrawer>
-
-    <UDrawer
       v-model:open="isHeightDrawerOpen"
       title="修改身高"
       description=" "
@@ -423,19 +397,6 @@
           v-model="profileForm.ocMBTI"
           :items="mbtiItems"
         />
-      </template>
-    </UDrawer>
-
-    <UDrawer
-      v-model:open="isMBTIDrawerOpen"
-      title="修改 MBTI"
-      description=" "
-      :ui="{
-        description: 'hidden'
-      }"
-    >
-      <template #body>
-        <USelect class="w-full" v-model="profileForm.mbti" :items="mbtiItems" />
       </template>
     </UDrawer>
   </template>
@@ -589,28 +550,6 @@
         </UFormField>
         <USeparator />
         <UFormField
-          label="体重"
-          description="选择你的体重"
-          class="flex items-start justify-between gap-4"
-          :ui="{ container: 'w-3/5' }"
-        >
-          <UInput class="w-full" v-model="profileForm.ocWeight">
-            <template v-if="profileForm.ocWeight" #trailing>
-              <div class="text-muted text-xs tabular-nums">
-                {{ profileForm.ocWeight.length }}/5
-              </div>
-              <UButton
-                color="neutral"
-                variant="link"
-                size="sm"
-                icon="lucide:circle-x"
-                @click="profileForm.ocWeight = ''"
-              />
-            </template>
-          </UInput>
-        </UFormField>
-        <USeparator />
-        <UFormField
           label="MBTI"
           description="选择你的 MBTI"
           class="flex items-start justify-between gap-4"
@@ -624,8 +563,8 @@
         </UFormField>
         <USeparator />
         <UFormField
-          label="背景故事"
-          description="修改背景故事"
+          label="背景故事 / 台词"
+          description="修改背景故事 / 台词"
           class="flex items-start justify-between gap-4"
           :ui="{ container: 'w-3/5' }"
         >
@@ -738,19 +677,6 @@
         </UFormField>
         <USeparator />
         <UFormField
-          label="MBTI"
-          description="选择你的 MBTI"
-          class="flex items-start justify-between gap-4"
-          :ui="{ container: 'w-3/5' }"
-        >
-          <USelect
-            class="w-full"
-            v-model="profileForm.mbti"
-            :items="mbtiItems"
-          />
-        </UFormField>
-        <USeparator />
-        <UFormField
           label="大学"
           description="填写你的大学"
           class="flex items-start justify-between gap-4"
@@ -810,12 +736,10 @@ const isRegionDrawerOpen = ref(false)
 const isCollegeDrawerOpen = ref(false)
 const isHeightDrawerOpen = ref(false)
 const isWeightDrawerOpen = ref(false)
-const isMBTIDrawerOpen = ref(false)
 const isBioDrawerOpen = ref(false)
 const isOCGenderDrawerOpen = ref(false)
 const isOCAgeDrawerOpen = ref(false)
 const isOCHeightDrawerOpen = ref(false)
-const isOCWeightDrawerOpen = ref(false)
 const isOCMBTIDrawerOpen = ref(false)
 const isAvatarSlideoverOpen = ref(false)
 const { isMobile, userInfo, avatarURL, globalSocket } =
@@ -864,17 +788,12 @@ const profileItems = [
     click: () => (isOCHeightDrawerOpen.value = true)
   },
   {
-    label: '体重',
-    key: 'ocWeight',
-    click: () => (isOCWeightDrawerOpen.value = true)
-  },
-  {
     label: 'MBTI',
     key: 'ocMBTI',
     click: () => (isOCMBTIDrawerOpen.value = true)
   },
   {
-    label: '背景故事',
+    label: '背景故事 / 台词',
     key: 'bio',
     click: () => (isBioDrawerOpen.value = true)
   },
@@ -897,11 +816,6 @@ const profileItems = [
     label: '体重',
     key: 'weight',
     click: () => (isWeightDrawerOpen.value = true)
-  },
-  {
-    label: 'MBTI',
-    key: 'mbti',
-    click: () => (isMBTIDrawerOpen.value = true)
   },
   {
     label: '大学',

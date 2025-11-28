@@ -76,13 +76,6 @@
           label="背景"
           size="xs"
         />
-        <!-- 个人主页必须显示切换按钮，因为可能会修改标签 -->
-        <UButton
-          v-if="isSelf || isToggleBtnShow"
-          @click="isOC = !isOC"
-          icon="lucide:arrow-left-right"
-          size="xs"
-        />
       </div>
     </div>
     <div class="text-toned text-xs">
@@ -93,8 +86,11 @@
     <div v-if="targetProfile.bio" class="text-highlighted mt-2 text-sm">
       {{ targetProfile.bio }}
     </div>
-    <div v-if="isSelf || isTagsShow" class="mt-2 flex flex-wrap gap-2">
-      <ProfileSpaceTags :is-o-c="isOC" :target-profile="targetProfile" />
+    <div
+      v-if="isSelf || targetProfile.ocTags.length"
+      class="mt-2 flex flex-wrap gap-2"
+    >
+      <ProfileSpaceTags :target-profile="targetProfile" />
       <UBadge
         v-if="isSelf"
         icon="lucide:circle-plus"
@@ -138,7 +134,6 @@
   <ProfileSpaceTagsSlideover
     v-if="isSelf"
     v-model="isTagSlideoverOpen"
-    :is-o-c="isOC"
     :target-id="targetId"
     :target-profile="targetProfile"
   />
@@ -183,13 +178,6 @@ const { isMobile, userInfo, avatarURL, globalSocket } =
   storeToRefs(useUserStore())
 const { activeTargetIds } = storeToRefs(useRecentContactsStore())
 const isSelf = props.targetId === userInfo.value.id
-const isToggleBtnShow = Boolean(
-  props.targetProfile.ocTags.length && props.targetProfile.tags.length
-)
-const isTagsShow = Boolean(
-  props.targetProfile.ocTags.length || props.targetProfile.tags.length
-)
-const isOC = ref(isSelf || Boolean(props.targetProfile.ocTags.length))
 const route = useRoute()
 const { VITE_OSS_BASE_URL } = import.meta.env
 const bgURL = ref(`${VITE_OSS_BASE_URL}spaceBg/${props.targetId}`)

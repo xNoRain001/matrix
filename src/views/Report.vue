@@ -68,7 +68,7 @@
             </template>
             <template v-else-if="reportTarget === 'tag'">
               <div class="flex flex-wrap gap-2">
-                <UBadge v-for="tag in profile.tags" :label="tag"></UBadge>
+                <UBadge v-for="tag in profile.ocTags" :label="tag"></UBadge>
               </div>
             </template>
 

@@ -99,7 +99,6 @@ import type { userInfo } from '@/types'
 
 const isTagSlideoverOpen = defineModel<boolean>()
 const props = defineProps<{
-  isOC: boolean
   targetId: string
   targetProfile: userInfo['profile']
 }>()
@@ -330,8 +329,7 @@ const onUpdateTag = async () => {
   const _tags = JSON.parse(JSON.stringify(tags.value))
   const stringifyTags = _tags.join('__separator__')
   const { profile } = userInfo.value
-  const { isOC } = props
-  const __tags = isOC ? profile.ocTags : profile.tags
+  const __tags = profile.ocTags
   const sameTags = stringifyTags === __tags.join('__separator__')
 
   if (sameTags) {
@@ -346,7 +344,7 @@ const onUpdateTag = async () => {
   const payload = {
     // 值为 __separator__ 表示清空所有标签
     ...(!sameTags && {
-      [isOC ? 'ocTags' : 'tags']: stringifyTags || '__separator__'
+      ocTags: stringifyTags || '__separator__'
     })
   }
 
@@ -354,13 +352,7 @@ const onUpdateTag = async () => {
     const { data: token } = await updateProfile(payload)
     localStorage.setItem('token', token)
     globalSocket.value.emit('refresh-profile', token)
-
-    if (isOC) {
-      profile.ocTags = _tags
-    } else {
-      profile.tags = _tags
-    }
-
+    profile.ocTags = _tags
     toast.add({
       title: '修改资料成功',
       icon: 'lucide:smile'
@@ -433,11 +425,7 @@ watch(activeTab, () => {
 
 watch(isTagSlideoverOpen, v => {
   if (v) {
-    const {
-      isOC,
-      targetProfile: { ocTags, tags: _tags }
-    } = props
-    const __tags = [...(isOC ? ocTags : _tags)]
+    const __tags = [...props.targetProfile.ocTags]
     tags.value = __tags
     tagsSet.value = new Set([...__tags])
     setTimeout(() => {

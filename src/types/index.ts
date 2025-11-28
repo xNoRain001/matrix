@@ -35,7 +35,6 @@ export type userInfo = {
     ocGender: string
     ocAge: string
     ocHeight: string
-    ocWeight: string
     ocMBTI: mbti
     ocTags: string[]
     bio: string
@@ -43,8 +42,6 @@ export type userInfo = {
     birthday: string
     height: string
     weight: string
-    mbti: mbti
-    tags: string[]
     college: string
     province: string
     city: string

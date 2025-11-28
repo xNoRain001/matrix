@@ -131,36 +131,6 @@
         </UInput>
       </UPageCard>
       <UPageCard
-        title="体重"
-        description="填写角色的体重"
-        variant="naked"
-        orientation="horizontal"
-        class="mb-4"
-        :ui="{
-          container: 'lg:grid-cols-none'
-        }"
-      >
-        <UInput
-          placeholder="例如: 45kg"
-          class="w-full"
-          v-model="ocWeight"
-          maxlength="5"
-        >
-          <template v-if="ocWeight" #trailing>
-            <div class="text-muted text-xs tabular-nums">
-              {{ ocWeight.length }}/5
-            </div>
-            <UButton
-              color="neutral"
-              variant="link"
-              size="sm"
-              icon="lucide:circle-x"
-              @click="ocWeight = ''"
-            />
-          </template>
-        </UInput>
-      </UPageCard>
-      <UPageCard
         title="MBTI"
         description="选择角色的 MBTI"
         variant="naked"
@@ -173,8 +143,8 @@
         <USelect class="w-full" v-model="ocMBTI" :items="mbtiItems" />
       </UPageCard>
       <UPageCard
-        title="签名 / 背景故事"
-        description="填写角色的签名 /背景故事"
+        title="背景故事 / 台词"
+        description="填写角色的背景故事 / 台词"
         variant="naked"
         orientation="horizontal"
         class="mb-4"
@@ -233,7 +203,6 @@ const ocName = ref('')
 const ocGender = ref('')
 const ocAge = ref('')
 const ocHeight = ref('')
-const ocWeight = ref('')
 const ocMBTI = ref('')
 const bio = ref('')
 const avatarMap = ref(null)
@@ -243,7 +212,6 @@ const onUpdateAvatar = async () => {
   const _ocGender = ocGender.value
   const _ocAge = ocAge.value
   const _ocHeight = ocHeight.value
-  const _ocWeight = ocWeight.value
   const _ocMBTI = ocMBTI.value as any
   const _bio = bio.value
   const { profile } = userInfo.value
@@ -256,7 +224,6 @@ const onUpdateAvatar = async () => {
       ocGender: _ocGender,
       ocAge: _ocAge,
       ocHeight: _ocHeight,
-      ocWeight: _ocWeight,
       ocMBTI: _ocMBTI,
       bio: _bio
     })
@@ -266,7 +233,6 @@ const onUpdateAvatar = async () => {
     profile.ocGender = profileForm.ocGender = _ocGender
     profile.ocAge = profileForm.ocAge = _ocAge
     profile.ocHeight = profileForm.ocHeight = _ocHeight
-    profile.ocWeight = profileForm.ocWeight = _ocWeight
     profile.ocMBTI = profileForm.ocMBTI = _ocMBTI
     profile.bio = profileForm.bio = _bio
     toast.add({

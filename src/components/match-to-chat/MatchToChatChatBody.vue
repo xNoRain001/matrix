@@ -11,6 +11,33 @@
     @click="onClick"
     @scroll="onScroll"
   >
+    <template #before>
+      <div
+        v-if="targetProfile"
+        class="ring-default bg-elevated/50 flex flex-col gap-2 rounded-lg bg-cover bg-center bg-no-repeat p-4 ring sm:p-6"
+        :style="{
+          backgroundImage: `url(${VITE_OSS_BASE_URL}spaceBg/${targetId})`
+        }"
+        @click="
+          !activeSpaceTargetIds.has(targetId) &&
+          profileSpaceOverlay.open({
+            targetId
+          })
+        "
+      >
+        <UAvatar
+          class="ring-accented ring-2"
+          size="xl"
+          :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
+          :alt="targetNickname[0]"
+        />
+
+        <div v-if="targetProfile.bio">{{ targetProfile.bio }}</div>
+        <div v-if="targetProfile.ocTags.length" class="flex flex-wrap gap-2">
+          <ProfileSpaceTags :target-profile="targetProfile" />
+        </div>
+      </div>
+    </template>
     <template #after>
       <div
         v-if="lastMsgMap[targetId]?.timeAgo"
@@ -587,6 +614,7 @@ import {
 import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
 import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 import type { userInfo } from '@/types'
+import { getProfile } from '@/apis/profile'
 
 let timer = null
 let lastFetchedMsgId = Number.MAX_SAFE_INTEGER
@@ -627,6 +655,7 @@ const chatBg = computed(() => {
 })
 const isAutoScrollBtnShow = ref(false)
 const scrollerRef = useTemplateRef<any>('scrollerRef')
+const targetProfile = ref(null)
 
 const onScrollToBottom = () => {
   messageRecordMap.value[props.targetId].newMessageCount = 0
@@ -856,6 +885,10 @@ onMounted(async () => {
   await initMessages()
   updateTimeAgo()
   timer = setInterval(updateTimeAgo, 1000 * 60)
+
+  if (props.isMatch) {
+    targetProfile.value = (await getProfile(props.targetId)).data
+  }
 })
 
 onBeforeUnmount(() => {
