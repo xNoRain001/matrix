@@ -17,7 +17,7 @@
             index
           ) in contactNotifications"
           :key="_id"
-          class="cursor-pointer p-4 sm:p-6"
+          class="bg-elevated/50 cursor-pointer p-4 sm:p-6"
           @click="
             !activeSpaceTargetIds.has(targetId) &&
             profileSpaceOverlay.open({
@@ -47,8 +47,9 @@
               />
             </template>
             <template #description>
-              <span class="flex-1 truncate">{{ content }}</span>
-              <time>{{ useFormatTimeAgo(createdAt) }}</time>
+              <span class="flex-1 truncate"
+                >在 {{ useFormatTimeAgo(createdAt) }}{{ content }}</span
+              >
             </template>
           </UUser>
         </div>

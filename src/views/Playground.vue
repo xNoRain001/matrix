@@ -8,10 +8,7 @@
         <template #content> -->
       <Skeleton v-if="loading" :count="10" />
       <!-- 存在 length 属性，说明已经成功从服务器获取了数据 -->
-      <div
-        v-if="postMap[activeTab]?.posts?.length >= 0"
-        class="divide-default divide-y"
-      >
+      <div v-if="postMap[activeTab]?.posts?.length >= 0">
         <div
           v-for="(
             {
@@ -27,31 +24,32 @@
             index
           ) in postMap[activeTab].posts"
           :key="_id"
-          class="space-y-2 p-4 sm:p-6"
+          class="bg-elevated/50 space-y-2 p-4 not-first:mt-2 sm:p-6"
         >
-          <!-- :description="`${useFormatTimeAgo(createdAt)} · 广东`" -->
-          <UUser
-            :avatar="{
-              src: `${VITE_OSS_BASE_URL}avatar/${user}`,
-              alt: nickname[0]
-            }"
-            :name="nickname"
-            :description="useFormatTimeAgo(createdAt)"
-            size="xl"
+          <div
             @click="
               !activeSpaceTargetIds.has(user) &&
               profileSpaceOverlay.open({
                 targetId: user
               })
             "
-            :ui="{
-              wrapper: 'flex-1 min-w-0',
-              avatar: 'group-hover/user:scale-100',
-              name: 'flex justify-between items-center gap-2'
-            }"
+            class="flex items-center gap-2"
           >
-            <template #name>
-              <span class="truncate">{{ nickname }}</span>
+            <UAvatar
+              size="xl"
+              :src="`${VITE_OSS_BASE_URL}avatar/${user}`"
+              :alt="nickname[0]"
+            />
+            <div class="flex flex-1 items-center justify-between">
+              <div>
+                <div class="font-medium">
+                  {{ nickname }}
+                </div>
+                <div class="text-muted text-sm">
+                  <!-- 发布于 {{ useFormatTimeAgo(createdAt) }} · 广东 -->
+                  发布于 {{ useFormatTimeAgo(createdAt) }}
+                </div>
+              </div>
               <UButton
                 v-if="isMobile"
                 variant="ghost"
@@ -65,8 +63,8 @@
                   @click.stop="onOpenDropdownMenu(user, _id)"
                 />
               </UDropdownMenu>
-            </template>
-          </UUser>
+            </div>
+          </div>
           <div v-if="content.text" class="break-all whitespace-pre-wrap">
             {{ content.text }}
           </div>
@@ -78,7 +76,7 @@
             :items="content.images"
             :active-index="0"
           />
-          <div class="flex justify-around gap-2">
+          <div class="flex justify-between">
             <UButton
               variant="ghost"
               :color="like ? 'secondary' : 'primary'"

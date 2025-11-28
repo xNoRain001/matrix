@@ -43,7 +43,7 @@
               ? 'ring-sky-400'
               : gender === 'female'
                 ? 'ring-pink-400'
-                : 'ring-default'
+                : 'ring-accented'
           "
           class="avatar text-muted bg-elevated absolute top-1/2 left-1/2 size-7 rounded-full text-center text-xl ring-2 transition"
           tabindex="-1"

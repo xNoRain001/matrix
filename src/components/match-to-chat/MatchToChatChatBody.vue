@@ -31,7 +31,6 @@
           :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
           :alt="targetNickname[0]"
         />
-
         <div v-if="targetProfile.bio">{{ targetProfile.bio }}</div>
         <div v-if="targetProfile.ocTags.length" class="flex flex-wrap gap-2">
           <ProfileSpaceTags :target-profile="targetProfile" />
@@ -42,7 +41,7 @@
       <div
         v-if="lastMsgMap[targetId]?.timeAgo"
         class="text-xs"
-        :class="lastMsgMap[targetId]?.sent ? 'mr-13 flex justify-end' : 'ml-13'"
+        :class="lastMsgMap[targetId]?.sent ? 'mr-12 flex justify-end' : 'ml-12'"
       >
         {{ lastMsgMap[targetId]?.timeAgo }}
       </div>

@@ -15,10 +15,10 @@
         index
       ) in postMap[targetId].posts"
       :key="_id"
-      class="space-y-2 p-4 sm:p-6"
+      class="bg-elevated/50 mt-2 space-y-2 p-4 sm:p-6"
     >
-      <div class="flex items-center justify-between gap-2">
-        <span class="text-toned truncate text-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-medium">
           {{ useFormatTimeAgo(createdAt) }}
         </span>
         <UButton
@@ -35,7 +35,7 @@
           />
         </UDropdownMenu>
       </div>
-      <p class="text-highlighted break-all whitespace-pre-wrap">
+      <p class="break-all whitespace-pre-wrap">
         {{ text }}
       </p>
       <Carousel
@@ -46,7 +46,7 @@
         :items="images"
         :active-index="0"
       />
-      <div class="flex justify-around">
+      <div class="flex justify-between">
         <UButton
           variant="ghost"
           :color="like ? 'secondary' : 'primary'"
