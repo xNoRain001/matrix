@@ -1,39 +1,39 @@
 <template>
   <div class="divide-default divide-y overflow-y-auto">
-    <div v-for="id in contactList" :key="id">
-      <div
-        class="w-full cursor-pointer p-4 transition-colors sm:px-6"
-        :class="
-          isMobile
-            ? []
-            : [
-                'border-l-2',
-                activeTargetId === id
-                  ? 'border-primary bg-primary/10'
-                  : 'hover:border-primary hover:bg-primary/5 border-bg'
-              ]
-        "
-        @click="onClick(id)"
-      >
-        <UUser
-          :avatar="{
-            src: `${VITE_OSS_BASE_URL}avatar/${id}`,
-            alt: contactProfileMap[id].profile.nickname[0]
-          }"
-          size="xl"
-          :chip="{
-            color: contactProfileMap[id].profile.onlineStatus?.isOnline
-              ? 'primary'
-              : 'error'
-          }"
-          :name="contactProfileMap[id].profile.nickname"
-          :description="`${contactProfileMap[id].profile.onlineStatus?.isOnline ? '在线' : formatLastOnline(contactProfileMap[id].profile.onlineStatus?.lastOnline)}`"
-          :ui="{
-            wrapper: 'flex-1 min-w-0',
-            name: 'truncate'
-          }"
-        />
-      </div>
+    <div
+      v-for="id in contactList"
+      :key="id"
+      class="w-full cursor-pointer p-4 transition-colors sm:px-6"
+      :class="
+        isMobile
+          ? []
+          : [
+              'border-l-2',
+              activeTargetId === id
+                ? 'border-primary bg-primary/10'
+                : 'hover:border-primary hover:bg-primary/5 border-bg'
+            ]
+      "
+      @click="onClick(id)"
+    >
+      <UUser
+        :avatar="{
+          src: `${VITE_OSS_BASE_URL}avatar/${id}`,
+          alt: contactProfileMap[id].profile.nickname[0]
+        }"
+        size="xl"
+        :chip="{
+          color: contactProfileMap[id].profile.onlineStatus?.isOnline
+            ? 'primary'
+            : 'error'
+        }"
+        :name="contactProfileMap[id].profile.nickname"
+        :description="`${contactProfileMap[id].profile.onlineStatus?.isOnline ? '在线' : formatLastOnline(contactProfileMap[id].profile.onlineStatus?.lastOnline)}`"
+        :ui="{
+          wrapper: 'flex-1 min-w-0',
+          name: 'truncate'
+        }"
+      />
     </div>
   </div>
 </template>

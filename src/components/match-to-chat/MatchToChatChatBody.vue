@@ -14,9 +14,10 @@
     <template #before>
       <div
         v-if="targetProfile"
-        class="ring-default bg-elevated/50 flex flex-col gap-2 rounded-lg bg-cover bg-center bg-no-repeat p-4 ring sm:p-6"
+        class="ring-default bg-no-repeatr bg-elevated/50 relative mb-1 flex flex-col gap-2 rounded-lg bg-cover bg-center p-4 ring sm:p-6"
         :style="{
-          backgroundImage: `url(${VITE_OSS_BASE_URL}spaceBg/${targetId})`
+          backgroundImage: 'url(https://picsum.photos/640/640)'
+          // backgroundImage: `url(${VITE_OSS_BASE_URL}spaceBg/${targetId})`
         }"
         @click="
           !activeSpaceTargetIds.has(targetId) &&
@@ -31,7 +32,9 @@
           :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
           :alt="targetNickname[0]"
         />
-        <div v-if="targetProfile.bio">{{ targetProfile.bio }}</div>
+        <div v-if="targetProfile.bio" class="break-all">
+          {{ targetProfile.bio }}
+        </div>
         <div v-if="targetProfile.ocTags.length" class="flex flex-wrap gap-2">
           <ProfileSpaceTags :target-profile="targetProfile" />
         </div>
@@ -48,7 +51,10 @@
     </template>
     <template #default="{ item, active }">
       <DynamicScrollerItem :item="item" :active="active">
-        <div v-if="item.type === 'label'" class="pt-3 pb-4 text-center text-sm">
+        <div
+          v-if="item.type === 'label'"
+          class="text-toned pt-3 pb-4 text-center text-sm"
+        >
           {{ useFormatTimestamp(item.timestamp) }}
         </div>
         <template v-else-if="item.type === 'text'">

@@ -28,7 +28,7 @@
               targetId
             })
           "
-          class="cursor-pointer p-4 sm:p-6"
+          class="bg-elevated/50 cursor-pointer p-4 sm:p-6"
         >
           <UUser
             :avatar="{
