@@ -13,7 +13,7 @@ const useHideMessageList = async (
   activeTargetNickname,
   isSlide,
   isMobile,
-  emits = null
+  emit = null
 ) => {
   const { id } = userInfo.value
   const db = await useGetDB(id)
@@ -41,7 +41,7 @@ const useHideMessageList = async (
 
   if (!isSlide) {
     if (isMobile) {
-      emits('close')
+      emit('close')
     } else if (activeTargetIds.value.has(targetId)) {
       // 通过右键菜单隐藏了当前聊天（此时 activeTargetIds 只有一项，因为只有一项时，
       // 才能操作聊天列表）

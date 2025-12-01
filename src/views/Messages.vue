@@ -1,6 +1,6 @@
 <template>
   <UDashboardPanel
-    id="message-1"
+    id="message"
     :default-size="25"
     :min-size="20"
     :max-size="30"

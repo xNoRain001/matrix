@@ -93,7 +93,7 @@ const props = withDefaults(
     isMatch: false
   }
 )
-const emits = defineEmits(['close'])
+const emit = defineEmits(['close'])
 const toast = useToast()
 const [defineOverlayTemplate, reuseOverlayTemplate] = createReusableTemplate()
 const {
@@ -208,7 +208,7 @@ const onDeleteList = async () => {
       activeTargetNickname,
       false,
       isMobile.value,
-      emits
+      emit
     )
     toast.add({ title: '删除列表成功', icon: 'lucide:smile' })
   } catch {
@@ -235,7 +235,7 @@ const onHideList = async () => {
       activeTargetNickname,
       false,
       isMobile.value,
-      emits
+      emit
     )
     toast.add({ title: '隐藏列表成功', icon: 'lucide:smile' })
   } catch {

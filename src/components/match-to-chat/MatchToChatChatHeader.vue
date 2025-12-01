@@ -24,7 +24,7 @@
         icon="lucide:chevron-left"
         color="neutral"
         variant="ghost"
-        @click="emits('close')"
+        @click="emit('close')"
       />
       <UBadge
         v-if="unreadMsgCounter && (isMobile || (!isMobile && isMatch))"
@@ -34,7 +34,7 @@
     </template>
     <template #right>
       <MatchToChatChatDropdownMenu
-        @close="emits('close')"
+        @close="emit('close')"
         :is-match="isMatch"
         :target-id="targetId"
       />
@@ -57,7 +57,7 @@ withDefaults(
     isMatch: false
   }
 )
-const emits = defineEmits(['close'])
+const emit = defineEmits(['close'])
 const { isMobile } = storeToRefs(useUserStore())
 const { unreadMsgCounter, activeSpaceTargetIds } = storeToRefs(
   useRecentContactsStore()

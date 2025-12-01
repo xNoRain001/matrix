@@ -10,7 +10,7 @@
     >
       <!-- 顶部导航 -->
       <ProfileSpaceHeader
-        @close="emits('close')"
+        @close="emit('close')"
         :is-match="isMatch"
         :target-id="targetId"
       />
@@ -57,7 +57,7 @@ const props = withDefaults(
     isMatch: false
   }
 )
-const emits = defineEmits(['close'])
+const emit = defineEmits(['close'])
 const containerRef = useTemplateRef('containerRef')
 const { userInfo } = storeToRefs(useUserStore())
 const { postMap } = storeToRefs(usePostStore())
@@ -88,7 +88,7 @@ onMounted(async () => {
         color: 'error',
         icon: 'lucide:annoyed'
       })
-      emits('close', true)
+      emit('close', true)
     }
   }
 })

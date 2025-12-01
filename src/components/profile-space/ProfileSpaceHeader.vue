@@ -12,7 +12,7 @@
         icon="lucide:chevron-left"
         color="neutral"
         variant="ghost"
-        @click="emits('close')"
+        @click="emit('close')"
       />
     </template>
     <template #right>
@@ -105,7 +105,7 @@ const props = withDefaults(
     isMatch: false
   }
 )
-const emits = defineEmits(['close'])
+const emit = defineEmits(['close'])
 const isSettingSlideoverOpen = ref(false)
 const isUserInfoSlideoverOpen = ref(false)
 const isUpdatePasswordSlideoverOpen = ref(false)

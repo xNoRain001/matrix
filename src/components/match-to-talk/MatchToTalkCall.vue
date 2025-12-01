@@ -1,8 +1,28 @@
 <template>
-  <div class="relative flex flex-1 items-center justify-center">
-    <div class="absolute top-0 right-0">
+  <div
+    class="relative flex flex-1 flex-col items-center justify-center gap-4 p-4 sm:gap-6 sm:p-6"
+  >
+    <UButton
+      variant="ghost"
+      color="neutral"
+      icon="lucide:chevron-left"
+      class="absolute top-4 left-4 sm:top-6 sm:left-6"
+      @click="emit('close')"
+    />
+    <div
+      class="absolute top-4 right-4 flex flex-col items-center gap-4 sm:top-6 sm:right-6 sm:gap-6"
+    >
       <UPopover v-if="!isMobile">
-        <UButton icon="lucide:volume-2" variant="ghost" color="neutral" />
+        <UButton
+          icon="lucide:volume-2"
+          variant="ghost"
+          color="neutral"
+          class="flex-col"
+          label="音量"
+          :ui="{
+            label: 'text-xs'
+          }"
+        />
         <template #content>
           <USlider
             @update:model-value="onUpdateVolume"
@@ -12,17 +32,24 @@
           />
         </template>
       </UPopover>
-
       <UDropdownMenu
         v-if="audioInputLabelsLength > 1"
-        class="mr-1.5"
         :disabled="!isMicOpen"
         :items="_micOptions"
         :ui="{
           content: 'w-80'
         }"
       >
-        <UButton icon="lucide:mic" color="neutral" variant="ghost" />
+        <UButton
+          icon="lucide:mic"
+          color="neutral"
+          variant="ghost"
+          class="flex-col"
+          label="麦克风"
+          :ui="{
+            label: 'text-xs'
+          }"
+        />
         <template #item="{ item: { label } }">
           <div
             class="flex w-full justify-between"
@@ -45,7 +72,16 @@
           content: 'w-80'
         }"
       >
-        <UButton icon="lucide:volume" color="neutral" variant="ghost" />
+        <UButton
+          icon="lucide:volume-2"
+          color="neutral"
+          variant="ghost"
+          class="flex-col"
+          label="扬声器"
+          :ui="{
+            label: 'text-xs'
+          }"
+        />
         <template #item="{ item: { label } }">
           <div
             class="flex w-full justify-between"
@@ -61,58 +97,53 @@
         </template>
       </UDropdownMenu>
     </div>
-    <div class="flex flex-1 flex-col items-center gap-4">
+    <div
+      class="flex flex-col items-center gap-4 sm:gap-6"
+      @click="
+        !activeSpaceTargetIds.has(targetId) &&
+        profileSpaceOverlay.open({ targetId })
+      "
+    >
       <UAvatar
         :src="`${VITE_OSS_BASE_URL}avatar/${targetId}`"
         :alt="targetNickname[0]"
         class="size-24 text-5xl"
       />
-      <div class="text-center">{{ targetNickname }}</div>
-      <div class="text-sm">
-        {{ rtcConnected ? '通话中...' : '等待对方接通...' }}
+      <div class="text-highlighted font-semibold">
+        {{ targetNickname }}
       </div>
-      <div
-        :class="isMobile ? '' : 'max-w-1/2'"
-        class="mt-4 grid w-full grid-cols-3"
-      >
-        <div class="flex flex-col items-center justify-center">
-          <UButton
-            class="flex flex-col"
-            @click="updateMicStatus"
-            :icon="isMicOpen ? 'lucide:mic' : 'lucide:mic-off'"
-            variant="ghost"
-            :color="isMicOpen ? 'neutral' : 'info'"
-            :ui="{ label: 'mt-4', leadingIcon: 'size-10' }"
-          />
-          <div class="mt-4 flex items-center">
-            <div class="text-sm">{{ isMicOpen ? '开启' : '关闭' }}</div>
-          </div>
-        </div>
-        <div class="flex flex-col items-center justify-center">
-          <UButton
-            class="flex flex-col"
-            icon="lucide:phone-off"
-            @click="onCancel"
-            variant="ghost"
-            color="error"
-            :ui="{ label: 'mt-4', leadingIcon: 'size-10' }"
-          />
-          <div class="text-error mt-4 text-sm">取消</div>
-        </div>
-        <div class="flex flex-col items-center justify-center">
-          <UButton
-            class="flex flex-col"
-            :icon="isSpeakerOpen ? 'lucide:volume-2' : 'lucide:volume-off'"
-            @click="updateSpeakerStatus"
-            variant="ghost"
-            :color="isSpeakerOpen ? 'neutral' : 'info'"
-            :ui="{ label: 'mt-4', leadingIcon: 'size-10' }"
-          />
-          <div class="mt-4 text-sm">
-            {{ isSpeakerOpen ? '开启' : '关闭' }}
-          </div>
-        </div>
-      </div>
+    </div>
+    <div class="text-toned text-sm">
+      {{ rtcConnected ? '通话中...' : '等待对方接通...' }}
+    </div>
+    <div :class="isMobile ? '' : 'max-w-1/2'" class="grid w-full grid-cols-3">
+      <UButton
+        class="flex-col"
+        :icon="isMicOpen ? 'lucide:mic' : 'lucide:mic-off'"
+        @click="updateMicStatus"
+        variant="ghost"
+        :color="isMicOpen ? 'neutral' : 'error'"
+        :ui="{ label: 'text-xs', leadingIcon: 'size-10' }"
+        :label="isMicOpen ? '开启' : '关闭'"
+      />
+      <UButton
+        class="flex-col"
+        icon="lucide:phone-off"
+        @click="onCancel"
+        variant="ghost"
+        color="error"
+        :ui="{ label: 'text-xs', leadingIcon: 'size-10' }"
+        label="挂断"
+      />
+      <UButton
+        class="flex-col"
+        :icon="isSpeakerOpen ? 'lucide:volume-2' : 'lucide:volume-off'"
+        @click="updateSpeakerStatus"
+        variant="ghost"
+        :color="isSpeakerOpen ? 'neutral' : 'error'"
+        :ui="{ label: 'text-xs', leadingIcon: 'size-10' }"
+        :label="isSpeakerOpen ? '开启' : '关闭'"
+      />
     </div>
   </div>
 </template>
@@ -140,19 +171,13 @@ import {
 import { useRoute, useRouter } from 'vue-router'
 import { useThrottleFn } from '@vueuse/core'
 import type { userInfo } from '@/types'
+import OverlayProfileSpace from '../overlay/OverlayProfileSpace.vue'
 
-const props = withDefaults(
-  defineProps<{
-    isMatch?: boolean
-    close?: () => void
-    targetId: string
-    targetNickname: string
-  }>(),
-  {
-    isMatch: false,
-    close: () => {}
-  }
-)
+defineProps<{
+  targetId: string
+  targetNickname: string
+}>()
+const emit = defineEmits(['close'])
 const { VITE_OSS_BASE_URL } = import.meta.env
 const {
   roomId,
@@ -165,8 +190,14 @@ const {
   isMicOpen,
   isSpeakerOpen
 } = storeToRefs(useWebRTCStore())
-const { lastMsgList, lastMsgMap, indexMap, unreadMsgCounter, activeTargetIds } =
-  storeToRefs(useRecentContactsStore())
+const {
+  activeSpaceTargetIds,
+  lastMsgList,
+  lastMsgMap,
+  indexMap,
+  unreadMsgCounter,
+  activeTargetIds
+} = storeToRefs(useRecentContactsStore())
 const { matchRes } = storeToRefs(useMatchStore())
 const { isMobile, globalPC, globalSocket, userInfo } =
   storeToRefs(useUserStore())
@@ -192,7 +223,9 @@ const _speakerOptions = speakerOptions.map(item => ({ label: item, icon: '' }))
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
-const isVoiceChat = computed(() => route.path === '/voice-chat')
+const overlay = useOverlay()
+const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
+const isVoiceChat = computed(() => route.path === '/match-to-talk')
 const volume = ref(
   Math.floor(Number(localStorage.getItem('volume')) * 100) || 100
 )
@@ -238,7 +271,7 @@ const onCancel = () => {
 
   // 由于当前组件是 Modal 的子组件，因此在这里调用 Modal 的 close 是不会关闭 Modal
   // 的，需要将 Modal 的关闭事件传递进来
-  props.close()
+  emit('close')
 
   // 语音匹配挂断时不进行通知
   // TODO: 处理匹配结果是好友的情况

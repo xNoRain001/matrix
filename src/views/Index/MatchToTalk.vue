@@ -7,25 +7,17 @@
     v-model:open="isOpen"
     :ui="{ content: 'flex-row', description: 'hidden' }"
   >
-    <!-- 规定时间内对方没接通时会清除 matchRes，因此需要使用到 v-if -->
-    <template v-if="isOpen" #content>
-      <div class="relative flex w-full flex-col">
-        <MatchToChatChatHeader
-          @close="isOpen = false"
-          :is-match="true"
-          :target-id="matchRes.targetId"
-          :target-nickname="matchRes.targetNickname"
-        />
+    <template #content>
+      <UDashboardPanel id="match-to-talk">
         <MatchToTalkCall
-          :is-match="true"
+          @close="isOpen = false"
           :target-id="matchRes.targetId"
           :target-nickname="matchRes.targetNickname"
-          class="m-4 sm:m-6"
         />
-      </div>
+      </UDashboardPanel>
       <ProfileSpace
         v-if="!isMobile"
-        class="max-w-md"
+        class="max-w-2/5"
         :is-match="true"
         :target-id="matchRes.targetId"
       />
@@ -45,7 +37,7 @@ const { isMobile, globalSocket, userInfo } = storeToRefs(useUserStore())
 const { matchRes } = storeToRefs(useMatchStore())
 const { roomId, isVoiceChatMatch, webRTCTargetId, webRTCTargetNickname } =
   storeToRefs(useWebRTCStore())
-const isOpen = ref(Boolean(matchRes.value))
+const isOpen = ref(matchRes.value?.type === 'talk')
 
 if (isOpen.value) {
   const { targetId, targetNickname } = matchRes.value

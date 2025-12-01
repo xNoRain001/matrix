@@ -89,14 +89,10 @@
     <div
       v-if="isSelf || targetProfile.ocTags.length"
       class="mt-2 flex flex-wrap gap-2"
+      @click="onOpenTagSlideover"
     >
       <ProfileSpaceTags :target-profile="targetProfile" />
-      <UBadge
-        v-if="isSelf"
-        icon="lucide:circle-plus"
-        label="标签"
-        @click="isTagSlideoverOpen = true"
-      />
+      <UBadge v-if="isSelf" icon="lucide:circle-plus" label="标签" />
     </div>
     <div class="text-highlighted mt-2 flex gap-4 text-xs">
       <div @click="onOpenFollowerSlideover('following')">
@@ -190,6 +186,12 @@ const { path } = route
 const isChatBtnShow = path === '/messages' && activeTargetIds.value.size === 1
 const isContacts = path === '/contacts'
 const activeTab = ref<'' | 'following' | 'follower'>('')
+
+const onOpenTagSlideover = () => {
+  if (isSelf) {
+    isTagSlideoverOpen.value = true
+  }
+}
 
 const onOpenFollowerSlideover = async v => {
   if (!isSelf) {

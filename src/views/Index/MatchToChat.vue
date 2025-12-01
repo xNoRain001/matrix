@@ -16,7 +16,7 @@
       />
       <ProfileSpace
         v-if="!isMobile"
-        class="max-w-md"
+        class="max-w-2/5"
         :is-match="true"
         :target-id="matchRes.targetId"
       />
@@ -34,7 +34,7 @@ const router = useRouter()
 const { isMobile } = storeToRefs(useUserStore())
 const { matchRes } = storeToRefs(useMatchStore())
 const { isReceivingOfflineMsgs } = storeToRefs(useRecentContactsStore())
-const isOpen = ref(Boolean(matchRes.value))
+const isOpen = ref(matchRes.value?.type === 'chat')
 
 if (!isOpen.value) {
   router.replace('/')

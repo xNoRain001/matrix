@@ -734,9 +734,7 @@ const onUpdate = (
 
 const onClick = e => {
   const { target } = e
-  const type =
-    target.getAttribute('data-type') ||
-    target.children[0]?.getAttribute('data-type')
+  const type = target.getAttribute('data-type')
 
   if (type === 'image') {
     const { src, width, height } = target

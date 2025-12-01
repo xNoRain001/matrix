@@ -36,7 +36,7 @@
         class="fixed right-6 bottom-6 flex items-center gap-2 sm:right-8 sm:bottom-8"
       >
         <UButton icon="lucide:delete" @click="onDelete" />
-        <UButton label="发送" @click="emits('send')" />
+        <UButton label="发送" @click="emit('send')" />
       </div>
     </template>
     <div
@@ -115,7 +115,7 @@ const props = defineProps<{
   elm: null | { textareaRef: HTMLTextAreaElement }
   inputRef: null | HTMLInputElement
 }>()
-const emits = defineEmits(['send'])
+const emit = defineEmits(['send'])
 const [DefineEmojiTemplate, ReuseEmojiTemplate] = createReusableTemplate()
 const message = defineModel<string>()
 const isEmojiOpen = defineModel<boolean>('is-emoji-open')

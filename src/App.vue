@@ -148,7 +148,7 @@ import {
   useIsDeviceOpen,
   useURLToBlob
 } from './hooks'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { voiceChatInviteToastExpireTime } from './const'
 import OverlayOffline from './components/overlay/OverlayOffline.vue'
 import { useThrottleFn } from '@vueuse/core'
@@ -313,6 +313,7 @@ const groups = computed(() => [
     items: navs.flat()
   }
 ])
+const route = useRoute()
 const router = useRouter()
 const constraints = {
   video: false,
@@ -553,37 +554,39 @@ const onConnect = emit => {
 }
 
 const onJoined = async (_roomId, _polite) => {
+  const isMatch = route.path === '/match-to-talk'
   roomId.value = _roomId
 
-  if (!talkOverlay.isOpen) {
-    talkOverlay.open()
-  } else if (_polite) {
+  if (_polite) {
     // 处理匹配语音通话时其中一方刷新页面后，能够恢复通话
     // 先进来的一方，规定时间内无法等到对方加入，判断为对方离开了房间
-    leaveRoomTimer.value = setTimeout(() => {
-      globalSocket.value.emit('leave', roomId.value)
-      roomId.value = ''
-      clearTimeout(leaveRoomTimer.value)
-      matchRes.value = null
-      const { id } = userInfo.value
-      localStorage.removeItem(`matchRes-${id}`)
-      toast.add({
-        title: '对方已离开房间',
-        color: 'error',
-        icon: 'lucide:annoyed'
-      })
-      router.replace('/')
-    }, 5000)
-  }
-
-  polite = _polite
-
-  // 同意的一方需要更新 roomId
-  if (!_polite) {
+    if (isMatch) {
+      leaveRoomTimer.value = setTimeout(async () => {
+        globalSocket.value.emit('leave', roomId.value)
+        roomId.value = ''
+        toast.add({
+          title: '对方已离开房间',
+          color: 'error',
+          icon: 'lucide:annoyed'
+        })
+        await router.replace('/')
+        matchRes.value = null
+        localStorage.removeItem(`matchRes-${userInfo.value.id}`)
+        clearTimeout(leaveRoomTimer.value)
+      }, 5000)
+    }
+  } else {
+    // 同意的一方需要更新 roomId
     createPeerConnection(_roomId, onTrack)
     await initLocalMediaStream()
     globalSocket.value.emit('otherjoin', _roomId)
   }
+
+  if (!isMatch && !talkOverlay.isOpen) {
+    talkOverlay.open()
+  }
+
+  polite = _polite
 }
 
 const onOtherJoin = async roomId => {

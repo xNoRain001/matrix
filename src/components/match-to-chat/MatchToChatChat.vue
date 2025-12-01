@@ -1,7 +1,8 @@
 <template>
-  <UDashboardPanel id="message-2" :ui="{ root: 'translate-z-0' }">
+  <!-- translate-z-0 用于定位聊天记录滚动到底部和新消息提示的位置 -->
+  <UDashboardPanel id="match-to-talk" :ui="{ root: 'translate-z-0' }">
     <MatchToChatChatHeader
-      @close="emits('close')"
+      @close="emit('close')"
       :is-match="isMatch"
       :target-id="targetId"
       :target-nickname="targetNickname"
@@ -35,7 +36,7 @@ const props = withDefaults(
     isMatch: false
   }
 )
-const emits = defineEmits(['close'])
+const emit = defineEmits(['close'])
 const { activeTargetIds } = storeToRefs(useRecentContactsStore())
 
 onBeforeMount(() => {

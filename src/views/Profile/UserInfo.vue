@@ -50,7 +50,7 @@
             <UIcon name="lucide:chevron-right" class="text-dimmed size-5" />
           </UFormField>
           <UFormField
-            v-for="{ label, click, key } in profileItems.slice(0, 7)"
+            v-for="{ label, click, key } in profileItems.slice(0, 6)"
             :key="key"
             :label="label"
             class="flex items-center gap-2 not-last:pb-4"
@@ -76,7 +76,7 @@
           :ui="{ container: 'divide-y divide-default' }"
         >
           <UFormField
-            v-for="{ label, click, key } in profileItems.slice(7)"
+            v-for="{ label, click, key } in profileItems.slice(6)"
             :key="key"
             :label="label"
             class="flex items-center gap-2 not-last:pb-4"
@@ -191,7 +191,22 @@
           v-model="profileForm.college"
           :items="colleges"
           class="w-full"
-        />
+        >
+          <template #trailing>
+            <UButton
+              v-if="profileForm.college"
+              color="neutral"
+              variant="link"
+              size="sm"
+              icon="lucide:circle-x"
+              @click.stop="profileForm.college = ''"
+            />
+            <UIcon
+              name="lucide:chevron-down"
+              class="text-dimmed size-5"
+            ></UIcon>
+          </template>
+        </USelectMenu>
       </template>
     </UDrawer>
 
@@ -687,7 +702,22 @@
             v-model="profileForm.college"
             :items="colleges"
             class="w-full"
-          />
+          >
+            <template #trailing>
+              <UButton
+                v-if="profileForm.college"
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="lucide:circle-x"
+                @click.stop="profileForm.college = ''"
+              />
+              <UIcon
+                name="lucide:chevron-down"
+                class="text-dimmed size-5"
+              ></UIcon>
+            </template>
+          </USelectMenu>
         </UFormField>
         <USeparator />
         <UFormField

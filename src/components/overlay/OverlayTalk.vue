@@ -1,14 +1,8 @@
 <template>
-  <UModal
-    fullscreen
-    :close="{ onClick: () => emit('close', false) }"
-    title="语音通话"
-    description=" "
-    :ui="{ body: 'flex', description: 'hidden' }"
-  >
-    <template #body>
+  <UModal fullscreen title=" " description=" ">
+    <template #content>
       <MatchToTalkCall
-        :close="() => emit('close', false)"
+        @close="emit('close', false)"
         :target-id="webRTCTargetId"
         :target-nickname="webRTCTargetNickname"
       />
