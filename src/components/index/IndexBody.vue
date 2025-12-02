@@ -1,5 +1,4 @@
 <template>
-  <!-- <IndexPlanets></IndexPlanets> -->
   <div class="flex justify-center">
     <!-- 108 = 12 * 8 + 6 * 2 -->
     <div
