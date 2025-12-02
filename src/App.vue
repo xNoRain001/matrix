@@ -299,11 +299,6 @@ const navs = [
       icon: 'lucide:info',
       onSelect: () => abouttOverlay.open()
     }
-    // {
-    //   label: '只有神知道的世界',
-    //   icon: 'lucide:leaf',
-    //   onSelect: () => router.replace('/ys')
-    // }
   ]
 ] satisfies NavigationMenuItem[][]
 const groups = computed(() => [
