@@ -24,15 +24,16 @@
         trailingIcon: 'text-dimmed'
       }"
     />
-
     <template #chip-leading="{ item: { chip } }">
-      <span
-        :style="{
-          '--chip-light': colors[chip]?.[500],
-          '--chip-dark': colors[chip]?.[400]
-        }"
-        class="ms-0.5 size-2 rounded-full bg-(--chip-light) dark:bg-(--chip-dark)"
-      ></span>
+      <div class="flex size-5 items-center justify-center">
+        <span
+          :style="{
+            '--chip-light': colors[chip]?.[500],
+            '--chip-dark': colors[chip]?.[400]
+          }"
+          class="size-2 rounded-full bg-(--chip-light) dark:bg-(--chip-dark)"
+        ></span>
+      </div>
     </template>
   </UDropdownMenu>
 </template>
@@ -89,7 +90,7 @@ const items = computed<DropdownMenuItem[]>(() => [
             collisionPadding: 16
           },
           children: primaryColors.map(color => ({
-            label: color,
+            label: color[0].toUpperCase() + color.slice(1),
             chip: color,
             slot: 'chip',
             checked: appConfig.ui.colors.primary === color,
@@ -109,7 +110,7 @@ const items = computed<DropdownMenuItem[]>(() => [
             collisionPadding: 16
           },
           children: neutralColors.map(color => ({
-            label: color,
+            label: color[0].toUpperCase() + color.slice(1),
             chip: color,
             slot: 'chip',
             type: 'checkbox',
