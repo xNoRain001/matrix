@@ -359,7 +359,7 @@ const reportTargetTypes = [
     value: 'nickname'
   },
   {
-    label: '背景故事 / 台词违规',
+    label: '签名违规',
     value: 'bio'
   },
   {

@@ -35,7 +35,7 @@
         <div v-if="targetProfile.bio" class="break-all">
           {{ targetProfile.bio }}
         </div>
-        <div v-if="targetProfile.ocTags.length" class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap gap-2">
           <ProfileSpaceTags :target-profile="targetProfile" />
         </div>
       </div>

@@ -87,7 +87,15 @@
       {{ targetProfile.bio }}
     </div>
     <div
-      v-if="isSelf || targetProfile.ocTags.length"
+      v-if="
+        isSelf ||
+        targetProfile.gender !== 'other' ||
+        targetProfile.birthday ||
+        targetProfile.mbti ||
+        targetProfile.college ||
+        targetProfile.province ||
+        targetProfile.tags.length
+      "
       class="mt-2 flex flex-wrap gap-2"
       @click="onOpenTagSlideover"
     >

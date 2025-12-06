@@ -32,16 +32,11 @@ export type userInfo = {
   tokenVersion: number
   profile: {
     nickname: string
-    ocGender: string
-    ocAge: string
-    ocHeight: string
-    ocMBTI: mbti
-    ocTags: string[]
+    mbti: mbti
+    tags: string[]
     bio: string
     gender: 'male' | 'female' | 'other'
     birthday: string
-    height: string
-    weight: string
     college: string
     province: string
     city: string

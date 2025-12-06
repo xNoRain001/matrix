@@ -329,7 +329,7 @@ const onUpdateTag = async () => {
   const _tags = JSON.parse(JSON.stringify(tags.value))
   const stringifyTags = _tags.join('__separator__')
   const { profile } = userInfo.value
-  const __tags = profile.ocTags
+  const __tags = profile.tags
   const sameTags = stringifyTags === __tags.join('__separator__')
 
   if (sameTags) {
@@ -344,7 +344,7 @@ const onUpdateTag = async () => {
   const payload = {
     // 值为 __separator__ 表示清空所有标签
     ...(!sameTags && {
-      ocTags: stringifyTags || '__separator__'
+      tags: stringifyTags || '__separator__'
     })
   }
 
@@ -352,7 +352,7 @@ const onUpdateTag = async () => {
     const { data: token } = await updateProfile(payload)
     localStorage.setItem('token', token)
     globalSocket.value.emit('refresh-profile', token)
-    profile.ocTags = _tags
+    profile.tags = _tags
     toast.add({
       title: '修改资料成功',
       icon: 'lucide:smile'
@@ -425,7 +425,7 @@ watch(activeTab, () => {
 
 watch(isTagSlideoverOpen, v => {
   if (v) {
-    const __tags = [...props.targetProfile.ocTags]
+    const __tags = [...props.targetProfile.tags]
     tags.value = __tags
     tagsSet.value = new Set([...__tags])
     setTimeout(() => {
