@@ -1,6 +1,6 @@
 <template>
   <!-- translate-z-0 用于定位聊天记录滚动到底部和新消息提示的位置 -->
-  <UDashboardPanel id="match-to-talk" :ui="{ root: 'translate-z-0' }">
+  <UDashboardPanel id="match-to-chat" :ui="{ root: 'translate-z-0' }">
     <MatchToChatChatHeader
       @close="emit('close')"
       :is-match="isMatch"

@@ -1,7 +1,4 @@
-const useURLToBlob = async url => {
-  const response = await fetch(url)
-  const arrayBuffer = await response.arrayBuffer()
-  return new Blob([arrayBuffer])
-}
+const useURLToBlob = async (url, type = '') =>
+  new Blob([await (await fetch(url)).arrayBuffer()], { type })
 
 export default useURLToBlob

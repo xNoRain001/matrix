@@ -3,5 +3,10 @@
 
 /* 移除默认样式，否则 iOS 中不会显示 ring */
 input, textarea {
-  appearance: none
+  appearance: none;
+}
+
+/* 选中文本区域的背景色 */
+::selection {
+  background-color: var(--ui-primary); 
 }

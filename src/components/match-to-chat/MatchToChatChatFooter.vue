@@ -311,7 +311,7 @@ const initMediaRecorder = async () => {
         isCancelRecordTipShow.value = false
       } else {
         const duration = Math.round((Date.now() - startTime) / 1000)
-        const blob = new Blob(chunks, { type: 'audio/mp3' })
+        const blob = new Blob(chunks, { type: 'audio/mpeg' })
         const url = URL.createObjectURL(blob)
         try {
           const hash = await useGenHash(blob, 'mp3')
@@ -683,7 +683,7 @@ const onSendMsg = async () => {
 
 onMounted(() => {
   cb = useFixSoftKeyboardInIOS(
-    document.querySelector('#dashboard-panel-message-2'),
+    document.querySelector('#dashboard-panel-match-to-chat'),
     messageRecordMap.value[props.targetId].scroller
   )
 })

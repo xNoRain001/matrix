@@ -779,7 +779,10 @@ const replaceAudioOSSURLToURL = async (hash, messageRecord) => {
   let url = ''
 
   try {
-    const blob = await useURLToBlob(VITE_OSS_BASE_URL + messageRecord.ossURL)
+    const blob = await useURLToBlob(
+      VITE_OSS_BASE_URL + messageRecord.ossURL,
+      'audio/mpeg'
+    )
     const db = await useGetDB(userInfo.value.id)
     const tx = db.transaction('files', 'readwrite')
     await tx.objectStore('files').put({ hash, blob })

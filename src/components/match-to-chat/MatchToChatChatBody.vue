@@ -685,15 +685,19 @@ const onEnded = () => (playingURL.value = '')
 const onPlayAudio = url => {
   const audio = audioRef.value
 
-  if (playingURL.value === url) {
-    // 未播放完成时点击相同的音频，停止播放
-    playingURL.value = ''
-    audio.pause()
-    audio.currentTime = 0
-  } else {
-    playingURL.value = url
-    audio.src = url
-    audio.play()
+  try {
+    if (playingURL.value === url) {
+      // 未播放完成时点击相同的音频，停止播放
+      playingURL.value = ''
+      audio.pause()
+      audio.currentTime = 0
+    } else {
+      playingURL.value = url
+      audio.src = url
+      audio.play()
+    }
+  } catch (error) {
+    console.log(error.message)
   }
 }
 
