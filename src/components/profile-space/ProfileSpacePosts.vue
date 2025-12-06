@@ -90,13 +90,16 @@
       }"
     >
       <template #footer>
-        <UButton label="编辑" @click="onEditPost" class="justify-center" />
-        <UButton
-          label="删除"
-          @click="onDeletePost"
-          class="justify-center"
-          color="error"
-        />
+        <template v-if="isSelf">
+          <UButton label="编辑" @click="onEditPost" class="justify-center" />
+          <UButton
+            label="删除"
+            @click="onDeletePost"
+            class="justify-center"
+            color="error"
+          />
+        </template>
+        <UButton v-else label="举报" @click="onReport" color="error" />
       </template>
     </UDrawer>
     <!-- 滚动到顶部浮动按钮 -->
@@ -243,6 +246,7 @@ const onAppeal = () => {
 }
 
 const onReport = () => {
+  isEditMenuDrawerOpen.value = false
   publisherOverlay.open({
     action: 'report',
     reportTarget: 'post',

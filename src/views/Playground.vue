@@ -259,6 +259,7 @@ const onScrollToTop = () => {
 }
 
 const onReport = () => {
+  isDrawerOpen.value = false
   publisherOverlay.open({
     action: 'report',
     reportTarget: 'post',
