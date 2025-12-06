@@ -8,36 +8,36 @@ declare module 'axios' {
   interface AxiosResponse<T = any> extends BaseResponse<T> {}
 }
 
-type mbti =
-  | 'ISTJ'
-  | 'ISFJ'
-  | 'INFJ'
-  | 'INTJ'
-  | 'ISTP'
-  | 'ISFP'
-  | 'INFP'
-  | 'INTP'
-  | 'ESTP'
-  | 'ESFP'
-  | 'ENFP'
-  | 'ENTP'
-  | 'ESTJ'
-  | 'ESFJ'
-  | 'ENFJ'
-  | 'ENTJ'
-
 export type userInfo = {
   id: string
   email: string
   tokenVersion: number
   profile: {
     nickname: string
-    mbti: mbti
+    mbti:
+      | ''
+      | 'ISTJ'
+      | 'ISFJ'
+      | 'INFJ'
+      | 'INTJ'
+      | 'ISTP'
+      | 'ISFP'
+      | 'INFP'
+      | 'INTP'
+      | 'ESTP'
+      | 'ESFP'
+      | 'ENFP'
+      | 'ENTP'
+      | 'ESTJ'
+      | 'ESFJ'
+      | 'ENFJ'
+      | 'ENTJ'
     tags: string[]
     bio: string
     gender: 'male' | 'female' | 'other'
     birthday: string
     college: string
+    grade: '' | '大一' | '大二' | '大三' | '大四' | '研一' | '研二' | '研三'
     province: string
     city: string
     followerCount: number

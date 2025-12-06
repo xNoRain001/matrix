@@ -1,7 +1,33 @@
 <template>
   <UBadge
     v-if="targetProfile.gender !== 'other' || targetProfile.birthday"
-    :label="`${targetProfile.gender !== 'other' ? useTransformGender(targetProfile.gender) : ''}${targetProfile.birthday ? `${targetProfile.gender !== 'other' ? ' · ' : ''}${useComputeAge(targetProfile.birthday)} 岁` : ''}`"
+    :label="
+      targetProfile.gender !== 'other'
+        ? `${useTransformGender(targetProfile.gender)}${
+            targetProfile.birthday
+              ? ` · ${useComputeAge(targetProfile.birthday)} 岁`
+              : ''
+          }`
+        : `${useComputeAge(targetProfile.birthday)} 岁`
+    "
+    color="secondary"
+  />
+  <UBadge
+    v-if="targetProfile.college || targetProfile.grade"
+    :label="`${
+      targetProfile.college
+        ? `${targetProfile.college}${
+            targetProfile.grade ? ` · ${targetProfile.grade}` : ''
+          }`
+        : targetProfile.grade
+    }`"
+    color="secondary"
+  />
+  <UBadge
+    v-if="targetProfile.province"
+    :label="`${targetProfile.province}${
+      targetProfile.city ? ` · ${targetProfile.city}` : ''
+    }`"
     color="secondary"
   />
   <UBadge
@@ -12,16 +38,6 @@
   <UBadge
     v-if="targetProfile.birthday"
     :label="useComputeZodiacSign(targetProfile.birthday)"
-    color="secondary"
-  />
-  <UBadge
-    v-if="targetProfile.college"
-    :label="targetProfile.college"
-    color="secondary"
-  />
-  <UBadge
-    v-if="targetProfile.province"
-    :label="`${targetProfile.province}${targetProfile.city ? ` · ${targetProfile.city}` : ''}`"
     color="secondary"
   />
   <UBadge

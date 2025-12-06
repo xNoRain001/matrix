@@ -178,6 +178,38 @@
     </UDrawer>
 
     <UDrawer
+      v-model:open="isGradeDrawerOpen"
+      title="修改年级"
+      description=" "
+      :ui="{
+        description: 'hidden'
+      }"
+    >
+      <template #body>
+        <USelectMenu
+          v-model="profileForm.grade"
+          :items="gradeItems"
+          class="w-full"
+        >
+          <template #trailing>
+            <UButton
+              v-if="profileForm.grade"
+              color="neutral"
+              variant="link"
+              size="sm"
+              icon="lucide:circle-x"
+              @click.stop="profileForm.grade = ''"
+            />
+            <UIcon
+              name="lucide:chevron-down"
+              class="text-dimmed size-5"
+            ></UIcon>
+          </template>
+        </USelectMenu>
+      </template>
+    </UDrawer>
+
+    <UDrawer
       v-model:open="isRegionDrawerOpen"
       title="修改地区"
       description=" "
@@ -187,17 +219,47 @@
     >
       <template #body>
         <div class="flex gap-2">
-          <USelect
+          <USelectMenu
             class="flex-1"
             v-model="profileForm.province"
             :items="provinceOptions"
-          />
-          <USelect
+          >
+            <template #trailing>
+              <UButton
+                v-if="profileForm.province"
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="lucide:circle-x"
+                @click.stop="profileForm.province = ''"
+              />
+              <UIcon
+                name="lucide:chevron-down"
+                class="text-dimmed size-5"
+              ></UIcon>
+            </template>
+          </USelectMenu>
+          <USelectMenu
             :disabled="!profileForm.province"
             class="flex-1"
             v-model="profileForm.city"
             :items="cityOptions"
-          />
+          >
+            <template #trailing>
+              <UButton
+                v-if="profileForm.city"
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="lucide:circle-x"
+                @click.stop="profileForm.city = ''"
+              />
+              <UIcon
+                name="lucide:chevron-down"
+                class="text-dimmed size-5"
+              ></UIcon>
+            </template>
+          </USelectMenu>
         </div>
       </template>
     </UDrawer>
@@ -244,7 +306,26 @@
       }"
     >
       <template #body>
-        <USelect class="w-full" v-model="profileForm.mbti" :items="mbtiItems" />
+        <USelectMenu
+          class="w-full"
+          v-model="profileForm.mbti"
+          :items="mbtiItems"
+        >
+          <template #trailing>
+            <UButton
+              v-if="profileForm.mbti"
+              color="neutral"
+              variant="link"
+              size="sm"
+              icon="lucide:circle-x"
+              @click.stop="profileForm.mbti = ''"
+            />
+            <UIcon
+              name="lucide:chevron-down"
+              class="text-dimmed size-5"
+            ></UIcon>
+          </template>
+        </USelectMenu>
       </template>
     </UDrawer>
   </template>
@@ -347,19 +428,6 @@
         </UFormField>
         <USeparator />
         <UFormField
-          label="MBTI"
-          description="选择你的 MBTI"
-          class="flex items-start justify-between gap-4"
-          :ui="{ container: 'w-3/5' }"
-        >
-          <USelect
-            class="w-full"
-            v-model="profileForm.mbti"
-            :items="mbtiItems"
-          />
-        </UFormField>
-        <USeparator />
-        <UFormField
           label="大学"
           description="填写你的大学"
           class="flex items-start justify-between gap-4"
@@ -389,24 +457,110 @@
         </UFormField>
         <USeparator />
         <UFormField
+          label="年级"
+          description="填写你的年级"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
+        >
+          <USelectMenu
+            v-model="profileForm.grade"
+            :items="gradeItems"
+            class="w-full"
+          >
+            <template #trailing>
+              <UButton
+                v-if="profileForm.grade"
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="lucide:circle-x"
+                @click.stop="profileForm.grade = ''"
+              />
+              <UIcon
+                name="lucide:chevron-down"
+                class="text-dimmed size-5"
+              ></UIcon>
+            </template>
+          </USelectMenu>
+        </UFormField>
+        <USeparator />
+        <UFormField
           label="地区"
           description="填写你的地区"
           class="flex items-start justify-between gap-4"
           :ui="{ container: 'w-3/5' }"
         >
           <div class="flex gap-4">
-            <USelect
+            <USelectMenu
               class="flex-1"
               v-model="profileForm.province"
               :items="provinceOptions"
-            />
-            <USelect
+            >
+              <template #trailing>
+                <UButton
+                  v-if="profileForm.province"
+                  color="neutral"
+                  variant="link"
+                  size="sm"
+                  icon="lucide:circle-x"
+                  @click.stop="profileForm.province = ''"
+                />
+                <UIcon
+                  name="lucide:chevron-down"
+                  class="text-dimmed size-5"
+                ></UIcon>
+              </template>
+            </USelectMenu>
+            <USelectMenu
               :disabled="!profileForm.province"
               class="flex-1"
               v-model="profileForm.city"
               :items="cityOptions"
-            />
+            >
+              <template #trailing>
+                <UButton
+                  v-if="profileForm.city"
+                  color="neutral"
+                  variant="link"
+                  size="sm"
+                  icon="lucide:circle-x"
+                  @click.stop="profileForm.city = ''"
+                />
+                <UIcon
+                  name="lucide:chevron-down"
+                  class="text-dimmed size-5"
+                ></UIcon>
+              </template>
+            </USelectMenu>
           </div>
+        </UFormField>
+        <USeparator />
+        <UFormField
+          label="MBTI"
+          description="选择你的 MBTI"
+          class="flex items-start justify-between gap-4"
+          :ui="{ container: 'w-3/5' }"
+        >
+          <USelectMenu
+            class="w-full"
+            v-model="profileForm.mbti"
+            :items="mbtiItems"
+          >
+            <template #trailing>
+              <UButton
+                v-if="profileForm.mbti"
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="lucide:circle-x"
+                @click.stop="profileForm.mbti = ''"
+              />
+              <UIcon
+                name="lucide:chevron-down"
+                class="text-dimmed size-5"
+              ></UIcon>
+            </template>
+          </USelectMenu>
         </UFormField>
         <USeparator />
         <UFormField
@@ -460,6 +614,7 @@ const isGenderDrawerOpen = ref(false)
 const isBirthdayDrawerOpen = ref(false)
 const isRegionDrawerOpen = ref(false)
 const isCollegeDrawerOpen = ref(false)
+const isGradeDrawerOpen = ref(false)
 const isBioDrawerOpen = ref(false)
 const isMBTIDrawerOpen = ref(false)
 const isAvatarSlideoverOpen = ref(false)
@@ -499,11 +654,6 @@ const profileItems = [
     click: () => (isGenderDrawerOpen.value = true)
   },
   {
-    label: 'MBTI',
-    key: 'mbti',
-    click: () => (isMBTIDrawerOpen.value = true)
-  },
-  {
     label: '生日',
     key: 'birthday',
     click: () => (isBirthdayDrawerOpen.value = true)
@@ -514,9 +664,19 @@ const profileItems = [
     click: () => (isCollegeDrawerOpen.value = true)
   },
   {
+    label: '年级',
+    key: 'grade',
+    click: () => (isGradeDrawerOpen.value = true)
+  },
+  {
     label: '地区',
     key: 'region',
     click: () => (isRegionDrawerOpen.value = true)
+  },
+  {
+    label: 'MBTI',
+    key: 'mbti',
+    click: () => (isMBTIDrawerOpen.value = true)
   },
   {
     label: '签名',
@@ -524,6 +684,7 @@ const profileItems = [
     click: () => (isBioDrawerOpen.value = true)
   }
 ]
+const gradeItems = ['大一', '大二', '大三', '大四', '研一', '研二', '研三']
 const date = shallowRef(
   profileForm.value.birthday ? parseDate(profileForm.value.birthday) : null
 )
@@ -622,8 +783,9 @@ watch(
   v => {
     if (v) {
       cityOptions.value = provinceCityMap[v]
-      profileForm.value.city = ''
     }
+
+    profileForm.value.city = ''
   }
 )
 </script>
