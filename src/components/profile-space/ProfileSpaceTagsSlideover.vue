@@ -19,7 +19,7 @@
       />
       <UInput
         ref="inputRef"
-        :maxlength="12"
+        maxlength="12"
         placeholder="输入标签"
         v-model="tag"
         class="w-full"

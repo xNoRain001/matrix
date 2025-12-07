@@ -186,6 +186,7 @@ import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
 import { useThrottleFn } from '@vueuse/core'
 import { useRoute } from 'vue-router'
 import type { userInfo } from '@/types'
+// import { getProductsAPI } from '@/apis/product'
 
 const props = defineProps<{
   isMatch?: boolean
@@ -348,6 +349,11 @@ const getPosts = async () => {
   postMap.value[props.targetId].posts = posts
   allPostLoaded.value = posts.length < 10
 }
+
+// const getProducts = async () => {
+//   const { data: products } = await getProductsAPI(props.targetId)
+//   allPostLoaded.value = products.length < 10
+// }
 
 watch(
   () => props.targetId,

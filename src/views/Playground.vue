@@ -1,11 +1,12 @@
 <template>
   <UDashboardPanel id="playground" :ui="{ body: 'p-0 sm:p-0 ' }">
     <template #header>
-      <PlaygroundHeader v-model="allPostLoaded" />
+      <PlaygroundHeader
+        v-model="activeTab"
+        v-model:all-post-loaded="allPostLoaded"
+      />
     </template>
     <template #body>
-      <!-- <UTabs ref="tabsRef" :items="tabItems" v-model="activeTab">
-        <template #content> -->
       <Skeleton v-if="loading" :count="10" />
       <!-- 存在 length 属性，说明已经成功从服务器获取了数据 -->
       <div v-if="postMap[activeTab]?.posts?.length >= 0">
@@ -126,14 +127,11 @@
           </div>
         </Transition>
       </div>
-      <!-- </template>
-      </UTabs> -->
     </template>
     <template v-if="isMobile" #footer>
       <div class="h-16"></div>
     </template>
   </UDashboardPanel>
-
   <UDrawer
     v-if="isMobile"
     v-model:open="isDrawerOpen"
@@ -180,22 +178,9 @@ let reportedUserId = null
 let reportPostId = null
 const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile } = storeToRefs(useUserStore())
-const activeTab = ref<'latest' | 'friend' | 'hot'>('latest')
-// const tabItems = [
-//   {
-//     label: '好友',
-//     value: 'friend'
-//   },
-//   {
-//     label: '热门',
-//     value: 'hot'
-//   },
-//   {
-//     label: '最新',
-//     value: 'latest',
-//     icon: 'lucide:refresh-cw'
-//   }
-// ]
+const activeTab = ref<
+  'myCollege' | 'latest' | 'friend' | 'hot' | 'market' | 'partner'
+>('latest')
 const { postMap } = storeToRefs(usePostStore())
 const { activeSpaceTargetIds } = storeToRefs(useRecentContactsStore())
 const { footerNavs } = storeToRefs(useFooterStore())
@@ -221,36 +206,6 @@ const allPostLoaded = ref(
 const loading = ref(postMap.value[activeTab.value]?.posts === undefined)
 const isDrawerOpen = ref(false)
 const isAutoScrollBtnShow = ref(false)
-
-// const getLatestData = async () => {
-//   const _activeTab = activeTab.value
-
-//   if (_activeTab === 'latest') {
-//     const posts = (
-//       await getPlaygroundPostsAPI(
-//         _activeTab,
-//         '',
-//         postMap.value[_activeTab].posts[0]._id
-//       )
-//     ).data
-//     const { length } = posts
-
-//     if (length) {
-//       if (length < 10) {
-//         postMap.value[_activeTab].posts.unshift(...posts)
-//       } else {
-//         postMap.value[_activeTab].posts = posts
-//         allPostLoaded.value = false
-//       }
-//     } else {
-//       toast.add({
-//         title: '暂时没有新内容',
-//         color: 'error',
-//         icon: 'lucide:annoyed'
-//       })
-//     }
-//   }
-// }
 
 const onScrollToTop = () => {
   document

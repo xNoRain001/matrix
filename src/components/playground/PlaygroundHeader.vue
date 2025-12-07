@@ -1,15 +1,10 @@
 <template>
-  <UDashboardNavbar title="广场" :toggle="false">
+  <UDashboardNavbar title="广场" :toggle="false" class="border-b-0">
     <template #leading>
       <UDashboardSidebarCollapse />
     </template>
 
     <template #right>
-      <UButton
-        icon="lucide:refresh-cw"
-        variant="ghost"
-        @click="getLatestData"
-      />
       <UButton
         icon="lucide:bell"
         variant="ghost"
@@ -18,173 +13,131 @@
       <UButton
         icon="lucide:pencil-line"
         variant="ghost"
-        @click="
-          publisherOverlay.open({ action: 'post', targetId: userInfo.id })
-        "
+        @click="isPublishSlideoverOpen = true"
       />
     </template>
   </UDashboardNavbar>
-
-  <!-- 通知模态框 -->
+  <div class="flex items-center justify-between">
+    <UTabs
+      :content="false"
+      variant="link"
+      :items="tabItems"
+      v-model="activeTab"
+    />
+    <UButton
+      @click="getLatestData"
+      class="mr-4 sm:mr-6"
+      variant="ghost"
+      icon="lucide:refresh-cw"
+    />
+  </div>
+  <PlaygroundNotificationsSlideover v-model="isNotificationSlideoverOpen" />
   <USlideover
     :class="isMobile ? 'max-w-none' : ''"
-    v-model:open="isNotificationSlideoverOpen"
+    v-model:open="isPublishSlideoverOpen"
     title="通知"
     description=" "
     :ui="{
-      body: 'flex flex-col',
-      description: 'hidden'
+      description: 'hidden',
+      body: 'space-y-4 sm:space-y-6'
     }"
   >
     <template #body>
-      <UTabs :items="tabItems" v-model="activeTab" :content="false" />
-      <template v-if="activeTab === 'like'">
-        <div
-          v-if="likeNotifications.length"
-          v-for="{
-            _id,
-            targetId,
-            targetProfile: { nickname },
-            createdAt
-          } in likeNotifications"
-          :key="_id"
-          class="cursor-pointer p-4 sm:p-6"
-        >
-          <UUser
-            :name="nickname"
-            :avatar="{
-              src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
-              alt: nickname[0]
-            }"
-            size="xl"
-            :ui="{
-              root: 'items-start',
-              wrapper: 'flex-1 min-w-0',
-              name: 'truncate',
-              description: 'flex justify-between'
-            }"
-          >
-            <template #description>
-              <span>点赞了你的内容</span>
-              <time>{{ useFormatTimeAgo(createdAt) }}</time>
-            </template>
-          </UUser>
-        </div>
-        <div v-else class="flex flex-1 items-center justify-center">
-          <UIcon name="lucide:bell" class="text-dimmed size-32" />
-        </div>
-      </template>
-      <template v-if="activeTab === 'star'">
-        <div
-          v-if="likeNotifications.length"
-          v-for="{
-            _id,
-            targetId,
-            targetProfile: { nickname },
-            createdAt
-          } in likeNotifications"
-          :key="_id"
-          class="cursor-pointer p-4 sm:p-6"
-        >
-          <UUser
-            :name="nickname"
-            :avatar="{
-              src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
-              alt: nickname[0]
-            }"
-            size="xl"
-            :ui="{
-              root: 'items-start',
-              wrapper: 'flex-1 min-w-0',
-              name: 'truncate',
-              description: 'flex justify-between'
-            }"
-          >
-            <template #description>
-              <span>点赞了你的内容</span>
-              <time>{{ useFormatTimeAgo(createdAt) }}</time>
-            </template>
-          </UUser>
-        </div>
-        <div v-else class="flex flex-1 items-center justify-center">
-          <UIcon name="lucide:bell" class="text-dimmed size-32" />
-        </div>
-      </template>
-      <template v-if="activeTab === 'comment'">
-        <div
-          v-if="likeNotifications.length"
-          v-for="{
-            _id,
-            targetId,
-            targetProfile: { nickname },
-            createdAt
-          } in likeNotifications"
-          :key="_id"
-          class="cursor-pointer p-4 sm:p-6"
-        >
-          <UUser
-            :name="nickname"
-            :avatar="{
-              src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
-              alt: nickname[0]
-            }"
-            size="xl"
-            :ui="{
-              root: 'items-start',
-              wrapper: 'flex-1 min-w-0',
-              name: 'truncate',
-              description: 'flex justify-between'
-            }"
-          >
-            <template #description>
-              <span>点赞了你的内容</span>
-              <time>{{ useFormatTimeAgo(createdAt) }}</time>
-            </template>
-          </UUser>
-        </div>
-        <div v-else class="flex flex-1 items-center justify-center">
-          <UIcon name="lucide:bell" class="text-dimmed size-32" />
-        </div>
-      </template>
+      <UPageCard
+        v-for="({ icon, title, desc, onSelect }, index) in list"
+        :key="index"
+        :title="title"
+        :description="desc"
+        :icon="icon"
+        @click="onSelect"
+        orientation="horizontal"
+        variant="subtle"
+        class="cursor-pointer"
+      />
     </template>
   </USlideover>
 </template>
 
 <script lang="ts" setup>
-import { useFormatTimeAgo } from '@/hooks'
 import { ref } from 'vue'
-import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
 import { storeToRefs } from 'pinia'
-import { useNotificationsStore, usePostStore, useUserStore } from '@/store'
+import { usePostStore, useUserStore } from '@/store'
+import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
+import OverlayPublishProduct from '../overlay/OverlayPublishProduct.vue'
 import { getPlaygroundPostsAPI } from '@/apis/playground'
 
-const { VITE_OSS_BASE_URL } = import.meta.env
-const allPostLoaded = defineModel<boolean>()
+const activeTab = defineModel<
+  'myCollege' | 'latest' | 'friend' | 'hot' | 'market' | 'partner'
+>()
+const allPostLoaded = defineModel<boolean>('allPostLoaded')
 const overlay = useOverlay()
 const publisherOverlay = overlay.create(OverlayPublisher)
-const { userInfo, isMobile } = storeToRefs(useUserStore())
+const publishProductOverlay = overlay.create(OverlayPublishProduct)
+const { isMobile, userInfo } = storeToRefs(useUserStore())
 const { postMap } = storeToRefs(usePostStore())
-const { likeNotifications } = storeToRefs(useNotificationsStore())
 const isNotificationSlideoverOpen = ref(false)
-const activeTab = ref('like')
+const isPublishSlideoverOpen = ref(false)
 const tabItems = [
   {
-    label: '赞',
-    value: 'like',
-    icon: 'lucide:heart'
+    label: '我的校园',
+    value: 'myCollege'
+  },
+  // {
+  //   label: '好友',
+  //   value: 'friend'
+  // },
+  {
+    label: '热门',
+    value: 'hot'
   },
   {
-    label: '收藏',
-    value: 'star',
-    icon: 'lucide:star'
+    label: '最新',
+    value: 'latest'
   },
   {
-    label: '评论',
-    value: 'comment',
-    icon: 'lucide:message-circle'
+    label: '集市',
+    value: 'market'
+  },
+  {
+    label: '搭子',
+    value: 'market'
   }
 ]
 const toast = useToast()
+const list = [
+  {
+    icon: 'lucide:pencil-line',
+    title: '发动态',
+    desc: '分享此刻的心情',
+    onSelect: () =>
+      publisherOverlay.open({ action: 'post', targetId: userInfo.value.id })
+  },
+  {
+    icon: 'lucide:shopping-bag',
+    title: '发闲置',
+    desc: '自己拍图卖 · 啥都能换钱',
+    onSelect: () => {
+      if (!userInfo.value.profile.college) {
+        return toast.add({
+          title: '请完善个人资料中的大学信息',
+          color: 'error',
+          icon: 'lucide:annoyed'
+        })
+      }
+
+      publishProductOverlay.open({
+        action: 'publishProduct',
+        targetId: userInfo.value.id
+      })
+    }
+  },
+  {
+    icon: 'lucide:user-search',
+    title: '找搭子',
+    desc: '发现志同道合的伙伴',
+    onSelect: () => {}
+  }
+]
 
 const getLatestData = async () => {
   const posts = (

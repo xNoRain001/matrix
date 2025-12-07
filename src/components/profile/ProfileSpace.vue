@@ -20,6 +20,13 @@
         :target-id="targetId"
         :target-profile="isSelf ? userInfo.profile : targetProfile"
       />
+      <UTabs
+        class="px-4 sm:px-6"
+        :content="false"
+        variant="link"
+        :items="tabItems"
+        v-model="activeTab"
+      />
       <!-- 日历热力图 -->
       <ProfileSpaceCalHeatMap
         :target-profile="isSelf ? userInfo.profile : targetProfile"
@@ -65,6 +72,21 @@ const { activeSpaceTargetIds } = storeToRefs(useRecentContactsStore())
 const isSelf = props.targetId === userInfo.value.id
 const targetProfile = ref(null)
 const toast = useToast()
+const activeTab = ref('post')
+const tabItems = [
+  {
+    label: '动态',
+    value: 'post'
+  },
+  {
+    label: '集市',
+    value: 'market'
+  },
+  {
+    label: '搭子',
+    value: 'partner'
+  }
+]
 
 onBeforeMount(() => {
   activeSpaceTargetIds.value.add(props.targetId)
