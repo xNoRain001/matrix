@@ -541,6 +541,18 @@ const getPlaygroundPostsByCollege = async () => {
 }
 
 watch(activeTab, v => {
+  if (v === 'latest') {
+    return
+  }
+
+  if (!userInfo.value.profile.college) {
+    return toast.add({
+      title: '请完善个人资料中的大学信息',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+  }
+
   if (v === 'market' && !postMap.value[v]) {
     getPlaygroundProducts()
   } else if (v === 'myCollege' && !postMap.value[v]) {

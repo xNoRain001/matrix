@@ -19,7 +19,7 @@
           index
         ) in postMap[targetId].posts"
         :key="_id"
-        class="bg-elevated/50 mt-2 space-y-2 p-4 sm:p-6"
+        class="bg-elevated/50 space-y-2 p-4 not-first:mt-2 sm:p-6"
       >
         <div class="flex items-center justify-between">
           <span class="text-xs font-medium">
@@ -168,7 +168,7 @@
           index
         ) in postMap[targetId].products"
         :key="_id"
-        class="bg-elevated/50 mt-2 space-y-2 p-4 sm:p-6"
+        class="bg-elevated/50 space-y-2 p-4 not-first:mt-2 sm:p-6"
       >
         <div class="flex items-center justify-between">
           <span class="text-xs font-medium">

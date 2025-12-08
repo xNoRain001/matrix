@@ -20,16 +20,19 @@
         :target-id="targetId"
         :target-profile="isSelf ? userInfo.profile : targetProfile"
       />
-      <UTabs
-        class="bg-default sticky top-16 px-4 sm:px-6"
-        :content="false"
-        variant="link"
-        :items="tabItems"
-        v-model="activeTab"
-      />
       <!-- 日历热力图 -->
       <ProfileSpaceCalHeatMap
         :target-profile="isSelf ? userInfo.profile : targetProfile"
+      />
+      <UTabs
+        class="bg-default sticky top-16 px-4 sm:px-6"
+        :content="false"
+        :ui="{
+          list: 'border-none'
+        }"
+        variant="link"
+        :items="tabItems"
+        v-model="activeTab"
       />
       <!-- 动态 -->
       <ProfileSpacePosts
