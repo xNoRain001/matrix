@@ -93,6 +93,7 @@
         targetProfile.birthday ||
         targetProfile.mbti ||
         targetProfile.college ||
+        targetProfile.grade ||
         targetProfile.province ||
         targetProfile.tags.length
       "
@@ -266,7 +267,14 @@ const computeDays = timestamp =>
   Math.ceil((Date.now() - timestamp) / (1000 * 60 * 60 * 24))
 
 const onSpaceBgChange = e =>
-  useUpdateStaticNameFile(e, 'spaceBg', userInfo, toast, bgURL)
+  useUpdateStaticNameFile(
+    e,
+    'spaceBg',
+    userInfo,
+    toast,
+    bgURL,
+    isPlaceholderShow
+  )
 
 watch(
   () => props.targetId,

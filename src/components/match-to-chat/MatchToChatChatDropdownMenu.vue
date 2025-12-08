@@ -82,7 +82,7 @@ import { createReusableTemplate } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
+import OverlayPublishContent from '@/components/overlay/OverlayPublishContent.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -134,12 +134,12 @@ const deleteMessageRecord = {
   }
 }
 const overlay = useOverlay()
-const publisherOverlay = overlay.create(OverlayPublisher)
+const publishContentOverlay = overlay.create(OverlayPublishContent)
 const report = {
   label: '举报聊天记录',
   icon: 'lucide:circle-alert',
   onSelect: () =>
-    publisherOverlay.open({
+    publishContentOverlay.open({
       action: 'report',
       reportTarget: 'messageRecord',
       reportedUserId: props.targetId
@@ -149,7 +149,7 @@ const reportAvatarOrSpaceBg = {
   label: '举报个人资料',
   icon: 'lucide:circle-alert',
   onSelect: () =>
-    publisherOverlay.open({
+    publishContentOverlay.open({
       action: 'report',
       reportTarget: 'profile',
       reportedUserId: props.targetId

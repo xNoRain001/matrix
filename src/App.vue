@@ -152,7 +152,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { voiceChatInviteToastExpireTime } from './const'
 import OverlayOffline from './components/overlay/OverlayOffline.vue'
 import { useThrottleFn } from '@vueuse/core'
-import OverlayPublisher from './components/overlay/OverlayPublisher.vue'
+import OverlayPublishContent from './components/overlay/OverlayPublishContent.vue'
 import type { message } from './types'
 import OverlayTalk from './components/overlay/OverlayTalk.vue'
 import OverlayHelpAndSupport from './components/overlay/OverlayHelpAndSupport.vue'
@@ -179,7 +179,7 @@ const maxReconnectionAttempts = 1
 const toast = useToast()
 const overlay = useOverlay()
 const logoutOverlay = overlay.create(OverlayLogout)
-const publisherOverlay = overlay.create(OverlayPublisher)
+const publishContentOverlay = overlay.create(OverlayPublishContent)
 const offlineOverlay = overlay.create(OverlayOffline)
 const { isMobile, globalSocket, globalPC, userInfo, config, onlineCount } =
   storeToRefs(useUserStore())
@@ -253,7 +253,7 @@ const navs = [
           exact: true
         },
         {
-          label: '情绪切片',
+          label: '我的动态',
           to: '/profile/space'
         },
         {
@@ -287,7 +287,7 @@ const navs = [
     {
       label: '反馈',
       icon: 'lucide:message-circle',
-      onSelect: () => publisherOverlay.open({ action: 'feedback' })
+      onSelect: () => publishContentOverlay.open({ action: 'feedback' })
     },
     {
       label: '帮助和支持',

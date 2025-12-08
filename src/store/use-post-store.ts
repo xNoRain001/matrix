@@ -7,6 +7,7 @@ const usePostStore = defineStore('postStore', () => ({
     Record<
       string,
       {
+        products: any[]
         posts: post[]
         comments?: comment[]
         isCommentCollapsibleOpenMap: { [x: string]: boolean }
@@ -20,6 +21,9 @@ const usePostStore = defineStore('postStore', () => ({
         activeReplyIndex: number
         activeCommentContent: content
         activeReplyContent: content
+        activeProduct: any
+        activeProductId: string
+        activeProductIndex: number
       }
     >
   >({})

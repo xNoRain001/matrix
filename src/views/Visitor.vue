@@ -31,7 +31,7 @@ const features = [
     icon: 'lucide:heart'
   },
   {
-    title: '情绪切片',
+    title: '我的动态',
     description:
       '记录每一个转瞬即逝的情绪坐标，总有同频共振在此刻回应。在这里，你的所有情绪都值得被看见。',
     icon: 'lucide:activity'

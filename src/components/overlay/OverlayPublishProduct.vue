@@ -41,7 +41,7 @@
       </UTextarea>
       <UPageCard
         title="图片"
-        description="选择图片，最多 9 张，每张不超过 10 MB，通过拖拽交换图片位置"
+        description="选择图片（最多 9 张，单张 ≤ 10MB），支持拖拽排序"
         variant="naked"
         orientation="horizontal"
         class="mb-4"
@@ -113,11 +113,10 @@ import { usePostStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { onMounted, reactive, ref, useTemplateRef, watch } from 'vue'
 import { useSortable } from '@vueuse/integrations/useSortable'
-import { updatePostAPI } from '@/apis/post'
 import { useURLToBlob } from '@/hooks'
 import useUploadFilesToOSS from '@/hooks/use-upload-files-to-oss'
 import type { content } from '@/types'
-import { publishProductAPI } from '@/apis/product'
+import { publishProductAPI, updateProductAPI } from '@/apis/product'
 
 let sortable = false
 const props = defineProps<{
@@ -146,7 +145,7 @@ const initFiles = async () => {
 
   return isUpdateProduct
     ? await initCommentFiles(
-        postMap.value[props.targetId].activePost.content.images
+        postMap.value[props.targetId].activeProduct.content.images
       )
     : []
 }
@@ -156,19 +155,28 @@ const oldFileLength = files.value.length
 const payload: content = reactive({
   text: isPublishProduct
     ? ''
-    : postMap.value[props.targetId].activePost.content.text,
+    : postMap.value[props.targetId].activeProduct.content.text,
   images: []
 })
 const oldText = payload.text
+const oldPrice = isPublishProduct
+  ? ''
+  : postMap.value[props.targetId].activeProduct.price
+const oldExpressDelivery = isPublishProduct
+  ? ''
+  : postMap.value[props.targetId].activeProduct.expressDelivery
+const oldAddress = isPublishProduct
+  ? ''
+  : postMap.value[props.targetId].activeProduct.address
 const { userInfo, isMobile } = storeToRefs(useUserStore())
 const toast = useToast()
 const emit = defineEmits<{ close: [boolean] }>()
 const title = isPublishProduct ? '发布商品' : '更新商品'
 const fileUploadRef = useTemplateRef('fileUploadRef')
-const price = ref('')
-const expressDelivery = ref('买家自提')
+const price = ref(isPublishProduct ? '' : oldPrice)
+const expressDelivery = ref(isPublishProduct ? '买家自提' : oldExpressDelivery)
 const expressDeliveryItems = ['买家自提', '送货上门']
-const address = ref('')
+const address = ref(isPublishProduct ? '' : oldAddress)
 
 const initDraggable = () => {
   if (!sortable) {
@@ -241,18 +249,18 @@ const onPublishProduct = async () => {
     formData.append('address', address.value)
     formData.append('college', userInfo.value.profile.college)
     // 服务器只返回 _id 和 content
-    const { data: post } = await publishProductAPI(formData)
+    const { data: product } = await publishProductAPI(formData)
     toast.add({ title: '发布成功', icon: 'lucide:smile' })
     // 补充其他属性
-    post.visibility = 'public'
-    post.createdAt = Date.now()
-    post.price = Number(price)
-    post.expressDelivery = expressDelivery.value
-    post.address = address.value
+    product.visibility = 'public'
+    product.createdAt = Date.now()
+    product.price = Number(price.value)
+    product.expressDelivery = expressDelivery.value
+    product.address = address.value
 
-    // if (postMap.value[props.targetId]) {
-    //   postMap.value[props.targetId].posts.unshift(post)
-    // }
+    if (postMap.value[props.targetId]) {
+      postMap.value[props.targetId].products.unshift(product)
+    }
 
     emit('close', true)
   } catch (error) {
@@ -264,33 +272,28 @@ const onPublishProduct = async () => {
   }
 }
 
-const isChanged = () => {
-  let res = true
+const isTextOrImageChange = () => {
+  if (
+    payload.text !== oldText ||
+    oldPrice !== price.value ||
+    oldExpressDelivery !== expressDelivery.value ||
+    oldAddress !== address.value
+  ) {
+    return true
+  }
 
   // 判断是否更新了图片顺序
   for (let i = 0, l = oldFilesOrder.length; i < l; i++) {
     // 可能删除了所有图片，此时 files 为空数组
     if (oldFilesOrder[i] !== files.value[i]?.ossURL) {
-      res = false
-      break
+      return true
     }
   }
 
   // 图片顺序没更新，但是有可能在最后新增了图片
-  if (res) {
-    res = files.value.length === oldFileLength
-  }
-
-  // 没发生任何改变
-  if (payload.text === oldText && res) {
+  if (files.value.length === oldFileLength) {
     emit('close', true)
     toast.add({ title: '更新成功', icon: 'lucide:smile' })
-    return false
-  }
-
-  // 发生了改变，需要判断是否将文字和图片都清空了
-  if (!payload.text && !files.value.length) {
-    toast.add({ title: '内容不能为空', color: 'error', icon: 'lucide:annoyed' })
     return false
   }
 
@@ -298,33 +301,40 @@ const isChanged = () => {
 }
 
 const onUpdateProduct = async () => {
-  if (!isChanged()) {
+  if (!isTextOrImageChange()) {
     return
   }
 
   try {
     payload.images = await useUploadFilesToOSS(userInfo, 'image', files.value)
     const formData = new FormData()
-    const activePostId = postMap.value[props.targetId].activePostId
-    formData.append('type', 'updatePost')
-    formData.append('postId', activePostId)
+    const activeProductId = postMap.value[props.targetId].activeProductId
+    formData.append('type', 'updateProduct')
+    formData.append('productId', activeProductId)
     const stringifyPayload = JSON.stringify(payload)
     formData.append('content', stringifyPayload)
-    await updatePostAPI(formData)
+    formData.append('price', price.value)
+    formData.append('expressDelivery', expressDelivery.value)
+    formData.append('address', address.value)
+    formData.append('college', userInfo.value.profile.college)
+    await updateProductAPI(formData)
     const { images } = payload
     toast.add({ title: '更新成功', icon: 'lucide:smile' })
-    const _activePost = postMap.value[props.targetId].activePost
+    const _activeProduct = postMap.value[props.targetId].activeProduct
     for (let i = 0, l = images.length; i < l; i++) {
       const image = images[i]
       const { url } = image
 
       // 修改新增的图片的 url
       if (url.startsWith('tmp/')) {
-        image.url = `posts/${activePostId}/${url.split('/')[2]}`
+        image.url = `posts/${activeProductId}/${url.split('/')[2]}`
       }
     }
-    _activePost.updateAt = Date.now()
-    _activePost.content = payload
+    _activeProduct.updateAt = Date.now()
+    _activeProduct.content = payload
+    _activeProduct.price = price.value
+    _activeProduct.expressDelivery = expressDelivery.value
+    _activeProduct.address = address.value
     emit('close', true)
   } catch (error) {
     toast.add({

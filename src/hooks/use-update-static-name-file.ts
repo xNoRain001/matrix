@@ -7,7 +7,8 @@ const useUpdateStaticNameFile = async (
   type: 'avatar' | 'spaceBg',
   userInfo,
   toast,
-  urlRef
+  urlRef,
+  isPlaceholderShow = null
 ) => {
   const input = e.target
   const file = input.files[0]
@@ -54,6 +55,13 @@ const useUpdateStaticNameFile = async (
     try {
       await updateStaticNameAPI(type, hash)
       urlRef.value = URL.createObjectURL(file)
+
+      // 如果在没有背景图的情况下更新了背景图，需要将 isPlaceholderShow 的值
+      // 设置为 true，才会显示背景图
+      if (type === 'spaceBg') {
+        isPlaceholderShow.value = true
+      }
+
       toast.add({ title: '更新成功', icon: 'lucide:smile' })
     } catch (error) {
       throw error

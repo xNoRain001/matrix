@@ -18,7 +18,7 @@
       />
       <UProgress :max="20" v-model="value" />
       <UPageCard
-        title="点赞 5 篇情绪切片（2 / 5）"
+        title="点赞 5 篇动态（2 / 5）"
         variant="naked"
         orientation="horizontal"
         class="mb-4"

@@ -41,7 +41,7 @@ const links = [
     },
     {
       icon: 'lucide:user-round',
-      label: '情绪切片',
+      label: '我的动态',
       to: '/profile/space'
     },
     {

@@ -33,20 +33,20 @@
 <script lang="ts" setup>
 import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
+import OverlayPublishContent from '@/components/overlay/OverlayPublishContent.vue'
 
 const props = defineProps<{
   targetId: string
 }>()
 const { isMobile } = storeToRefs(useUserStore())
 const overlay = useOverlay()
-const publisherOverlay = overlay.create(OverlayPublisher)
+const publishContentOverlay = overlay.create(OverlayPublishContent)
 const dropdownItems = [
   {
     label: '举报个人资料',
     icon: 'lucide:circle-alert',
     onSelect: () => {
-      publisherOverlay.open({
+      publishContentOverlay.open({
         action: 'report',
         reportTarget: 'profile',
         reportedUserId: props.targetId

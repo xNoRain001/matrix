@@ -13,7 +13,7 @@
       <UButton
         icon="lucide:pencil-line"
         variant="ghost"
-        @click="isPublishSlideoverOpen = true"
+        @click="publisherOverlay.open()"
       />
     </template>
   </UDashboardNavbar>
@@ -32,38 +32,13 @@
     />
   </div>
   <PlaygroundNotificationsSlideover v-model="isNotificationSlideoverOpen" />
-  <USlideover
-    :class="isMobile ? 'max-w-none' : ''"
-    v-model:open="isPublishSlideoverOpen"
-    title="通知"
-    description=" "
-    :ui="{
-      description: 'hidden',
-      body: 'space-y-4 sm:space-y-6'
-    }"
-  >
-    <template #body>
-      <UPageCard
-        v-for="({ icon, title, desc, onSelect }, index) in list"
-        :key="index"
-        :title="title"
-        :description="desc"
-        :icon="icon"
-        @click="onSelect"
-        orientation="horizontal"
-        variant="subtle"
-        class="cursor-pointer"
-      />
-    </template>
-  </USlideover>
 </template>
 
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import { usePostStore, useUserStore } from '@/store'
+import { usePostStore } from '@/store'
 import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
-import OverlayPublishProduct from '../overlay/OverlayPublishProduct.vue'
 import { getPlaygroundPostsAPI } from '@/apis/playground'
 
 const activeTab = defineModel<
@@ -72,11 +47,8 @@ const activeTab = defineModel<
 const allPostLoaded = defineModel<boolean>('allPostLoaded')
 const overlay = useOverlay()
 const publisherOverlay = overlay.create(OverlayPublisher)
-const publishProductOverlay = overlay.create(OverlayPublishProduct)
-const { isMobile, userInfo } = storeToRefs(useUserStore())
 const { postMap } = storeToRefs(usePostStore())
 const isNotificationSlideoverOpen = ref(false)
-const isPublishSlideoverOpen = ref(false)
 const tabItems = [
   {
     label: '我的校园',
@@ -104,40 +76,6 @@ const tabItems = [
   }
 ]
 const toast = useToast()
-const list = [
-  {
-    icon: 'lucide:pencil-line',
-    title: '发动态',
-    desc: '分享此刻的心情',
-    onSelect: () =>
-      publisherOverlay.open({ action: 'post', targetId: userInfo.value.id })
-  },
-  {
-    icon: 'lucide:shopping-bag',
-    title: '发闲置',
-    desc: '自己拍图卖 · 啥都能换钱',
-    onSelect: () => {
-      if (!userInfo.value.profile.college) {
-        return toast.add({
-          title: '请完善个人资料中的大学信息',
-          color: 'error',
-          icon: 'lucide:annoyed'
-        })
-      }
-
-      publishProductOverlay.open({
-        action: 'publishProduct',
-        targetId: userInfo.value.id
-      })
-    }
-  },
-  {
-    icon: 'lucide:user-search',
-    title: '找搭子',
-    desc: '发现志同道合的伙伴',
-    onSelect: () => {}
-  }
-]
 
 const getLatestData = async () => {
   const posts = (

@@ -20,7 +20,7 @@
         v-if="isSelf"
         icon="lucide:pencil-line"
         variant="ghost"
-        @click="publisherOverlay.open({ action: 'post', targetId })"
+        @click="publisherOverlay.open()"
       />
       <UButton
         v-if="isSetting"
@@ -91,6 +91,7 @@ import Logoff from '@/views/Profile/Logoff.vue'
 import Theme from '@/views/Profile/Theme.vue'
 import OverlayLogout from '@/components/overlay/OverlayLogout.vue'
 import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
+import OverlayPublishContent from '@/components/overlay/OverlayPublishContent.vue'
 import OverlayHelpAndSupport from '@/components/overlay/OverlayHelpAndSupport.vue'
 import OverlayAbout from '@/components/overlay/OverlayAbout.vue'
 import type { userInfo } from '@/types'
@@ -149,7 +150,7 @@ const cards = [
     {
       icon: 'lucide:message-circle',
       label: '反馈',
-      onSelect: () => publisherOverlay.open({ action: 'feedback' })
+      onSelect: () => publishContentOverlay.open({ action: 'feedback' })
     },
     {
       icon: 'lucide:circle-question-mark',
@@ -179,6 +180,7 @@ const isSelf = props.targetId === userInfo.value.id
 const route = useRoute()
 const logoutOverlay = overlay.create(OverlayLogout)
 const publisherOverlay = overlay.create(OverlayPublisher)
+const publishContentOverlay = overlay.create(OverlayPublishContent)
 const helpAndSupportOverlay = overlay.create(OverlayHelpAndSupport)
 const aboutOverlay = overlay.create(OverlayAbout)
 const isSetting =

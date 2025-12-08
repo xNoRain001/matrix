@@ -157,7 +157,7 @@
 import { getPlaygroundPostsAPI } from '@/apis/playground'
 import OverlayPostDetail from '@/components/overlay/OverlayPostDetail.vue'
 import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
-import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
+import OverlayPublishContent from '@/components/overlay/OverlayPublishContent.vue'
 import {
   useFormatTimeAgo,
   useInitAutoScrollBtn,
@@ -198,7 +198,7 @@ const toast = useToast()
 const overlay = useOverlay()
 const postDetailOverlay = overlay.create(OverlayPostDetail)
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
-const publisherOverlay = overlay.create(OverlayPublisher)
+const publishContentOverlay = overlay.create(OverlayPublishContent)
 // const tabsRef = useTemplateRef('tabsRef')
 const allPostLoaded = ref(
   (postMap.value[activeTab.value]?.posts?.length || 0) >= 100
@@ -215,7 +215,7 @@ const onScrollToTop = () => {
 
 const onReport = () => {
   isDrawerOpen.value = false
-  publisherOverlay.open({
+  publishContentOverlay.open({
     action: 'report',
     reportTarget: 'post',
     reportedUserId,

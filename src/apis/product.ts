@@ -14,8 +14,8 @@ export const publishProductAPI = async data =>
 export const getProductsAPI = async (targetId = '', lastId = '') =>
   HTTP.request(`${prefix}?targetId=${targetId}&lastId=${lastId}`)
 
-export const deleteProductAPI = async postId =>
-  HTTP.request(`${prefix}?postId=${postId}`, {
+export const deleteProductAPI = async productId =>
+  HTTP.request(`${prefix}?productId=${productId}`, {
     method: 'DELETE'
   })
 

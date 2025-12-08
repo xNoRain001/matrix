@@ -559,7 +559,7 @@
         class="relative w-full"
         autoresize
         @click="
-          publisherOverlay.open({
+          publishContentOverlay.open({
             action: 'comment',
             targetId
           })
@@ -580,7 +580,7 @@ import {
   useTemplateRef,
   watch
 } from 'vue'
-import OverlayPublisher from './OverlayPublisher.vue'
+import OverlayPublishContent from './OverlayPublishContent.vue'
 import { useFormatTimeAgo, useLike } from '@/hooks'
 import { getPostLikesAPI } from '@/apis/like'
 import {
@@ -603,7 +603,7 @@ const { isMobile, userInfo } = storeToRefs(useUserStore())
 const { postMap } = storeToRefs(usePostStore())
 const { activeSpaceTargetIds } = storeToRefs(useRecentContactsStore())
 const overlay = useOverlay()
-const publisherOverlay = overlay.create(OverlayPublisher)
+const publishContentOverlay = overlay.create(OverlayPublishContent)
 const viewerOverlay = overlay.create(OverlayViewer)
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 const contentRef = useTemplateRef('contentRef')
@@ -698,7 +698,7 @@ const onLoadLikes = async () => {
 }
 
 const onReport = () => {
-  publisherOverlay.open({
+  publishContentOverlay.open({
     action: 'report',
     reportTarget: 'comment',
     reportedUserId,
@@ -714,7 +714,7 @@ const onError = e => {
 }
 
 const onEditReply = () => {
-  publisherOverlay.open({
+  publishContentOverlay.open({
     action: 'updateReply',
     targetId: props.targetId
   })
@@ -725,7 +725,7 @@ const onEditReply = () => {
 }
 
 const onEditComment = () => {
-  publisherOverlay.open({
+  publishContentOverlay.open({
     action: 'updateComment',
     targetId: props.targetId
   })
@@ -787,7 +787,7 @@ const onDeleteComment = async () => {
 const onReply = (owner, commentId, commentIndex, replyTargetNickname) => {
   postMap.value[props.targetId].activeCommentId = commentId
   postMap.value[props.targetId].activeCommentIndex = commentIndex
-  publisherOverlay.open({
+  publishContentOverlay.open({
     action: 'reply',
     targetId: props.targetId,
     owner,
@@ -810,7 +810,7 @@ const onReplyTarget = (
   postMap.value[props.targetId].activeReplyId = replyId
   postMap.value[props.targetId].activeReplyIndex = replyIndex
   postMap.value[props.targetId].activeReplyContent = replyContent
-  publisherOverlay.open({
+  publishContentOverlay.open({
     action: 'reply',
     targetId: props.targetId,
     owner,
