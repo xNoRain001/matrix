@@ -37,19 +37,26 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import { usePostStore } from '@/store'
+import { usePostStore, useUserStore } from '@/store'
 import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
-import { getPlaygroundPostsAPI } from '@/apis/playground'
+import {
+  getPlaygroundPostsAPI,
+  getPlaygroundProductsAPI
+} from '@/apis/playground'
 
 const activeTab = defineModel<
-  'myCollege' | 'latest' | 'friend' | 'hot' | 'market' | 'partner'
+  'myCollege' | 'latest' | 'friend' | 'market' | 'partner'
 >()
-const allPostLoaded = defineModel<boolean>('allPostLoaded')
 const overlay = useOverlay()
 const publisherOverlay = overlay.create(OverlayPublisher)
+const { userInfo } = storeToRefs(useUserStore())
 const { postMap } = storeToRefs(usePostStore())
 const isNotificationSlideoverOpen = ref(false)
 const tabItems = [
+  {
+    label: '广场',
+    value: 'latest'
+  },
   {
     label: '我的校园',
     value: 'myCollege'
@@ -59,48 +66,77 @@ const tabItems = [
   //   value: 'friend'
   // },
   {
-    label: '热门',
-    value: 'hot'
-  },
-  {
-    label: '最新',
-    value: 'latest'
-  },
-  {
     label: '集市',
     value: 'market'
   },
   {
     label: '搭子',
-    value: 'market'
+    value: 'partner'
   }
 ]
 const toast = useToast()
 
 const getLatestData = async () => {
-  const posts = (
-    await getPlaygroundPostsAPI(
-      'latest',
-      '',
-      //  可能在没有任何内容的时候刷新
-      postMap.value.latest.posts?.[0]?._id || ''
-    )
-  ).data
-  const { length } = posts
+  const _activeTab = activeTab.value
 
-  if (length) {
-    if (length < 10) {
+  if (_activeTab === 'latest') {
+    const posts = (
+      await getPlaygroundPostsAPI(
+        '',
+        //  可能在没有帖子的情况下刷新
+        postMap.value.latest.posts?.[0]?._id || ''
+      )
+    ).data
+    const { length } = posts
+
+    if (length) {
       postMap.value.latest.posts.unshift(...posts)
     } else {
-      postMap.value.latest.posts = posts
-      allPostLoaded.value = false
+      toast.add({
+        title: '暂时没有新内容',
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
     }
-  } else {
-    toast.add({
-      title: '暂时没有新内容',
-      color: 'error',
-      icon: 'lucide:annoyed'
-    })
+  } else if (_activeTab === 'myCollege') {
+    const posts = (
+      await getPlaygroundPostsAPI(
+        '',
+        //  可能在没有帖子的情况下刷新
+        postMap.value.myCollege.posts?.[0]?._id || '',
+        userInfo.value.profile.college
+      )
+    ).data
+    const { length } = posts
+
+    if (length) {
+      postMap.value.myCollege.posts.unshift(...posts)
+    } else {
+      toast.add({
+        title: '暂时没有新内容',
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
+    }
+  } else if (_activeTab === 'market') {
+    const products = (
+      await getPlaygroundProductsAPI(
+        userInfo.value.profile.college,
+        '',
+        postMap.value.market.products?.[0]?._id || ''
+      )
+    ).data
+    const { length } = products
+
+    if (length) {
+      postMap.value.market.products.unshift(...products)
+    } else {
+      toast.add({
+        title: '暂时没有新内容',
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
+    }
   }
 }
 </script>

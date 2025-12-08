@@ -30,6 +30,7 @@ import { useUserStore } from '@/store'
 import OverlayPublishContent from '@/components/overlay/OverlayPublishContent.vue'
 import OverlayPublishProduct from '../overlay/OverlayPublishProduct.vue'
 
+const emit = defineEmits<{ close: [boolean] }>()
 const overlay = useOverlay()
 const publishContentOverlay = overlay.create(OverlayPublishContent)
 const publishProductOverlay = overlay.create(OverlayPublishProduct)
@@ -40,11 +41,24 @@ const list = [
     icon: 'lucide:pencil-line',
     title: '发动态',
     desc: '分享此刻的心情',
-    onSelect: () =>
+    onSelect: () => {
+      if (!userInfo.value.profile.college) {
+        return toast.add({
+          title: '请完善个人资料中的大学信息',
+          color: 'error',
+          icon: 'lucide:annoyed'
+        })
+      }
+
       publishContentOverlay.open({
         action: 'post',
         targetId: userInfo.value.id
       })
+
+      setTimeout(() => {
+        emit('close', true)
+      }, 2000)
+    }
   },
   {
     icon: 'lucide:shopping-bag',
@@ -63,6 +77,10 @@ const list = [
         action: 'publishProduct',
         targetId: userInfo.value.id
       })
+
+      setTimeout(() => {
+        emit('close', true)
+      }, 2000)
     }
   },
   {

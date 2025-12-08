@@ -1,132 +1,319 @@
 <template>
   <UDashboardPanel id="playground" :ui="{ body: 'p-0 sm:p-0 ' }">
     <template #header>
-      <PlaygroundHeader
-        v-model="activeTab"
-        v-model:all-post-loaded="allPostLoaded"
-      />
+      <PlaygroundHeader v-model="activeTab" />
     </template>
     <template #body>
       <Skeleton v-if="loading" :count="10" />
-      <!-- 存在 length 属性，说明已经成功从服务器获取了数据 -->
-      <div v-if="postMap[activeTab]?.posts?.length >= 0">
-        <div
-          v-for="(
-            {
-              _id,
-              user,
-              profile: { nickname },
-              content,
-              createdAt,
-              likes,
-              like,
-              commentCount
-            },
-            index
-          ) in postMap[activeTab].posts"
-          :key="_id"
-          class="bg-elevated/50 space-y-2 p-4 not-first:mt-2 sm:p-6"
-        >
+      <template v-if="activeTab === 'latest'">
+        <!-- 存在 length 属性，说明已经成功从服务器获取了数据 -->
+        <div v-if="postMap[activeTab]?.posts?.length >= 0">
           <div
-            @click="
-              !activeSpaceTargetIds.has(user) &&
-              profileSpaceOverlay.open({
-                targetId: user
-              })
-            "
-            class="flex items-center gap-2"
+            v-for="(
+              {
+                _id,
+                user,
+                profile: { nickname, college },
+                content,
+                createdAt,
+                likes,
+                like,
+                commentCount
+              },
+              index
+            ) in postMap[activeTab].posts"
+            :key="_id"
+            class="bg-elevated/50 space-y-2 p-4 not-first:mt-2 sm:p-6"
           >
-            <UAvatar
-              size="xl"
-              :src="`${VITE_OSS_BASE_URL}avatar/${user}`"
-              :alt="nickname[0]"
-            />
-            <div class="flex flex-1 items-center justify-between">
-              <div>
-                <div class="font-medium">
-                  {{ nickname }}
-                </div>
-                <div class="text-muted text-sm">
-                  <!-- 发布于 {{ useFormatTimeAgo(createdAt) }} · 广东 -->
-                  发布于 {{ useFormatTimeAgo(createdAt) }}
-                </div>
-              </div>
-              <UButton
-                v-if="isMobile"
-                variant="ghost"
-                icon="lucide:ellipsis"
-                @click.stop="onOpenDropdownMenu(user, _id)"
+            <div
+              @click="
+                !activeSpaceTargetIds.has(user) &&
+                profileSpaceOverlay.open({
+                  targetId: user
+                })
+              "
+              class="flex items-center gap-2"
+            >
+              <UAvatar
+                size="xl"
+                :src="`${VITE_OSS_BASE_URL}avatar/${user}`"
+                :alt="nickname[0]"
               />
-              <UDropdownMenu v-else :items="dropdownMenuItems">
+              <div class="flex flex-1 items-center justify-between">
+                <div>
+                  <div class="font-medium">
+                    {{ nickname }}
+                  </div>
+                  <div class="text-muted text-sm">
+                    发布于 {{ useFormatTimeAgo(createdAt) }} · {{ college }}
+                  </div>
+                </div>
                 <UButton
+                  v-if="isMobile"
                   variant="ghost"
                   icon="lucide:ellipsis"
                   @click.stop="onOpenDropdownMenu(user, _id)"
                 />
-              </UDropdownMenu>
+                <UDropdownMenu v-else :items="dropdownMenuItems">
+                  <UButton
+                    variant="ghost"
+                    icon="lucide:ellipsis"
+                    @click.stop="onOpenDropdownMenu(user, _id)"
+                  />
+                </UDropdownMenu>
+              </div>
+            </div>
+            <div v-if="content.text" class="break-all whitespace-pre-wrap">
+              {{ content.text }}
+            </div>
+            <!-- 需要开启 crossorigin，否则切换到个人空间时会报跨域错误 -->
+            <Carousel
+              v-if="content.images.length"
+              :set-loading="true"
+              :set-crossorigin="true"
+              :items="content.images"
+              :active-index="0"
+            />
+            <div class="flex justify-between">
+              <UButton
+                variant="ghost"
+                :color="like ? 'secondary' : 'primary'"
+                icon="lucide:heart"
+                :label="String(likes || '点赞')"
+                @click="
+                  useLike(toast, postMap[activeTab].posts[index], _id, 'post')
+                "
+              />
+              <UButton
+                variant="ghost"
+                icon="lucide:message-circle"
+                :label="String(commentCount || '回复')"
+                @click="
+                  useOpenPostDetailOverlay(
+                    postMap,
+                    activeTab,
+                    _id,
+                    index,
+                    postDetailOverlay
+                  )
+                "
+              />
+              <UButton variant="ghost" icon="lucide:share-2" label="分享" />
             </div>
           </div>
-          <div v-if="content.text" class="break-all whitespace-pre-wrap">
-            {{ content.text }}
-          </div>
-          <!-- 需要开启 crossorigin，否则切换到个人空间时会报跨域错误 -->
-          <Carousel
-            v-if="content.images.length"
-            :set-loading="true"
-            :set-crossorigin="true"
-            :items="content.images"
-            :active-index="0"
+          <Separator
+            v-if="postMap[activeTab].posts.length === 0"
+            :label="'空空如也'"
           />
-          <div class="flex justify-between">
-            <UButton
-              variant="ghost"
-              :color="like ? 'secondary' : 'primary'"
-              icon="lucide:heart"
-              :label="String(likes || '点赞')"
-              @click="
-                useLike(toast, postMap[activeTab].posts[index], _id, 'post')
-              "
-            />
-            <UButton
-              variant="ghost"
-              icon="lucide:message-circle"
-              :label="String(commentCount || '回复')"
-              @click="
-                useOpenPostDetailOverlay(
-                  postMap,
-                  activeTab,
-                  _id,
-                  index,
-                  postDetailOverlay
-                )
-              "
-            />
-            <UButton variant="ghost" icon="lucide:share-2" label="分享" />
-          </div>
+          <Separator v-else-if="allPostLoaded" label="已经到底了" />
         </div>
-        <Separator
-          v-if="postMap[activeTab].posts.length === 0"
-          :label="'空空如也'"
-        />
-        <Separator v-else-if="allPostLoaded" label="已经到底了" />
-        <Transition
-          enter-active-class="animate-[fade-in_200ms_ease-out]"
-          leave-active-class="animate-[fade-out_200ms_ease-in]"
-        >
+      </template>
+      <template v-if="activeTab === 'myCollege'">
+        <!-- 存在 length 属性，说明已经成功从服务器获取了数据 -->
+        <div v-if="postMap[activeTab]?.posts?.length >= 0">
           <div
-            v-if="!isMobile && isAutoScrollBtnShow"
-            class="absolute top-5/6 w-full"
+            v-for="(
+              {
+                _id,
+                user,
+                profile: { nickname },
+                content,
+                createdAt,
+                likes,
+                like,
+                commentCount
+              },
+              index
+            ) in postMap[activeTab].posts"
+            :key="_id"
+            class="bg-elevated/50 space-y-2 p-4 not-first:mt-2 sm:p-6"
           >
-            <UButton
-              @click="onScrollToTop"
-              class="absolute right-4 rounded-full sm:right-6"
-              variant="outline"
-              color="neutral"
-              icon="lucide:arrow-up"
+            <div
+              @click="
+                !activeSpaceTargetIds.has(user) &&
+                profileSpaceOverlay.open({
+                  targetId: user
+                })
+              "
+              class="flex items-center gap-2"
+            >
+              <UAvatar
+                size="xl"
+                :src="`${VITE_OSS_BASE_URL}avatar/${user}`"
+                :alt="nickname[0]"
+              />
+              <div class="flex flex-1 items-center justify-between">
+                <div>
+                  <div class="font-medium">
+                    {{ nickname }}
+                  </div>
+                  <div class="text-muted text-sm">
+                    <!-- 发布于 {{ useFormatTimeAgo(createdAt) }} · 广东 -->
+                    发布于 {{ useFormatTimeAgo(createdAt) }}
+                  </div>
+                </div>
+                <UButton
+                  v-if="isMobile"
+                  variant="ghost"
+                  icon="lucide:ellipsis"
+                  @click.stop="onOpenDropdownMenu(user, _id)"
+                />
+                <UDropdownMenu v-else :items="dropdownMenuItems">
+                  <UButton
+                    variant="ghost"
+                    icon="lucide:ellipsis"
+                    @click.stop="onOpenDropdownMenu(user, _id)"
+                  />
+                </UDropdownMenu>
+              </div>
+            </div>
+            <div v-if="content.text" class="break-all whitespace-pre-wrap">
+              {{ content.text }}
+            </div>
+            <!-- 需要开启 crossorigin，否则切换到个人空间时会报跨域错误 -->
+            <Carousel
+              v-if="content.images.length"
+              :set-loading="true"
+              :set-crossorigin="true"
+              :items="content.images"
+              :active-index="0"
             />
+            <div class="flex justify-between">
+              <UButton
+                variant="ghost"
+                :color="like ? 'secondary' : 'primary'"
+                icon="lucide:heart"
+                :label="String(likes || '点赞')"
+                @click="
+                  useLike(toast, postMap[activeTab].posts[index], _id, 'post')
+                "
+              />
+              <UButton
+                variant="ghost"
+                icon="lucide:message-circle"
+                :label="String(commentCount || '回复')"
+                @click="
+                  useOpenPostDetailOverlay(
+                    postMap,
+                    activeTab,
+                    _id,
+                    index,
+                    postDetailOverlay
+                  )
+                "
+              />
+              <UButton variant="ghost" icon="lucide:share-2" label="分享" />
+            </div>
           </div>
-        </Transition>
-      </div>
+          <Separator
+            v-if="postMap[activeTab].posts.length === 0"
+            :label="'空空如也'"
+          />
+          <Separator v-else-if="allPostByCollegeLoaded" label="已经到底了" />
+        </div>
+      </template>
+      <template v-if="activeTab === 'market'">
+        <div v-if="postMap[activeTab]?.products?.length >= 0">
+          <div
+            v-for="{
+              _id,
+              user,
+              profile: { nickname },
+              content: { text, images },
+              createdAt,
+              commentCount,
+              price,
+              expressDelivery
+              // visibility
+            } in postMap[activeTab].products"
+            :key="_id"
+            class="bg-elevated/50 space-y-2 p-4 not-first:mt-2 sm:p-6"
+          >
+            <div
+              @click="
+                !activeSpaceTargetIds.has(user) &&
+                profileSpaceOverlay.open({
+                  targetId: user
+                })
+              "
+              class="flex items-center gap-2"
+            >
+              <UAvatar
+                size="xl"
+                :src="`${VITE_OSS_BASE_URL}avatar/${user}`"
+                :alt="nickname[0]"
+              />
+              <div class="flex flex-1 items-center justify-between">
+                <div>
+                  <div class="font-medium">
+                    {{ nickname }}
+                  </div>
+                  <div class="text-muted text-sm">
+                    <!-- 发布于 {{ useFormatTimeAgo(createdAt) }} · 广东 -->
+                    发布于 {{ useFormatTimeAgo(createdAt) }}
+                  </div>
+                </div>
+                <UButton
+                  v-if="isMobile"
+                  variant="ghost"
+                  icon="lucide:ellipsis"
+                  @click.stop="onOpenDropdownMenu(user, _id)"
+                />
+                <UDropdownMenu v-else :items="dropdownMenuItems">
+                  <UButton
+                    variant="ghost"
+                    icon="lucide:ellipsis"
+                    @click.stop="onOpenDropdownMenu(user, _id)"
+                  />
+                </UDropdownMenu>
+              </div>
+            </div>
+            <div class="break-all whitespace-pre-wrap">
+              <span class="text-primary mr-2 font-semibold">{{
+                expressDelivery
+              }}</span>
+              <span>{{ text }}</span>
+            </div>
+            <!-- 需要开启 crossorigin，否则切换到个人空间时会报跨域错误 -->
+            <Carousel
+              v-if="images.length"
+              :set-loading="true"
+              :set-crossorigin="true"
+              :items="images"
+              :active-index="0"
+            />
+            <div>
+              <span class="text-error text-xs font-semibold">￥</span>
+              <span class="text-error font-semibold">{{ price }}</span>
+              <span v-if="commentCount" class="ml-2 text-xs">
+                {{ commentCount }} 人评论
+              </span>
+            </div>
+          </div>
+          <Separator
+            v-if="postMap[activeTab].products.length === 0"
+            :label="'空空如也'"
+          />
+          <Separator v-else-if="allProductLoaded" label="已经到底了" />
+        </div>
+      </template>
+      <Transition
+        enter-active-class="animate-[fade-in_200ms_ease-out]"
+        leave-active-class="animate-[fade-out_200ms_ease-in]"
+      >
+        <div
+          v-if="!isMobile && isAutoScrollBtnShow"
+          class="absolute top-5/6 w-full"
+        >
+          <UButton
+            @click="onScrollToTop"
+            class="absolute right-4 rounded-full sm:right-6"
+            variant="outline"
+            color="neutral"
+            icon="lucide:arrow-up"
+          />
+        </div>
+      </Transition>
     </template>
     <template v-if="isMobile" #footer>
       <div class="h-16"></div>
@@ -154,7 +341,10 @@
 </template>
 
 <script lang="ts" setup>
-import { getPlaygroundPostsAPI } from '@/apis/playground'
+import {
+  getPlaygroundPostsAPI,
+  getPlaygroundProductsAPI
+} from '@/apis/playground'
 import OverlayPostDetail from '@/components/overlay/OverlayPostDetail.vue'
 import OverlayProfileSpace from '@/components/overlay/OverlayProfileSpace.vue'
 import OverlayPublishContent from '@/components/overlay/OverlayPublishContent.vue'
@@ -176,11 +366,12 @@ import { onMounted, ref, watch } from 'vue'
 
 let reportedUserId = null
 let reportPostId = null
+let reportProductId = null
 const { VITE_OSS_BASE_URL } = import.meta.env
-const { isMobile } = storeToRefs(useUserStore())
-const activeTab = ref<
-  'myCollege' | 'latest' | 'friend' | 'hot' | 'market' | 'partner'
->('latest')
+const { isMobile, userInfo } = storeToRefs(useUserStore())
+const activeTab = ref<'myCollege' | 'latest' | 'friend' | 'market' | 'partner'>(
+  'latest'
+)
 const { postMap } = storeToRefs(usePostStore())
 const { activeSpaceTargetIds } = storeToRefs(useRecentContactsStore())
 const { footerNavs } = storeToRefs(useFooterStore())
@@ -199,33 +390,53 @@ const overlay = useOverlay()
 const postDetailOverlay = overlay.create(OverlayPostDetail)
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 const publishContentOverlay = overlay.create(OverlayPublishContent)
-// const tabsRef = useTemplateRef('tabsRef')
-const allPostLoaded = ref(
-  (postMap.value[activeTab.value]?.posts?.length || 0) >= 100
+const allPostLoaded = ref((postMap.value.latest?.posts?.length || 0) >= 100)
+const allProductLoaded = ref(
+  (postMap.value.market?.products?.length || 0) >= 100
 )
-const loading = ref(postMap.value[activeTab.value]?.posts === undefined)
+const allPostByCollegeLoaded = ref(
+  (postMap.value.myCollege?.posts?.length || 0) >= 100
+)
+const loading = ref(postMap.value[activeTab.value] === undefined)
 const isDrawerOpen = ref(false)
 const isAutoScrollBtnShow = ref(false)
 
 const onScrollToTop = () => {
   document
     .querySelector('#dashboard-panel-playground')
-    .children[1].scrollTo({ top: 0, behavior: 'smooth' })
+    .children[2].scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 const onReport = () => {
   isDrawerOpen.value = false
-  publishContentOverlay.open({
-    action: 'report',
-    reportTarget: 'post',
-    reportedUserId,
-    reportPostId
-  })
+  const _activeTab = activeTab.value
+
+  if (_activeTab === 'latest') {
+    publishContentOverlay.open({
+      action: 'report',
+      reportTarget: 'post',
+      reportedUserId,
+      reportPostId
+    })
+  } else if (_activeTab === 'market') {
+    publishContentOverlay.open({
+      action: 'report',
+      reportTarget: 'product',
+      reportedUserId,
+      reportProductId
+    })
+  }
 }
 
-const onOpenDropdownMenu = (user, postId) => {
+const onOpenDropdownMenu = (user, postIdOrProductId) => {
   reportedUserId = user
-  reportPostId = postId
+  const _activeTab = activeTab.value
+
+  if (_activeTab === 'latest') {
+    reportPostId = postIdOrProductId
+  } else if (_activeTab === 'market') {
+    reportProductId = postIdOrProductId
+  }
 
   if (isMobile.value) {
     isDrawerOpen.value = true
@@ -234,6 +445,10 @@ const onOpenDropdownMenu = (user, postId) => {
 
 const onScroll = useThrottleFn(
   async e => {
+    if (loading.value) {
+      return
+    }
+
     const { scrollTop, scrollHeight, clientHeight } = e.target
 
     useInitAutoScrollBtn(
@@ -244,24 +459,46 @@ const onScroll = useThrottleFn(
       isAutoScrollBtnShow
     )
 
-    if (allPostLoaded.value) {
+    const _activeTab = activeTab.value
+    const isPost = _activeTab === 'latest'
+    const isMarket = _activeTab === 'market'
+    const isMyCollege = _activeTab === 'myCollege'
+
+    if (isPost && allPostLoaded.value) {
+      return
+    }
+
+    if (isMyCollege && allPostByCollegeLoaded.value) {
+      return
+    }
+
+    if (isMarket && allProductLoaded.value) {
       return
     }
 
     if (scrollHeight - (scrollTop + clientHeight) < 64) {
-      const lastId =
-        postMap.value[activeTab.value].posts[
-          postMap.value[activeTab.value].posts.length - 1
-        ]._id
-      const { data } = await getPlaygroundPostsAPI(activeTab.value, lastId)
+      const item = isPost
+        ? postMap.value[_activeTab].posts
+        : postMap.value[_activeTab].products
+      const lastId = item[item.length - 1]._id
+      const { data } = await (isPost
+        ? getPlaygroundPostsAPI(lastId)
+        : isMyCollege
+          ? getPlaygroundPostsAPI(lastId, '', userInfo.value.profile.college)
+          : getPlaygroundProductsAPI(userInfo.value.profile.college, lastId))
       const { length } = data
 
       if (length) {
-        postMap.value[activeTab.value].posts.push(...data)
+        item.push(...data)
       }
 
-      allPostLoaded.value =
-        length < 10 || postMap.value[activeTab.value].posts.length > 100
+      if (isPost) {
+        allPostLoaded.value = length < 10 || item.length > 100
+      } else if (isMyCollege) {
+        allPostByCollegeLoaded.value = length < 10 || item.length > 100
+      } else if (isMarket) {
+        allProductLoaded.value = length < 10 || item.length > 100
+      }
     }
   },
   200,
@@ -269,26 +506,53 @@ const onScroll = useThrottleFn(
   false
 )
 
-const getPosts = async () => {
+const getPlaygroundPosts = async () => {
   const _activeTab = activeTab.value
-
-  if (!postMap.value[_activeTab]) {
-    postMap.value[_activeTab] = {} as any
-    const posts = (await getPlaygroundPostsAPI(_activeTab)).data
-    postMap.value[_activeTab].posts = posts
-    allPostLoaded.value = posts.length < 10
-    loading.value = false
-  }
+  loading.value = true
+  postMap.value[_activeTab] = {} as any
+  const posts = (await getPlaygroundPostsAPI()).data
+  postMap.value[_activeTab].posts = posts
+  allPostLoaded.value = posts.length < 10
+  loading.value = false
 }
 
-watch(activeTab, getPosts)
+const getPlaygroundProducts = async () => {
+  const _activeTab = activeTab.value
+  loading.value = true
+  postMap.value[_activeTab] = {} as any
+  const products = (
+    await getPlaygroundProductsAPI(userInfo.value.profile.college)
+  ).data
+  postMap.value[_activeTab].products = products
+  allProductLoaded.value = products.length < 10
+  loading.value = false
+}
+
+const getPlaygroundPostsByCollege = async () => {
+  const _activeTab = activeTab.value
+  loading.value = true
+  postMap.value[_activeTab] = {} as any
+  const posts = (
+    await getPlaygroundPostsAPI('', '', userInfo.value.profile.college)
+  ).data
+  postMap.value[_activeTab].posts = posts
+  allPostByCollegeLoaded.value = posts.length < 10
+  loading.value = false
+}
+
+watch(activeTab, v => {
+  if (v === 'market' && !postMap.value[v]) {
+    getPlaygroundProducts()
+  } else if (v === 'myCollege' && !postMap.value[v]) {
+    getPlaygroundPostsByCollege()
+  }
+})
 
 onMounted(async () => {
-  await getPosts()
+  await getPlaygroundPosts()
 
-  // tabsRef.value.triggersRef[0].$el.addEventListener('click', getLatestData)
   document
     .querySelector('#dashboard-panel-playground')
-    .children[1].addEventListener('scroll', onScroll)
+    .children[2].addEventListener('scroll', onScroll)
 })
 </script>

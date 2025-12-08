@@ -77,12 +77,12 @@
           <UButton variant="ghost" icon="lucide:share-2" label="分享" />
         </div>
         <!-- <UBadge
-       v-if="visibility === 'hidden'"
-        class=" w-fit"
-        label="违规内容，去申诉"
-        trailing-icon="lucide:navigation"
-        @click="onAppeal"
-      ></UBadge> -->
+          v-if="visibility === 'hidden'"
+          class="w-fit"
+          label="违规内容，去申诉"
+          trailing-icon="lucide:navigation"
+          @click="onAppeal"
+        ></UBadge> -->
       </div>
       <UDrawer
         v-model:open="isEditMenuDrawerOpen"
@@ -106,24 +106,6 @@
           <UButton v-else label="举报" @click="onReportPost" color="error" />
         </template>
       </UDrawer>
-      <!-- 滚动到顶部浮动按钮 -->
-      <Transition
-        enter-active-class="animate-[fade-in_200ms_ease-out]"
-        leave-active-class="animate-[fade-out_200ms_ease-in]"
-      >
-        <div
-          v-if="!isFooterNavsUpdateByScroll && isAutoScrollBtnShow"
-          class="fixed top-5/6 right-0 left-0"
-        >
-          <UButton
-            @click="onScrollToTop"
-            class="absolute right-4 rounded-full sm:right-6"
-            variant="outline"
-            color="neutral"
-            icon="lucide:arrow-up"
-          />
-        </div>
-      </Transition>
     </div>
     <div
       v-show="postMap[targetId]?.posts?.length === 0"
@@ -227,32 +209,6 @@
             {{ commentCount }} 人评论
           </span>
         </div>
-        <!-- <div class="flex justify-between">
-          <UButton
-            variant="ghost"
-            :color="like ? 'secondary' : 'primary'"
-            icon="lucide:heart"
-            :label="String(likes || '点赞')"
-            @click.stop="
-              useLike(toast, postMap[targetId].posts[index], _id, 'post')
-            "
-          />
-          <UButton
-            variant="ghost"
-            icon="lucide:message-circle"
-            :label="String(commentCount || '评论')"
-            @click.stop="
-              useOpenPostDetailOverlay(
-                postMap,
-                targetId,
-                _id,
-                index,
-                postDetailOverlay
-              )
-            "
-          />
-          <UButton variant="ghost" icon="lucide:share-2" label="分享" />
-        </div> -->
       </div>
       <UDrawer
         v-model:open="isEditMenuDrawerOpen"
@@ -285,24 +241,6 @@
           />
         </template>
       </UDrawer>
-      <!-- 滚动到顶部浮动按钮 -->
-      <Transition
-        enter-active-class="animate-[fade-in_200ms_ease-out]"
-        leave-active-class="animate-[fade-out_200ms_ease-in]"
-      >
-        <div
-          v-if="!isFooterNavsUpdateByScroll && isAutoScrollBtnShow"
-          class="fixed top-5/6 right-0 left-0"
-        >
-          <UButton
-            @click="onScrollToTop"
-            class="absolute right-4 rounded-full sm:right-6"
-            variant="outline"
-            color="neutral"
-            icon="lucide:arrow-up"
-          />
-        </div>
-      </Transition>
     </div>
     <div
       v-show="postMap[targetId]?.products?.length === 0"
@@ -346,6 +284,24 @@
       />
     </div>
   </template>
+  <!-- 滚动到顶部浮动按钮 -->
+  <Transition
+    enter-active-class="animate-[fade-in_200ms_ease-out]"
+    leave-active-class="animate-[fade-out_200ms_ease-in]"
+  >
+    <div
+      v-if="!isFooterNavsUpdateByScroll && isAutoScrollBtnShow"
+      class="fixed top-5/6 right-0 left-0"
+    >
+      <UButton
+        @click="onScrollToTop"
+        class="absolute right-4 rounded-full sm:right-6"
+        variant="outline"
+        color="neutral"
+        icon="lucide:arrow-up"
+      />
+    </div>
+  </Transition>
 </template>
 
 <script lang="ts" setup>
@@ -510,7 +466,7 @@ const onScroll = useThrottleFn(
       if (isPost) {
         // 等于 10 时会多发送一次请求，不做处理
         allPostLoaded.value = length < 10
-      } else {
+      } else if (isMarket) {
         allProductLoaded.value = length < 10
       }
     }

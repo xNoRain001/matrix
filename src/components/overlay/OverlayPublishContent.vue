@@ -182,6 +182,7 @@ const props = defineProps<{
   reportTarget?: 'profile' | 'post' | 'comment' | 'messageRecord' | 'product'
   reportedUserId?: string
   reportPostId?: string
+  reportProductId?: string
   reportedCommentId?: string
   appealTarget?: 'post'
   appealPostId?: string
@@ -423,6 +424,8 @@ const onReport = async () => {
       formData.append('reportPostId', props.reportPostId)
     } else if (props.reportTarget === 'comment') {
       formData.append('reportedCommentId', props.reportedCommentId)
+    } else if (props.reportTarget === 'product') {
+      formData.append('reportProductId', props.reportProductId)
     }
 
     formData.append('type', 'report')
@@ -519,6 +522,7 @@ const onPublishPost = async () => {
     const formData = new FormData()
     formData.append('type', 'publishPost')
     formData.append('content', JSON.stringify(payload))
+    formData.append('college', userInfo.value.profile.college)
     // 服务器只返回 _id 和 content
     const { data: post } = await publishPostAPI(formData)
     toast.add({ title: '发布成功', icon: 'lucide:smile' })
@@ -580,6 +584,7 @@ const onUpdatePost = async () => {
     formData.append('postId', activePostId)
     const stringifyPayload = JSON.stringify(payload)
     formData.append('content', stringifyPayload)
+    formData.append('college', userInfo.value.profile.college)
     await updatePostAPI(formData)
     const { images } = payload
     toast.add({ title: '更新成功', icon: 'lucide:smile' })
