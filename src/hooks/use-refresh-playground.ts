@@ -1,0 +1,70 @@
+import {
+  getPlaygroundPostsAPI,
+  getPlaygroundProductsAPI
+} from '@/apis/playground'
+
+const useRefreshPlayground = async (activeTab, postMap, userInfo, toast) => {
+  const _activeTab = activeTab.value
+
+  if (_activeTab === 'latest') {
+    const posts = (
+      await getPlaygroundPostsAPI(
+        '',
+        //  可能在没有帖子的情况下刷新
+        postMap.value.latest.posts?.[0]?._id || ''
+      )
+    ).data
+    const { length } = posts
+
+    if (length) {
+      postMap.value.latest.posts.unshift(...posts)
+    } else {
+      toast.add({
+        title: '暂时没有新内容',
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
+    }
+  } else if (_activeTab === 'myCollege') {
+    const posts = (
+      await getPlaygroundPostsAPI(
+        '',
+        //  可能在没有帖子的情况下刷新
+        postMap.value.myCollege.posts?.[0]?._id || '',
+        userInfo.value.profile.college
+      )
+    ).data
+    const { length } = posts
+
+    if (length) {
+      postMap.value.myCollege.posts.unshift(...posts)
+    } else {
+      toast.add({
+        title: '暂时没有新内容',
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
+    }
+  } else if (_activeTab === 'market') {
+    const products = (
+      await getPlaygroundProductsAPI(
+        userInfo.value.profile.college,
+        '',
+        postMap.value.market.products?.[0]?._id || ''
+      )
+    ).data
+    const { length } = products
+
+    if (length) {
+      postMap.value.market.products.unshift(...products)
+    } else {
+      toast.add({
+        title: '暂时没有新内容',
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
+    }
+  }
+}
+
+export default useRefreshPlayground

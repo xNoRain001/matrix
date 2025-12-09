@@ -25,7 +25,8 @@
       v-model="activeTab"
     />
     <UButton
-      @click="getLatestData"
+      v-if="!isMobile"
+      @click="onRefreshPlayground"
       class="mr-4 sm:mr-6"
       variant="ghost"
       icon="lucide:refresh-cw"
@@ -39,17 +40,14 @@ import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePostStore, useUserStore } from '@/store'
 import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
-import {
-  getPlaygroundPostsAPI,
-  getPlaygroundProductsAPI
-} from '@/apis/playground'
+import { useRefreshPlayground } from '@/hooks'
 
 const activeTab = defineModel<
   'myCollege' | 'latest' | 'friend' | 'market' | 'partner'
 >()
 const overlay = useOverlay()
 const publisherOverlay = overlay.create(OverlayPublisher)
-const { userInfo } = storeToRefs(useUserStore())
+const { isMobile, userInfo } = storeToRefs(useUserStore())
 const { postMap } = storeToRefs(usePostStore())
 const isNotificationSlideoverOpen = ref(false)
 const tabItems = [
@@ -72,71 +70,18 @@ const tabItems = [
   {
     label: '搭子',
     value: 'partner'
+  },
+  {
+    label: '兼职',
+    value: ''
+  },
+  {
+    label: '建议',
+    value: ''
   }
 ]
 const toast = useToast()
 
-const getLatestData = async () => {
-  const _activeTab = activeTab.value
-
-  if (_activeTab === 'latest') {
-    const posts = (
-      await getPlaygroundPostsAPI(
-        '',
-        //  可能在没有帖子的情况下刷新
-        postMap.value.latest.posts?.[0]?._id || ''
-      )
-    ).data
-    const { length } = posts
-
-    if (length) {
-      postMap.value.latest.posts.unshift(...posts)
-    } else {
-      toast.add({
-        title: '暂时没有新内容',
-        color: 'error',
-        icon: 'lucide:annoyed'
-      })
-    }
-  } else if (_activeTab === 'myCollege') {
-    const posts = (
-      await getPlaygroundPostsAPI(
-        '',
-        //  可能在没有帖子的情况下刷新
-        postMap.value.myCollege.posts?.[0]?._id || '',
-        userInfo.value.profile.college
-      )
-    ).data
-    const { length } = posts
-
-    if (length) {
-      postMap.value.myCollege.posts.unshift(...posts)
-    } else {
-      toast.add({
-        title: '暂时没有新内容',
-        color: 'error',
-        icon: 'lucide:annoyed'
-      })
-    }
-  } else if (_activeTab === 'market') {
-    const products = (
-      await getPlaygroundProductsAPI(
-        userInfo.value.profile.college,
-        '',
-        postMap.value.market.products?.[0]?._id || ''
-      )
-    ).data
-    const { length } = products
-
-    if (length) {
-      postMap.value.market.products.unshift(...products)
-    } else {
-      toast.add({
-        title: '暂时没有新内容',
-        color: 'error',
-        icon: 'lucide:annoyed'
-      })
-    }
-  }
-}
+const onRefreshPlayground = async () =>
+  useRefreshPlayground(activeTab, postMap, userInfo, toast)
 </script>

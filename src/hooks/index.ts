@@ -52,8 +52,10 @@ import useFileToImage from './use-file-to-image'
 import useImageToImageData from './use-image-to-image-data'
 import useInitAutoScrollBtn from './use-init-auto-scroll-btn'
 import useFormatTimestamp from './use-format-timestamp'
+import useRefreshPlayground from './use-refresh-playground'
 
 export {
+  useRefreshPlayground,
   useFormatTimestamp,
   useInitAutoScrollBtn,
   useImageToImageData,

@@ -352,7 +352,8 @@ import {
   useFormatTimeAgo,
   useInitAutoScrollBtn,
   useLike,
-  useOpenPostDetailOverlay
+  useOpenPostDetailOverlay,
+  useRefreshPlayground
 } from '@/hooks'
 import {
   useFooterStore,
@@ -363,6 +364,7 @@ import {
 import { useThrottleFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref, watch } from 'vue'
+import PullToRefresh from 'pulltorefreshjs'
 
 let reportedUserId = null
 let reportPostId = null
@@ -401,11 +403,10 @@ const loading = ref(postMap.value[activeTab.value] === undefined)
 const isDrawerOpen = ref(false)
 const isAutoScrollBtnShow = ref(false)
 
-const onScrollToTop = () => {
+const onScrollToTop = () =>
   document
     .querySelector('#dashboard-panel-playground')
     .children[2].scrollTo({ top: 0, behavior: 'smooth' })
-}
 
 const onReport = () => {
   isDrawerOpen.value = false
@@ -560,11 +561,74 @@ watch(activeTab, v => {
   }
 })
 
+const initContainer = () => {
+  const container = document.querySelector('#dashboard-panel-playground')
+    .children[2]
+
+  container.addEventListener('scroll', onScroll)
+
+  if (isMobile.value) {
+    PullToRefresh.init({
+      mainElement: container,
+      triggerElement: container,
+      distReload: 80,
+      shouldPullToRefresh: () => !container.scrollTop,
+      instructionsPullToRefresh: '下拉刷新',
+      instructionsReleaseToRefresh: '释放刷新',
+      instructionsRefreshing: '刷新中',
+      iconRefreshing: '',
+      getStyles: () => `
+        .__PREFIX__ptr {
+          pointer-events: none;
+          height: 0;
+          transition: height 0.3s, min-height 0.3s;
+          overflow: hidden;
+          display: flex;
+          align-items: flex-end;
+        }
+
+        .__PREFIX__box {
+          text-align: center;
+          padding: 1rem;
+          flex: 1;
+        }
+
+        .__PREFIX__pull {
+          transition: none;
+        }
+
+        .__PREFIX__content {
+          font-weight: bold;
+          color: var(--ui-primary);
+        }
+
+        .__PREFIX__text {
+          margin-top: 0.25rem;
+        }
+
+        .__PREFIX__icon {
+          transition: transform .3s;
+        }
+
+        /*
+          When at the top of the page, disable vertical overscroll so passive touch
+          listeners can take over.
+        */
+        .__PREFIX__top {
+          touch-action: pan-x pan-down pinch-zoom;
+        }
+
+        .__PREFIX__release .__PREFIX__icon {
+          transform: rotate(180deg);
+        }
+      `,
+      onRefresh: () => useRefreshPlayground(activeTab, postMap, userInfo, toast)
+    })
+  }
+}
+
 onMounted(async () => {
   await getPlaygroundPosts()
-
-  document
-    .querySelector('#dashboard-panel-playground')
-    .children[2].addEventListener('scroll', onScroll)
+  initContainer()
 })
 </script>
