@@ -8,7 +8,7 @@
       <div>
         <UPageCard
           v-for="(
-            { _id, user, profile, reportTarget, post, comment }, index
+            { _id, user, profile, reportTarget, post, comment, product }, index
           ) in reports"
           :key="_id"
           variant="subtle"
@@ -17,34 +17,58 @@
         >
           <template #description>
             <template v-if="reportTarget === 'post'">
-              <div
-                v-if="post.content.text"
-                class="text-base break-all whitespace-pre-wrap"
-              >
-                {{ post.content.text }}
-              </div>
-              <Carousel
-                v-if="post.content.images.length"
-                :set-loading="true"
-                :class="post.content.text ? 'mt-2' : ''"
-                :items="post.content.images"
-                :active-index="0"
-              />
+              <template v-if="post">
+                <div
+                  v-if="post.content.text"
+                  class="text-base break-all whitespace-pre-wrap"
+                >
+                  {{ post.content.text }}
+                </div>
+                <Carousel
+                  v-if="post.content.images.length"
+                  :set-loading="true"
+                  :class="post.content.text ? 'mt-2' : ''"
+                  :items="post.content.images"
+                  :active-index="0"
+                />
+              </template>
+              <div v-else>内容已被用户删除</div>
             </template>
-            <template v-if="reportTarget === 'comment'">
-              <div
-                v-if="comment.content.text"
-                class="text-base break-all whitespace-pre-wrap"
-              >
-                {{ comment.content.text }}
-              </div>
-              <Carousel
-                v-if="comment.content.images.length"
-                :set-loading="true"
-                :class="comment.content.text ? 'mt-2' : ''"
-                :items="comment.content.images"
-                :active-index="0"
-              />
+            <template v-else-if="reportTarget === 'comment'">
+              <template v-if="comment">
+                <div
+                  v-if="comment.content.text"
+                  class="text-base break-all whitespace-pre-wrap"
+                >
+                  {{ comment.content.text }}
+                </div>
+                <Carousel
+                  v-if="comment.content.images.length"
+                  :set-loading="true"
+                  :class="comment.content.text ? 'mt-2' : ''"
+                  :items="comment.content.images"
+                  :active-index="0"
+                />
+              </template>
+              <div v-else>内容已被用户删除</div>
+            </template>
+            <template v-if="reportTarget === 'product'">
+              <template v-if="product">
+                <div
+                  v-if="product.content.text"
+                  class="text-base break-all whitespace-pre-wrap"
+                >
+                  {{ product.content.text }}
+                </div>
+                <Carousel
+                  v-if="product.content.images.length"
+                  :set-loading="true"
+                  :class="product.content.text ? 'mt-2' : ''"
+                  :items="product.content.images"
+                  :active-index="0"
+                />
+              </template>
+              <div v-else>内容已被用户删除</div>
             </template>
             <template v-else-if="reportTarget === 'avatar'">
               <img
@@ -84,13 +108,20 @@
             </div>
             <Carousel
               v-if="content.images.length"
-        :set-loading="true"
+              :set-loading="true"
               :class="content.text ? 'mt-2' : ''"
               :items="content.images"
               :active-index="0"
             ></Carousel> -->
-            <div class="mt-2">
+            <div class="mt-2 flex gap-2">
               <UButton
+                v-if="
+                  !(
+                    (reportTarget === 'post' && !post) ||
+                    (reportTarget === 'comment' && !comment) ||
+                    (reportTarget === 'product' && !product)
+                  )
+                "
                 label="违规"
                 @click="
                   onHandleReport(
@@ -99,15 +130,12 @@
                     reportTarget,
                     user,
                     post?._id,
-                    comment?._id
+                    comment?._id,
+                    product?._id
                   )
                 "
               />
-              <UButton
-                class="ml-2"
-                label="正常"
-                @click="onReadReport(_id, index)"
-              />
+              <UButton label="正常" @click="onReadReport(_id, index)" />
             </div>
           </template>
         </UPageCard>
@@ -137,7 +165,8 @@ const onHandleReport = async (
   reportTarget,
   reportedUserId,
   postId,
-  commentId
+  commentId,
+  productId
 ) => {
   try {
     await adminResetProfileAPI(
@@ -145,7 +174,8 @@ const onHandleReport = async (
       reportTarget,
       reportedUserId,
       postId,
-      commentId
+      commentId,
+      productId
     )
     reports.value.splice(index, 1)
     toast.add({ title: '操作成功', icon: 'lucide:smile' })

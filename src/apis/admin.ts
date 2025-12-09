@@ -19,8 +19,9 @@ export const adminResetProfileAPI = async (
   type,
   reportedUserId,
   postId,
-  commentId
+  commentId,
+  productId
 ) =>
   HTTP.request(
-    `${prefix}/reset-profile?reportId=${reportId}&type=${type}&reportedUserId=${reportedUserId}&postId=${postId}&commentId=${commentId}`
+    `${prefix}/reset-profile?reportId=${reportId}&type=${type}&reportedUserId=${reportedUserId}&postId=${postId}&commentId=${commentId}&productId=${productId}`
   )

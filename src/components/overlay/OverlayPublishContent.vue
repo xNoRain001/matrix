@@ -425,7 +425,7 @@ const onReport = async () => {
     } else if (props.reportTarget === 'comment') {
       formData.append('reportedCommentId', props.reportedCommentId)
     } else if (props.reportTarget === 'product') {
-      formData.append('reportProductId', props.reportProductId)
+      formData.append('reportedProductId', props.reportProductId)
     }
 
     formData.append('type', 'report')
