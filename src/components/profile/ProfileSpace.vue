@@ -28,7 +28,8 @@
         class="bg-default sticky top-16 px-4 sm:px-6"
         :content="false"
         :ui="{
-          list: 'border-none'
+          list: 'border-none gap-4 px-0 sm:gap-6',
+          trigger: 'px-0'
         }"
         variant="link"
         :items="tabItems"

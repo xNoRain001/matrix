@@ -27,3 +27,9 @@ export const updateProductAPI = async data =>
       'Content-Type': 'multipart/form-data'
     }
   })
+
+export const delistAPI = async productId =>
+  HTTP.request(`${prefix}/delist?productId=${productId}`)
+
+export const relistAPI = async productId =>
+  HTTP.request(`${prefix}/relist?productId=${productId}`)

@@ -84,28 +84,6 @@
           @click="onAppeal"
         ></UBadge> -->
       </div>
-      <UDrawer
-        v-model:open="isEditMenuDrawerOpen"
-        :handle="false"
-        title="操作"
-        description=" "
-        :ui="{
-          description: 'hidden'
-        }"
-      >
-        <template #footer>
-          <template v-if="isSelf">
-            <UButton label="编辑" @click="onEditPost" class="justify-center" />
-            <UButton
-              label="删除"
-              @click="onDeletePost"
-              class="justify-center"
-              color="error"
-            />
-          </template>
-          <UButton v-else label="举报" @click="onReportPost" color="error" />
-        </template>
-      </UDrawer>
     </div>
     <div
       v-show="postMap[targetId]?.posts?.length === 0"
@@ -162,8 +140,8 @@
             createdAt,
             commentCount,
             price,
-            expressDelivery
-            // visibility
+            expressDelivery,
+            visibility
           },
           index
         ) in postMap[targetId].products"
@@ -209,38 +187,34 @@
             {{ commentCount }} 人评论
           </span>
         </div>
-      </div>
-      <UDrawer
-        v-model:open="isEditMenuDrawerOpen"
-        :handle="false"
-        title="操作"
-        description=" "
-        :ui="{
-          description: 'hidden'
-        }"
-      >
-        <template #footer>
-          <template v-if="isSelf">
-            <UButton
-              label="编辑"
-              @click="onEditProduct"
-              class="justify-center"
-            />
-            <UButton
-              label="删除"
-              @click="onDeleteProduct"
-              class="justify-center"
-              color="error"
-            />
-          </template>
-          <UButton
-            v-else
-            label="举报"
-            @click="onReportPostProduct"
-            color="error"
+        <div class="flex items-center gap-2">
+          <span class="text-sm">
+            商品状态：{{
+              visibility === 'public'
+                ? '正常'
+                : visibility === 'delist'
+                  ? '已下架'
+                  : '违规'
+            }}</span
+          >
+          <UBadge
+            :label="
+              visibility === 'public'
+                ? '下架'
+                : visibility === 'delist'
+                  ? '重新上架'
+                  : '申诉'
+            "
+            @click="
+              visibility === 'public'
+                ? onDelist(_id, index)
+                : visibility === 'delist'
+                  ? onRelist(_id, index)
+                  : useNoop()
+            "
           />
-        </template>
-      </UDrawer>
+        </div>
+      </div>
     </div>
     <div
       v-show="postMap[targetId]?.products?.length === 0"
@@ -284,6 +258,26 @@
       />
     </div>
   </template>
+  <UDrawer
+    v-if="isMobile"
+    v-model:open="isEditMenuDrawerOpen"
+    :handle="false"
+    title="操作"
+    description=" "
+    :ui="{
+      description: 'hidden'
+    }"
+  >
+    <template #footer>
+      <UButton
+        v-for="{ label, color, onSelect } in dropdownMenuItems[0]"
+        :label="label"
+        :color="color"
+        @click="onSelect"
+        class="justify-center"
+      />
+    </template>
+  </UDrawer>
   <!-- 滚动到顶部浮动按钮 -->
   <Transition
     enter-active-class="animate-[fade-in_200ms_ease-out]"
@@ -326,9 +320,13 @@ import OverlayPublishContent from '@/components/overlay/OverlayPublishContent.vu
 import { useThrottleFn } from '@vueuse/core'
 import { useRoute } from 'vue-router'
 import type { userInfo } from '@/types'
-import { deleteProductAPI, getProductsAPI } from '@/apis/product'
+import {
+  deleteProductAPI,
+  delistAPI,
+  getProductsAPI,
+  relistAPI
+} from '@/apis/product'
 import OverlayPublishProduct from '../overlay/OverlayPublishProduct.vue'
-// import { getProductsAPI } from '@/apis/product'
 
 const props = defineProps<{
   activeTab: 'post' | 'market' | 'partner'
@@ -365,7 +363,7 @@ const dropdownMenuItems = isSelf
         {
           label: '删除',
           icon: 'lucide:trash',
-          color: 'error',
+          color: 'error' as const,
           onSelect: () =>
             props.activeTab === 'post' ? onDeletePost() : onDeleteProduct()
         }
@@ -376,9 +374,9 @@ const dropdownMenuItems = isSelf
         {
           label: '举报',
           icon: 'lucide:info',
-          color: 'error',
+          color: 'error' as const,
           onSelect: () =>
-            props.activeTab === 'post' ? onReportPost() : onReportPostProduct()
+            props.activeTab === 'post' ? onReportPost() : onReportProduct()
         }
       ]
     ]
@@ -404,13 +402,13 @@ const onReportPost = () => {
   })
 }
 
-const onReportPostProduct = () => {
+const onReportProduct = () => {
   isEditMenuDrawerOpen.value = false
   publishContentOverlay.open({
     action: 'report',
     reportTarget: 'product',
     reportedUserId: props.targetId,
-    reportPostId: postMap.value[props.targetId].activeProduct
+    reportProductId: postMap.value[props.targetId].activeProductId
   })
 }
 
@@ -500,6 +498,34 @@ const onEditProduct = () => {
 
   if (isMobile.value) {
     isEditMenuDrawerOpen.value = false
+  }
+}
+
+const onDelist = async (productId, productIndex) => {
+  try {
+    await delistAPI(productId)
+    postMap.value[props.targetId].products[productIndex].visibility = 'delist'
+    toast.add({ title: '下架成功', icon: 'lucide:smile' })
+
+    if (isMobile.value) {
+      isEditMenuDrawerOpen.value = false
+    }
+  } catch (error) {
+    toast.add({ title: '下架失败', color: 'error', icon: 'lucide:annoyed' })
+  }
+}
+
+const onRelist = async (productId, productIndex) => {
+  try {
+    await relistAPI(productId)
+    postMap.value[props.targetId].products[productIndex].visibility = 'public'
+    toast.add({ title: '重新上架成功', icon: 'lucide:smile' })
+
+    if (isMobile.value) {
+      isEditMenuDrawerOpen.value = false
+    }
+  } catch (error) {
+    toast.add({ title: '重新上架失败', color: 'error', icon: 'lucide:annoyed' })
   }
 }
 

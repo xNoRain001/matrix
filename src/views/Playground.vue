@@ -331,10 +331,11 @@
   >
     <template #footer>
       <UButton
-        label="举报"
+        v-for="{ label, color, onSelect } in dropdownMenuItems[0]"
+        :label="label"
+        :color="color"
+        @click="onSelect"
         class="justify-center"
-        color="error"
-        @click="onReport"
       />
     </template>
   </UDrawer>
@@ -382,7 +383,7 @@ const dropdownMenuItems = [
     {
       label: '举报',
       icon: 'lucide:circle-alert',
-      color: 'error',
+      color: 'error' as const,
       onSelect: () => onReport()
     }
   ]
@@ -412,7 +413,7 @@ const onReport = () => {
   isDrawerOpen.value = false
   const _activeTab = activeTab.value
 
-  if (_activeTab === 'latest') {
+  if (_activeTab === 'latest' || _activeTab === 'myCollege') {
     publishContentOverlay.open({
       action: 'report',
       reportTarget: 'post',
@@ -433,7 +434,7 @@ const onOpenDropdownMenu = (user, postIdOrProductId) => {
   reportedUserId = user
   const _activeTab = activeTab.value
 
-  if (_activeTab === 'latest') {
+  if (_activeTab === 'latest' || _activeTab === 'myCollege') {
     reportPostId = postIdOrProductId
   } else if (_activeTab === 'market') {
     reportProductId = postIdOrProductId
