@@ -138,6 +138,7 @@ const publishContentOverlay = overlay.create(OverlayPublishContent)
 const reportItem = {
   label: '举报聊天记录',
   icon: 'lucide:circle-alert',
+  color: 'error',
   onSelect: () =>
     publishContentOverlay.open({
       action: 'report',
@@ -148,6 +149,7 @@ const reportItem = {
 const reportAvatarOrSpaceBgItem = {
   label: '举报个人资料',
   icon: 'lucide:circle-alert',
+  color: 'error',
   onSelect: () =>
     publishContentOverlay.open({
       action: 'report',

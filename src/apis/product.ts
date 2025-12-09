@@ -33,3 +33,6 @@ export const delistAPI = async productId =>
 
 export const relistAPI = async productId =>
   HTTP.request(`${prefix}/relist?productId=${productId}`)
+
+export const refreshProductAPI = async productId =>
+  HTTP.request(`${prefix}/refresh?productId=${productId}`)

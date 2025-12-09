@@ -45,6 +45,7 @@ const dropdownItems = [
   {
     label: '举报个人资料',
     icon: 'lucide:circle-alert',
+    color: 'error' as const,
     onSelect: () => {
       publishContentOverlay.open({
         action: 'report',

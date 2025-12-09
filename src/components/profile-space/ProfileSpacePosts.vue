@@ -198,6 +198,11 @@
             }}</span
           >
           <UBadge
+            v-if="visibility === 'public'"
+            label="擦亮"
+            @click="onRefreshProduct(_id, index)"
+          />
+          <UBadge
             :label="
               visibility === 'public'
                 ? '下架'
@@ -324,6 +329,7 @@ import {
   deleteProductAPI,
   delistAPI,
   getProductsAPI,
+  refreshProductAPI,
   relistAPI
 } from '@/apis/product'
 import OverlayPublishProduct from '../overlay/OverlayPublishProduct.vue'
@@ -501,15 +507,21 @@ const onEditProduct = () => {
   }
 }
 
+const onRefreshProduct = async (productId, productIndex) => {
+  try {
+    await refreshProductAPI(productId)
+    postMap.value[props.targetId].products[productIndex].createdAt = Date.now()
+    toast.add({ title: '擦亮成功', icon: 'lucide:smile' })
+  } catch (error) {
+    toast.add({ title: '擦亮失败', color: 'error', icon: 'lucide:annoyed' })
+  }
+}
+
 const onDelist = async (productId, productIndex) => {
   try {
     await delistAPI(productId)
     postMap.value[props.targetId].products[productIndex].visibility = 'delist'
     toast.add({ title: '下架成功', icon: 'lucide:smile' })
-
-    if (isMobile.value) {
-      isEditMenuDrawerOpen.value = false
-    }
   } catch (error) {
     toast.add({ title: '下架失败', color: 'error', icon: 'lucide:annoyed' })
   }
@@ -518,12 +530,10 @@ const onDelist = async (productId, productIndex) => {
 const onRelist = async (productId, productIndex) => {
   try {
     await relistAPI(productId)
-    postMap.value[props.targetId].products[productIndex].visibility = 'public'
+    const product = postMap.value[props.targetId].products[productIndex]
+    product.visibility = 'public'
+    product.createdAt = Date.now()
     toast.add({ title: '重新上架成功', icon: 'lucide:smile' })
-
-    if (isMobile.value) {
-      isEditMenuDrawerOpen.value = false
-    }
   } catch (error) {
     toast.add({ title: '重新上架失败', color: 'error', icon: 'lucide:annoyed' })
   }
