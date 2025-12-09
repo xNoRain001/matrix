@@ -146,7 +146,7 @@
                         )
                       "
                     />
-                    <UDropdownMenu v-else :items="dropdownMenuItems">
+                    <UDropdownMenu v-else :items="commentDropdownMenuItems">
                       <UButton
                         variant="ghost"
                         size="xs"
@@ -324,7 +324,7 @@
                               />
                               <UDropdownMenu
                                 v-else
-                                :items="replydropdownMenuItems"
+                                :items="replyDropdownMenuItems"
                               >
                                 <UButton
                                   variant="ghost"
@@ -512,18 +512,12 @@
         }"
       >
         <template #footer>
-          <UButton label="编辑" @click="onEditComment" class="justify-center" />
           <UButton
-            label="删除"
-            @click="onDeleteComment"
+            v-for="{ label, color, onSelect } in commentDropdownMenuItems[0]"
+            :label="label"
+            :color="color"
+            @click="onSelect"
             class="justify-center"
-            color="error"
-          />
-          <UButton
-            label="举报"
-            @click="onReport"
-            class="justify-center"
-            color="error"
           />
         </template>
       </UDrawer>
@@ -537,18 +531,12 @@
         }"
       >
         <template #footer>
-          <UButton label="编辑" @click="onEditReply" class="justify-center" />
           <UButton
-            label="删除"
-            @click="onDeleteReply"
+            v-for="{ label, color, onSelect } in replyDropdownMenuItems[0]"
+            :label="label"
+            :color="color"
+            @click="onSelect"
             class="justify-center"
-            color="error"
-          />
-          <UButton
-            label="举报"
-            @click="onReport"
-            class="justify-center"
-            color="error"
           />
         </template>
       </UDrawer>
@@ -633,19 +621,19 @@ const tabItems = computed(() => [
 const activeTab = ref('comment')
 const isEditMenuDrawerOpen = ref(false)
 const isEditReplyMenuDrawerOpen = ref(false)
-const report = {
+const reportItem = {
   label: '举报',
   icon: 'lucide:circle-alert',
-  color: 'error',
+  color: 'error' as const,
   onSelect: () => {
     onReport()
   }
 }
-const dropdownMenuItems = computed(() => {
-  const common = {
+const commentDropdownMenuItems = computed(() => {
+  const deleteItem = {
     label: '删除',
     icon: 'lucide:trash',
-    color: 'error',
+    color: 'error' as const,
     onSelect: () => onDeleteComment()
   }
   return postMap.value[props.targetId].canEdit
@@ -654,18 +642,20 @@ const dropdownMenuItems = computed(() => {
           {
             label: '编辑',
             icon: 'lucide:pen',
+            // TODO: 这里不写 color，ts 类型检测会报错
+            color: 'primary' as const,
             onSelect: () => onEditComment()
           },
-          common
+          deleteItem
         ]
       ]
-    : [[common, report]]
+    : [[deleteItem, reportItem]]
 })
-const replydropdownMenuItems = computed(() => {
-  const common = {
+const replyDropdownMenuItems = computed(() => {
+  const deleteItem = {
     label: '删除',
     icon: 'lucide:trash',
-    color: 'error',
+    color: 'error' as const,
     onSelect: () => onDeleteReply()
   }
   return postMap.value[props.targetId].canEdit
@@ -674,12 +664,13 @@ const replydropdownMenuItems = computed(() => {
           {
             label: '编辑',
             icon: 'lucide:pen',
+            color: 'primary' as const,
             onSelect: () => onEditReply()
           },
-          common
+          deleteItem
         ]
       ]
-    : [[common, report]]
+    : [[deleteItem, reportItem]]
 })
 
 const onLoadLikes = async () => {
@@ -706,6 +697,14 @@ const onReport = () => {
       ? postMap.value[props.targetId].activeCommentId
       : postMap.value[props.targetId].activeReplyId
   })
+
+  if (isMobile.value) {
+    if (isComment) {
+      isEditMenuDrawerOpen.value = false
+    } else {
+      isEditReplyMenuDrawerOpen.value = false
+    }
+  }
 }
 
 const onError = e => {

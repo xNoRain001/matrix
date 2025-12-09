@@ -115,7 +115,7 @@ const isOverlayOpen = ref(false)
 const isMessage = route.path === '/messages'
 const title = ref('')
 const description = ref(' ')
-const deleteList = {
+const deleteListItem = {
   label: '删除列表',
   icon: 'lucide:circle-x',
   onSelect: () => {
@@ -124,7 +124,7 @@ const deleteList = {
     isConfirmOverlayOpen.value = true
   }
 }
-const deleteMessageRecord = {
+const deleteMessageRecordItem = {
   label: '清空聊天记录',
   icon: 'lucide:circle-arrow-out-up-right',
   onSelect: () => {
@@ -135,7 +135,7 @@ const deleteMessageRecord = {
 }
 const overlay = useOverlay()
 const publishContentOverlay = overlay.create(OverlayPublishContent)
-const report = {
+const reportItem = {
   label: '举报聊天记录',
   icon: 'lucide:circle-alert',
   onSelect: () =>
@@ -145,7 +145,7 @@ const report = {
       reportedUserId: props.targetId
     })
 }
-const reportAvatarOrSpaceBg = {
+const reportAvatarOrSpaceBgItem = {
   label: '举报个人资料',
   icon: 'lucide:circle-alert',
   onSelect: () =>
@@ -160,8 +160,8 @@ const dropdownItems = computed(() =>
   contactProfileMap.value[props.targetId]
     ? props.isMatch
       ? isMobile.value
-        ? [deleteMessageRecord, report]
-        : [deleteMessageRecord, report, reportAvatarOrSpaceBg]
+        ? [deleteMessageRecordItem, reportItem]
+        : [deleteMessageRecordItem, reportItem, reportAvatarOrSpaceBgItem]
       : isListActionShow
         ? // 只有 message 页面下的一级界面才提供修改列表的选项
           [
@@ -174,18 +174,18 @@ const dropdownItems = computed(() =>
                 isConfirmOverlayOpen.value = true
               }
             },
-            deleteList,
-            deleteMessageRecord,
-            report
+            deleteListItem,
+            deleteMessageRecordItem,
+            reportItem
           ]
-        : [deleteMessageRecord, report]
+        : [deleteMessageRecordItem, reportItem]
     : props.isMatch
       ? isMobile.value
-        ? [deleteMessageRecord, report]
-        : [deleteMessageRecord, report, reportAvatarOrSpaceBg]
+        ? [deleteMessageRecordItem, reportItem]
+        : [deleteMessageRecordItem, reportItem, reportAvatarOrSpaceBgItem]
       : isListActionShow
-        ? [deleteList, deleteMessageRecord, report]
-        : [deleteMessageRecord, report]
+        ? [deleteListItem, deleteMessageRecordItem, reportItem]
+        : [deleteMessageRecordItem, reportItem]
 )
 
 const onDeleteList = async () => {
