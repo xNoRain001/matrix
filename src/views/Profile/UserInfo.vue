@@ -601,7 +601,7 @@
 import { updateProfile } from '@/apis/profile'
 import { mbtiItems } from '@/const'
 import { useTransformGender } from '@/hooks'
-import { useUserStore } from '@/store'
+import { usePostStore, useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { ref, shallowRef, watch } from 'vue'
 import { parseDate } from '@internationalized/date'
@@ -620,6 +620,8 @@ const isMBTIDrawerOpen = ref(false)
 const isAvatarSlideoverOpen = ref(false)
 const { isMobile, userInfo, avatarURL, globalSocket } =
   storeToRefs(useUserStore())
+const { postMap, allProductLoaded, allPostByCollegeLoaded } =
+  storeToRefs(usePostStore())
 const profileForm = ref({ ...userInfo.value.profile })
 const colleges = await (await fetch('/json/filter/colleges.json')).json()
 const provinceCityMap = await (
@@ -765,6 +767,14 @@ const onUpdateProfile = async () => {
       title: '修改资料成功',
       icon: 'lucide:smile'
     })
+
+    // 如果修改了大学，需要清空这些和大学有关的数据
+    if (diff.college) {
+      delete postMap.value.myCollege
+      delete postMap.value.market
+      allProductLoaded.value = false
+      allPostByCollegeLoaded.value = false
+    }
 
     if (isMobile.value) {
       isUserInfoSlideoverOpen.value = false

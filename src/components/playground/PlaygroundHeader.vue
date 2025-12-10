@@ -45,13 +45,10 @@ import { usePostStore, useUserStore } from '@/store'
 import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
 import { useRefreshPlayground } from '@/hooks'
 
-const activeTab = defineModel<
-  'myCollege' | 'latest' | 'friend' | 'market' | 'partner'
->()
 const overlay = useOverlay()
 const publisherOverlay = overlay.create(OverlayPublisher)
 const { isMobile, userInfo } = storeToRefs(useUserStore())
-const { postMap } = storeToRefs(usePostStore())
+const { activeTab, postMap } = storeToRefs(usePostStore())
 const isNotificationSlideoverOpen = ref(false)
 const tabItems = [
   {

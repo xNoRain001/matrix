@@ -1,8 +1,14 @@
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { post, comment, content } from '@/types'
 
 const usePostStore = defineStore('postStore', () => ({
+  activeTab: ref<'myCollege' | 'latest' | 'friend' | 'market' | 'partner'>(
+    'latest'
+  ),
+  allPostLoaded: ref(false),
+  allProductLoaded: ref(false),
+  allPostByCollegeLoaded: ref(false),
   postMap: reactive<
     Record<
       string,

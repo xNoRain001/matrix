@@ -1,7 +1,7 @@
 <template>
   <UDashboardPanel id="playground" :ui="{ body: 'p-0 sm:p-0 ' }">
     <template #header>
-      <PlaygroundHeader v-model="activeTab" />
+      <PlaygroundHeader />
     </template>
     <template #body>
       <Skeleton v-if="loading" :count="10" />
@@ -372,10 +372,13 @@ let reportPostId = null
 let reportProductId = null
 const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile, userInfo } = storeToRefs(useUserStore())
-const activeTab = ref<'myCollege' | 'latest' | 'friend' | 'market' | 'partner'>(
-  (sessionStorage.getItem('playgroundActiveTab') as any) || 'latest'
-)
-const { postMap } = storeToRefs(usePostStore())
+const {
+  activeTab,
+  postMap,
+  allPostLoaded,
+  allProductLoaded,
+  allPostByCollegeLoaded
+} = storeToRefs(usePostStore())
 const { activeSpaceTargetIds } = storeToRefs(useRecentContactsStore())
 const { footerNavs } = storeToRefs(useFooterStore())
 const dropdownMenuItems = [
@@ -393,14 +396,7 @@ const overlay = useOverlay()
 const postDetailOverlay = overlay.create(OverlayPostDetail)
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 const publishContentOverlay = overlay.create(OverlayPublishContent)
-const allPostLoaded = ref((postMap.value.latest?.posts?.length || 0) >= 100)
-const allProductLoaded = ref(
-  (postMap.value.market?.products?.length || 0) >= 100
-)
-const allPostByCollegeLoaded = ref(
-  (postMap.value.myCollege?.posts?.length || 0) >= 100
-)
-const loading = ref(postMap.value[activeTab.value] === undefined)
+const loading = ref(!postMap.value[activeTab.value])
 const isDrawerOpen = ref(false)
 const isAutoScrollBtnShow = ref(false)
 
@@ -545,9 +541,11 @@ const getPlaygroundPostsByCollege = async () => {
 const getData = () => {
   const _activeTab = activeTab.value
 
-  sessionStorage.setItem('playgroundActiveTab', _activeTab)
+  if (postMap.value[_activeTab]) {
+    return
+  }
 
-  if (_activeTab === 'latest' && !postMap.value[_activeTab]) {
+  if (_activeTab === 'latest') {
     return getPlaygroundPosts()
   }
 
@@ -559,9 +557,9 @@ const getData = () => {
     })
   }
 
-  if (_activeTab === 'market' && !postMap.value[_activeTab]) {
+  if (_activeTab === 'market') {
     getPlaygroundProducts()
-  } else if (_activeTab === 'myCollege' && !postMap.value[_activeTab]) {
+  } else if (_activeTab === 'myCollege') {
     getPlaygroundPostsByCollege()
   }
 }
