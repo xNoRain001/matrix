@@ -69,19 +69,19 @@ const tabItems = [
   {
     label: '集市',
     value: 'market'
-  },
-  {
-    label: '搭子',
-    value: 'partner'
-  },
-  {
-    label: '兼职',
-    value: ''
-  },
-  {
-    label: '建议',
-    value: ''
   }
+  // {
+  //   label: '搭子',
+  //   value: 'partner'
+  // },
+  // {
+  //   label: '兼职',
+  //   value: ''
+  // },
+  // {
+  //   label: '建议',
+  //   value: ''
+  // }
 ]
 const toast = useToast()
 

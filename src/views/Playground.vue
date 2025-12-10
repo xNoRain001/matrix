@@ -373,7 +373,7 @@ let reportProductId = null
 const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const activeTab = ref<'myCollege' | 'latest' | 'friend' | 'market' | 'partner'>(
-  'latest'
+  (sessionStorage.getItem('playgroundActiveTab') as any) || 'latest'
 )
 const { postMap } = storeToRefs(usePostStore())
 const { activeSpaceTargetIds } = storeToRefs(useRecentContactsStore())
@@ -509,13 +509,14 @@ const onScroll = useThrottleFn(
 )
 
 const getPlaygroundPosts = async () => {
-  const _activeTab = activeTab.value
-  loading.value = true
-  postMap.value[_activeTab] = {} as any
-  const posts = (await getPlaygroundPostsAPI()).data
-  postMap.value[_activeTab].posts = posts
-  allPostLoaded.value = posts.length < 10
-  loading.value = false
+  if (!postMap.value.latest) {
+    loading.value = true
+    postMap.value.latest = {} as any
+    const posts = (await getPlaygroundPostsAPI()).data
+    postMap.value.latest.posts = posts
+    allPostLoaded.value = posts.length < 10
+    loading.value = false
+  }
 }
 
 const getPlaygroundProducts = async () => {
@@ -543,6 +544,8 @@ const getPlaygroundPostsByCollege = async () => {
 }
 
 watch(activeTab, v => {
+  sessionStorage.setItem('playgroundActiveTab', v)
+
   if (v === 'latest') {
     return
   }

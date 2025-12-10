@@ -1204,6 +1204,11 @@ const onRefreshToken = token => {
   location.reload()
 }
 
+const onResetToken = () => {
+  localStorage.removeItem('token')
+  location.href = '/login'
+}
+
 const onRefreshVersion = () => location.reload()
 
 const onAgreeWebRTCButNoPermission = () => {
@@ -1279,6 +1284,7 @@ const initSocket = socket => {
   socket.on('get-online-status', onGetOnlineStatus)
   socket.on('get-online-count', onGetOnlineCount)
   socket.on('refresh-token', onRefreshToken)
+  socket.on('reset-token', onResetToken)
   socket.on('refresh-version', onRefreshVersion)
   socket.emit('ready')
 }
