@@ -348,7 +348,12 @@ const floatingBtnY = ref(Number(localStorage.getItem('floatingBtnY') || 40))
 const talkOverlay = overlay.create(OverlayTalk)
 const helpAndSupportOverlay = overlay.create(OverlayHelpAndSupport)
 const abouttOverlay = overlay.create(OverlayAbout)
-const { VITE_LAST_UPDATE_AT, VITE_OSS_BASE_URL } = import.meta.env
+const {
+  VITE_RESET_TOKEN_AT,
+  VITE_LAST_UPDATE_AT,
+  VITE_OSS_BASE_URL,
+  VITE_SOCKET_BASE_URL
+} = import.meta.env
 
 const initFloatingBtnPosition = (currentTarget, clientX, clientY) => {
   const { left, top, width, height } = currentTarget.getBoundingClientRect()
@@ -1223,16 +1228,14 @@ const onAgreeWebRTCButNoPermission = () => {
 }
 
 const createSocket = (emit = null) => {
-  const socket = (globalSocket.value = io(
-    import.meta.env.VITE_SOCKET_BASE_URL,
-    {
-      reconnectionAttempts: maxReconnectionAttempts,
-      auth: {
-        lastUpdateAt: VITE_LAST_UPDATE_AT,
-        token: localStorage.getItem('token')
-      }
+  const socket = (globalSocket.value = io(VITE_SOCKET_BASE_URL, {
+    reconnectionAttempts: maxReconnectionAttempts,
+    auth: {
+      lastUpdateAt: VITE_LAST_UPDATE_AT,
+      resetTokenAt: VITE_RESET_TOKEN_AT,
+      token: localStorage.getItem('token')
     }
-  ))
+  }))
 
   // 连接成功
   socket.on('connect', () => onConnect(emit))
