@@ -11,6 +11,7 @@ declare module 'axios' {
 export type userInfo = {
   id: string
   email: string
+  createdAt: number
   tokenVersion: number
   profile: {
     nickname: string

@@ -509,14 +509,13 @@ const onScroll = useThrottleFn(
 )
 
 const getPlaygroundPosts = async () => {
-  if (!postMap.value.latest) {
-    loading.value = true
-    postMap.value.latest = {} as any
-    const posts = (await getPlaygroundPostsAPI()).data
-    postMap.value.latest.posts = posts
-    allPostLoaded.value = posts.length < 10
-    loading.value = false
-  }
+  const _activeTab = activeTab.value
+  loading.value = true
+  postMap.value[_activeTab] = {} as any
+  const posts = (await getPlaygroundPostsAPI()).data
+  postMap.value[_activeTab].posts = posts
+  allPostLoaded.value = posts.length < 10
+  loading.value = false
 }
 
 const getPlaygroundProducts = async () => {
@@ -543,11 +542,13 @@ const getPlaygroundPostsByCollege = async () => {
   loading.value = false
 }
 
-watch(activeTab, v => {
-  sessionStorage.setItem('playgroundActiveTab', v)
+const getData = () => {
+  const _activeTab = activeTab.value
 
-  if (v === 'latest') {
-    return
+  sessionStorage.setItem('playgroundActiveTab', _activeTab)
+
+  if (_activeTab === 'latest' && !postMap.value[_activeTab]) {
+    return getPlaygroundPosts()
   }
 
   if (!userInfo.value.profile.college) {
@@ -558,12 +559,14 @@ watch(activeTab, v => {
     })
   }
 
-  if (v === 'market' && !postMap.value[v]) {
+  if (_activeTab === 'market' && !postMap.value[_activeTab]) {
     getPlaygroundProducts()
-  } else if (v === 'myCollege' && !postMap.value[v]) {
+  } else if (_activeTab === 'myCollege' && !postMap.value[_activeTab]) {
     getPlaygroundPostsByCollege()
   }
-})
+}
+
+watch(activeTab, getData)
 
 const initContainer = () => {
   const container = document.querySelector('#dashboard-panel-playground')
@@ -632,7 +635,7 @@ const initContainer = () => {
 }
 
 onMounted(async () => {
-  await getPlaygroundPosts()
+  await getData()
   initContainer()
 })
 </script>

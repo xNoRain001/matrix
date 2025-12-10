@@ -1209,11 +1209,6 @@ const onRefreshToken = token => {
   location.reload()
 }
 
-const onResetToken = () => {
-  localStorage.removeItem('token')
-  location.href = '/login'
-}
-
 const onRefreshVersion = () => location.reload()
 
 const onAgreeWebRTCButNoPermission = () => {
@@ -1232,7 +1227,6 @@ const createSocket = (emit = null) => {
     reconnectionAttempts: maxReconnectionAttempts,
     auth: {
       lastUpdateAt: VITE_LAST_UPDATE_AT,
-      resetTokenAt: VITE_RESET_TOKEN_AT,
       token: localStorage.getItem('token')
     }
   }))
@@ -1287,7 +1281,6 @@ const initSocket = socket => {
   socket.on('get-online-status', onGetOnlineStatus)
   socket.on('get-online-count', onGetOnlineCount)
   socket.on('refresh-token', onRefreshToken)
-  socket.on('reset-token', onResetToken)
   socket.on('refresh-version', onRefreshVersion)
   socket.emit('ready')
 }
@@ -1338,7 +1331,14 @@ const initBeep = () => {
 }
 
 onBeforeMount(async () => {
-  if (userInfo.value?.id) {
+  if (userInfo.value) {
+    if (
+      (userInfo.value.createdAt || 0) < new Date(VITE_RESET_TOKEN_AT).getTime()
+    ) {
+      localStorage.removeItem('token')
+      return location.replace('/login')
+    }
+
     userInfo.value.profile.ipInfo = { province: '', city: '' }
 
     // 优先创建 socket
@@ -1358,7 +1358,7 @@ onBeforeMount(async () => {
 })
 
 onMounted(async () => {
-  if (userInfo.value?.id) {
+  if (userInfo.value) {
     initBeep()
     setInterval(() => {
       globalSocket.value.emit('get-online-count')
