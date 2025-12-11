@@ -3,7 +3,7 @@
     <UApp
       v-if="userInfo"
       :locale="zh_cn"
-      :toaster="{ position: 'top-center', progress: false }"
+      :toaster="{ position: 'top-center', progress: false, duration: 1000 }"
     >
       <UDashboardGroup unit="rem" storage="local">
         <UDashboardSidebar

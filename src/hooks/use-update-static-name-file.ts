@@ -57,9 +57,9 @@ const useUpdateStaticNameFile = async (
       urlRef.value = URL.createObjectURL(file)
 
       // 如果在没有背景图的情况下更新了背景图，需要将 isPlaceholderShow 的值
-      // 设置为 true，才会显示背景图
+      // 设置为 false，才会显示背景图
       if (type === 'spaceBg') {
-        isPlaceholderShow.value = true
+        isPlaceholderShow.value = false
       }
 
       toast.add({ title: '更新成功', icon: 'lucide:smile' })

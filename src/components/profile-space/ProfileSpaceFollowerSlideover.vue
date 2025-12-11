@@ -14,58 +14,99 @@
         <template #content></template
       ></UTabs>
       <Skeleton v-if="loading" :count="5" />
-      <div class="divide-default divide-y">
-        <div
-          v-if="userMap[activeTab].length"
-          v-for="(
-            { targetId, targetProfile: { nickname, bio }, mutual, unfollow },
-            index
-          ) in userMap[activeTab]"
-          :key="targetId"
-          @click="
-            !activeSpaceTargetIds.has(targetId) &&
-            profileSpaceOverlay.open({
-              targetId
-            })
-          "
-          class="bg-elevated/50 cursor-pointer p-4 sm:p-6"
-        >
-          <UUser
-            :avatar="{
-              src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
-              alt: nickname[0]
-            }"
-            :description="bio"
-            size="xl"
-            :ui="{
-              wrapper: 'flex-1 min-w-0',
-              name: 'flex justify-between items-center gap-2',
-              description: 'truncate'
-            }"
+      <template v-if="activeTab === 'follower'">
+        <div v-if="followerList?.length >= 0">
+          <div
+            v-for="(
+              { targetId, targetProfile: { nickname, bio }, mutual }, index
+            ) in followerList"
+            :key="targetId"
+            @click="
+              !activeSpaceTargetIds.has(targetId) &&
+              profileSpaceOverlay.open({
+                targetId
+              })
+            "
+            class="bg-elevated/50 cursor-pointer p-4 sm:p-6"
           >
-            <template #name>
-              <span class="truncate">{{ nickname }}</span>
-              <template v-if="isSelf">
-                <div v-if="activeTab === 'follower'" class="flex gap-2">
-                  <UButton
-                    v-if="mutual"
-                    @click.stop="onUnfollow(index, targetId, true)"
-                    label="互相关注"
-                    size="xs"
-                  />
-                  <UButton
-                    v-else
-                    @click.stop="onFollow(index, targetId, true)"
-                    label="回关"
-                    size="xs"
-                  />
-                  <UButton
-                    @click.stop="onRemoveFollower(index, targetId)"
-                    label="移除"
-                    size="xs"
-                  />
-                </div>
-                <template v-else>
+            <UUser
+              :avatar="{
+                src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
+                alt: nickname[0]
+              }"
+              :description="bio"
+              size="xl"
+              :ui="{
+                wrapper: 'flex-1 min-w-0',
+                name: 'flex justify-between items-center gap-2',
+                description: 'truncate'
+              }"
+            >
+              <template #name>
+                <span class="truncate">{{ nickname }}</span>
+                <template v-if="isSelf">
+                  <div class="flex gap-2">
+                    <UButton
+                      v-if="mutual"
+                      @click.stop="onUnfollow(index, targetId, true)"
+                      label="互相关注"
+                      size="xs"
+                    />
+                    <UButton
+                      v-else
+                      @click.stop="onFollow(index, targetId, true)"
+                      label="回关"
+                      size="xs"
+                    />
+                    <UButton
+                      @click.stop="onRemoveFollower(index, targetId)"
+                      label="移除"
+                      size="xs"
+                    />
+                  </div>
+                </template>
+              </template>
+            </UUser>
+          </div>
+          <Separator v-if="followerList.length === 0" label="空空如也" />
+        </div>
+        <Separator
+          v-else-if="!publicFollowers"
+          label="由于该用户隐私设置，粉丝列表不可见"
+        />
+      </template>
+      <template v-if="activeTab === 'following'">
+        <div v-if="followingList?.length >= 0">
+          <div
+            v-for="(
+              { targetId, targetProfile: { nickname, bio }, mutual, unfollow },
+              index
+            ) in followingList"
+            :key="targetId"
+            @click="
+              !activeSpaceTargetIds.has(targetId) &&
+              profileSpaceOverlay.open({
+                targetId
+              })
+            "
+            class="bg-elevated/50 cursor-pointer p-4 sm:p-6"
+          >
+            <UUser
+              :avatar="{
+                src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
+                alt: nickname[0]
+              }"
+              :description="bio"
+              size="xl"
+              :ui="{
+                wrapper: 'flex-1 min-w-0',
+                name: 'flex justify-between items-center gap-2',
+                description: 'truncate'
+              }"
+            >
+              <template #name>
+                <span class="truncate">{{ nickname }}</span>
+                <template v-if="isSelf">
                   <UButton
                     v-if="unfollow"
                     @click.stop="onFollow(index, targetId)"
@@ -80,22 +121,15 @@
                   />
                 </template>
               </template>
-            </template>
-          </UUser>
+            </UUser>
+          </div>
+          <Separator v-if="followingList.length === 0" :label="'空空如也'" />
         </div>
-        <Separator v-if="userMap[activeTab].length === 0" :label="'空空如也'" />
-      </div>
-      <div v-if="activeTab === 'follower' && !publicFollowers">
-        <UIcon name="lucide:eye-off" class="text-dimmed size-32"></UIcon>
-        <div class="text-toned text-sm">由于该用户隐私设置，粉丝列表不可见</div>
-      </div>
-      <div
-        v-if="activeTab === 'following' && !publicFollowings"
-        class="flex flex-1 flex-col items-center justify-center gap-4"
-      >
-        <UIcon name="lucide:eye-off" class="text-dimmed size-32"></UIcon>
-        <div class="text-toned text-sm">由于该用户隐私设置，关注列表不可见</div>
-      </div>
+        <Separator
+          v-else-if="!publicFollowings"
+          label="由于该用户隐私设置，关注列表不可见"
+        />
+      </template>
     </template>
   </USlideover>
 </template>
@@ -126,8 +160,8 @@ const isSelf = props.targetId === userInfo.value.id
 const overlay = useOverlay()
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 const loading = ref(true)
-const loadingFollowings = ref(true)
-const loadingFollowers = ref(true)
+// const allFollowingsLoaded = ref(false)
+// const allFollowersLoaded = ref(false)
 const publicFollowings = ref(true)
 const publicFollowers = ref(true)
 const toast = useToast()
@@ -142,17 +176,15 @@ const tabItems = [
     value: 'follower'
   }
 ]
-const userMap = ref({
-  following: [],
-  follower: []
-})
+const followerList = ref(null)
+const followingList = ref(null)
 
 const onRemoveFollower = async (index, targetId) => {
   try {
     await removeFollowerAPI(targetId)
     toast.add({ title: '移除成功', icon: 'lucide:smile' })
     userInfo.value.profile.followerCount--
-    userMap.value[activeTab.value].splice(index, 1)
+    followerList.value.splice(index, 1)
   } catch (error) {
     toast.add({ title: error.message, color: 'error', icon: 'lucide:annoyed' })
   }
@@ -163,10 +195,10 @@ const onFollow = async (index, targetId, mutual = false) => {
     await followAPI(targetId)
     toast.add({ title: '关注成功', icon: 'lucide:smile' })
     userInfo.value.profile.followingCount++
-    userMap.value[activeTab.value][index].unfollow = false
+    followingList.value[index].unfollow = false
 
     if (mutual) {
-      userMap.value[activeTab.value][index].mutual = true
+      followingList.value[index].mutual = true
     }
   } catch (error) {
     toast.add({ title: error.message, color: 'error', icon: 'lucide:annoyed' })
@@ -178,10 +210,10 @@ const onUnfollow = async (index, targetId, mutual = false) => {
     await unfollowAPI(targetId)
     toast.add({ title: '取消关注成功', icon: 'lucide:smile' })
     userInfo.value.profile.followingCount--
-    userMap.value[activeTab.value][index].unfollow = true
+    followingList.value[index].unfollow = true
 
     if (mutual) {
-      userMap.value[activeTab.value][index].mutual = false
+      followingList.value[index].mutual = false
     }
   } catch (error) {
     toast.add({ title: error.message, color: 'error', icon: 'lucide:annoyed' })
@@ -189,10 +221,9 @@ const onUnfollow = async (index, targetId, mutual = false) => {
 }
 
 const getUsers = async () => {
-  const _userMap = userMap.value
   const v = activeTab.value
 
-  if (v === 'following' && loadingFollowings.value) {
+  if (v === 'following' && publicFollowings.value && !followingList.value) {
     loading.value = true
     const { targetId } = props
 
@@ -201,22 +232,20 @@ const getUsers = async () => {
 
       if (!data) {
         publicFollowings.value = false
-        loadingFollowings.value = false
         loading.value = false
         return
       }
     }
 
     const { data } = await getFollowingAPI(isSelf ? '' : targetId)
+    followingList.value = data
 
-    if (data.length) {
-      _userMap[v] = data
+    if (isSelf) {
+      userInfo.value.profile.followingCount = data.length
     }
 
-    userInfo.value.profile.followingCount = data.length
-    loadingFollowings.value = false
     loading.value = false
-  } else if (v === 'follower' && loadingFollowers.value) {
+  } else if (v === 'follower' && publicFollowers.value && !followerList.value) {
     loading.value = true
     const { targetId } = props
 
@@ -225,7 +254,6 @@ const getUsers = async () => {
 
       if (!data) {
         publicFollowers.value = false
-        loadingFollowers.value = false
         loading.value = false
         return
       }
@@ -238,11 +266,13 @@ const getUsers = async () => {
         item.targetId = item.user
         item.targetProfile = item.profile
       })
-      _userMap[v] = data
     }
 
-    userInfo.value.profile.followerCount = data.length
-    loadingFollowers.value = false
+    followerList.value = data
+
+    if (isSelf) {
+      userInfo.value.profile.followerCount = data.length
+    }
     loading.value = false
   }
 }

@@ -1,11 +1,9 @@
 <template>
-  <div class="flex h-48 items-center justify-center">
-    <USeparator
-      :ui="{ border: 'border-accented', label: 'text-xs text-muted' }"
-      class="w-48"
-      :label="label"
-    />
-  </div>
+  <USeparator
+    :ui="{ border: 'border-accented w-6', label: 'text-xs text-muted' }"
+    class="h-48 w-full justify-center"
+    :label="label"
+  />
 </template>
 
 <script lang="ts" setup>
