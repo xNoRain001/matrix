@@ -73,8 +73,8 @@ const initAutoScrollBtn = () => {
       $el.addEventListener('click', e => {
         if (e.currentTarget.children[1].textContent === '顶部') {
           document
-            .querySelector(`#dashboard-panel-playground`)
-            .children[2].scrollTo({ top: 0, behavior: 'smooth' })
+            .querySelector('#dashboard-panel-playground > .playground-body')
+            .scrollTo({ top: 0, behavior: 'smooth' })
         }
       })
     } else if (value === '/profile') {

@@ -3,10 +3,10 @@ import { defineStore } from 'pinia'
 import type { post, comment, content } from '@/types'
 
 const usePostStore = defineStore('postStore', () => ({
-  activeTab: ref<'myCollege' | 'latest' | 'friend' | 'market' | 'partner'>(
-    'latest'
-  ),
+  activeCollegeTab: ref<'myCollege' | 'market' | 'partner'>('myCollege'),
+  activeTab: ref<'college' | 'latest' | 'friend'>('latest'),
   allPostLoaded: ref(false),
+  allFriendPostLoaded: ref(false),
   allProductLoaded: ref(false),
   allPostByCollegeLoaded: ref(false),
   postMap: reactive<

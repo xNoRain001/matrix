@@ -63,7 +63,7 @@ const list = [
   {
     icon: 'lucide:shopping-bag',
     title: '卖闲置',
-    desc: '自己拍图卖 · 啥都能换钱',
+    desc: '二手闲置轻松交易',
     onSelect: () => {
       if (!userInfo.value.profile.college) {
         return toast.add({

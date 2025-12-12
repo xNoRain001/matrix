@@ -1,11 +1,14 @@
 <template>
-  <UDashboardPanel id="playground" :ui="{ body: 'p-0 sm:p-0 ' }">
+  <UDashboardPanel
+    id="playground"
+    :ui="{ body: 'playground-body p-0 sm:p-0 ' }"
+  >
     <template #header>
       <PlaygroundHeader />
     </template>
     <template #body>
       <Skeleton v-if="loading" :count="10" />
-      <template v-if="activeTab === 'latest'">
+      <template v-else-if="activeTab === 'latest'">
         <!-- 存在 length 属性，说明已经成功从服务器获取了数据 -->
         <div v-if="postMap[activeTab]?.posts?.length >= 0">
           <div
@@ -108,9 +111,13 @@
           <Separator v-else-if="allPostLoaded" label="已经到底了" />
         </div>
       </template>
-      <template v-if="activeTab === 'myCollege'">
-        <!-- 存在 length 属性，说明已经成功从服务器获取了数据 -->
-        <div v-if="postMap[activeTab]?.posts?.length >= 0">
+      <template v-else-if="activeTab === 'college'">
+        <div
+          v-if="
+            activeCollegeTab === 'myCollege' &&
+            postMap[activeCollegeTab]?.posts?.length >= 0
+          "
+        >
           <div
             v-for="(
               {
@@ -124,7 +131,7 @@
                 commentCount
               },
               index
-            ) in postMap[activeTab].posts"
+            ) in postMap[activeCollegeTab].posts"
             :key="_id"
             class="bg-elevated/50 space-y-2 p-4 not-first:mt-2 sm:p-6"
           >
@@ -206,14 +213,17 @@
             </div>
           </div>
           <Separator
-            v-if="postMap[activeTab].posts.length === 0"
+            v-if="postMap[activeCollegeTab].posts.length === 0"
             :label="'空空如也'"
           />
           <Separator v-else-if="allPostByCollegeLoaded" label="已经到底了" />
         </div>
-      </template>
-      <template v-if="activeTab === 'market'">
-        <div v-if="postMap[activeTab]?.products?.length >= 0">
+        <div
+          v-if="
+            activeCollegeTab === 'market' &&
+            postMap[activeCollegeTab]?.products?.length >= 0
+          "
+        >
           <div
             v-for="{
               _id,
@@ -225,7 +235,7 @@
               price,
               expressDelivery
               // visibility
-            } in postMap[activeTab].products"
+            } in postMap[activeCollegeTab].products"
             :key="_id"
             class="bg-elevated/50 space-y-2 p-4 not-first:mt-2 sm:p-6"
           >
@@ -291,7 +301,7 @@
             </div>
           </div>
           <Separator
-            v-if="postMap[activeTab].products.length === 0"
+            v-if="postMap[activeCollegeTab].products.length === 0"
             :label="'空空如也'"
           />
           <Separator v-else-if="allProductLoaded" label="已经到底了" />
@@ -374,8 +384,10 @@ const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const {
   activeTab,
+  activeCollegeTab,
   postMap,
   allPostLoaded,
+  allFriendPostLoaded,
   allProductLoaded,
   allPostByCollegeLoaded
 } = storeToRefs(usePostStore())
@@ -396,33 +408,49 @@ const overlay = useOverlay()
 const postDetailOverlay = overlay.create(OverlayPostDetail)
 const profileSpaceOverlay = overlay.create(OverlayProfileSpace)
 const publishContentOverlay = overlay.create(OverlayPublishContent)
-const loading = ref(!postMap.value[activeTab.value])
+const loading = ref(
+  activeTab.value === 'latest' || activeTab.value === 'friend'
+    ? !postMap.value[activeTab.value]
+    : !postMap.value[activeCollegeTab.value]
+)
 const isDrawerOpen = ref(false)
 const isAutoScrollBtnShow = ref(false)
 
 const onScrollToTop = () =>
   document
-    .querySelector('#dashboard-panel-playground')
-    .children[2].scrollTo({ top: 0, behavior: 'smooth' })
+    .querySelector('#dashboard-panel-playground > .playground-body')
+    .scrollTo({ top: 0, behavior: 'smooth' })
 
 const onReport = () => {
   isDrawerOpen.value = false
   const _activeTab = activeTab.value
 
-  if (_activeTab === 'latest' || _activeTab === 'myCollege') {
+  if (_activeTab === 'latest') {
     publishContentOverlay.open({
       action: 'report',
       reportTarget: 'post',
       reportedUserId,
       reportPostId
     })
-  } else if (_activeTab === 'market') {
-    publishContentOverlay.open({
-      action: 'report',
-      reportTarget: 'product',
-      reportedUserId,
-      reportProductId
-    })
+  } else if (_activeTab === 'friend') {
+  } else {
+    const _activeCollegeTab = activeCollegeTab.value
+
+    if (_activeCollegeTab === 'myCollege') {
+      publishContentOverlay.open({
+        action: 'report',
+        reportTarget: 'post',
+        reportedUserId,
+        reportPostId
+      })
+    } else if (_activeCollegeTab === 'market') {
+      publishContentOverlay.open({
+        action: 'report',
+        reportTarget: 'product',
+        reportedUserId,
+        reportProductId
+      })
+    }
   }
 }
 
@@ -430,10 +458,18 @@ const onOpenDropdownMenu = (user, postIdOrProductId) => {
   reportedUserId = user
   const _activeTab = activeTab.value
 
-  if (_activeTab === 'latest' || _activeTab === 'myCollege') {
+  if (_activeTab === 'latest') {
     reportPostId = postIdOrProductId
-  } else if (_activeTab === 'market') {
-    reportProductId = postIdOrProductId
+  } else if (_activeTab === 'friend') {
+    reportPostId = postIdOrProductId
+  } else {
+    const _activeCollegeTab = activeCollegeTab.value
+
+    if (_activeCollegeTab === 'myCollege') {
+      reportPostId = postIdOrProductId
+    } else if (_activeCollegeTab === 'market') {
+      reportProductId = postIdOrProductId
+    }
   }
 
   if (isMobile.value) {
@@ -458,32 +494,38 @@ const onScroll = useThrottleFn(
     )
 
     const _activeTab = activeTab.value
+    const _activeCollegeTab = activeCollegeTab.value
     const isPost = _activeTab === 'latest'
-    const isMarket = _activeTab === 'market'
-    const isMyCollege = _activeTab === 'myCollege'
+    const isFriend = _activeTab === 'friend'
+    const isCollege = _activeTab === 'college'
+    const isMarket = _activeCollegeTab === 'market'
+    const isMyCollege = _activeCollegeTab === 'myCollege'
 
-    if (isPost && allPostLoaded.value) {
-      return
-    }
-
-    if (isMyCollege && allPostByCollegeLoaded.value) {
-      return
-    }
-
-    if (isMarket && allProductLoaded.value) {
+    if (
+      (isPost && allPostLoaded.value) ||
+      (isFriend && allFriendPostLoaded.value) ||
+      (isCollege &&
+        ((isMyCollege && allPostByCollegeLoaded.value) ||
+          (isMarket && allProductLoaded.value)))
+    ) {
       return
     }
 
     if (scrollHeight - (scrollTop + clientHeight) < 64) {
-      const item = isPost
-        ? postMap.value[_activeTab].posts
-        : postMap.value[_activeTab].products
+      const item =
+        isPost || isFriend
+          ? postMap.value[_activeTab].posts
+          : isMyCollege
+            ? postMap.value[_activeCollegeTab].posts
+            : postMap.value[_activeCollegeTab].products
       const lastId = item[item.length - 1]._id
       const { data } = await (isPost
         ? getPlaygroundPostsAPI(lastId)
-        : isMyCollege
-          ? getPlaygroundPostsAPI(lastId, '', userInfo.value.profile.college)
-          : getPlaygroundProductsAPI(userInfo.value.profile.college, lastId))
+        : isFriend
+          ? { data: [] }
+          : isMyCollege
+            ? getPlaygroundPostsAPI(lastId, '', userInfo.value.profile.college)
+            : getPlaygroundProductsAPI(userInfo.value.profile.college, lastId))
       const { length } = data
 
       if (length) {
@@ -492,10 +534,14 @@ const onScroll = useThrottleFn(
 
       if (isPost) {
         allPostLoaded.value = length < 10 || item.length > 100
-      } else if (isMyCollege) {
-        allPostByCollegeLoaded.value = length < 10 || item.length > 100
-      } else if (isMarket) {
-        allProductLoaded.value = length < 10 || item.length > 100
+      } else if (isFriend) {
+        allFriendPostLoaded.value = length < 10 || item.length > 100
+      } else {
+        if (isMyCollege) {
+          allPostByCollegeLoaded.value = length < 10 || item.length > 100
+        } else {
+          allProductLoaded.value = length < 10 || item.length > 100
+        }
       }
     }
   },
@@ -505,35 +551,32 @@ const onScroll = useThrottleFn(
 )
 
 const getPlaygroundPosts = async () => {
-  const _activeTab = activeTab.value
   loading.value = true
-  postMap.value[_activeTab] = {} as any
+  postMap.value.latest = {} as any
   const posts = (await getPlaygroundPostsAPI()).data
-  postMap.value[_activeTab].posts = posts
+  postMap.value.latest.posts = posts
   allPostLoaded.value = posts.length < 10
   loading.value = false
 }
 
 const getPlaygroundProducts = async () => {
-  const _activeTab = activeTab.value
   loading.value = true
-  postMap.value[_activeTab] = {} as any
+  postMap.value.market = {} as any
   const products = (
     await getPlaygroundProductsAPI(userInfo.value.profile.college)
   ).data
-  postMap.value[_activeTab].products = products
+  postMap.value.market.products = products
   allProductLoaded.value = products.length < 10
   loading.value = false
 }
 
 const getPlaygroundPostsByCollege = async () => {
-  const _activeTab = activeTab.value
   loading.value = true
-  postMap.value[_activeTab] = {} as any
+  postMap.value.myCollege = {} as any
   const posts = (
     await getPlaygroundPostsAPI('', '', userInfo.value.profile.college)
   ).data
-  postMap.value[_activeTab].posts = posts
+  postMap.value.myCollege.posts = posts
   allPostByCollegeLoaded.value = posts.length < 10
   loading.value = false
 }
@@ -541,34 +584,43 @@ const getPlaygroundPostsByCollege = async () => {
 const getData = () => {
   const _activeTab = activeTab.value
 
-  if (postMap.value[_activeTab]) {
-    return
-  }
-
   if (_activeTab === 'latest') {
+    if (postMap.value[_activeTab]) {
+      return
+    }
+
     return getPlaygroundPosts()
-  }
+  } else if (_activeTab === 'friend') {
+  } else {
+    const _activeCollegeTab = activeCollegeTab.value
 
-  if (!userInfo.value.profile.college) {
-    return toast.add({
-      title: '请完善个人资料中的大学信息',
-      color: 'error',
-      icon: 'lucide:annoyed'
-    })
-  }
+    if (postMap.value[_activeCollegeTab]) {
+      return
+    }
 
-  if (_activeTab === 'market') {
-    getPlaygroundProducts()
-  } else if (_activeTab === 'myCollege') {
-    getPlaygroundPostsByCollege()
+    if (!userInfo.value.profile.college) {
+      return toast.add({
+        title: '请完善个人资料中的大学信息',
+        color: 'error',
+        icon: 'lucide:annoyed'
+      })
+    }
+
+    if (_activeCollegeTab === 'market') {
+      getPlaygroundProducts()
+    } else if (_activeCollegeTab === 'myCollege') {
+      getPlaygroundPostsByCollege()
+    }
   }
 }
 
 watch(activeTab, getData)
+watch(activeCollegeTab, getData)
 
 const initContainer = () => {
-  const container = document.querySelector('#dashboard-panel-playground')
-    .children[2]
+  const container = document.querySelector(
+    '#dashboard-panel-playground > .playground-body'
+  )
 
   container.addEventListener('scroll', onScroll)
 
@@ -627,7 +679,14 @@ const initContainer = () => {
           transform: rotate(180deg);
         }
       `,
-      onRefresh: () => useRefreshPlayground(activeTab, postMap, userInfo, toast)
+      onRefresh: () =>
+        useRefreshPlayground(
+          activeTab,
+          activeCollegeTab,
+          postMap,
+          userInfo,
+          toast
+        )
     })
   }
 }

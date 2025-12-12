@@ -4,7 +4,24 @@
       <UDashboardSidebarCollapse />
     </template>
 
+    <template #trailing>
+      <UTabs
+        :ui="{
+          root: 'absolute left-1/2 -translate-x-1/2'
+        }"
+        :content="false"
+        :items="tabItems"
+        v-model="activeTab"
+      />
+    </template>
+
     <template #right>
+      <UButton
+        v-if="!isMobile"
+        @click="onRefreshPlayground"
+        variant="ghost"
+        icon="lucide:refresh-cw"
+      />
       <UButton
         icon="lucide:bell"
         variant="ghost"
@@ -17,24 +34,19 @@
       />
     </template>
   </UDashboardNavbar>
-  <div class="flex items-center justify-between px-4 sm:px-6">
-    <UTabs
-      :ui="{
-        list: 'gap-4 px-0 sm:gap-6',
-        trigger: 'px-0'
-      }"
-      :content="false"
-      variant="link"
-      :items="tabItems"
-      v-model="activeTab"
-    />
-    <UButton
-      v-if="!isMobile"
-      @click="onRefreshPlayground"
-      variant="ghost"
-      icon="lucide:refresh-cw"
-    />
-  </div>
+  <UTabs
+    v-if="activeTab === 'college'"
+    :ui="{
+      root: 'px-4 sm:px-6',
+      list: 'gap-4 px-0 sm:gap-6',
+      trigger: 'px-0'
+    }"
+    :content="false"
+    variant="link"
+    :items="collegeItems"
+    v-model="activeCollegeTab"
+  />
+
   <PlaygroundNotificationsSlideover v-model="isNotificationSlideoverOpen" />
 </template>
 
@@ -48,21 +60,27 @@ import { useRefreshPlayground } from '@/hooks'
 const overlay = useOverlay()
 const publisherOverlay = overlay.create(OverlayPublisher)
 const { isMobile, userInfo } = storeToRefs(useUserStore())
-const { activeTab, postMap } = storeToRefs(usePostStore())
+const { activeTab, activeCollegeTab, postMap } = storeToRefs(usePostStore())
 const isNotificationSlideoverOpen = ref(false)
 const tabItems = [
+  {
+    label: '好友',
+    value: 'friend'
+  },
   {
     label: '广场',
     value: 'latest'
   },
   {
-    label: '我的校园',
+    label: '校园',
+    value: 'college'
+  }
+]
+const collegeItems = [
+  {
+    label: '动态',
     value: 'myCollege'
   },
-  // {
-  //   label: '好友',
-  //   value: 'friend'
-  // },
   {
     label: '集市',
     value: 'market'
@@ -83,5 +101,5 @@ const tabItems = [
 const toast = useToast()
 
 const onRefreshPlayground = async () =>
-  useRefreshPlayground(activeTab, postMap, userInfo, toast)
+  useRefreshPlayground(activeTab, activeCollegeTab, postMap, userInfo, toast)
 </script>
