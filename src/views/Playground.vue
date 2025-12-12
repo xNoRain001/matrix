@@ -111,6 +111,108 @@
           <Separator v-else-if="allPostLoaded" label="已经到底了" />
         </div>
       </template>
+      <template v-else-if="activeTab === 'friend'">
+        <div v-if="postMap[activeTab]?.posts?.length >= 0">
+          <div
+            v-for="(
+              {
+                _id,
+                user,
+                profile: { nickname, college },
+                content,
+                createdAt,
+                likes,
+                like,
+                commentCount
+              },
+              index
+            ) in postMap[activeTab].posts"
+            :key="_id"
+            class="bg-elevated/50 space-y-2 p-4 not-first:mt-2 sm:p-6"
+          >
+            <div
+              @click="
+                !activeSpaceTargetIds.has(user) &&
+                profileSpaceOverlay.open({
+                  targetId: user
+                })
+              "
+              class="flex items-center gap-2"
+            >
+              <UAvatar
+                size="xl"
+                :src="`${VITE_OSS_BASE_URL}avatar/${user}`"
+                :alt="nickname[0]"
+              />
+              <div class="flex flex-1 items-center justify-between">
+                <div>
+                  <div class="font-medium">
+                    {{ nickname }}
+                  </div>
+                  <div class="text-muted text-sm">
+                    发布于 {{ useFormatTimeAgo(createdAt) }} · {{ college }}
+                  </div>
+                </div>
+                <UButton
+                  v-if="isMobile"
+                  variant="ghost"
+                  icon="lucide:ellipsis"
+                  @click.stop="onOpenDropdownMenu(user, _id)"
+                />
+                <UDropdownMenu v-else :items="dropdownMenuItems">
+                  <UButton
+                    variant="ghost"
+                    icon="lucide:ellipsis"
+                    @click.stop="onOpenDropdownMenu(user, _id)"
+                  />
+                </UDropdownMenu>
+              </div>
+            </div>
+            <div v-if="content.text" class="break-all whitespace-pre-wrap">
+              {{ content.text }}
+            </div>
+            <!-- 需要开启 crossorigin，否则切换到个人空间时会报跨域错误 -->
+            <Carousel
+              v-if="content.images.length"
+              :set-loading="true"
+              :set-crossorigin="true"
+              :items="content.images"
+              :active-index="0"
+            />
+            <div class="flex justify-between">
+              <UButton
+                variant="ghost"
+                :color="like ? 'secondary' : 'primary'"
+                icon="lucide:heart"
+                :label="String(likes || '点赞')"
+                @click="
+                  useLike(toast, postMap[activeTab].posts[index], _id, 'post')
+                "
+              />
+              <UButton
+                variant="ghost"
+                icon="lucide:message-circle"
+                :label="String(commentCount || '回复')"
+                @click="
+                  useOpenPostDetailOverlay(
+                    postMap,
+                    activeTab,
+                    _id,
+                    index,
+                    postDetailOverlay
+                  )
+                "
+              />
+              <UButton variant="ghost" icon="lucide:share-2" label="分享" />
+            </div>
+          </div>
+          <Separator
+            v-if="postMap[activeTab].posts.length === 0"
+            :label="'空空如也'"
+          />
+          <Separator v-else-if="allFriendPostLoaded" label="已经到底了" />
+        </div>
+      </template>
       <template v-else-if="activeTab === 'college'">
         <div
           v-if="
@@ -192,7 +294,12 @@
                 icon="lucide:heart"
                 :label="String(likes || '点赞')"
                 @click="
-                  useLike(toast, postMap[activeTab].posts[index], _id, 'post')
+                  useLike(
+                    toast,
+                    postMap[activeCollegeTab].posts[index],
+                    _id,
+                    'post'
+                  )
                 "
               />
               <UButton
@@ -353,6 +460,7 @@
 
 <script lang="ts" setup>
 import {
+  getPlaygroundFriendPostsAPI,
   getPlaygroundPostsAPI,
   getPlaygroundProductsAPI
 } from '@/apis/playground'
@@ -522,7 +630,7 @@ const onScroll = useThrottleFn(
       const { data } = await (isPost
         ? getPlaygroundPostsAPI(lastId)
         : isFriend
-          ? { data: [] }
+          ? getPlaygroundFriendPostsAPI(lastId)
           : isMyCollege
             ? getPlaygroundPostsAPI(lastId, '', userInfo.value.profile.college)
             : getPlaygroundProductsAPI(userInfo.value.profile.college, lastId))
@@ -559,6 +667,15 @@ const getPlaygroundPosts = async () => {
   loading.value = false
 }
 
+const getPlaygroundFriendPosts = async () => {
+  loading.value = true
+  postMap.value.friend = {} as any
+  const posts = (await getPlaygroundFriendPostsAPI()).data
+  postMap.value.friend.posts = posts
+  allFriendPostLoaded.value = posts.length < 10
+  loading.value = false
+}
+
 const getPlaygroundProducts = async () => {
   loading.value = true
   postMap.value.market = {} as any
@@ -591,6 +708,8 @@ const getData = () => {
 
     return getPlaygroundPosts()
   } else if (_activeTab === 'friend') {
+    // 不缓存好友动态
+    getPlaygroundFriendPosts()
   } else {
     const _activeCollegeTab = activeCollegeTab.value
 

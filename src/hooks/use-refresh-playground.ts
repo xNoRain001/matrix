@@ -1,4 +1,5 @@
 import {
+  getPlaygroundFriendPostsAPI,
   getPlaygroundPostsAPI,
   getPlaygroundProductsAPI
 } from '@/apis/playground'
@@ -32,6 +33,12 @@ const useRefreshPlayground = async (
       })
     }
   } else if (_activeTab === 'friend') {
+    const posts = (await getPlaygroundFriendPostsAPI()).data
+    postMap.value.friend.posts = posts
+    toast.add({
+      title: '刷新成功',
+      icon: 'lucide:smile'
+    })
   } else {
     const _activeCollegeTab = activeCollegeTab.value
 
