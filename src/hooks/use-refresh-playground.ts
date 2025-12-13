@@ -33,6 +33,7 @@ const useRefreshPlayground = async (
       })
     }
   } else if (_activeTab === 'friend') {
+    // 完全替换原数据，因为可能关注或取消关注其他用户
     const posts = (await getPlaygroundFriendPostsAPI()).data
     postMap.value.friend.posts = posts
     toast.add({

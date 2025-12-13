@@ -309,7 +309,7 @@
                 @click="
                   useOpenPostDetailOverlay(
                     postMap,
-                    activeTab,
+                    activeCollegeTab,
                     _id,
                     index,
                     postDetailOverlay
@@ -533,14 +533,13 @@ const onReport = () => {
   isDrawerOpen.value = false
   const _activeTab = activeTab.value
 
-  if (_activeTab === 'latest') {
+  if (_activeTab === 'latest' || _activeTab === 'friend') {
     publishContentOverlay.open({
       action: 'report',
       reportTarget: 'post',
       reportedUserId,
       reportPostId
     })
-  } else if (_activeTab === 'friend') {
   } else {
     const _activeCollegeTab = activeCollegeTab.value
 
@@ -708,21 +707,24 @@ const getData = () => {
 
     return getPlaygroundPosts()
   } else if (_activeTab === 'friend') {
-    // 不缓存好友动态
-    getPlaygroundFriendPosts()
-  } else {
-    const _activeCollegeTab = activeCollegeTab.value
-
-    if (postMap.value[_activeCollegeTab]) {
+    if (postMap.value[_activeTab]) {
       return
     }
 
+    getPlaygroundFriendPosts()
+  } else {
     if (!userInfo.value.profile.college) {
       return toast.add({
         title: '请完善个人资料中的大学信息',
         color: 'error',
         icon: 'lucide:annoyed'
       })
+    }
+
+    const _activeCollegeTab = activeCollegeTab.value
+
+    if (postMap.value[_activeCollegeTab]) {
+      return
     }
 
     if (_activeCollegeTab === 'market') {

@@ -1,71 +1,67 @@
 <template>
-  <UPageSection
-    title="矩阵"
-    description="欢迎进入 Z 世代的多元宇宙：你的灵魂，由你定义。"
-    :features="features"
-    :links="links"
-  />
+  <div
+    class="flex h-screen flex-col items-center justify-center gap-4 bg-[url('/images/bg.jpg')] bg-cover bg-center bg-no-repeat p-4 sm:gap-6 sm:p-6"
+  >
+    <h2
+      class="text-highlighted text-center text-3xl font-bold sm:text-4xl lg:text-5xl"
+    >
+      即刻校园
+    </h2>
+    <div class="text-muted text-center text-base text-balance sm:text-lg">
+      大学校园交友 | 二手交易 | 搭子 | 兼职 | 意见等一站式解决方案
+    </div>
+    <USelectMenu
+      :disabled="disabled"
+      placeholder="选择大学"
+      virtualize
+      v-model="college"
+      :items="colleges"
+      class="w-48"
+    />
+    <UButton
+      :disabled="!college"
+      loading-auto
+      label="进入"
+      trailing-icon="lucide:arrow-right"
+      @click="onClick"
+    />
+  </div>
 </template>
 <script lang="ts" setup>
-import { loginWithFingerprint } from '@/apis/auth'
+import { getCollegeAPI, loginWithFingerprint } from '@/apis/auth'
 import { useEncryptUserInfo } from '@/hooks'
 import fpPromise from '@fingerprintjs/fingerprintjs'
+import { onMounted, ref } from 'vue'
 
 const toast = useToast()
-const features = [
-  {
-    title: '全国互联',
-    description: '打破时空边界，发现共振频率。山海皆无距，知交在眼前',
-    icon: 'lucide:map-pin'
-  },
-  {
-    title: '高校匹配',
-    description:
-      '精准校友雷达，解锁你的校园「平行宇宙」。没有朋友？或许 TA 就在隔壁教学楼。',
-    icon: 'lucide:graduation-cap'
-  },
-  {
-    title: '兴趣匹配',
-    description:
-      '从「游戏」到「电影」，精准捕捉你的同好。拒绝尬聊，从共享热爱开始。',
-    icon: 'lucide:heart'
-  },
-  {
-    title: '我的动态',
-    description:
-      '记录每一个转瞬即逝的情绪坐标，总有同频共振在此刻回应。在这里，你的所有情绪都值得被看见。',
-    icon: 'lucide:activity'
-  },
-  {
-    title: 'OC',
-    description:
-      '不当现实副本，只做原创主角。亲手捏一个「我」，从此人设不撞车。',
-    icon: 'lucide:pencil-line'
-  },
-  {
-    title: 'OOC',
-    description: '跳出设定框，体验「灵魂出窍」的快乐。今天的你，由你自己定义。',
-    icon: 'lucide:palette'
+const college = ref('')
+const colleges = await (await fetch('/json/filter/colleges.json')).json()
+const fp = await fpPromise.load()
+const visitorId = (await fp.get()).visitorId
+// const visitorId = '632206f0f46de61b8d46f94bd4958039'
+const disabled = ref(false)
+
+const onClick = async () => {
+  try {
+    const encryptedUserInfo = await useEncryptUserInfo({
+      visitorId,
+      college: college.value
+    })
+    const { data: token } = await loginWithFingerprint(encryptedUserInfo)
+    localStorage.setItem('token', token)
+    toast.add({ title: '登录成功', icon: 'lucide:smile' })
+    location.replace('/')
+  } catch {
+    toast.add({ title: '登录失败', color: 'error', icon: 'lucide:annoyed' })
   }
-]
-const links = [
-  {
-    label: '进入',
-    trailingIcon: 'lucide:arrow-right',
-    onclick: async () => {
-      try {
-        const fp = await fpPromise.load()
-        const visitorId = (await fp.get()).visitorId
-        // const visitorId = '632206f0f46de61b8d46f94bd4958039'
-        const encryptedUserInfo = await useEncryptUserInfo({ visitorId })
-        const { data: token } = await loginWithFingerprint(encryptedUserInfo)
-        localStorage.setItem('token', token)
-        toast.add({ title: '登录成功', icon: 'lucide:smile' })
-        location.replace('/')
-      } catch {
-        toast.add({ title: '登录失败', color: 'error', icon: 'lucide:annoyed' })
-      }
-    }
+}
+
+onMounted(async () => {
+  const { data } = await getCollegeAPI(visitorId)
+
+  if (data) {
+    college.value = data
+    disabled.value = true
   }
-]
+})
 </script>

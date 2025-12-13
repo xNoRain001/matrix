@@ -158,22 +158,7 @@
           v-model="profileForm.college"
           :items="colleges"
           class="w-full"
-        >
-          <template #trailing>
-            <UButton
-              v-if="profileForm.college"
-              color="neutral"
-              variant="link"
-              size="sm"
-              icon="lucide:circle-x"
-              @click.stop="profileForm.college = ''"
-            />
-            <UIcon
-              name="lucide:chevron-down"
-              class="text-dimmed size-5"
-            ></UIcon>
-          </template>
-        </USelectMenu>
+        />
       </template>
     </UDrawer>
 
@@ -438,22 +423,7 @@
             v-model="profileForm.college"
             :items="colleges"
             class="w-full"
-          >
-            <template #trailing>
-              <UButton
-                v-if="profileForm.college"
-                color="neutral"
-                variant="link"
-                size="sm"
-                icon="lucide:circle-x"
-                @click.stop="profileForm.college = ''"
-              />
-              <UIcon
-                name="lucide:chevron-down"
-                class="text-dimmed size-5"
-              ></UIcon>
-            </template>
-          </USelectMenu>
+          />
         </UFormField>
         <USeparator />
         <UFormField
@@ -620,8 +590,13 @@ const isMBTIDrawerOpen = ref(false)
 const isAvatarSlideoverOpen = ref(false)
 const { isMobile, userInfo, avatarURL, globalSocket } =
   storeToRefs(useUserStore())
-const { postMap, allProductLoaded, allPostByCollegeLoaded } =
-  storeToRefs(usePostStore())
+const {
+  postMap,
+  activeTab,
+  activeCollegeTab,
+  allProductLoaded,
+  allPostByCollegeLoaded
+} = storeToRefs(usePostStore())
 const profileForm = ref({ ...userInfo.value.profile })
 const colleges = await (await fetch('/json/filter/colleges.json')).json()
 const provinceCityMap = await (
@@ -769,11 +744,13 @@ const onUpdateProfile = async () => {
     })
 
     // 如果修改了大学，需要清空这些和大学有关的数据
-    if (diff.college) {
+    if (diff.hasOwnProperty('college')) {
       delete postMap.value.myCollege
       delete postMap.value.market
       allProductLoaded.value = false
       allPostByCollegeLoaded.value = false
+      activeTab.value = 'latest'
+      activeCollegeTab.value = 'myCollege'
     }
 
     if (isMobile.value) {

@@ -39,3 +39,6 @@ export const hasResetPasswordURL = async (email: string) =>
 
 export const sendResetPasswordURL = async (email: string) =>
   HTTP.request(`${prefix}/send-reset-password-url?email=${email}`)
+
+export const getCollegeAPI = async (id: string) =>
+  HTTP.request(`${prefix}/get-college?id=${id}`)
