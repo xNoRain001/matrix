@@ -1,5 +1,5 @@
 <template>
-  <UDashboardNavbar title="广场" :toggle="false" class="border-b-0">
+  <UDashboardNavbar :toggle="false" class="border-b-0">
     <template #leading>
       <UDashboardSidebarCollapse />
     </template>
@@ -7,9 +7,13 @@
     <template #trailing>
       <UTabs
         :ui="{
-          root: 'absolute left-1/2 -translate-x-1/2'
+          root: 'absolute left-1/2 -translate-x-1/2',
+          list: 'px-0 border-none gap-4 sm:gap-6',
+          trigger: 'px-0 font-semibold text-base',
+          indicator: 'h-1'
         }"
         :content="false"
+        variant="link"
         :items="tabItems"
         v-model="activeTab"
       />
@@ -34,18 +38,20 @@
       />
     </template>
   </UDashboardNavbar>
-  <UTabs
-    v-if="activeTab === 'college'"
-    :ui="{
-      root: 'px-4 sm:px-6',
-      list: 'gap-4 px-0 sm:gap-6',
-      trigger: 'px-0'
-    }"
-    :content="false"
-    variant="link"
-    :items="collegeItems"
-    v-model="activeCollegeTab"
-  />
+  <div class="flex justify-center px-4 sm:px-6">
+    <UTabs
+      v-if="activeTab === 'college'"
+      :ui="{
+        list: 'px-0 border-none gap-4 sm:gap-6',
+        trigger: 'px-0 font-semibold text-base',
+        indicator: 'h-1'
+      }"
+      :content="false"
+      variant="link"
+      :items="collegeItems"
+      v-model="activeCollegeTab"
+    />
+  </div>
 
   <PlaygroundNotificationsSlideover v-model="isNotificationSlideoverOpen" />
 </template>
@@ -86,16 +92,20 @@ const collegeItems = [
     value: 'market'
   }
   // {
+  //   label: '失物招领',
+  //   value: 'lostAndFound'
+  // },
+  // {
   //   label: '搭子',
   //   value: 'partner'
   // },
   // {
-  //   label: '兼职',
-  //   value: ''
+  //   label: '兼职的英文表述',
+  //   value: 'part-timeJob'
   // },
   // {
   //   label: '建议',
-  //   value: ''
+  //   value: 'suggestion'
   // }
 ]
 const toast = useToast()

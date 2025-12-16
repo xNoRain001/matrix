@@ -4,7 +4,7 @@
       <UDashboardSidebarCollapse />
     </template>
     <template #trailing>
-      <UBadge v-if="onlineCount" :label="onlineCount" />
+      <UBadge v-if="onlineCount" :label="onlineCount" size="sm" />
     </template>
     <template #right>
       <UButton

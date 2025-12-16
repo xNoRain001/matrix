@@ -29,7 +29,8 @@
         :content="false"
         :ui="{
           list: 'border-none gap-4 px-0 sm:gap-6',
-          trigger: 'px-0'
+          trigger: 'px-0 font-semibold text-base',
+          indicator: 'h-1'
         }"
         variant="link"
         :items="tabItems"
