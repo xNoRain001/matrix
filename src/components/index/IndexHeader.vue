@@ -7,12 +7,6 @@
       <UBadge v-if="onlineCount" :label="onlineCount" size="sm" />
     </template>
     <template #right>
-      <UButton
-        v-if="!isMobile"
-        :icon="isFullScreen ? 'lucide:minimize' : 'lucide:maximize'"
-        variant="ghost"
-        @click="onScreenSize"
-      />
       <!-- <UButton
         icon="lucide:calendar-check"
         variant="ghost"
@@ -34,30 +28,16 @@
         variant="ghost"
       />
       <IndexThemePicker />
-      <UButton
+      <!-- <UButton
         @click="startViewTransition"
         :icon="nextTheme === 'dark' ? 'lucide:moon' : 'lucide:sun'"
         variant="ghost"
-      />
+      /> -->
     </template>
   </UDashboardNavbar>
 
   <!-- 通知 -->
   <IndexNotificationsSlideover v-model="isNotificationsSlideoverOpen" />
-  <!-- 全屏 -->
-  <USlideover
-    v-if="isMobile"
-    title="开启全屏"
-    description=" "
-    :ui="{
-      description: 'hidden'
-    }"
-    v-model:open="isFullscreenSlideoverOpen"
-  >
-    <template #body>
-      <img src="/images/fullscreen.webp" />
-    </template>
-  </USlideover>
   <!-- 过滤器 -->
   <IndexFilter v-model="isFilterOverlayOpen" />
   <!-- 每日任务 -->
@@ -65,17 +45,14 @@
 </template>
 
 <script lang="ts" setup>
-import { useExitFullscreen, useRequestFullscreen } from '@/hooks'
 import { useNotificationsStore, useUserStore } from '@/store'
 import { useColorMode } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
 
-const isFullScreen = ref(false)
-const isFullscreenSlideoverOpen = ref(false)
 // const isDailyQuestsSlideoverOpen = ref(false)
 const isFilterOverlayOpen = ref(false)
-const { userInfo, onlineCount, isMobile } = storeToRefs(useUserStore())
+const { userInfo, onlineCount } = storeToRefs(useUserStore())
 const { unreadHomeNotificationCount } = storeToRefs(useNotificationsStore())
 const { store } = useColorMode()
 const getNextTheme = () =>
@@ -88,58 +65,41 @@ const getNextTheme = () =>
       : 'dark'
 const nextTheme = ref<'light' | 'dark' | 'auto'>(getNextTheme())
 const isNotificationsSlideoverOpen = ref(false)
-const toast = useToast()
 
-const switchTheme = () => (store.value = nextTheme.value)
+// const switchTheme = () => (store.value = nextTheme.value)
 
-const startViewTransition = (event: MouseEvent) => {
-  if (!document.startViewTransition) {
-    switchTheme()
-    return
-  }
+// const startViewTransition = (event: MouseEvent) => {
+//   if (!document.startViewTransition) {
+//     switchTheme()
+//     return
+//   }
 
-  const x = event.clientX
-  const y = event.clientY
-  const endRadius = Math.hypot(
-    Math.max(x, window.innerWidth - x),
-    Math.max(y, window.innerHeight - y)
-  )
-  const transition = document.startViewTransition(() => {
-    switchTheme()
-  })
-  transition.ready.then(() => {
-    const duration = 600
-    document.documentElement.animate(
-      {
-        clipPath: [
-          `circle(0px at ${x}px ${y}px)`,
-          `circle(${endRadius}px at ${x}px ${y}px)`
-        ]
-      },
-      {
-        duration: duration,
-        easing: 'cubic-bezier(.76,.32,.29,.99)',
-        pseudoElement: '::view-transition-new(root)'
-      }
-    )
-  })
-}
-
-const onScreenSize = () => {
-  if (isMobile.value) {
-    isFullscreenSlideoverOpen.value = true
-    return
-  }
-
-  const v = !isFullScreen.value
-  isFullScreen.value = v
-
-  if (v) {
-    useRequestFullscreen(toast)
-  } else {
-    useExitFullscreen(toast)
-  }
-}
+//   const x = event.clientX
+//   const y = event.clientY
+//   const endRadius = Math.hypot(
+//     Math.max(x, window.innerWidth - x),
+//     Math.max(y, window.innerHeight - y)
+//   )
+//   const transition = document.startViewTransition(() => {
+//     switchTheme()
+//   })
+//   transition.ready.then(() => {
+//     const duration = 600
+//     document.documentElement.animate(
+//       {
+//         clipPath: [
+//           `circle(0px at ${x}px ${y}px)`,
+//           `circle(${endRadius}px at ${x}px ${y}px)`
+//         ]
+//       },
+//       {
+//         duration: duration,
+//         easing: 'cubic-bezier(.76,.32,.29,.99)',
+//         pseudoElement: '::view-transition-new(root)'
+//       }
+//     )
+//   })
+// }
 
 watch(store, () =>
   // 在定时器中获取的才是最新的
