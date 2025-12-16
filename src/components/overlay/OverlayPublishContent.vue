@@ -92,21 +92,6 @@
           files: 'grid-cols-3'
         }"
       />
-      <template v-if="isPost">
-        <div class="text-primary text-center text-sm" @click="onTextToImage">
-          没有图片？试试 AI 生成图片
-        </div>
-        <UChatPrompt
-          :autofocus="false"
-          v-model="prompt"
-          variant="soft"
-          placeholder="帮我生成一只卡通风格的猫"
-          :maxrows="3"
-          :loading="generating"
-        >
-          <UChatPromptSubmit class="rounded-full" @click="onTextToImage" />
-        </UChatPrompt>
-      </template>
     </template>
     <template #footer>
       <div class="flex flex-1 gap-2">
@@ -163,7 +148,6 @@ import type { content } from '@/types'
 import { reportAPI } from '@/apis/report'
 
 let sortable = false
-let startTime = 0
 const props = defineProps<{
   action:
     | 'post'
@@ -368,43 +352,6 @@ const reportTargetTypes = [
     value: 'tag'
   }
 ]
-const prompt = ref('')
-const generating = ref(false)
-
-const onTextToImage = async () => {
-  if (generating.value) {
-    return
-  }
-
-  generating.value = true
-  startTime = Date.now()
-
-  try {
-    const response = await fetch(
-      `https://text-to-image.xtrix.asia?prompt=${prompt.value}`
-    )
-
-    if (!response.ok) {
-      throw new Error()
-    }
-
-    const blob = await response.blob()
-    const file = new File([blob], `text-to-image-${Date.now()}.jpeg`, {
-      type: 'image/jpeg'
-    })
-    const dataTransfer = new DataTransfer()
-    dataTransfer.items.add(file)
-    files.value.push(file)
-    prompt.value = ''
-    toast.add({
-      title: `生成成功，用时 ${((Date.now() - startTime) / 1000).toFixed(2)} 秒`
-    })
-  } catch {
-    toast.add({ title: '生成失败', color: 'error', icon: 'lucide:annoyed' })
-  } finally {
-    generating.value = false
-  }
-}
 
 const onReport = async () => {
   if (props.reportTarget === 'profile' && reportTargetType.value === '') {
