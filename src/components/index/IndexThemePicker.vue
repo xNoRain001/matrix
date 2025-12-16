@@ -68,26 +68,11 @@
           />
         </div>
       </fieldset>
-
-      <!-- <fieldset>
-        <legend class="mb-2 text-xs leading-none font-semibold">主题</legend>
-
-        <div class="-mx-2 grid grid-cols-3 gap-1">
-          <IndexThemePickerButton
-            v-for="m in modes"
-            :key="m.label"
-            v-bind="m"
-            :selected="store === m.value"
-            @click="store = m.value"
-          />
-        </div>
-      </fieldset> -->
     </template>
   </UPopover>
 </template>
 
 <script setup lang="ts">
-// import { useColorMode } from '@vueuse/core'
 import { computed, reactive } from 'vue'
 import {
   appConfig as _appConfig,
@@ -98,7 +83,6 @@ import {
 import { useUpdateTheme } from '@/hooks'
 
 const appConfig = reactive(_appConfig)
-// const { store } = useColorMode()
 const neutral = computed({
   get() {
     return appConfig.ui.colors.neutral
@@ -123,15 +107,6 @@ const radius = computed({
     useUpdateTheme('radius', appConfig, v)
   }
 })
-// const modes: {
-//   label: '亮色' | '暗色' | '系统'
-//   value: 'light' | 'dark' | 'auto'
-//   icon: string
-// }[] = [
-//   { label: '亮色', value: 'light', icon: 'lucide:sun' },
-//   { label: '暗色', value: 'dark', icon: 'lucide:moon' },
-//   { label: '系统', value: 'auto', icon: 'lucide:monitor' }
-// ]
 
 const setBlackAsPrimary = (v: boolean) =>
   useUpdateTheme('blackAsPrimary', appConfig, v)

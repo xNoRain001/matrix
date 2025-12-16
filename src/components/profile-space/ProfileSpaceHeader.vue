@@ -17,12 +17,6 @@
     </template>
     <template #right>
       <UButton
-        v-if="isSelf"
-        icon="lucide:pencil-line"
-        variant="ghost"
-        @click="publisherOverlay.open()"
-      />
-      <UButton
         v-if="isSetting"
         icon="lucide:settings"
         variant="ghost"
@@ -31,6 +25,8 @@
       <ProfileSpaceDropdownMenu v-if="!isSelf" :target-id="targetId" />
     </template>
   </UDashboardNavbar>
+  <!-- 通知 -->
+  <IndexNotificationsSlideover v-model="isNotificationsSlideoverOpen" />
   <!-- 移动端设置界面 -->
   <USlideover
     v-if="isMobile && isSelf"
@@ -90,7 +86,6 @@ import DataManager from '@/views/Profile/DataManager.vue'
 import Logoff from '@/views/Profile/Logoff.vue'
 import Theme from '@/views/Profile/Theme.vue'
 import OverlayLogout from '@/components/overlay/OverlayLogout.vue'
-import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
 import OverlayPublishContent from '@/components/overlay/OverlayPublishContent.vue'
 import OverlayHelpAndSupport from '@/components/overlay/OverlayHelpAndSupport.vue'
 import OverlayAbout from '@/components/overlay/OverlayAbout.vue'
@@ -114,6 +109,7 @@ const isNotificationSlideoverOpen = ref(false)
 const isDataManagerSlideoverOpen = ref(false)
 const isLogoffSlideoverOpen = ref(false)
 const isThemeSlideoverOpen = ref(false)
+const isNotificationsSlideoverOpen = ref(false)
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const { activeSpaceTargetIds } = storeToRefs(useRecentContactsStore())
 const cards = [
@@ -179,7 +175,6 @@ const cards = [
 const isSelf = props.targetId === userInfo.value.id
 const route = useRoute()
 const logoutOverlay = overlay.create(OverlayLogout)
-const publisherOverlay = overlay.create(OverlayPublisher)
 const publishContentOverlay = overlay.create(OverlayPublishContent)
 const helpAndSupportOverlay = overlay.create(OverlayHelpAndSupport)
 const aboutOverlay = overlay.create(OverlayAbout)

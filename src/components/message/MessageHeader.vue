@@ -14,7 +14,7 @@
       />
       <UButton
         @click="onResetMsgCounter"
-        icon="lucide:mail-check"
+        icon="lucide:brush-cleaning"
         variant="ghost"
       />
     </template>

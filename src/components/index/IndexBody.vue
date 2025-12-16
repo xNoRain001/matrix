@@ -3,12 +3,17 @@
     <!-- 108 = 12 * 8 + 6 * 2 -->
     <div
       ref="planetsRef"
-      class="flex w-[calc(100vw-2rem)] overflow-hidden p-4 sm:w-108 sm:p-6"
+      class="flex w-[calc(100vw-2rem)] flex-col items-center gap-7.5 overflow-hidden p-4 sm:w-108 sm:gap-9.5 sm:p-6"
     >
       <IndexPlanets2D
         :planets="planets"
         :paused="!isPlanetsInView || isPlanetsHovered"
       />
+      <div class="text-highlighted text-xs">
+        当前
+        <span class="text-primary">{{ onlineCount }}</span>
+        人在线
+      </div>
     </div>
   </div>
   <!-- class="from-primary/10 to-default bg-gradient-to-tl from-5%" -->
@@ -132,7 +137,7 @@ const list = [
 ]
 const { hasMatchRes, offline, matching, noMatch, filter } =
   storeToRefs(useMatchStore())
-const { userInfo, globalSocket } = storeToRefs(useUserStore())
+const { userInfo, globalSocket, onlineCount } = storeToRefs(useUserStore())
 const { roomId } = storeToRefs(useWebRTCStore())
 const toast = useToast()
 const route = useRoute()

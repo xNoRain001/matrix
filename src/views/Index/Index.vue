@@ -1,7 +1,7 @@
 <template>
   <UDashboardPanel id="home">
     <template #header>
-      <IndexHeader />
+      <IndexHeader></IndexHeader>
     </template>
     <template #body>
       <IndexBody></IndexBody>

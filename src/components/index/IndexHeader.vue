@@ -22,17 +22,12 @@
           <UIcon name="i-lucide-bell" class="text-primary size-5" />
         </UChip>
       </UButton>
+      <IndexThemePicker />
       <UButton
         @click="isFilterOverlayOpen = true"
         icon="lucide:filter"
         variant="ghost"
       />
-      <IndexThemePicker />
-      <!-- <UButton
-        @click="startViewTransition"
-        :icon="nextTheme === 'dark' ? 'lucide:moon' : 'lucide:sun'"
-        variant="ghost"
-      /> -->
     </template>
   </UDashboardNavbar>
 
@@ -65,41 +60,6 @@ const getNextTheme = () =>
       : 'dark'
 const nextTheme = ref<'light' | 'dark' | 'auto'>(getNextTheme())
 const isNotificationsSlideoverOpen = ref(false)
-
-// const switchTheme = () => (store.value = nextTheme.value)
-
-// const startViewTransition = (event: MouseEvent) => {
-//   if (!document.startViewTransition) {
-//     switchTheme()
-//     return
-//   }
-
-//   const x = event.clientX
-//   const y = event.clientY
-//   const endRadius = Math.hypot(
-//     Math.max(x, window.innerWidth - x),
-//     Math.max(y, window.innerHeight - y)
-//   )
-//   const transition = document.startViewTransition(() => {
-//     switchTheme()
-//   })
-//   transition.ready.then(() => {
-//     const duration = 600
-//     document.documentElement.animate(
-//       {
-//         clipPath: [
-//           `circle(0px at ${x}px ${y}px)`,
-//           `circle(${endRadius}px at ${x}px ${y}px)`
-//         ]
-//       },
-//       {
-//         duration: duration,
-//         easing: 'cubic-bezier(.76,.32,.29,.99)',
-//         pseudoElement: '::view-transition-new(root)'
-//       }
-//     )
-//   })
-// }
 
 watch(store, () =>
   // 在定时器中获取的才是最新的
