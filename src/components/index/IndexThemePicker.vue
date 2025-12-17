@@ -5,7 +5,6 @@
         icon="i-lucide-swatch-book"
         color="neutral"
         :variant="open ? 'soft' : 'ghost'"
-        square
         aria-label="Color picker"
         :ui="{ leadingIcon: 'text-primary' }"
       />

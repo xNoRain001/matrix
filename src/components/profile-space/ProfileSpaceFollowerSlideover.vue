@@ -5,17 +5,14 @@
     title="关注"
     description=" "
     :ui="{
-      body: 'flex flex-col p-0 sm:p-0',
       description: 'hidden'
     }"
   >
     <template #body>
-      <UTabs class="gap-0 p-4 sm:p-6" :items="tabItems" v-model="activeTab">
-        <template #content></template
-      ></UTabs>
+      <UTabs :content="false" :items="tabItems" v-model="activeTab" />
       <Skeleton v-if="loading" :count="5" />
       <template v-if="activeTab === 'follower'">
-        <div v-if="followerList?.length >= 0">
+        <div v-if="followerList?.length >= 0" class="divide-default divide-y">
           <div
             v-for="(
               { targetId, targetProfile: { nickname, bio }, mutual }, index
@@ -27,7 +24,7 @@
                 targetId
               })
             "
-            class="bg-elevated/50 cursor-pointer p-4 sm:p-6"
+            class="cursor-pointer py-4 sm:py-6"
           >
             <UUser
               :avatar="{
@@ -76,7 +73,7 @@
         />
       </template>
       <template v-if="activeTab === 'following'">
-        <div v-if="followingList?.length >= 0">
+        <div v-if="followingList?.length >= 0" class="divide-default divide-y">
           <div
             v-for="(
               { targetId, targetProfile: { nickname, bio }, mutual, unfollow },
@@ -89,7 +86,7 @@
                 targetId
               })
             "
-            class="bg-elevated/50 cursor-pointer p-4 sm:p-6"
+            class="cursor-pointer py-4 sm:py-6"
           >
             <UUser
               :avatar="{

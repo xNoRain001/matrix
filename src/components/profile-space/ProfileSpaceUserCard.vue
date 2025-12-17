@@ -179,8 +179,7 @@ const props = withDefaults(
 )
 const spaceBgRef = useTemplateRef('spaceBgRef')
 const toast = useToast()
-const { isMobile, userInfo, avatarURL, globalSocket } =
-  storeToRefs(useUserStore())
+const { isMobile, userInfo, avatarURL } = storeToRefs(useUserStore())
 const { activeTargetIds } = storeToRefs(useRecentContactsStore())
 const isSelf = props.targetId === userInfo.value.id
 const route = useRoute()
@@ -229,7 +228,6 @@ const onFollow = async () => {
     props.targetProfile.isFollower = true
     props.targetProfile.followerCount++
     userInfo.value.profile.followingCount++
-    globalSocket.value.emit('follow', targetId)
     toast.add({
       title: '关注成功',
       icon: 'lucide:smile'

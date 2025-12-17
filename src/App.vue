@@ -58,6 +58,18 @@
                   :label="unreadContactNotificationCount"
                   size="sm"
               /></template>
+              <template #playground-trailing>
+                <UBadge
+                  v-if="
+                    unreadPlaygroundNotificationCount.like ||
+                    unreadPlaygroundNotificationCount.comment
+                  "
+                  :label="
+                    unreadPlaygroundNotificationCount.like +
+                    unreadPlaygroundNotificationCount.comment
+                  "
+                  size="sm"
+              /></template>
             </UNavigationMenu>
 
             <UNavigationMenu
@@ -208,10 +220,9 @@ const {
 } = storeToRefs(useRecentContactsStore())
 const { messageRecordMap } = storeToRefs(useMessagesStore())
 const {
-  contactNotifications,
-  homeNotifications,
   unreadContactNotificationCount,
-  unreadHomeNotificationCount
+  unreadHomeNotificationCount,
+  unreadPlaygroundNotificationCount
 } = storeToRefs(useNotificationsStore())
 const { matchRes, hasMatchRes, offline, matching, noMatch } =
   storeToRefs(useMatchStore())
@@ -226,7 +237,8 @@ const navs = [
     {
       label: '广场',
       icon: 'lucide:aperture',
-      to: '/playground'
+      to: '/playground',
+      slot: 'playground'
     },
     {
       label: '好友',
@@ -476,21 +488,6 @@ const startRTC = async roomId => {
   const offer = await pc.createOffer()
   await pc.setLocalDescription(offer)
   globalSocket.value.emit('web-rtc', roomId, { description: offer })
-}
-
-const onFollow = async notification => {
-  const _contactNotifications = contactNotifications.value
-  const { id } = userInfo.value
-  _contactNotifications.unshift(notification)
-  unreadContactNotificationCount.value++
-  localStorage.setItem(
-    `contactNotifications-${id}`,
-    JSON.stringify(_contactNotifications)
-  )
-  localStorage.setItem(
-    `unreadContactNotificationCount-${id}`,
-    String(unreadContactNotificationCount.value)
-  )
 }
 
 const onTrack = ({ track, streams }) => {
@@ -1139,45 +1136,20 @@ const onOtherWebRTC = () => {
   })
 }
 
-const onRefreshNotifications = notifications => {
-  const _homeNotifications = notifications.filter(
-    item =>
-      item.type === 'feedback' ||
-      item.type === 'reporter' ||
-      item.type === 'reported'
-  )
-  const _contactNotifications = notifications.filter(
-    item => item.type === 'contact'
-  )
-  const __homeNotifications = homeNotifications.value
-  const __contactNotifications = contactNotifications.value
-  const homeNotificationsLength = _homeNotifications.length
-  const contactNotificationsLength = _contactNotifications.length
+const onGetNotificationCount = countMap => {
   const { id } = userInfo.value
+  const {
+    unreadPlaygroundNotificationCount: { like, comment }
+  } = countMap
 
-  if (homeNotificationsLength) {
-    __homeNotifications.unshift(..._homeNotifications)
-    unreadHomeNotificationCount.value += homeNotificationsLength
+  if (like || comment) {
+    const _unreadPlaygroundNotificationCount =
+      unreadPlaygroundNotificationCount.value
+    _unreadPlaygroundNotificationCount.like += like
+    _unreadPlaygroundNotificationCount.comment += comment
     localStorage.setItem(
-      `homeNotifications-${id}`,
-      JSON.stringify(__homeNotifications)
-    )
-    localStorage.setItem(
-      `unreadHomeNotificationCount-${id}`,
-      String(unreadHomeNotificationCount.value)
-    )
-  }
-
-  if (contactNotificationsLength) {
-    __contactNotifications.unshift(..._contactNotifications)
-    unreadContactNotificationCount.value += contactNotificationsLength
-    localStorage.setItem(
-      `contactNotifications-${id}`,
-      JSON.stringify(_contactNotifications)
-    )
-    localStorage.setItem(
-      `unreadContactNotificationCount-${id}`,
-      String(unreadContactNotificationCount.value)
+      `unreadPlaygroundNotificationCount-${id}`,
+      JSON.stringify(_unreadPlaygroundNotificationCount)
     )
   }
 }
@@ -1249,8 +1221,6 @@ const initSocket = socket => {
   socket.on('otherjoin', onOtherJoin)
   // web rtc
   socket.on('web-rtc', onWebRTC)
-  // 被关注
-  socket.on('follow', onFollow)
   // 接收消息
   socket.on('receive-msg', onReceiveMsg)
   // 接收的离线消息
@@ -1276,7 +1246,7 @@ const initSocket = socket => {
   // 对方结束了 web rtc
   socket.on('bye', onBye)
   // 通知
-  socket.on('refresh-notifications', onRefreshNotifications)
+  socket.on('get-notification-count', onGetNotificationCount)
   // 在线状态
   socket.on('get-online-status', onGetOnlineStatus)
   socket.on('get-online-count', onGetOnlineCount)
@@ -1363,6 +1333,12 @@ onMounted(async () => {
     setInterval(() => {
       globalSocket.value.emit('get-online-count')
     }, 1000 * 60)
+    setInterval(
+      () => {
+        globalSocket.value.emit('get-notification-count')
+      },
+      1000 * 60 * 5
+    )
   }
 })
 </script>

@@ -31,6 +31,19 @@
           :label="unreadHomeNotificationCount"
           size="sm"
         />
+        <UBadge
+          v-if="
+            value === '/playground' &&
+            (unreadPlaygroundNotificationCount.like ||
+              unreadPlaygroundNotificationCount.comment)
+          "
+          class="absolute top-0 right-0"
+          :label="
+            unreadPlaygroundNotificationCount.like +
+            unreadPlaygroundNotificationCount.comment
+          "
+          size="sm"
+        />
       </template>
     </UTabs>
   </div>
@@ -48,8 +61,11 @@ import {
 } from '@/store'
 
 const { unreadMsgCounter } = storeToRefs(useRecentContactsStore())
-const { unreadHomeNotificationCount, unreadContactNotificationCount } =
-  storeToRefs(useNotificationsStore())
+const {
+  unreadHomeNotificationCount,
+  unreadContactNotificationCount,
+  unreadPlaygroundNotificationCount
+} = storeToRefs(useNotificationsStore())
 const tabsRef = useTemplateRef('tabsRef')
 const { footerNavs } = storeToRefs(useFooterStore())
 const route = useRoute()

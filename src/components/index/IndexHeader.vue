@@ -3,21 +3,13 @@
     <template #leading>
       <UDashboardSidebarCollapse />
     </template>
-    <template #trailing>
-      <UBadge v-if="onlineCount" :label="onlineCount" size="sm" />
-    </template>
     <template #right>
       <!-- <UButton
         icon="lucide:calendar-check"
         variant="ghost"
         @click="isDailyQuestsSlideoverOpen = true"
       ></UButton> -->
-      <UButton
-        color="neutral"
-        variant="ghost"
-        square
-        @click="isNotificationsSlideoverOpen = true"
-      >
+      <UButton variant="ghost" @click="isNotificationsSlideoverOpen = true">
         <UChip :show="Boolean(unreadHomeNotificationCount)" color="error" inset>
           <UIcon name="i-lucide-bell" class="text-primary size-5" />
         </UChip>
@@ -47,7 +39,7 @@ import { ref, watch } from 'vue'
 
 // const isDailyQuestsSlideoverOpen = ref(false)
 const isFilterOverlayOpen = ref(false)
-const { userInfo, onlineCount } = storeToRefs(useUserStore())
+const { userInfo } = storeToRefs(useUserStore())
 const { unreadHomeNotificationCount } = storeToRefs(useNotificationsStore())
 const { store } = useColorMode()
 const getNextTheme = () =>

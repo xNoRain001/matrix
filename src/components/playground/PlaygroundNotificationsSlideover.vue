@@ -6,119 +6,51 @@
     title="通知"
     description=" "
     :ui="{
-      body: 'flex flex-col',
       description: 'hidden'
     }"
   >
     <template #body>
       <UTabs :items="tabItems" v-model="activeTab" :content="false" />
-      <template v-if="activeTab === 'like'">
-        <div
-          v-if="likeNotifications.length"
-          v-for="{
-            _id,
-            targetId,
-            targetProfile: { nickname },
-            createdAt
-          } in likeNotifications"
-          :key="_id"
-          class="cursor-pointer p-4 sm:p-6"
-        >
-          <UUser
-            :name="nickname"
-            :avatar="{
-              src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
-              alt: nickname[0]
-            }"
-            size="xl"
-            :ui="{
-              root: 'items-start',
-              wrapper: 'flex-1 min-w-0',
-              name: 'truncate',
-              description: 'flex justify-between'
-            }"
+      <Skeleton v-if="loading" :count="10" />
+      <template v-else-if="activeTab === 'like' && likeNotifications">
+        <div class="divide-default divide-y">
+          <div
+            v-for="{ _id, actors, updatedAt } in likeNotifications"
+            :key="_id"
+            class="cursor-pointer py-4 sm:py-6"
           >
-            <template #description>
-              <span>点赞了你的内容</span>
-              <time>{{ useFormatTimeAgo(createdAt) }}</time>
-            </template>
-          </UUser>
+            <div class="flex items-center gap-2">
+              <UAvatarGroup size="xl">
+                <UAvatar
+                  v-for="{ nickname, user } in actors"
+                  :src="`${VITE_OSS_BASE_URL}avatar/${user}`"
+                  :alt="nickname[0]"
+                />
+              </UAvatarGroup>
+              <div class="min-w-0 flex-1">
+                <div class="text-highlighted truncate font-medium">
+                  {{ actors.map(item => item.nickname).join('、') }}
+                </div>
+                <div class="text-muted flex justify-between gap-2 text-sm">
+                  <span>
+                    {{
+                      actors.length > 2 ? `等 ${actors.length} 人 ` : ''
+                    }}点赞了你的内容
+                  </span>
+                  <time>{{ useFormatTimeAgo(updatedAt) }}</time>
+                </div>
+              </div>
+              <!-- <img src="/images/logo.svg" class="size-10" /> -->
+              <div
+                class="text-muted bg-elevated flex size-10 items-center justify-center rounded-xl text-xs"
+              >
+                ...
+              </div>
+            </div>
+          </div>
         </div>
-        <div v-else class="flex flex-1 items-center justify-center">
-          <UIcon name="lucide:bell" class="text-dimmed size-32" />
-        </div>
-      </template>
-      <template v-if="activeTab === 'star'">
-        <div
-          v-if="likeNotifications.length"
-          v-for="{
-            _id,
-            targetId,
-            targetProfile: { nickname },
-            createdAt
-          } in likeNotifications"
-          :key="_id"
-          class="cursor-pointer p-4 sm:p-6"
-        >
-          <UUser
-            :name="nickname"
-            :avatar="{
-              src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
-              alt: nickname[0]
-            }"
-            size="xl"
-            :ui="{
-              root: 'items-start',
-              wrapper: 'flex-1 min-w-0',
-              name: 'truncate',
-              description: 'flex justify-between'
-            }"
-          >
-            <template #description>
-              <span>点赞了你的内容</span>
-              <time>{{ useFormatTimeAgo(createdAt) }}</time>
-            </template>
-          </UUser>
-        </div>
-        <div v-else class="flex flex-1 items-center justify-center">
-          <UIcon name="lucide:bell" class="text-dimmed size-32" />
-        </div>
-      </template>
-      <template v-if="activeTab === 'comment'">
-        <div
-          v-if="likeNotifications.length"
-          v-for="{
-            _id,
-            targetId,
-            targetProfile: { nickname },
-            createdAt
-          } in likeNotifications"
-          :key="_id"
-          class="cursor-pointer p-4 sm:p-6"
-        >
-          <UUser
-            :name="nickname"
-            :avatar="{
-              src: `${VITE_OSS_BASE_URL}avatar/${targetId}`,
-              alt: nickname[0]
-            }"
-            size="xl"
-            :ui="{
-              root: 'items-start',
-              wrapper: 'flex-1 min-w-0',
-              name: 'truncate',
-              description: 'flex justify-between'
-            }"
-          >
-            <template #description>
-              <span>点赞了你的内容</span>
-              <time>{{ useFormatTimeAgo(createdAt) }}</time>
-            </template>
-          </UUser>
-        </div>
-        <div v-else class="flex flex-1 items-center justify-center">
-          <UIcon name="lucide:bell" class="text-dimmed size-32" />
-        </div>
+        <Separator v-if="likeNotifications.length === 0" :label="'空空如也'" />
+        <Separator v-else-if="allLikeLoaded" label="已经到底了" />
       </template>
     </template>
   </USlideover>
@@ -126,14 +58,14 @@
 
 <script lang="ts" setup>
 import { useFormatTimeAgo } from '@/hooks'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useNotificationsStore, useUserStore } from '@/store'
+import { useUserStore } from '@/store'
+import { getNotificationsAPI } from '@/apis/notification'
 
 const isNotificationSlideoverOpen = defineModel<boolean>()
 const { VITE_OSS_BASE_URL } = import.meta.env
 const { isMobile } = storeToRefs(useUserStore())
-const { likeNotifications } = storeToRefs(useNotificationsStore())
 const activeTab = ref('like')
 const tabItems = [
   {
@@ -142,14 +74,26 @@ const tabItems = [
     icon: 'lucide:heart'
   },
   {
-    label: '收藏',
-    value: 'star',
-    icon: 'lucide:star'
-  },
-  {
     label: '评论',
     value: 'comment',
     icon: 'lucide:message-circle'
+  },
+  {
+    label: '收藏',
+    value: 'star',
+    icon: 'lucide:star'
   }
 ]
+const likeNotifications = ref(null)
+const loading = ref(true)
+const allLikeLoaded = ref(false)
+
+watch(isNotificationSlideoverOpen, async v => {
+  if (v) {
+    const { data } = await getNotificationsAPI('like')
+    likeNotifications.value = data
+    allLikeLoaded.value = data.length < 10
+    loading.value = false
+  }
+})
 </script>

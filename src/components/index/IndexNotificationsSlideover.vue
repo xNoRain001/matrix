@@ -10,59 +10,62 @@
     }"
   >
     <template #body>
-      <div v-if="homeNotifications.length" class="divide-default divide-y">
-        <div
-          v-for="(
-            { _id, createdAt, content, type }, index
-          ) in homeNotifications"
-          :key="_id"
-          class="cursor-pointer p-4 sm:p-6"
-        >
-          <UUser
-            size="xl"
-            :ui="{
-              wrapper: 'flex-1 min-w-0',
-              description: 'flex justify-between items-center gap-2'
-            }"
+      <Skeleton v-if="loading" :count="10" />
+      <template v-if="homeNotifications">
+        <div class="divide-default divide-y">
+          <div
+            v-for="{ _id, createdAt, content, type } in homeNotifications"
+            :key="_id"
+            class="cursor-pointer p-4 sm:p-6"
           >
-            <template #description>
-              <span class="flex-1 truncate">{{ content }}</span>
-              <time
-                >{{ useFormatTimeAgo(createdAt)
-                }}{{
-                  type === 'feedback'
-                    ? '已阅读反馈'
-                    : type === 'reporter'
-                      ? '已处理举报对象'
-                      : ''
-                }}</time
-              >
-              <UBadge label="删除" color="error" @click="onDelete(index)" />
-            </template>
-          </UUser>
+            <UUser
+              size="xl"
+              :ui="{
+                wrapper: 'flex-1 min-w-0',
+                description: 'flex justify-between gap-2'
+              }"
+            >
+              <template #description>
+                <span class="flex-1 truncate">{{ content }}</span>
+                <time>
+                  {{ useFormatTimeAgo(createdAt) }}
+                  {{
+                    type === 'feedback'
+                      ? '已阅读反馈'
+                      : type === 'reporter'
+                        ? '已处理举报对象'
+                        : ''
+                  }}
+                </time>
+              </template>
+            </UUser>
+          </div>
         </div>
-      </div>
-      <div v-else class="flex h-full items-center justify-center">
-        <UIcon name="lucide:bell" class="text-dimmed size-32" />
-      </div>
+        <Separator v-if="homeNotifications.length === 0" :label="'空空如也'" />
+        <Separator v-else-if="allNotificationLoaded" label="已经到底了" />
+      </template>
     </template>
   </USlideover>
 </template>
 
 <script setup lang="ts">
 import { useFormatTimeAgo } from '@/hooks'
-import { useNotificationsStore, useUserStore } from '@/store'
+import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
+import { watch } from 'vue'
+import { ref } from 'vue'
 
 const isNotificationsSlideoverOpen = defineModel<boolean>()
-const { userInfo, isMobile } = storeToRefs(useUserStore())
-const { homeNotifications } = storeToRefs(useNotificationsStore())
+const { isMobile } = storeToRefs(useUserStore())
+const homeNotifications = ref(null)
+const allNotificationLoaded = ref(false)
+const loading = ref(true)
 
-const onDelete = index => {
-  homeNotifications.value.splice(index, 1)
-  localStorage.setItem(
-    `homeNotifications-${userInfo.value.id}`,
-    JSON.stringify(homeNotifications.value)
-  )
-}
+watch(isNotificationsSlideoverOpen, v => {
+  if (v) {
+    homeNotifications.value = []
+    allNotificationLoaded.value = true
+    loading.value = false
+  }
+})
 </script>

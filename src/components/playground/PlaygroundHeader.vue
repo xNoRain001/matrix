@@ -26,11 +26,21 @@
         variant="ghost"
         icon="lucide:refresh-cw"
       />
-      <UButton
-        icon="lucide:bell"
-        variant="ghost"
-        @click="isNotificationSlideoverOpen = true"
-      />
+
+      <UButton variant="ghost" @click="isNotificationSlideoverOpen = true">
+        <UChip
+          :show="
+            Boolean(
+              unreadPlaygroundNotificationCount.like ||
+                unreadPlaygroundNotificationCount.comment
+            )
+          "
+          color="error"
+          inset
+        >
+          <UIcon name="i-lucide-bell" class="text-primary size-5" />
+        </UChip>
+      </UButton>
       <UButton
         icon="lucide:pencil-line"
         variant="ghost"
@@ -59,7 +69,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import { usePostStore, useUserStore } from '@/store'
+import { useNotificationsStore, usePostStore, useUserStore } from '@/store'
 import OverlayPublisher from '@/components/overlay/OverlayPublisher.vue'
 import { useRefreshPlayground } from '@/hooks'
 
@@ -67,6 +77,9 @@ const overlay = useOverlay()
 const publisherOverlay = overlay.create(OverlayPublisher)
 const { isMobile, userInfo } = storeToRefs(useUserStore())
 const { activeTab, activeCollegeTab, postMap } = storeToRefs(usePostStore())
+const { unreadPlaygroundNotificationCount } = storeToRefs(
+  useNotificationsStore()
+)
 const isNotificationSlideoverOpen = ref(false)
 const tabItems = [
   {
