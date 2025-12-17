@@ -62,7 +62,6 @@
         <img class="opacity-0" :src="favoriteEmojis[0].blobURL" />
       </div>
       <div
-        v-if="favoriteEmojis.length"
         v-for="{ blob, blobURL, id } in favoriteEmojis"
         :key="id"
         class="hover:bg-accented/50 flex aspect-square items-center justify-center rounded-lg p-1.5"
@@ -70,7 +69,7 @@
       >
         <img class="rounded-lg" :src="blobURL" />
       </div>
-      <template v-else>
+      <template v-if="!favoriteEmojis.length">
         <UButton @click="onAddEmoji" icon="lucide:plus" size="xl" />
         <div class="mt-2 text-xs">点击添加自定义表情</div>
       </template>

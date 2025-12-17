@@ -5,11 +5,17 @@
     title="关注"
     description=" "
     :ui="{
+      body: 'p-0 sm:p-0',
       description: 'hidden'
     }"
   >
     <template #body>
-      <UTabs :content="false" :items="tabItems" v-model="activeTab" />
+      <UTabs
+        class="p-4 sm:p-6"
+        :content="false"
+        :items="tabItems"
+        v-model="activeTab"
+      />
       <Skeleton v-if="loading" :count="5" />
       <template v-if="activeTab === 'follower'">
         <div v-if="followerList?.length >= 0" class="divide-default divide-y">
@@ -24,7 +30,7 @@
                 targetId
               })
             "
-            class="cursor-pointer py-4 sm:py-6"
+            class="cursor-pointer p-4 sm:p-6"
           >
             <UUser
               :avatar="{
@@ -86,7 +92,7 @@
                 targetId
               })
             "
-            class="cursor-pointer py-4 sm:py-6"
+            class="cursor-pointer p-4 sm:p-6"
           >
             <UUser
               :avatar="{
@@ -192,10 +198,14 @@ const onFollow = async (index, targetId, mutual = false) => {
     await followAPI(targetId)
     toast.add({ title: '关注成功', icon: 'lucide:smile' })
     userInfo.value.profile.followingCount++
-    followingList.value[index].unfollow = false
+    const item =
+      activeTab.value === 'following'
+        ? followingList.value[index]
+        : followerList.value[index]
+    item.unfollow = false
 
     if (mutual) {
-      followingList.value[index].mutual = true
+      item.mutual = true
     }
   } catch (error) {
     toast.add({ title: error.message, color: 'error', icon: 'lucide:annoyed' })
@@ -207,10 +217,14 @@ const onUnfollow = async (index, targetId, mutual = false) => {
     await unfollowAPI(targetId)
     toast.add({ title: '取消关注成功', icon: 'lucide:smile' })
     userInfo.value.profile.followingCount--
-    followingList.value[index].unfollow = true
+    const item =
+      activeTab.value === 'following'
+        ? followingList.value[index]
+        : followerList.value[index]
+    item.unfollow = true
 
     if (mutual) {
-      followingList.value[index].mutual = false
+      item.mutual = false
     }
   } catch (error) {
     toast.add({ title: error.message, color: 'error', icon: 'lucide:annoyed' })

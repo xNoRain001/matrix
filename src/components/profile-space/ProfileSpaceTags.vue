@@ -40,12 +40,7 @@
     :label="useComputeZodiacSign(targetProfile.birthday)"
     color="secondary"
   />
-  <UBadge
-    v-if="targetProfile.tags.length"
-    v-for="tag in targetProfile.tags"
-    :key="tag"
-    :label="tag"
-  />
+  <UBadge v-for="tag in targetProfile.tags" :key="tag" :label="tag" />
 </template>
 
 <script lang="ts" setup>
