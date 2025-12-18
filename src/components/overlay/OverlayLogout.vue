@@ -1,7 +1,6 @@
 <template>
   <UDrawer
     v-if="isMobile"
-    :close="{ onClick: () => emit('close', false) }"
     :title="title"
     :description="description"
     :ui="{
@@ -20,7 +19,6 @@
   </UDrawer>
   <UModal
     v-else
-    :close="{ onClick: () => emit('close', false) }"
     :title="title"
     :description="description"
     :ui="{

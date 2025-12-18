@@ -47,10 +47,11 @@
         :class="isMobile ? '' : 'mb-4'"
       />
       <div ref="tagRef" class="flex flex-wrap gap-2">
+        <!-- key 不能使用 index，因为移动位置后再删除，index 可能错乱 -->
         <UButton
           v-for="(tag, index) in tags"
-          :label="tag"
           :key="tag"
+          :label="tag"
           @click="onDeleteTag(tag, index)"
         />
       </div>
@@ -66,8 +67,8 @@
         <template #content>
           <div class="grid grid-cols-3 gap-4">
             <UButton
-              v-for="tag in categoryMap[activeTab]"
-              :key="tag"
+              v-for="(tag, index) in categoryMap[activeTab]"
+              :key="index"
               :variant="tagsSet.has(tag) ? 'solid' : 'subtle'"
               :label="tag"
               class="flex justify-center"

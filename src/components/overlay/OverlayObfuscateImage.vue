@@ -1,7 +1,6 @@
 <template>
   <USlideover
     :class="isMobile ? 'max-w-none' : ''"
-    :close="{ onClick: () => emit('close', false) }"
     title="混淆图片"
     description=" "
     :ui="{

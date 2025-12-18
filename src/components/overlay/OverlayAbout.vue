@@ -2,7 +2,6 @@
   <USlideover
     v-if="isMobile"
     class="max-w-none"
-    :close="{ onClick: () => emit('close', false) }"
     :title="title"
     :description="description"
     :ui="{
@@ -32,7 +31,6 @@
   </USlideover>
   <UModal
     v-else
-    :close="{ onClick: () => emit('close', false) }"
     :title="title"
     :description="description"
     :ui="{ body: 'flex flex-col gap-4 justify-center items-center' }"
@@ -63,7 +61,6 @@
 import { useUserStore } from '@/store'
 import { storeToRefs } from 'pinia'
 
-const emit = defineEmits<{ close: [boolean] }>()
 const { isMobile } = storeToRefs(useUserStore())
 const title = '关于'
 const description = ' '

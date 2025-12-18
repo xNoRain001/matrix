@@ -108,9 +108,7 @@
             <img
               v-if="item.url"
               data-type="image"
-              class="max-w-1/2 rounded-lg"
-              :width="item.width"
-              :height="item.height"
+              class="max-h-40 max-w-40 rounded-lg sm:max-h-80 sm:max-w-80"
               :src="item.url"
             />
             <div
@@ -141,9 +139,7 @@
             <img
               v-if="item.url"
               data-type="image"
-              class="max-w-1/2 rounded-lg"
-              :width="item.width"
-              :height="item.height"
+              class="max-h-40 max-w-40 rounded-lg sm:max-h-80 sm:max-w-80"
               :src="item.url"
             />
             <div

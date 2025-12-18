@@ -2,7 +2,6 @@
   <USlideover
     v-if="isMobile"
     class="max-w-none"
-    :close="{ onClick: () => emit('close', false) }"
     :title="title"
     :description="description"
     :ui="{ description: 'hidden' }"
@@ -13,7 +12,6 @@
   </USlideover>
   <UModal
     v-else
-    :close="{ onClick: () => emit('close', false) }"
     :title="title"
     :description="description"
     :ui="{ description: 'hidden' }"
@@ -30,7 +28,6 @@ import type { AccordionItem } from '@nuxt/ui'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 
-const emit = defineEmits<{ close: [boolean] }>()
 const { isMobile } = storeToRefs(useUserStore())
 const title = '帮助和支持'
 const description = ' '

@@ -7,10 +7,8 @@
         :items="items"
         :class="
           viewer
-            ? isMobile
-              ? 'w-[calc(100vw-2rem)] sm:w-[calc(100vw-3rem)]'
-              : 'w-[calc(100vw-3rem)]'
-            : 'w-80'
+            ? 'w-[calc(100vw-2rem)] sm:w-[calc(100vw-3rem)]'
+            : 'w-full sm:w-80'
         "
         :ui="{ container: 'items-center' }"
         @select="onSelect"
@@ -26,21 +24,17 @@
               ? url
               : VITE_OSS_BASE_URL + url
           "
-          class="w-fit rounded-lg"
-          :width="width"
-          :height="height"
+          class="rounded-lg"
           :class="
             viewer
-              ? isMobile
-                ? 'mx-auto max-h-[calc(100vh-9.75rem)] max-w-[calc(100vw-2rem)] sm:max-h-[calc(100vh-10.75rem)] sm:max-w-[calc(100vw-3rem)]'
-                : 'mx-auto max-h-[calc(100vh-10.75rem)] max-w-[calc(100vw-3rem)]'
-              : 'max-h-80 max-w-80'
+              ? 'mx-auto max-h-[calc(100vh-9.75rem)] max-w-[calc(100vw-2rem)] sm:max-h-[calc(100vh-10.75rem)] sm:max-w-[calc(100vw-3rem)]'
+              : 'max-h-80 sm:max-w-80'
           "
         />
       </UCarousel>
       <div
-        :class="viewer ? 'mx-auto justify-center pt-4' : 'pt-2'"
-        class="flex w-full max-w-xs gap-2 overflow-auto sm:max-w-md"
+        :class="viewer ? 'mx-auto w-fit pt-4' : 'pt-2'"
+        class="flex gap-2 overflow-x-auto"
       >
         <div
           v-for="({ url }, index) in items"
@@ -57,7 +51,7 @@
                 ? url
                 : VITE_OSS_BASE_URL + url
             "
-            class="size-11 rounded-lg"
+            class="size-10 rounded-lg"
           />
         </div>
       </div>
@@ -72,15 +66,11 @@
           ? items[0].url
           : VITE_OSS_BASE_URL + items[0].url
       "
-      class="w-fit rounded-lg"
-      :width="items[0].width"
-      :height="items[0].height"
+      class="rounded-lg"
       :class="
         viewer
-          ? isMobile
-            ? 'mx-auto max-h-[calc(100vh-6rem)] max-w-[calc(100vw-2rem)] sm:max-h-[calc(100vh-7rem)] sm:max-w-[calc(100vw-3rem)]'
-            : 'mx-auto max-h-[calc(100vh-7rem)] max-w-[calc(100vw-3rem)]'
-          : 'max-h-80 max-w-80'
+          ? 'mx-auto max-h-[calc(100vh-6rem)] max-w-[calc(100vw-2rem)] sm:max-h-[calc(100vh-7rem)] sm:max-w-[calc(100vw-3rem)]'
+          : 'max-h-80 sm:max-w-80'
       "
     />
   </div>
@@ -111,7 +101,6 @@ const overlay = useOverlay()
 const carousel = useTemplateRef('carousel')
 const _activeIndex = ref(props.activeIndex)
 const viewerOverlay = overlay.create(OverlayViewer)
-const { isMobile } = storeToRefs(useUserStore())
 const { VITE_OSS_BASE_URL } = import.meta.env
 
 const onSelect = (index: number) => {

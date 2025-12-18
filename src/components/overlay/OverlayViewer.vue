@@ -1,7 +1,6 @@
 <template>
   <UModal
     fullscreen
-    :close="{ onClick: () => emit('close', false) }"
     title="预览"
     description=" "
     :ui="{
@@ -33,7 +32,6 @@ withDefaults(
     activeIndex: 0
   }
 )
-const emit = defineEmits<{ close: [boolean] }>()
 
 // const onDownload = (url, filename) => {
 //   fetch(url)
