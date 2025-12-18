@@ -1,6 +1,7 @@
 <template>
   <div
-    v-for="[cover, title, character] in cards"
+    v-for="([cover, title, character], index) in cards"
+    :key="index"
     class="group relative mt-4 h-[300px] w-[200px] rounded-lg"
   >
     <img

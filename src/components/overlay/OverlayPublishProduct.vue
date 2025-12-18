@@ -258,7 +258,7 @@ const onPublishProduct = async () => {
     product.expressDelivery = expressDelivery.value
     product.address = address.value
 
-    if (postMap.value[props.targetId].products) {
+    if (postMap.value[props.targetId]?.products) {
       postMap.value[props.targetId].products.unshift(product)
     }
 

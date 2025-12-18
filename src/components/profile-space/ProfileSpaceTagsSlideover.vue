@@ -67,6 +67,7 @@
           <div class="grid grid-cols-3 gap-4">
             <UButton
               v-for="tag in categoryMap[activeTab]"
+              :key="tag"
               :variant="tagsSet.has(tag) ? 'solid' : 'subtle'"
               :label="tag"
               class="flex justify-center"

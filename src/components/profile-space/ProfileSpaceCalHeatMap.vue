@@ -2,8 +2,8 @@
   <div
     ref="calHeatmapRef"
     class="bg-elevated/50 overflow-x-auto p-4 sm:p-6"
-    style="scrollbar-width: none"
   ></div>
+  <!-- style="scrollbar-width: none" -->
 </template>
 
 <script lang="ts" setup>

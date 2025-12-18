@@ -115,6 +115,12 @@
       <audio hidden ref="remoteAudioRef" autoplay></audio>
       <audio hidden ref="beepAudioRef"></audio>
       <IndexSkyBg v-if="config.theme.starsBg" />
+      <UProgress
+        v-if="fetching"
+        indeterminate
+        size="xs"
+        :ui="{ base: 'bg-default' }"
+      />
     </UApp>
 
     <!-- 注册登录和重置密码等内容 -->
@@ -193,8 +199,15 @@ const overlay = useOverlay()
 const logoutOverlay = overlay.create(OverlayLogout)
 const publishContentOverlay = overlay.create(OverlayPublishContent)
 const offlineOverlay = overlay.create(OverlayOffline)
-const { isMobile, globalSocket, globalPC, userInfo, config, onlineCount } =
-  storeToRefs(useUserStore())
+const {
+  isMobile,
+  globalSocket,
+  globalPC,
+  userInfo,
+  config,
+  onlineCount,
+  fetching
+} = storeToRefs(useUserStore())
 const {
   leaveRoomTimer,
   rtcConnected,

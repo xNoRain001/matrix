@@ -1,10 +1,7 @@
 <template>
   <Skeleton v-if="loading" :count="5" />
-  <template v-if="activeTab === 'post'">
-    <div
-      v-if="postMap[targetId]?.posts?.length"
-      class="divide-default divide-y"
-    >
+  <template v-if="activeTab === 'post' && postMap[targetId]?.posts">
+    <div v-if="postMap[targetId].posts.length" class="divide-default divide-y">
       <div
         v-for="(
           {
@@ -86,7 +83,7 @@
       </div>
     </div>
     <div
-      v-show="postMap[targetId]?.posts?.length === 0"
+      v-if="postMap[targetId].posts.length === 0"
       class="flex h-96 flex-col items-center justify-center gap-4 p-4 sm:gap-6 sm:p-6"
     >
       <svg
@@ -107,7 +104,7 @@
       />
     </div>
     <div
-      v-show="allPostLoaded"
+      v-else-if="allPostLoaded"
       class="flex h-48 flex-col items-center justify-center p-4 sm:p-6"
     >
       <div class="text-muted">
@@ -127,9 +124,9 @@
       />
     </div>
   </template>
-  <template v-if="activeTab === 'market'">
+  <template v-if="activeTab === 'market' && postMap[targetId]?.products">
     <div
-      v-if="postMap[targetId]?.products?.length"
+      v-if="postMap[targetId].products.length"
       class="divide-default divide-y"
     >
       <div
@@ -222,7 +219,7 @@
       </div>
     </div>
     <div
-      v-show="postMap[targetId]?.products?.length === 0"
+      v-if="postMap[targetId].products.length === 0"
       class="flex h-96 flex-col items-center justify-center gap-4 p-4 sm:gap-6 sm:p-6"
     >
       <svg
@@ -243,7 +240,7 @@
       />
     </div>
     <div
-      v-show="allProductLoaded"
+      v-else-if="allProductLoaded"
       class="flex h-48 flex-col items-center justify-center p-4 sm:p-6"
     >
       <div class="text-muted">
@@ -275,7 +272,8 @@
   >
     <template #footer>
       <UButton
-        v-for="{ label, color, onSelect } in dropdownMenuItems[0]"
+        v-for="({ label, color, onSelect }, index) in dropdownMenuItems[0]"
+        :key="index"
         :label="label"
         :color="color"
         @click="onSelect"
@@ -342,7 +340,7 @@ const props = defineProps<{
   container?: HTMLElement
 }>()
 const overlay = useOverlay()
-const { isMobile, userInfo } = storeToRefs(useUserStore())
+const { isMobile, userInfo, fetching } = storeToRefs(useUserStore())
 const postDetailOverlay = overlay.create(OverlayPostDetail)
 const publishContentOverlay = overlay.create(OverlayPublishContent)
 const publishProductOverlay = overlay.create(OverlayPublishProduct)
@@ -458,6 +456,7 @@ const onScroll = useThrottleFn(
         ? postMap.value[props.targetId].posts
         : postMap.value[props.targetId].products
       const lastId = item[item.length - 1]._id
+      fetching.value = true
       const { data } = await (isPost
         ? getPostsAPI(props.targetId, lastId)
         : getProductsAPI(props.targetId, lastId))
@@ -473,6 +472,8 @@ const onScroll = useThrottleFn(
       } else if (isMarket) {
         allProductLoaded.value = length < 10
       }
+
+      fetching.value = false
     }
   },
   200,

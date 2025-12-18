@@ -185,7 +185,8 @@
                     loading="lazy"
                     crossorigin="anonymous"
                     class="size-11 rounded-lg"
-                    v-for="image in content.images"
+                    v-for="(image, index) in content.images"
+                    :key="index"
                     :src="VITE_OSS_BASE_URL + image.url"
                   />
                 </div>
@@ -368,8 +369,9 @@
                                   urls: replyComments[replyIndex].content.images
                                 })
                               "
-                              v-for="image in replyComments[replyIndex].content
-                                .images"
+                              v-for="(image, index) in replyComments[replyIndex]
+                                .content.images"
+                              :key="index"
                               :src="VITE_OSS_BASE_URL + image.url"
                             />
                           </div>
@@ -513,7 +515,10 @@
       >
         <template #footer>
           <UButton
-            v-for="{ label, color, onSelect } in commentDropdownMenuItems[0]"
+            v-for="(
+              { label, color, onSelect }, index
+            ) in commentDropdownMenuItems[0]"
+            :key="index"
             :label="label"
             :color="color"
             @click="onSelect"
@@ -532,7 +537,10 @@
       >
         <template #footer>
           <UButton
-            v-for="{ label, color, onSelect } in replyDropdownMenuItems[0]"
+            v-for="(
+              { label, color, onSelect }, index
+            ) in replyDropdownMenuItems[0]"
+            :key="index"
             :label="label"
             :color="color"
             @click="onSelect"

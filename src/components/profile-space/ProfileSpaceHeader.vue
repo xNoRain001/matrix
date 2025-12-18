@@ -40,7 +40,8 @@
   >
     <template #body>
       <UPageCard
-        v-for="items in cards"
+        v-for="(items, index) in cards"
+        :key="index"
         variant="subtle"
         class="not-last:mb-4"
         :ui="{ container: 'divide-y divide-default' }"

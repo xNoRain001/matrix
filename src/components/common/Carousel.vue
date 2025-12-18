@@ -3,7 +3,7 @@
     <template v-if="items.length > 1">
       <UCarousel
         ref="carousel"
-        v-slot="{ item, index }"
+        v-slot="{ item: { url, width, height }, index }"
         :items="items"
         :class="
           viewer
@@ -22,13 +22,13 @@
             !viewer && viewerOverlay.open({ urls: items, activeIndex: index })
           "
           :src="
-            item.url.startsWith('blob:') || item.url.startsWith('https://')
-              ? item.url
-              : VITE_OSS_BASE_URL + item.url
+            url.startsWith('blob:') || url.startsWith('https://')
+              ? url
+              : VITE_OSS_BASE_URL + url
           "
           class="w-fit rounded-lg"
-          :width="item.width"
-          :height="item.height"
+          :width="width"
+          :height="height"
           :class="
             viewer
               ? isMobile
@@ -43,7 +43,7 @@
         class="flex w-full max-w-xs gap-2 overflow-auto sm:max-w-md"
       >
         <div
-          v-for="(item, index) in items"
+          v-for="({ url }, index) in items"
           :key="index"
           class="shrink-0 opacity-25 transition-opacity hover:opacity-100"
           :class="{ 'opacity-100': _activeIndex === index }"
@@ -53,9 +53,9 @@
             :loading="setLoading ? 'lazy' : undefined"
             :crossorigin="setCrossorigin ? 'anonymous' : undefined"
             :src="
-              item.url.startsWith('blob:') || item.url.startsWith('https://')
-                ? item.url
-                : VITE_OSS_BASE_URL + item.url
+              url.startsWith('blob:') || url.startsWith('https://')
+                ? url
+                : VITE_OSS_BASE_URL + url
             "
             class="size-11 rounded-lg"
           />
@@ -87,6 +87,7 @@
 </template>
 
 <script lang="ts" setup>
+// @ts-nocheck
 import { onMounted, ref, useTemplateRef } from 'vue'
 import OverlayViewer from '@/components/overlay/OverlayViewer.vue'
 import { storeToRefs } from 'pinia'

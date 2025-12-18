@@ -448,7 +448,8 @@
   >
     <template #footer>
       <UButton
-        v-for="{ label, color, onSelect } in dropdownMenuItems[0]"
+        v-for="({ label, color, onSelect }, index) in dropdownMenuItems[0]"
+        :key="index"
         :label="label"
         :color="color"
         @click="onSelect"
@@ -489,7 +490,7 @@ let reportedUserId = null
 let reportPostId = null
 let reportProductId = null
 const { VITE_OSS_BASE_URL } = import.meta.env
-const { isMobile, userInfo } = storeToRefs(useUserStore())
+const { isMobile, userInfo, fetching } = storeToRefs(useUserStore())
 const {
   activeTab,
   activeCollegeTab,
@@ -626,6 +627,7 @@ const onScroll = useThrottleFn(
             ? postMap.value[_activeCollegeTab].posts
             : postMap.value[_activeCollegeTab].products
       const lastId = item[item.length - 1]._id
+      fetching.value = true
       const { data } = await (isPost
         ? getPlaygroundPostsAPI(lastId)
         : isFriend
@@ -650,6 +652,8 @@ const onScroll = useThrottleFn(
           allProductLoaded.value = length < 10 || item.length > 100
         }
       }
+
+      fetching.value = false
     }
   },
   200,
