@@ -1,5 +1,5 @@
 <template>
-  <div class="select-none">
+  <div>
     <template v-if="items.length > 1">
       <UCarousel
         ref="carousel"
@@ -24,6 +24,8 @@
               ? url
               : VITE_OSS_BASE_URL + url
           "
+          :width="width"
+          :height="height"
           class="rounded-lg"
           :class="
             viewer
@@ -66,6 +68,8 @@
           ? items[0].url
           : VITE_OSS_BASE_URL + items[0].url
       "
+      :width="items[0].width"
+      :height="items[0].height"
       class="rounded-lg"
       :class="
         viewer

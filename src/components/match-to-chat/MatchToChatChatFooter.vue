@@ -27,107 +27,8 @@
         v-if="isRecord"
         class="grow justify-center select-none"
         size="xl"
-        :label="recording ? '' : '按住说话'"
-      >
-        <svg
-          v-if="recording"
-          class="size-6"
-          fill="currentColor"
-          viewBox="0 0 135 140"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <rect y="10" width="15" height="120" rx="6">
-            <animate
-              attributeName="height"
-              begin="0.5s"
-              dur="1s"
-              values="120;110;100;90;80;70;60;50;40;140;120"
-              calcMode="linear"
-              repeatCount="indefinite"
-            ></animate>
-            <animate
-              attributeName="y"
-              begin="0.5s"
-              dur="1s"
-              values="10;15;20;25;30;35;40;45;50;0;10"
-              calcMode="linear"
-              repeatCount="indefinite"
-            ></animate>
-          </rect>
-          <rect x="30" y="10" width="15" height="120" rx="6">
-            <animate
-              attributeName="height"
-              begin="0.25s"
-              dur="1s"
-              values="120;110;100;90;80;70;60;50;40;140;120"
-              calcMode="linear"
-              repeatCount="indefinite"
-            ></animate>
-            <animate
-              attributeName="y"
-              begin="0.25s"
-              dur="1s"
-              values="10;15;20;25;30;35;40;45;50;0;10"
-              calcMode="linear"
-              repeatCount="indefinite"
-            ></animate>
-          </rect>
-          <rect x="60" width="15" height="140" rx="6">
-            <animate
-              attributeName="height"
-              begin="0s"
-              dur="1s"
-              values="120;110;100;90;80;70;60;50;40;140;120"
-              calcMode="linear"
-              repeatCount="indefinite"
-            ></animate>
-            <animate
-              attributeName="y"
-              begin="0s"
-              dur="1s"
-              values="10;15;20;25;30;35;40;45;50;0;10"
-              calcMode="linear"
-              repeatCount="indefinite"
-            ></animate>
-          </rect>
-          <rect x="90" y="10" width="15" height="120" rx="6">
-            <animate
-              attributeName="height"
-              begin="0.25s"
-              dur="1s"
-              values="120;110;100;90;80;70;60;50;40;140;120"
-              calcMode="linear"
-              repeatCount="indefinite"
-            ></animate>
-            <animate
-              attributeName="y"
-              begin="0.25s"
-              dur="1s"
-              values="10;15;20;25;30;35;40;45;50;0;10"
-              calcMode="linear"
-              repeatCount="indefinite"
-            ></animate>
-          </rect>
-          <rect x="120" y="10" width="15" height="120" rx="6">
-            <animate
-              attributeName="height"
-              begin="0.5s"
-              dur="1s"
-              values="120;110;100;90;80;70;60;50;40;140;120"
-              calcMode="linear"
-              repeatCount="indefinite"
-            ></animate>
-            <animate
-              attributeName="y"
-              begin="0.5s"
-              dur="1s"
-              values="10;15;20;25;30;35;40;45;50;0;10"
-              calcMode="linear"
-              repeatCount="indefinite"
-            ></animate>
-          </rect>
-        </svg>
-      </UBadge>
+        :label="recording ? '说话中...' : '按住说话'"
+      />
       <UTextarea
         v-if="!recording && !isRecord"
         ref="mobileTextareaRef"
@@ -304,17 +205,34 @@ const initMediaRecorder = async () => {
   try {
     const stream = await navigator.mediaDevices.getUserMedia(constraints)
     mediaRecorder = new MediaRecorder(stream)
-    mediaRecorder.start()
     mediaRecorder.ondataavailable = ({ data }) => chunks.push(data)
     mediaRecorder.onstop = async () => {
       if (isCancelRecordTipShow.value) {
         isCancelRecordTipShow.value = false
+        chunks = []
+        recording.value = false
       } else {
-        const duration = Math.round((Date.now() - startTime) / 1000)
-        const blob = new Blob(chunks, { type: 'audio/mpeg' })
+        const diff = Date.now() - startTime
+        const duration = Math.round(diff / 1000)
+
+        if (diff < 1000) {
+          toast.add({
+            title: '说话时间太短',
+            color: 'error',
+            icon: 'lucide:annoyed'
+          })
+          chunks = []
+          recording.value = false
+          return
+        }
+
+        const blob = new Blob(chunks, { type: 'audio/mp4' })
         const url = URL.createObjectURL(blob)
+        chunks = []
+        recording.value = false
+
         try {
-          const hash = await useGenHash(blob, 'mp3')
+          const hash = await useGenHash(blob, 'mp4')
           await useSendMsg(
             'audio',
             null,
@@ -349,7 +267,6 @@ const initMediaRecorder = async () => {
         }
       }
 
-      chunks = []
       // 关闭麦克风
       stream.getTracks().forEach(track => track.stop())
     }
@@ -362,15 +279,35 @@ const initMediaRecorder = async () => {
   }
 }
 
-const onTouchstart = e => {
-  startY = e.touches[0].clientY
+const onTouchstart = async e => {
+  // 查看支持的格式类型
+  // const list = [
+  //   'audio/webm;codecs=opus',
+  //   'audio/webm',
+  //   'audio/ogg;codecs=opus',
+  //   'audio/ogg',
+  //   'audio/mp4',
+  //   'audio/wav',
+  //   'audio/mpeg'
+  // ]
+  // console.log(list.filter(item => MediaRecorder.isTypeSupported(item)))
 
-  recorderTimer = setTimeout(async () => {
-    recording.value = true
-    startTime = Date.now()
-    navigator.vibrate && navigator.vibrate(200)
-    initMediaRecorder()
-  }, 50)
+  await initMediaRecorder()
+  recording.value = true
+  startY = e.touches[0].clientY
+  navigator.vibrate && navigator.vibrate(200)
+  startTime = Date.now()
+
+  try {
+    mediaRecorder.start()
+  } catch {
+    recording.value = false
+    toast.add({
+      title: '麦克风异常，请刷新页面后重试',
+      color: 'error',
+      icon: 'lucide:annoyed'
+    })
+  }
 }
 
 const onTouchmove = useThrottleFn(
@@ -399,11 +336,17 @@ const onTouchmove = useThrottleFn(
 )
 
 const onTouchend = () => {
-  clearTimeout(recorderTimer)
-
-  if (recording.value) {
-    recording.value = false
+  if (mediaRecorder) {
     mediaRecorder.stop()
+  } else {
+    // 点击录音之后立马松开，mediaRecorder 可能还没完成初始化，需要通过定时器关闭
+    // mediaRecorder
+    recorderTimer = setInterval(() => {
+      if (mediaRecorder) {
+        clearInterval(recorderTimer)
+        mediaRecorder.stop()
+      }
+    }, 50)
   }
 }
 

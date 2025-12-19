@@ -110,6 +110,8 @@
               data-type="image"
               class="max-h-40 max-w-40 rounded-lg sm:max-h-80 sm:max-w-80"
               :src="item.url"
+              :width="item.width"
+              :height="item.height"
             />
             <div
               v-else
@@ -141,6 +143,8 @@
               data-type="image"
               class="max-h-40 max-w-40 rounded-lg sm:max-h-80 sm:max-w-80"
               :src="item.url"
+              :width="item.width"
+              :height="item.height"
             />
             <div
               v-else
