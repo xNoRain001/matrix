@@ -1,5 +1,12 @@
 <template>
   <div class="border-default relative border-t p-4" v-if="isMobile">
+    <div
+      v-if="recording"
+      :class="isCancelRecordTipShow ? 'text-error' : ''"
+      class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[calc(100%+1rem)] text-sm"
+    >
+      {{ isCancelRecordTipShow ? '松手取消' : '松手发送 上移取消' }}
+    </div>
     <div class="flex items-end gap-2">
       <UButton
         v-if="!recording && !isRecord"
@@ -13,13 +20,6 @@
         variant="ghost"
         icon="lucide:keyboard"
       />
-      <div
-        v-if="recording"
-        :class="isCancelRecordTipShow ? 'text-error' : ''"
-        class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full text-sm"
-      >
-        {{ isCancelRecordTipShow ? '松手取消' : '松手发送 上移取消' }}
-      </div>
       <UBadge
         @touchstart="onTouchstart"
         @touchend="onTouchend"
@@ -27,7 +27,7 @@
         v-if="isRecord"
         class="grow justify-center select-none"
         size="xl"
-        :label="recording ? '说话中...' : '按住说话'"
+        label="按住说话"
       />
       <UTextarea
         v-if="!recording && !isRecord"
@@ -105,6 +105,13 @@
       <UButton @click="onSendMsg" class="rounded-full" icon="lucide:arrow-up" />
     </div>
   </UPageCard>
+  <UButton
+    v-if="recording"
+    class="absolute top-1/2 left-1/2 aspect-square h-fit -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl"
+    icon="lucide:mic"
+    label="说话中..."
+    :ui="{ leadingIcon: 'size-10' }"
+  ></UButton>
   <!-- 图片选择器 -->
   <input
     ref="inputRef"
@@ -293,13 +300,13 @@ const onTouchstart = async e => {
   // console.log(list.filter(item => MediaRecorder.isTypeSupported(item)))
 
   await initMediaRecorder()
-  recording.value = true
   startY = e.touches[0].clientY
   navigator.vibrate && navigator.vibrate(200)
-  startTime = Date.now()
 
   try {
     mediaRecorder.start()
+    startTime = Date.now()
+    recording.value = true
   } catch {
     recording.value = false
     toast.add({
