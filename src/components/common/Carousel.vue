@@ -26,7 +26,7 @@
           "
           :width="width"
           :height="height"
-          class="rounded-lg"
+          class="w-fit rounded-lg"
           :class="
             viewer
               ? 'mx-auto max-h-[calc(100vh-9.75rem)] max-w-[calc(100vw-2rem)] sm:max-h-[calc(100vh-10.75rem)] sm:max-w-[calc(100vw-3rem)]'
@@ -70,7 +70,7 @@
       "
       :width="items[0].width"
       :height="items[0].height"
-      class="rounded-lg"
+      class="w-fit rounded-lg"
       :class="
         viewer
           ? 'mx-auto max-h-[calc(100vh-6rem)] max-w-[calc(100vw-2rem)] sm:max-h-[calc(100vh-7rem)] sm:max-w-[calc(100vw-3rem)]'
